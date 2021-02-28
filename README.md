@@ -3,10 +3,10 @@
 [![Documentation Status](https://readthedocs.org/projects/ksrates/badge/?version=latest)](https://ksrates.readthedocs.io/en/latest/?badge=latest)
 
 
-VIB-UGent Center for Plant Systems Biology---[Evolutionary Systems Biology Lab](http://www.psb.ugent.be/esb)
+VIB-UGent Center for Plant Systems Biology&mdash;[Evolutionary Systems Biology Lab](http://www.psb.ugent.be/esb)
 
 # ksrates
-*ksrates* is a tool to position whole-genome duplications\* (WGDs) relative to speciation events using substitution-rate-adjusted mixed paralog--ortholog distributions of synonymous substitutions per synonymous site (*K*<sub>S</sub>).
+*ksrates* is a tool to position whole-genome duplications\* (WGDs) relative to speciation events using substitution-rate-adjusted mixed paralog&ndash;ortholog distributions of synonymous substitutions per synonymous site (*K*<sub>S</sub>).
 
 \* or, more generally, whole-genome multiplications (WGMs), but we will simply use the more common WGD to refer to any multiplication
 
@@ -18,8 +18,8 @@ To position ancient WGD events with respect to speciation events in a phylogeny,
 
 For more details, see:
 <!-- ***TODO:*** paper link -->
-[Documentation](https://ksrates.readthedocs.io/)
-[Tutorial](https://ksrates.readthedocs.io/en/latest/usage.html)  
+[Documentation](https://ksrates.readthedocs.io/)\
+[Tutorial](https://ksrates.readthedocs.io/en/latest/usage.html)\
 [FAQ](https://ksrates.readthedocs.io/en/latest/faqs.html)
 
 ## Quick start
@@ -68,12 +68,11 @@ See the Usage sections below and the [Tutorial](https://ksrates.readthedocs.io/e
 We briefly illustrate here how to run the *ksrates* Nextflow pipeline on the `test` dataset.
 
 1. Get the example datasets.
-    * Clone the repository to get the test datasets: 
-	<!-- ***TODO:*** or another data repo? -->
-		
+    1. Clone the repository to get the test datasets: <!-- ***TODO:*** or another data repo? -->
+
             git clone https://github.com/VIB-PSB/ksrates
 
-	* You may want to copy the dataset folder you want to use to another location, for example your home folder, and then change to that folder:
+    2. You may want to copy the dataset folder you want to use to another location, for example your home folder, and then change to that folder:
 
             mv ksrates/test ~
             cd ~/test
