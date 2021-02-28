@@ -1,4 +1,4 @@
-name: ksrates Nextflow pipeline CI
+name: Test pipeline CI
 
 # Controls when the action will run. 
 on:
@@ -37,7 +37,7 @@ jobs:
       - name: Running ksrates Nextflow pipeline
         run: |
           cd test
-          nextflow run ../main.nf --config config_palm.txt -with-docker ksrates
+          nextflow run ../main.nf --config config_elaeis.txt -with-docker ksrates
         
       - name: Visualize output files
-        run: ls -l test/correction_analysis/palm
+        run: ls -l test/correction_analysis/elaeis
