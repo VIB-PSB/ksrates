@@ -45,19 +45,19 @@ See the Usage sections below and the [Tutorial](https://ksrates.readthedocs.io/e
 1. Install [Nextflow](https://github.com/nextflow-io/nextflow), official instructions are [here](https://www.nextflow.io/docs/latest/getstarted.html), but briefly:
 	1. If you do not have [Java](https://www.oracle.com/java/) installed, install [Java 8 or later](https://www.oracle.com/java/technologies/javase-downloads.html) or follow these steps:
 	
-			sudo apt-get install default-jdk
+           sudo apt-get install default-jdk
 
 	2. Install Nextflow using either:
 	
-            wget -qO- https://get.nextflow.io | bash
+           wget -qO- https://get.nextflow.io | bash
 
-	    or:
+	   or:
 	
-	        curl -fsSL https://get.nextflow.io | bash
+	       curl -fsSL https://get.nextflow.io | bash
 
-	    It creates the `nextflow` executable file in the current directory. You may want to move it to a folder accessible from your `$PATH`, for example:
+	   It creates the `nextflow` executable file in the current directory. You may want to move it to a folder accessible from your `$PATH`, for example:
 	    
-            mv nextflow /usr/local/bin
+           mv nextflow /usr/local/bin
     
 2. Install either [Singularity](https://sylabs.io/guides/3.7/admin-guide/installation.html) (recommended, but see [here]((https://ksrates.readthedocs.io/en/latest/installation.html#container-availability)) or [Docker](https://docs.docker.com/get-docker/). This is needed to run the *ksrates* Singularity or Docker container which contain all other required software dependencies, so nothing else needs to be installed.
 
@@ -70,44 +70,42 @@ We briefly illustrate here how to run the *ksrates* Nextflow pipeline on the `te
 1. Get the example datasets.
     1. Clone the repository to get the test datasets: <!-- ***TODO:*** or another data repo? -->
 
-            git clone https://github.com/VIB-PSB/ksrates
+           git clone https://github.com/VIB-PSB/ksrates
 
     2. You may want to copy the dataset folder you want to use to another location, for example your home folder, and then change to that folder:
 
-            mv ksrates/test ~
-            cd ~/test
+           mv ksrates/test ~
+           cd ~/test
 
 2. Launch the *ksrates* Nextflow pipeline.
     (If this is the first time you launch the pipeline, Nextflow will first download *ksrates* and the *ksrates* Singularity or Docker container.)
 
-	* Running locally on a laptop/desktop:
-	
-		When using Singularity (recommended):
-		<!-- ***TODO:*** check command -->
-	
-			nextflow run VIB-PSB/ksrates --config config_elaeis.txt -with-singularity docker://vibpsb/ksrates:latest
+    * Running locally on a laptop/desktop:
 
-		Or when using Docker:
-		<!-- ***TODO:*** check command -->
+        When using Singularity (recommended):<!-- ***TODO:*** check command -->
 
-			nextflow run VIB-PSB/ksrates --config config_elaeis.txt -with-docker vibpsb/ksrates:latest
+          nextflow run VIB-PSB/ksrates --config config_elaeis.txt -with-singularity docker://vibpsb/ksrates:latest
+
+        Or when using Docker:<!-- ***TODO:*** check command -->
+
+          nextflow run VIB-PSB/ksrates --config config_elaeis.txt -with-docker vibpsb/ksrates:latest
 		  
-		The required `--config` parameter specifies the (path to the) pipeline configuration file for the *ksrates* analyses to be run. If the specified file does not exist (at the given path) a new template configuration file will be generated and the pipeline exits. Edit and fill in the generated configuration file (see the [full documentation](https://ksrates.readthedocs.io/) for more detail) and then rerun the same command above to relaunch the pipeline. 
-		
-		The dataset directory already contains a pre-filled *ksrates* pipeline configuration file for the oil palm example use case, `config_elaeis.txt`, therefore the above Nextflow command should directly launch the pipeline.
-
-	* Running on a compute cluster:
+        The required `--config` parameter specifies the (path to the) pipeline configuration file for the *ksrates* analyses to be run. If the specified file does not exist (at the given path) a new template configuration file will be generated and the pipeline exits. Edit and fill in the generated configuration file (see the [full documentation](https://ksrates.readthedocs.io/) for more detail) and then rerun the same command above to relaunch the pipeline. 
 	
-			nextflow run VIB-PSB/ksrates --config config_elaeis.txt -c custom_nextflow.config
+        The dataset directory already contains a pre-filled *ksrates* pipeline configuration file for the oil palm example use case, `config_elaeis.txt`, therefore the above Nextflow command should directly launch the pipeline.
+
+    * Running on a compute cluster:
 	
-		The `--config` parameter is the same as above.
+          nextflow run VIB-PSB/ksrates --config config_elaeis.txt -c custom_nextflow.config
+	
+        The `--config` parameter is the same as above.
 		
-	    The `-c` parameter specifies a Nextflow configuration file. This file contains settings to configure the compute cluster to be used and the pipelines resources on it such as number of CPUs and amount of memory. It also now configures whether to use the *ksrates* Singularity or Docker container. 
-	    The dataset directory already contains a template Nextflow configuration file called `custom_nextflow.config` that can be adapted to your resources. Other general template Nextflow configuration files can be found in the [doc](doc/source) directory in the repository.
+        The `-c` parameter specifies a Nextflow configuration file. This file contains settings to configure the compute cluster to be used and the pipelines resources on it such as number of CPUs and amount of memory. It also now configures whether to use the *ksrates* Singularity or Docker container. 
+        The dataset directory already contains a template Nextflow configuration file called `custom_nextflow.config` that can be adapted to your resources. Other general template Nextflow configuration files can be found in the [doc](doc/source) directory in the repository.
 
-    	If the Nextflow configuration file is simply named `nextflow.config`, the configuration file will be automatically recognized and used without having to specify it using the `-c` parameter.
+        If the Nextflow configuration file is simply named `nextflow.config`, the configuration file will be automatically recognized and used without having to specify it using the `-c` parameter.
 
-	    Please see the [full documentation](https://ksrates.readthedocs.io/) and the [Nextflow documentation](https://www.nextflow.io/docs/latest/config.html) for more detail on Nextflow configuration, e.g. for different HPC schedulers.
+        Please see the [full documentation](https://ksrates.readthedocs.io/) and the [Nextflow documentation](https://www.nextflow.io/docs/latest/config.html) for more detail on Nextflow configuration, e.g. for different HPC schedulers.
 
 
 ### Command-line interface
@@ -144,15 +142,15 @@ We briefly illustrate here how to run *ksrates* using the Singularity or Docker 
 
 * *ksrates* comes with a command-line interface. Its basic syntax is:
 
-		ksrates [OPTIONS] COMMAND [ARGS]...
+      ksrates [OPTIONS] COMMAND [ARGS]...
 
 * To execute a *ksrates* command using the Singularity container the syntax is:
 
-		singularity exec docker://vibpsb/ksrates ksrates [OPTIONS] COMMAND [ARGS]...
+      singularity exec docker://vibpsb/ksrates ksrates [OPTIONS] COMMAND [ARGS]...
 
 * Or to execute a *ksrates* command using the Docker container the syntax is:
 
-		docker run --rm -v $PWD:/temp -w /temp vibpsb/ksrates ksrates [OPTIONS] COMMAND [ARGS]...
+      docker run --rm -v $PWD:/temp -w /temp vibpsb/ksrates ksrates [OPTIONS] COMMAND [ARGS]...
 	
 
 Some example *ksrates* commands are:
