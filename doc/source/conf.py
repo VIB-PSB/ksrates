@@ -1,10 +1,3 @@
-import rst2pdf
-
-# COMMAND TO BUILD THE DOCUMENTATION LOCALLY
-# For LaTeX: sphinx-build -M latexpdf source/ abs/path/outdir
-# It will generate the PDF version in outdir/latex
-# For HTML: sphinx-build -b html source/ abs/path/outdir
-
 project = "ksrates"
 author = "Cecilia Sensalari, Steven Maere and Rolf Lohaus"
 
@@ -18,10 +11,6 @@ pygments_style = "sphinx"
 source_suffix = '.rst'
 master_doc = 'index'
 
-extensions = [
-    'rst2pdf.pdfbuilder',
-]
-
 # To use light grey background and no frame on code blocks
 # To avoid extra white pages to force starting on the left page (like it was a book)
 # To use inconsolata monospace font (looks better than Courier)
@@ -34,3 +23,13 @@ latex_elements = {
     '''
 }
 
+# For local export to PDF:
+# import rst2pdf
+# extensions = [
+#     'rst2pdf.pdfbuilder',
+# ]
+
+# COMMAND TO BUILD THE DOCUMENTATION LOCALLY
+# For LaTeX: sphinx-build -M latexpdf source/ abs/path/outdir
+# It will generate the PDF version in outdir/latex
+# For HTML: sphinx-build -b html source/ abs/path/outdir
