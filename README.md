@@ -8,7 +8,7 @@ VIB-UGent Center for Plant Systems Biology---[Evolutionary Systems Biology Lab](
 # ksrates
 *ksrates* is a tool to position whole-genome duplications\* (WGDs) relative to speciation events using substitution-rate-adjusted mixed paralog--ortholog distributions of synonymous substitutions per synonymous site (*K*<sub>S</sub>).
 
-<font size="2">\* or, more generally, whole-genome multiplications (WGMs), but we will simply use the more common WGD to refer to any multiplication</font>
+\* or, more generally, whole-genome multiplications (WGMs), but we will simply use the more common WGD to refer to any multiplication
 
 ## Quick overview
 
@@ -17,9 +17,10 @@ To position ancient WGD events with respect to speciation events in a phylogeny,
 *ksrates* is user-friendly command-line tool and [Nextflow](https://github.com/nextflow-io/nextflow) pipeline to compare paralog and ortholog *K*<sub>S</sub> distributions derived from genomic or transcriptomic sequences. *ksrates* estimates differences in synonymous substitution rates among the lineages involved and generates an adjusted mixed plot of paralog and ortholog *K*<sub>S</sub> distributions that allows to assess the relative phylogenetic positioning of presumed WGD and speciation events.
 
 For more details, see:
-[Documentation](https://ksrates.readthedocs.io/)
-
 <!-- ***TODO:*** paper link -->
+[Documentation](https://ksrates.readthedocs.io/)
+[Tutorial](https://ksrates.readthedocs.io/en/latest/usage.html)  
+[FAQ](https://ksrates.readthedocs.io/en/latest/faqs.html)
 
 ## Quick start
 
@@ -35,6 +36,7 @@ To illustrate how to use *ksrates*, two example datasets are provided for a simp
 
 - [`test`](test): a small test dataset that contains only a small subset of the sequence data for each of the species and takes only a few minutes to be run. This is intended for a quick check of the tool only and can be run locally, e.g. on a laptop. The results are not very meaningful.
 
+See the Usage sections below and the [Tutorial](https://ksrates.readthedocs.io/en/latest/usage.html) for more detail.
 
 ### Nextflow pipeline
 
@@ -67,6 +69,7 @@ We briefly illustrate here how to run the *ksrates* Nextflow pipeline on the `te
 
 1. Get the example datasets.
     * Clone the repository to get the test datasets: 
+	<!-- ***TODO:*** or another data repo? -->
 		
             git clone https://github.com/VIB-PSB/ksrates
 
@@ -81,16 +84,18 @@ We briefly illustrate here how to run the *ksrates* Nextflow pipeline on the `te
 	* Running locally on a laptop/desktop:
 	
 		When using Singularity (recommended):
+		<!-- ***TODO:*** check command -->
 	
 			nextflow run VIB-PSB/ksrates --config config_elaeis.txt -with-singularity docker://vibpsb/ksrates:latest
 
 		Or when using Docker:
-	
+		<!-- ***TODO:*** check command -->
+
 			nextflow run VIB-PSB/ksrates --config config_elaeis.txt -with-docker vibpsb/ksrates:latest
 		  
 		The required `--config` parameter specifies the (path to the) pipeline configuration file for the *ksrates* analyses to be run. If the specified file does not exist (at the given path) a new template configuration file will be generated and the pipeline exits. Edit and fill in the generated configuration file (see the [full documentation](https://ksrates.readthedocs.io/) for more detail) and then rerun the same command above to relaunch the pipeline. 
 		
-		The dataset folder already contains a pre-filled *ksrates* pipeline configuration file for the oil palm example use case, `config_elaeis.txt`, therefore the above Nextflow command should directly launch the pipeline.
+		The dataset directory already contains a pre-filled *ksrates* pipeline configuration file for the oil palm example use case, `config_elaeis.txt`, therefore the above Nextflow command should directly launch the pipeline.
 
 	* Running on a compute cluster:
 	
@@ -99,7 +104,7 @@ We briefly illustrate here how to run the *ksrates* Nextflow pipeline on the `te
 		The `--config` parameter is the same as above.
 		
 	    The `-c` parameter specifies a Nextflow configuration file. This file contains settings to configure the compute cluster to be used and the pipelines resources on it such as number of CPUs and amount of memory. It also now configures whether to use the *ksrates* Singularity or Docker container. 
-	    Both example dataset folders already contain a template Nextflow configuration file called `custom_nextflow.config` that can be adapted to your resources. Other general template Nextflow configuration files can be found in the [doc](doc/source) folder in the repository.
+	    The dataset directory already contains a template Nextflow configuration file called `custom_nextflow.config` that can be adapted to your resources. Other general template Nextflow configuration files can be found in the [doc](doc/source) directory in the repository.
 
     	If the Nextflow configuration file is simply named `nextflow.config`, the configuration file will be automatically recognized and used without having to specify it using the `-c` parameter.
 
@@ -110,7 +115,7 @@ We briefly illustrate here how to run the *ksrates* Nextflow pipeline on the `te
 
 #### Installation
    
-1. Install either [Singularity](https://sylabs.io/guides/3.7/admin-guide/installation.html) (recommended, for more information click [here](https://ksrates.readthedocs.io/en/latest/installation.html#container-availability)) or [Docker](https://docs.docker.com/get-docker/). This is needed to run the *ksrates* Singularity or Docker container which contain *ksrates* and all other required software dependencies, so nothing else needs to be installed.
+Install either [Singularity](https://sylabs.io/guides/3.7/admin-guide/installation.html) (recommended, but see [here](https://ksrates.readthedocs.io/en/latest/installation.html#container-availability)) or [Docker](https://docs.docker.com/get-docker/). This is needed to run the *ksrates* Singularity or Docker container which contain *ksrates* and all other required software dependencies, so nothing else needs to be installed.
 The *ksrates* Singularity or Docker container will be automatically downloaded simply when you execute a *ksrates* command on the publicly accessible container for the first time, and they will be stored and reused for any further command executions.
 
 <!--
@@ -136,17 +141,19 @@ We briefly illustrate here how to run *ksrates* using the Singularity or Docker 
 2. Execute individual *ksrates* commands.
 -->
 
-*ksrates* comes with a command-line interface. Its basic syntax is:
+<!-- ***TODO:*** double-check this -->
 
-	ksrates [OPTIONS] COMMAND [ARGS]...
+* *ksrates* comes with a command-line interface. Its basic syntax is:
 
-To execute a *ksrates* command using the Singularity container the syntax is:
+		ksrates [OPTIONS] COMMAND [ARGS]...
 
-	singularity exec docker://vibpsb/ksrates ksrates [OPTIONS] COMMAND [ARGS]...
+* To execute a *ksrates* command using the Singularity container the syntax is:
 
-Or to execute a *ksrates* command using the Docker container the syntax is:
+		singularity exec docker://vibpsb/ksrates ksrates [OPTIONS] COMMAND [ARGS]...
 
-	docker run --rm -v $PWD:/temp -w /temp vibpsb/ksrates ksrates [OPTIONS] COMMAND [ARGS]...
+* Or to execute a *ksrates* command using the Docker container the syntax is:
+
+		docker run --rm -v $PWD:/temp -w /temp vibpsb/ksrates ksrates [OPTIONS] COMMAND [ARGS]...
 	
 
 Some example *ksrates* commands are:
@@ -165,14 +172,15 @@ Show usage and `ARGS` for a specific `COMMAND`:
 
 Run the ortholog *K*<sub>S</sub> analysis between two species using four threads/CPU cores:
 
-	ksrates orthologs-ks config_palm.txt elaeis oryza --n-threads 4
+	ksrates orthologs-ks config_elaeis.txt elaeis oryza --n-threads 4
 
 Please see the [full documentation](https://ksrates.readthedocs.io/) for more details and the complete set of commands.
 
 
 ## Support
 
-If you come across a bug or have any question or suggestion, please open an issue.
+If you come across a bug or have any question or suggestion, please open an [issue](https://github.com/VIB-PSB/ksrates/issues).
+
 <!-- ## Citation
 
 If you publish results generated using *ksrates*, please cite:
