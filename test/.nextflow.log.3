@@ -1,0 +1,219 @@
+Feb-28 18:00:49.273 [main] DEBUG nextflow.cli.Launcher - $> nextflow run ../main.nf --config config_elaeis.txt -with-docker ksrates
+Feb-28 18:00:49.359 [main] INFO  nextflow.cli.CmdRun - N E X T F L O W  ~  version 20.10.0
+Feb-28 18:00:49.381 [main] INFO  nextflow.cli.CmdRun - Launching `../main.nf` [extravagant_mahavira] - revision: 9ce05ce71f
+Feb-28 18:00:49.484 [main] DEBUG nextflow.config.ConfigBuilder - Enabling execution in Docker container as requested by cli option `-with-docker ksrates`
+Feb-28 18:00:49.542 [main] DEBUG nextflow.Session - Session uuid: b0ccfc0d-91b7-41c0-a0eb-e5ea38a05d63
+Feb-28 18:00:49.542 [main] DEBUG nextflow.Session - Run name: extravagant_mahavira
+Feb-28 18:00:49.545 [main] DEBUG nextflow.Session - Executor pool size: 8
+Feb-28 18:00:49.605 [main] DEBUG nextflow.cli.CmdRun - 
+  Version: 20.10.0 build 5430
+  Created: 01-11-2020 15:14 UTC (16:14 CEST)
+  System: Linux 5.4.0-66-generic
+  Runtime: Groovy 3.0.5 on OpenJDK 64-Bit Server VM 11.0.10+9-Ubuntu-0ubuntu1.20.04
+  Encoding: UTF-8 (UTF-8)
+  Process: 24351@Data [127.0.1.1]
+  CPUs: 8 - Mem: 7.7 GB (878.8 MB) - Swap: 8 GB (8 GB)
+Feb-28 18:00:49.644 [main] DEBUG nextflow.Session - Work-dir: /home/csensa/Desktop/ksrates/test/work [ext2/ext3]
+Feb-28 18:00:49.644 [main] DEBUG nextflow.Session - Script base path does not exist or is not a directory: /home/csensa/Desktop/ksrates/bin
+Feb-28 18:00:49.700 [main] DEBUG nextflow.Session - Observer factory: TowerFactory
+Feb-28 18:00:49.704 [main] DEBUG nextflow.Session - Observer factory: DefaultObserverFactory
+Feb-28 18:00:49.854 [main] DEBUG nextflow.Session - Session start invoked
+Feb-28 18:00:51.271 [main] DEBUG nextflow.script.ScriptRunner - > Launching execution
+Feb-28 18:00:51.281 [main] DEBUG nextflow.Session - Workflow process names [dsl1]: checkConfig, wgdParalogs, setParalogAnalysis, doRateCorrection, paralogsAnalyses, drawTree, wgdOrthologs, estimatePeak, setupCorrection, setOrthologAnalysis, plotOrthologDistrib
+Feb-28 18:00:51.302 [main] INFO  nextflow.Nextflow - 
+Feb-28 18:00:51.306 [main] INFO  nextflow.Nextflow - K S  R A T E  C O R R E C T I O N  -  N F   P I P E L I N E
+-----------------------------------------------------------
+
+Configuration file:                    config_elaeis.txt
+Logs folder:                           logs_b0ccfc0d
+Sequential mode:                       false
+Default threads per paralog process:   1
+Default threads per ortholog process:  1
+
+Feb-28 18:00:51.306 [main] INFO  nextflow.Nextflow - 
+Feb-28 18:00:51.307 [main] INFO  nextflow.Nextflow - Cmd line:       nextflow run ../main.nf --config config_elaeis.txt -with-docker ksrates
+Feb-28 18:00:51.307 [main] INFO  nextflow.Nextflow - Launch dir:     /home/csensa/Desktop/ksrates/test
+Feb-28 18:00:51.308 [main] INFO  nextflow.Nextflow - Work dir:       /home/csensa/Desktop/ksrates/test/work
+Feb-28 18:00:51.308 [main] INFO  nextflow.Nextflow - Project:        /home/csensa/Desktop/ksrates
+Feb-28 18:00:51.308 [main] INFO  nextflow.Nextflow - 
+Feb-28 18:00:51.393 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: local
+Feb-28 18:00:51.393 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Feb-28 18:00:51.398 [main] DEBUG nextflow.executor.Executor - [warm up] executor > local
+Feb-28 18:00:51.406 [main] DEBUG n.processor.LocalPollingMonitor - Creating local task monitor for executor 'local' > cpus=8; memory=7.7 GB; capacity=8; pollInterval=100ms; dumpInterval=5m
+Feb-28 18:00:51.636 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: local
+Feb-28 18:00:51.636 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Feb-28 18:00:51.654 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: local
+Feb-28 18:00:51.654 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Feb-28 18:00:51.671 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: local
+Feb-28 18:00:51.671 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Feb-28 18:00:51.693 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: null
+Feb-28 18:00:51.694 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Feb-28 18:00:51.716 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: null
+Feb-28 18:00:51.716 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Feb-28 18:00:51.743 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: null
+Feb-28 18:00:51.743 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Feb-28 18:00:51.783 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: null
+Feb-28 18:00:51.783 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Feb-28 18:00:51.793 [Task submitter] DEBUG nextflow.executor.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Feb-28 18:00:51.797 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: local
+Feb-28 18:00:51.797 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Feb-28 18:00:51.799 [Task submitter] INFO  nextflow.Session - [f2/564dcf] Submitted process > checkConfig
+Feb-28 18:00:51.807 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: null
+Feb-28 18:00:51.807 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Feb-28 18:00:51.815 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: local
+Feb-28 18:00:51.815 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'local'
+Feb-28 18:00:51.824 [main] DEBUG nextflow.script.ScriptRunner - > Await termination 
+Feb-28 18:00:51.824 [main] DEBUG nextflow.Session - Session await
+Feb-28 18:00:52.729 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 1; name: checkConfig; status: COMPLETED; exit: 0; error: -; workDir: /home/csensa/Desktop/ksrates/test/work/f2/564dcfb2fbceee932aa58bb59791f8]
+Feb-28 18:00:52.745 [Actor Thread 1] INFO  nextflow.Nextflow - Process setupCorrection (1) has 1 CPU available.
+Feb-28 18:00:52.781 [Task submitter] DEBUG nextflow.executor.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Feb-28 18:00:52.783 [Task submitter] INFO  nextflow.Session - [cd/eb863d] Submitted process > setupCorrection
+Feb-28 18:00:54.539 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 2; name: setupCorrection; status: COMPLETED; exit: 0; error: -; workDir: /home/csensa/Desktop/ksrates/test/work/cd/eb863dc4b31676a4ea417aac5b51ce]
+Feb-28 18:00:54.552 [Actor Thread 3] INFO  nextflow.Nextflow - [setupCorrection] [elaeis] Extracting ortholog pairs from Newick tree
+Feb-28 18:00:54.552 [Actor Thread 3] INFO  nextflow.Nextflow - [setupCorrection] Ortholog data in DB and / or TSV files not present for one or more species pair required for correction
+Feb-28 18:00:54.553 [Actor Thread 3] INFO  nextflow.Nextflow - [setupCorrection] Ortholog Ks analysis is scheduled
+Feb-28 18:00:54.553 [Actor Thread 3] INFO  nextflow.Nextflow - [setupCorrection] The species pair list can be found in [correction_analysis/elaeis/ortholog_pairs_elaeis.tsv]
+Feb-28 18:00:54.553 [Actor Thread 3] INFO  nextflow.Nextflow - [setupCorrection] [elaeis] log can be found in: correction_analysis/elaeis/logs_b0ccfc0d/setup_correction.log
+Feb-28 18:00:54.554 [Actor Thread 8] INFO  nextflow.Nextflow - Process setParalogAnalysis (1) has 1 CPU available.
+Feb-28 18:00:54.555 [Actor Thread 9] INFO  nextflow.Nextflow - Process setOrthologAnalysis (1) has 1 CPU available.
+Feb-28 18:00:54.571 [Task submitter] DEBUG nextflow.executor.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Feb-28 18:00:54.573 [Task submitter] INFO  nextflow.Session - [55/f2558c] Submitted process > setOrthologAnalysis
+Feb-28 18:00:54.579 [Task submitter] DEBUG nextflow.executor.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Feb-28 18:00:54.585 [Task submitter] INFO  nextflow.Session - [f8/80264c] Submitted process > setParalogAnalysis
+Feb-28 18:00:55.840 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 4; name: setOrthologAnalysis; status: COMPLETED; exit: 0; error: -; workDir: /home/csensa/Desktop/ksrates/test/work/55/f2558c2cd10f8fc3a13731acf4e2ac]
+Feb-28 18:00:55.841 [Task monitor] DEBUG nextflow.processor.TaskProcessor - Process `setOrthologAnalysis` is unable to find [UnixPath]: `/home/csensa/Desktop/ksrates/test/work/55/f2558c2cd10f8fc3a13731acf4e2ac/tmp_species_pairs_for_estimatePeak.txt` (pattern: `tmp_species_pairs_for_estimatePeak.txt`)
+Feb-28 18:00:55.921 [Actor Thread 7] INFO  nextflow.Nextflow - [setOrthologAnalysis] [elaeis – oryza] log can be found in: correction_analysis/elaeis/logs_b0ccfc0d/set_orthologs.log
+Feb-28 18:00:55.921 [Actor Thread 7] INFO  nextflow.Nextflow - [setOrthologAnalysis] [asparagus – elaeis] log can be found in: correction_analysis/elaeis/logs_b0ccfc0d/set_orthologs.log
+Feb-28 18:00:55.922 [Actor Thread 7] INFO  nextflow.Nextflow - [setOrthologAnalysis] [asparagus – oryza] log can be found in: correction_analysis/elaeis/logs_b0ccfc0d/set_orthologs.log
+Feb-28 18:00:55.922 [Task monitor] DEBUG nextflow.processor.TaskProcessor - Process setOrthologAnalysis > Skipping output binding because one or more optional files are missing: fileoutparam<2>
+Feb-28 18:00:55.928 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 3; name: setParalogAnalysis; status: COMPLETED; exit: 0; error: -; workDir: /home/csensa/Desktop/ksrates/test/work/f8/80264c8f37eb34483bac661fcad5ac]
+Feb-28 18:00:55.932 [Actor Thread 3] INFO  nextflow.Nextflow - Process wgdOrthologs (3) will use species pair asparagus – oryza and has 1 CPU available.
+Feb-28 18:00:55.933 [Actor Thread 6] INFO  nextflow.Nextflow - Process wgdParalogs (1) will use species elaeis and has 1 CPU available.
+Feb-28 18:00:55.934 [Actor Thread 8] INFO  nextflow.Nextflow - Process wgdOrthologs (1) will use species pair elaeis – oryza and has 1 CPU available.
+Feb-28 18:00:55.934 [Actor Thread 9] INFO  nextflow.Nextflow - Process wgdOrthologs (2) will use species pair asparagus – elaeis and has 1 CPU available.
+Feb-28 18:00:55.936 [Actor Thread 7] INFO  nextflow.Nextflow - [setParalogAnalysis] [elaeis] Organizing paralog wgd runs
+Feb-28 18:00:55.940 [Actor Thread 7] INFO  nextflow.Nextflow - [setParalogAnalysis] [elaeis] Paralog TSV file not found [elaeis.ks.tsv]; wgd pipeline will be started
+Feb-28 18:00:55.940 [Actor Thread 7] INFO  nextflow.Nextflow - [setParalogAnalysis] [elaeis] Anchor pairs TSV file not found [elaeis.ks_anchors.tsv]; wgd pipeline will be started
+Feb-28 18:00:55.941 [Actor Thread 7] INFO  nextflow.Nextflow - [setParalogAnalysis] [elaeis] log can be found in: correction_analysis/elaeis/logs_b0ccfc0d/wgd_paralogs.log
+Feb-28 18:00:55.958 [Task submitter] DEBUG nextflow.executor.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Feb-28 18:00:55.962 [Task submitter] INFO  nextflow.Session - [cf/4e982d] Submitted process > wgdOrthologs (2)
+Feb-28 18:00:55.966 [Task submitter] DEBUG nextflow.executor.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Feb-28 18:00:55.972 [Task submitter] INFO  nextflow.Session - [c2/7c5274] Submitted process > wgdOrthologs (3)
+Feb-28 18:00:55.981 [Task submitter] DEBUG nextflow.executor.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Feb-28 18:00:55.981 [Task submitter] INFO  nextflow.Session - [d1/14e0cd] Submitted process > wgdOrthologs (1)
+Feb-28 18:00:55.986 [Task submitter] DEBUG nextflow.executor.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Feb-28 18:00:55.994 [Task submitter] INFO  nextflow.Session - [93/a1afae] Submitted process > wgdParalogs
+Feb-28 18:01:16.634 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 6; name: wgdOrthologs (1); status: COMPLETED; exit: 0; error: -; workDir: /home/csensa/Desktop/ksrates/test/work/d1/14e0cdd39ae97a30c24a64b01768f7]
+Feb-28 18:01:16.640 [Actor Thread 12] INFO  nextflow.Nextflow - [wgdOrthologs] [elaeis – oryza] Sun Feb 28 17:00:57 UTC 2021
+Feb-28 18:01:16.640 [Actor Thread 12] INFO  nextflow.Nextflow - [wgdOrthologs] [elaeis – oryza] Starting ortholog wgd analysis
+Feb-28 18:01:16.641 [Actor Thread 12] INFO  nextflow.Nextflow - [wgdOrthologs] [elaeis – oryza] Using 1 threads
+Feb-28 18:01:16.641 [Actor Thread 12] INFO  nextflow.Nextflow - [wgdOrthologs] [elaeis – oryza] wgd done [0]
+Feb-28 18:01:16.641 [Actor Thread 12] INFO  nextflow.Nextflow - [wgdOrthologs] [elaeis – oryza] Computing ortholog peak and error
+Feb-28 18:01:16.641 [Actor Thread 12] INFO  nextflow.Nextflow - [wgdOrthologs] [elaeis – oryza] Compute peak done [0]
+Feb-28 18:01:16.644 [Actor Thread 12] INFO  nextflow.Nextflow - [wgdOrthologs] [elaeis – oryza] wgd log and compute peak log can be found in: correction_analysis/elaeis/logs_b0ccfc0d/wgd_orthologs_elaeis_oryza.log
+Feb-28 18:01:16.644 [Actor Thread 12] INFO  nextflow.Nextflow - [wgdOrthologs] [elaeis – oryza] Sun Feb 28 17:01:16 UTC 2021
+Feb-28 18:01:16.645 [Actor Thread 14] INFO  nextflow.Nextflow - Process doRateCorrection (2) will use species elaeis and has 1 CPU available.
+Feb-28 18:01:16.651 [Task submitter] DEBUG nextflow.executor.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Feb-28 18:01:16.651 [Task submitter] INFO  nextflow.Session - [db/8db3cc] Submitted process > doRateCorrection (2)
+Feb-28 18:01:17.698 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 11; name: doRateCorrection (2); status: COMPLETED; exit: 0; error: -; workDir: /home/csensa/Desktop/ksrates/test/work/db/8db3cc3ef060bbada4bac103690cd4]
+Feb-28 18:01:17.699 [Actor Thread 12] INFO  nextflow.Nextflow - [doRateCorrection] [elaeis] Sun Feb 28 17:01:17 UTC 2021
+Feb-28 18:01:17.699 [Actor Thread 12] INFO  nextflow.Nextflow - [doRateCorrection] [elaeis] Starting rate correction analysis
+Feb-28 18:01:17.699 [Actor Thread 12] INFO  nextflow.Nextflow - [doRateCorrection] [elaeis] Whole-paranome and anchor pair data do not yet exist -> skipping rate correction analysis
+Feb-28 18:01:17.699 [Actor Thread 12] INFO  nextflow.Nextflow - [doRateCorrection] [elaeis] Done
+Feb-28 18:01:17.699 [Actor Thread 12] INFO  nextflow.Nextflow - [doRateCorrection] [elaeis] Sun Feb 28 17:01:17 UTC 2021
+Feb-28 18:01:19.765 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 8; name: wgdOrthologs (3); status: COMPLETED; exit: 0; error: -; workDir: /home/csensa/Desktop/ksrates/test/work/c2/7c52743492b1fe38916b5a6b1974a0]
+Feb-28 18:01:19.768 [Actor Thread 16] INFO  nextflow.Nextflow - [wgdOrthologs] [asparagus – oryza] Sun Feb 28 17:00:56 UTC 2021
+Feb-28 18:01:19.768 [Actor Thread 16] INFO  nextflow.Nextflow - [wgdOrthologs] [asparagus – oryza] Starting ortholog wgd analysis
+Feb-28 18:01:19.768 [Actor Thread 16] INFO  nextflow.Nextflow - [wgdOrthologs] [asparagus – oryza] Using 1 threads
+Feb-28 18:01:19.768 [Actor Thread 16] INFO  nextflow.Nextflow - [wgdOrthologs] [asparagus – oryza] wgd done [0]
+Feb-28 18:01:19.768 [Actor Thread 16] INFO  nextflow.Nextflow - [wgdOrthologs] [asparagus – oryza] Computing ortholog peak and error
+Feb-28 18:01:19.768 [Actor Thread 16] INFO  nextflow.Nextflow - [wgdOrthologs] [asparagus – oryza] Compute peak done [0]
+Feb-28 18:01:19.768 [Actor Thread 16] INFO  nextflow.Nextflow - [wgdOrthologs] [asparagus – oryza] wgd log and compute peak log can be found in: correction_analysis/elaeis/logs_b0ccfc0d/wgd_orthologs_asparagus_oryza.log
+Feb-28 18:01:19.769 [Actor Thread 16] INFO  nextflow.Nextflow - [wgdOrthologs] [asparagus – oryza] Sun Feb 28 17:01:19 UTC 2021
+Feb-28 18:01:19.772 [Actor Thread 15] INFO  nextflow.Nextflow - Process doRateCorrection (3) will use species elaeis and has 1 CPU available.
+Feb-28 18:01:19.785 [Task submitter] DEBUG nextflow.executor.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Feb-28 18:01:19.785 [Task submitter] INFO  nextflow.Session - [8e/d2f7a8] Submitted process > doRateCorrection (3)
+Feb-28 18:01:20.651 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 12; name: doRateCorrection (3); status: COMPLETED; exit: 0; error: -; workDir: /home/csensa/Desktop/ksrates/test/work/8e/d2f7a8e94c5ee3d24ae4fdb1607cfa]
+Feb-28 18:01:20.654 [Actor Thread 16] INFO  nextflow.Nextflow - [doRateCorrection] [elaeis] Sun Feb 28 17:01:20 UTC 2021
+Feb-28 18:01:20.654 [Actor Thread 16] INFO  nextflow.Nextflow - [doRateCorrection] [elaeis] Starting rate correction analysis
+Feb-28 18:01:20.654 [Actor Thread 16] INFO  nextflow.Nextflow - [doRateCorrection] [elaeis] Whole-paranome and anchor pair data do not yet exist -> skipping rate correction analysis
+Feb-28 18:01:20.654 [Actor Thread 16] INFO  nextflow.Nextflow - [doRateCorrection] [elaeis] Done
+Feb-28 18:01:20.654 [Actor Thread 16] INFO  nextflow.Nextflow - [doRateCorrection] [elaeis] Sun Feb 28 17:01:20 UTC 2021
+Feb-28 18:01:32.497 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 7; name: wgdOrthologs (2); status: COMPLETED; exit: 0; error: -; workDir: /home/csensa/Desktop/ksrates/test/work/cf/4e982d16b66e5e5075d00a23378085]
+Feb-28 18:01:32.498 [Actor Thread 19] INFO  nextflow.Nextflow - [wgdOrthologs] [asparagus – elaeis] Sun Feb 28 17:00:56 UTC 2021
+Feb-28 18:01:32.499 [Actor Thread 19] INFO  nextflow.Nextflow - [wgdOrthologs] [asparagus – elaeis] Starting ortholog wgd analysis
+Feb-28 18:01:32.499 [Actor Thread 19] INFO  nextflow.Nextflow - [wgdOrthologs] [asparagus – elaeis] Using 1 threads
+Feb-28 18:01:32.499 [Actor Thread 19] INFO  nextflow.Nextflow - [wgdOrthologs] [asparagus – elaeis] wgd done [0]
+Feb-28 18:01:32.499 [Actor Thread 19] INFO  nextflow.Nextflow - [wgdOrthologs] [asparagus – elaeis] Computing ortholog peak and error
+Feb-28 18:01:32.499 [Actor Thread 19] INFO  nextflow.Nextflow - [wgdOrthologs] [asparagus – elaeis] Compute peak done [0]
+Feb-28 18:01:32.502 [Actor Thread 19] INFO  nextflow.Nextflow - [wgdOrthologs] [asparagus – elaeis] wgd log and compute peak log can be found in: correction_analysis/elaeis/logs_b0ccfc0d/wgd_orthologs_asparagus_elaeis.log
+Feb-28 18:01:32.502 [Actor Thread 19] INFO  nextflow.Nextflow - [wgdOrthologs] [asparagus – elaeis] Sun Feb 28 17:01:32 UTC 2021
+Feb-28 18:01:32.504 [Actor Thread 21] INFO  nextflow.Nextflow - Process doRateCorrection (4) will use species elaeis and has 1 CPU available.
+Feb-28 18:01:32.506 [Actor Thread 20] INFO  nextflow.Nextflow - Process plotOrthologDistrib (2) has 1 CPU available.
+Feb-28 18:01:32.510 [Task submitter] DEBUG nextflow.executor.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Feb-28 18:01:32.510 [Task submitter] INFO  nextflow.Session - [82/9cc27c] Submitted process > doRateCorrection (4)
+Feb-28 18:01:32.514 [Task submitter] DEBUG nextflow.executor.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Feb-28 18:01:32.515 [Task submitter] INFO  nextflow.Session - [c8/162398] Submitted process > plotOrthologDistrib (2)
+Feb-28 18:01:33.845 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 13; name: doRateCorrection (4); status: COMPLETED; exit: 0; error: -; workDir: /home/csensa/Desktop/ksrates/test/work/82/9cc27c256bdb57241e38a731f0b036]
+Feb-28 18:01:33.846 [Actor Thread 21] INFO  nextflow.Nextflow - [doRateCorrection] [elaeis] Sun Feb 28 17:01:33 UTC 2021
+Feb-28 18:01:33.846 [Actor Thread 21] INFO  nextflow.Nextflow - [doRateCorrection] [elaeis] Starting rate correction analysis
+Feb-28 18:01:33.847 [Actor Thread 21] INFO  nextflow.Nextflow - [doRateCorrection] [elaeis] Whole-paranome and anchor pair data do not yet exist -> skipping rate correction analysis
+Feb-28 18:01:33.847 [Actor Thread 21] INFO  nextflow.Nextflow - [doRateCorrection] [elaeis] Done
+Feb-28 18:01:33.847 [Actor Thread 21] INFO  nextflow.Nextflow - [doRateCorrection] [elaeis] Sun Feb 28 17:01:33 UTC 2021
+Feb-28 18:01:37.256 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 14; name: plotOrthologDistrib (2); status: COMPLETED; exit: 0; error: -; workDir: /home/csensa/Desktop/ksrates/test/work/c8/162398ab568d26ea07f6444f1c9bac]
+Feb-28 18:01:37.257 [Actor Thread 20] INFO  nextflow.Nextflow - [plotOrthologDistrib] [elaeis] Sun Feb 28 17:01:33 UTC 2021
+Feb-28 18:01:37.257 [Actor Thread 20] INFO  nextflow.Nextflow - [plotOrthologDistrib] [elaeis] Plotting ortholog distributions
+Feb-28 18:01:37.257 [Actor Thread 20] INFO  nextflow.Nextflow - [plotOrthologDistrib] [elaeis] Done [0]
+Feb-28 18:01:37.257 [Actor Thread 20] INFO  nextflow.Nextflow - [plotOrthologDistrib] [elaeis] log can be found in: correction_analysis/elaeis/logs_b0ccfc0d/plot_ortholog_distributions.log
+Feb-28 18:01:37.258 [Actor Thread 20] INFO  nextflow.Nextflow - [plotOrthologDistrib] [elaeis] Sun Feb 28 17:01:36 UTC 2021
+Feb-28 18:02:22.307 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 9; name: wgdParalogs; status: COMPLETED; exit: 0; error: -; workDir: /home/csensa/Desktop/ksrates/test/work/93/a1afaef998e5debebfa2b0c90fb02b]
+Feb-28 18:02:22.309 [Actor Thread 25] INFO  nextflow.Nextflow - [wgdParalogs] [elaeis] Sun Feb 28 17:00:57 UTC 2021
+Feb-28 18:02:22.309 [Actor Thread 25] INFO  nextflow.Nextflow - [wgdParalogs] [elaeis] Starting paralog wgd analysis
+Feb-28 18:02:22.309 [Actor Thread 25] INFO  nextflow.Nextflow - [wgdParalogs] [elaeis] Using 1 threads
+Feb-28 18:02:22.309 [Actor Thread 25] INFO  nextflow.Nextflow - [wgdParalogs] [elaeis] Done [0]
+Feb-28 18:02:22.309 [Actor Thread 25] INFO  nextflow.Nextflow - [wgdParalogs] [elaeis] wgd log can be found in: correction_analysis/elaeis/logs_b0ccfc0d/wgd_paralogs.log
+Feb-28 18:02:22.309 [Actor Thread 25] INFO  nextflow.Nextflow - [wgdParalogs] [elaeis] Sun Feb 28 17:02:21 UTC 2021
+Feb-28 18:02:22.313 [Actor Thread 26] INFO  nextflow.Nextflow - Process doRateCorrection (5) will use species elaeis and has 1 CPU available.
+Feb-28 18:02:22.317 [Task submitter] DEBUG nextflow.executor.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Feb-28 18:02:22.317 [Task submitter] INFO  nextflow.Session - [db/1a8a22] Submitted process > doRateCorrection (5)
+Feb-28 18:02:25.938 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 15; name: doRateCorrection (5); status: COMPLETED; exit: 0; error: -; workDir: /home/csensa/Desktop/ksrates/test/work/db/1a8a22ba73f2eeab3f3c428c6084fd]
+Feb-28 18:02:25.941 [Actor Thread 25] INFO  nextflow.Nextflow - [doRateCorrection] [elaeis] Sun Feb 28 17:02:22 UTC 2021
+Feb-28 18:02:25.942 [Actor Thread 25] INFO  nextflow.Nextflow - [doRateCorrection] [elaeis] Starting rate correction analysis
+Feb-28 18:02:25.943 [Actor Thread 25] INFO  nextflow.Nextflow - [doRateCorrection] [elaeis] Performing correction
+Feb-28 18:02:25.943 [Actor Thread 25] INFO  nextflow.Nextflow - [doRateCorrection] [elaeis] Plotting mixed distributions
+Feb-28 18:02:25.943 [Actor Thread 25] INFO  nextflow.Nextflow - [doRateCorrection] [elaeis] Done [0]
+Feb-28 18:02:25.944 [Actor Thread 25] INFO  nextflow.Nextflow - [doRateCorrection] [elaeis] log can be found in: correction_analysis/elaeis/logs_b0ccfc0d/rate_correction.log
+Feb-28 18:02:25.944 [Actor Thread 25] INFO  nextflow.Nextflow - [doRateCorrection] [elaeis] Sun Feb 28 17:02:25 UTC 2021
+Feb-28 18:02:25.966 [Task submitter] DEBUG nextflow.executor.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Feb-28 18:02:25.966 [Task submitter] INFO  nextflow.Session - [37/2609ea] Submitted process > drawTree
+Feb-28 18:02:25.972 [Task submitter] DEBUG nextflow.executor.LocalTaskHandler - Launch cmd line: /bin/bash -ue .command.run
+Feb-28 18:02:25.973 [Task submitter] INFO  nextflow.Session - [c5/315419] Submitted process > paralogsAnalyses
+Feb-28 18:02:27.848 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 17; name: drawTree; status: COMPLETED; exit: 0; error: -; workDir: /home/csensa/Desktop/ksrates/test/work/37/2609eac0ee4fc343e5f05e422c4995]
+Feb-28 18:02:27.850 [Actor Thread 24] INFO  nextflow.Nextflow - [drawTree] [elaeis] Sun Feb 28 17:02:26 UTC 2021
+Feb-28 18:02:27.850 [Actor Thread 24] INFO  nextflow.Nextflow - [drawTree] [elaeis] Plotting tree with branch length proportional to relative rates
+Feb-28 18:02:27.850 [Actor Thread 24] INFO  nextflow.Nextflow - [drawTree] [elaeis] Done [0]
+Feb-28 18:02:27.850 [Actor Thread 24] INFO  nextflow.Nextflow - [drawTree] [elaeis] log can be found in: correction_analysis/elaeis/logs_b0ccfc0d/rate_correction.log
+Feb-28 18:02:27.850 [Actor Thread 24] INFO  nextflow.Nextflow - [drawTree] [elaeis] Sun Feb 28 17:02:27 UTC 2021
+Feb-28 18:02:41.827 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 16; name: paralogsAnalyses; status: COMPLETED; exit: 0; error: -; workDir: /home/csensa/Desktop/ksrates/test/work/c5/315419f15a04401afae825cf1a4adf]
+Feb-28 18:02:41.828 [main] DEBUG nextflow.Session - Session await > all process finished
+Feb-28 18:02:41.829 [main] DEBUG nextflow.Session - Session await > all barriers passed
+Feb-28 18:02:41.829 [Actor Thread 30] INFO  nextflow.Nextflow - [paralogsAnalyses] [elaeis] Sun Feb 28 17:02:26 UTC 2021
+Feb-28 18:02:41.829 [Actor Thread 30] INFO  nextflow.Nextflow - [paralogsAnalyses] [elaeis] Performing WGM peak calling
+Feb-28 18:02:41.829 [Actor Thread 30] INFO  nextflow.Nextflow - [paralogsAnalyses] [elaeis] Done [0]
+Feb-28 18:02:41.829 [Actor Thread 30] INFO  nextflow.Nextflow - [paralogsAnalyses] [elaeis] log can be found in: correction_analysis/elaeis/logs_b0ccfc0d/paralogs_analyses.log
+Feb-28 18:02:41.829 [Actor Thread 30] INFO  nextflow.Nextflow - [paralogsAnalyses] [elaeis] Sun Feb 28 17:02:41 UTC 2021
+Feb-28 18:02:41.830 [main] INFO  nextflow.Nextflow - 
+Feb-28 18:02:41.830 [main] INFO  nextflow.Nextflow - Logs folder: logs_b0ccfc0d
+Feb-28 18:02:41.831 [main] INFO  nextflow.Nextflow - Cleaning up any temporary files left behind...
+Feb-28 18:02:41.832 [main] DEBUG nextflow.Nextflow - No such file: /home/csensa/Desktop/ksrates/paralog_distributions/ -- Skipping visit
+Feb-28 18:02:41.833 [main] DEBUG nextflow.Nextflow - No such file: /home/csensa/Desktop/ksrates/ortholog_distributions/ -- Skipping visit
+Feb-28 18:02:41.834 [main] INFO  nextflow.Nextflow - Done.
+Feb-28 18:02:41.834 [main] INFO  nextflow.Nextflow - 
+Feb-28 18:02:41.834 [main] INFO  nextflow.Nextflow - Pipeline completed at: 2021-02-28T18:02:41.829851+01:00 taking 1m 52s
+Feb-28 18:02:41.834 [main] INFO  nextflow.Nextflow - Execution status: OK
+Feb-28 18:02:41.834 [main] INFO  nextflow.Nextflow - 
+Feb-28 18:02:41.834 [main] INFO  nextflow.Nextflow - 
+Feb-28 18:02:41.838 [main] DEBUG nextflow.trace.WorkflowStatsObserver - Workflow completed > WorkflowStats[succeededCount=15; failedCount=0; ignoredCount=0; cachedCount=0; pendingCount=0; submittedCount=0; runningCount=0; retriesCount=0; abortedCount=0; succeedDuration=3m 21s; failedDuration=0ms; cachedDuration=0ms;loadCpus=0; loadMemory=0; peakRunning=4; peakCpus=4; peakMemory=0; ]
+Feb-28 18:02:41.869 [main] DEBUG nextflow.CacheDB - Closing CacheDB done
+Feb-28 18:02:41.874 [main] DEBUG nextflow.util.SpuriousDeps - AWS S3 uploader shutdown
+Feb-28 18:02:41.883 [main] DEBUG nextflow.script.ScriptRunner - > Execution complete -- Goodbye

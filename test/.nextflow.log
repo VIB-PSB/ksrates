@@ -1,0 +1,12 @@
+Feb-28 19:58:23.367 [main] DEBUG nextflow.cli.Launcher - $> nextflow run VIB-PSB/ksrates --config config_elaeis.txt -with-docker 'vibpsb/ksrates:latest'
+Feb-28 19:58:23.452 [main] INFO  nextflow.cli.CmdRun - N E X T F L O W  ~  version 20.10.0
+Feb-28 19:58:23.486 [main] DEBUG nextflow.scm.AssetManager - Project manifest does not exist: /home/csensa/.nextflow/assets/VIB-PSB/ksrates/nextflow.config (No such file or directory)
+Feb-28 19:58:23.493 [main] DEBUG nextflow.scm.AssetManager - Git config: /home/csensa/.nextflow/assets/VIB-PSB/ksrates/.git/config; branch: master; remote: origin; url: https://github.com/VIB-PSB/ksrates.git
+Feb-28 19:58:23.530 [main] DEBUG nextflow.scm.AssetManager - Git config: /home/csensa/.nextflow/assets/VIB-PSB/ksrates/.git/config; branch: master; remote: origin; url: https://github.com/VIB-PSB/ksrates.git
+Feb-28 19:58:23.599 [main] DEBUG nextflow.cli.Launcher - Operation aborted
+nextflow.exception.AbortOperationException: Project `VIB-PSB/ksrates` currently is sticked on revision: main -- you need to specify explicitly a revision with the option `-r` to use it
+	at nextflow.scm.AssetManager.checkout(AssetManager.groovy:903)
+	at nextflow.cli.CmdRun.getScriptFile(CmdRun.groovy:350)
+	at nextflow.cli.CmdRun.run(CmdRun.groovy:249)
+	at nextflow.cli.Launcher.run(Launcher.groovy:466)
+	at nextflow.cli.Launcher.main(Launcher.groovy:648)
