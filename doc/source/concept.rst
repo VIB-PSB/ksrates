@@ -30,7 +30,7 @@ From the perspective of palm history there are two divergence events (i.e. ortho
 
 Further on, the pipeline breaks down the trios into the three possible species pairs they are composed of, which in this case are palm-rice, palm-asparagus and rice-asparagus. ``wgd`` package then estimates the ortholog *K*:sub:`S` distribution for each of them. The ortholog distributions are simplified to a vertical line centered on their peak value (Figure 1).
 
-.. figure:: figures/ortholog_distribution_peak.pdf
+.. figure:: _images/ortholog_distribution_peak.pdf
     :align: center
     :width: 200
 
@@ -38,7 +38,7 @@ Further on, the pipeline breaks down the trios into the three possible species p
     
 The RRT uses the *K*:sub:`S` values of the three ortholog peaks to compute the relative rates of the divergent pair: palm has a relative rate of about 0.36 while rice of 1.17, therefore palm accumulates substitution much more slowly than rice. Lastly, the rate-adjustment reinterprets the ortholog *K*:sub:`S` peak of palm-rice by encoding it as twice the relative rate of palm (*K*:sub:`S`' = 0.73). The ortholog peak has therefore been largely shifted to the left from 1.53 to 0.73 *K*:sub:`S` (Figure 2), and it is now adapted to the slow scale of palm paralog distribution. The shift has important consequences in the interpretation of the mixed plot concerning the older WGD signal around 0.9 *K*:sub:`S`.
 
-.. figure:: figures/mixed_palm_corrected.pdf
+.. figure:: _images/mixed_palm_corrected.pdf
     :align: center
     :width: 550
 
