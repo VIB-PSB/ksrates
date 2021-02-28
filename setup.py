@@ -11,11 +11,11 @@ setup(
     name='ksrates',
     version='0.1',
     packages=['ksrates', 'wgd'],
-    url='xxx',
-    license='xxx',
-    author='xxx',
-    author_email='xxx@psb.vib-ugent.be',
-    description='Command line tool for substitution rate-correction of mixed Ks distributions.',
+    url='https://github.com/VIB-PSB/ksrates',
+    license='GNU GPL v3.0',
+    author='Cecilia Sensalari, Steven Maere, Rolf Lohaus',
+    author_email='steven.maere@ugent.vib.be, rolf.lohaus@ugent.vib.be',
+    description='Command line tool for substitution rate-adjustment in mixed paralog-ortholog Ks distributions.',
     long_description=long_description,
     package_data={
         'ksrates': ['ks.mplstyle']
