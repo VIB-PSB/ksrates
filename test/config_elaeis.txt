@@ -1,0 +1,65 @@
+[SPECIES]
+species = elaeis
+# informal name of the species of interest from the input tree
+
+newick_tree = ((elaeis, oryza), asparagus);
+# input phylogenetic tree in newick format; use the informal names
+
+latin_names = elaeis: Elaeis guineensis, oryza: Oryza sativa, asparagus: Asparagus officinalis
+# informal names associated to their latin name through a colon and separated by comma
+
+fasta_filenames =  elaeis: elaeis.fasta, oryza: oryza.fasta, asparagus: asparagus.fasta
+gff_filenames = elaeis: elaeis.gff3
+# informal names associated to their filename/path through a colon and separated by comma
+
+peak_database_path = ortholog_peak_db.tsv
+ks_list_database_path = ortholog_ks_list_db.tsv
+# filenames/paths of the ortholog data databases
+
+
+[ANALYSIS SETTING]
+paranome = yes
+colinearity = yes
+# analysis type for paralog data; allowed values: 'yes' or 'no'
+
+gff_feature = mrna
+# keyword to parse the sequence type from the gff file (column 3); can be 'gene', 'mrna'...
+
+gff_attribute = id
+# keyword to parse gene id from the gff file (column 9); can be 'id', 'name'...
+
+max_number_outspecies = 4
+# maximum number of outspecies/trios selected to correct each divergent species pair (default: 4)
+
+consensus_peak_for_multiple_outgroups = mean among outgroups
+# allowed values: 'mean among outgroups' or 'best outgroup' (default: 'mean among outgroups')
+
+
+[PARAMETERS]
+x_axis_max_limit_paralogs_plot = 5
+# highest value of the x axis in the mixed distribution plot (default: 5)
+
+bin_width_para = 0.1
+# bin width in paralog ks histograms (default: 0.1, ten bins per unit)
+
+y_axis_limit_paralogs_plot = None
+# highest value of the y axis in the mixed distribution plot  (default: none)
+
+num_iterations = 10
+# number of bootstrap iterations for ortholog peak estimate
+
+divergence_colors =  Red, MediumBlue, Goldenrod, Crimson, ForestGreen, Gray, SaddleBrown, Black
+# color of the divergence lines drawn in correspondence of the ortholog peaks
+# use color names/codes separated by comma and use at least as many colors as the number of divergence nodes
+
+x_axis_max_limit_orthologs_plots = 5
+# highest value of the x axis in the ortholog distribution plots (default: 5)
+
+bin_width_ortho = 0.1
+# bin width in ortholog ks histograms (default: 0.1, ten bins per unit)
+
+max_ks_para = 5
+# maximum paralog ks value accepted from ks data table (default: 5)
+
+max_ks_ortho = 10
+# maximum ortholog ks value accepted from ks data table (default: 10)

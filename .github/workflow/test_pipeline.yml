@@ -1,0 +1,43 @@
+name: ksrates Nextflow pipeline CI
+
+# Controls when the action will run. 
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch: 
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+      
+      # Runs commands using the runners shell
+      - name: Building dependency Docker container
+        # Temporarly builds here the container
+        # When the container will be public, it will be pulled from Docker Hub
+        run: docker build . --file Dockerfile --tag ksrates
+
+      - name: Installing Nextflow
+        run: |
+          sudo apt-get install wget
+          sudo apt-get install default-jdk
+          sudo wget -qO- https://get.nextflow.io | bash
+          sudo mv nextflow /usr/bin
+            
+      - name: Running ksrates Nextflow pipeline
+        run: |
+          cd test
+          nextflow run ../main.nf --config config_palm.txt -with-docker ksrates
+        
+      - name: Visualize output files
+        run: ls -l test/correction_analysis/palm
