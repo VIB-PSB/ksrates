@@ -1,3 +1,6 @@
+[![Test pipeline CI](https://github.com/VIB-PSB/ksrates/actions/workflows/test_pipeline.yml/badge.svg)](https://github.com/VIB-PSB/ksrates/actions/workflows/test_pipeline.yml)
+[![Push DockerHub CI](https://github.com/VIB-PSB/ksrates/actions/workflows/push_container.yml/badge.svg)](https://github.com/VIB-PSB/ksrates/actions/workflows/push_container.yml)
+
 VIB-UGent Center for Plant Systems Biology---[Evolutionary Systems Biology Lab](http://www.psb.ugent.be/esb)
 
 # ksrates
