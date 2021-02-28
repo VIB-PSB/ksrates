@@ -745,7 +745,7 @@ process doRateCorrection {
     echo "NF internal work directory for [doRateCorrection (${task.index})] process:\n\$processDir\n" >> $logs_folder/rate_correction.log
 
     echo "[$species] Performing correction"
-    ksrates orthologs-correction ${config} >> $logs_folder/rate_correction.log 2>&1
+    ksrates orthologs-adjustment ${config} >> $logs_folder/rate_correction.log 2>&1
     echo "\n" >> $logs_folder/rate_correction.log
 
     echo "[$species] Plotting mixed distributions"
