@@ -16,8 +16,10 @@ To position ancient WGD events with respect to speciation events in a phylogeny,
 
 *ksrates* is user-friendly command-line tool and [Nextflow](https://github.com/nextflow-io/nextflow) pipeline to compare paralog and ortholog *K*<sub>S</sub> distributions derived from genomic or transcriptomic sequences. *ksrates* estimates differences in synonymous substitution rates among the lineages involved and generates an adjusted mixed plot of paralog and ortholog *K*<sub>S</sub> distributions that allows to assess the relative phylogenetic positioning of presumed WGD and speciation events.
 
-For more details, see:
-<!-- ***TODO:*** paper link -->
+For more details, see our [preprint](https://www.biorxiv.org/content/10.1101/2021.02.28.433234v1) and the documentation below.
+
+## Documentation
+
 [Documentation](https://ksrates.readthedocs.io/)\
 [Tutorial](https://ksrates.readthedocs.io/en/latest/usage.html)\
 [FAQ](https://ksrates.readthedocs.io/en/latest/faqs.html)
@@ -74,7 +76,7 @@ We briefly illustrate here how to run the *ksrates* Nextflow pipeline on the `te
 
     2. You may want to copy the dataset folder you want to use to another location, for example your home folder, and then change to that folder:
 
-           mv ksrates/test ~
+           cp ksrates/test ~
            cd ~/test
 
 2. Launch the *ksrates* Nextflow pipeline.
@@ -178,15 +180,13 @@ Please see the [full documentation](https://ksrates.readthedocs.io/) for more de
 
 If you come across a bug or have any question or suggestion, please open an [issue](https://github.com/VIB-PSB/ksrates/issues).
 
-<!-- ## Citation
+
+## Citation
 
 If you publish results generated using *ksrates*, please cite:
 
->__*ksrates*: positioning whole-genome duplications relative to speciation events using rate-adjusted mixed paralog--ortholog *K*<sub>S</sub> distributions__  
->Cecilia Sensalari, Steven Maere, and Rolf Lohaus  
->bioRxiv, February 28, 2021  
-
-***TODO:*** add link -->
+Sensalari, C., Maere, S., and Lohaus, R. (2021) *ksrates*: positioning whole-genome duplications relative to speciation events using rate-adjusted mixed paralog&ndash;ortholog *K*<sub>S</sub> distributions. *bioRxiv* 2021.02.28.433234 [doi: 10.1101/2021.02.28.433234](https://doi.org/10.1101/2021.02.28.433234)
+>This article is a preprint and has not been certified by peer review [[what does this mean?](https://www.biorxiv.org/content/what-unrefereed-preprint)].
 
 <!--
 ## Acknowledgements
