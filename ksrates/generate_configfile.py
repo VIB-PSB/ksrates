@@ -11,7 +11,7 @@ def generate_configfile(configfile_name):
     Config = configparser.ConfigParser(allow_no_value=True)
 
     Config.add_section("SPECIES")
-    Config.set("SPECIES", "species", "")
+    Config.set("SPECIES", "focal_species", "")
     Config.set("SPECIES", "# informal name of the species that will be used to perform the rate-correction\n")
 
     Config.set("SPECIES", "newick_tree", "();")

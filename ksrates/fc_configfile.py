@@ -98,13 +98,13 @@ class Configuration:
 
     def get_species(self):
         """
-        Gets the config file field of the name of the species of interest.
-        The species of interest is one of the leaves of the input tree and is the one\\
+        Gets the config file field of the name of the focal species.
+        The focal species is one of the leaves of the input tree and is the one\\
         whose paralog distribution is plotted and which the correction will be relative to. 
 
         :return species: informal species name 
         """
-        species = self.config.get("SPECIES", "species")
+        species = self.config.get("SPECIES", "focal_species")
         return species
 
     def get_newick_tree(self):
@@ -214,11 +214,11 @@ class Configuration:
 
     def get_gff_name(self, gff_dict, species):
         """
-        Gets the path to the GFF file of the species of interest from the dictionary.
+        Gets the path to the GFF file of the focal species from the dictionary.
         If the value is an empty string, it applies the fallback filename "species + .gff".
 
         :param fasta_dict: Python dictionary that associates each informal species name to the path of its FASTA file 
-        :param species: the informal name of the species of interest
+        :param species: the informal name of the focal species
         :return: the GFF file path
         """
         if gff_dict == {}:
@@ -303,7 +303,7 @@ class Configuration:
 
     def get_paranome(self):
         """
-        Gets the config file field specifying if the mixed distribution will show or not the whole-paranome of the species of interest.
+        Gets the config file field specifying if the mixed distribution will show or not the whole-paranome of the focal species.
 
         :return boolean: flags whether the paranome analysis is required
         """
@@ -318,7 +318,7 @@ class Configuration:
 
     def get_colinearity(self):
         """
-        Gets the config file field specifying if the mixed distribution will show or not the anchor pairs of the species of interest.
+        Gets the config file field specifying if the mixed distribution will show or not the anchor pairs of the focal species.
 
         :return boolean: flags whether the colinearity analysis is required
         """
@@ -433,7 +433,7 @@ class Configuration:
         Gets the config file field of the color list for the divergence lines.
         All the divergence lines coming from the same divergence node in the tree share the
         same color. The first color of the list is assigned to the first internal node 
-        encountered when going from the species of interest leaf up to the root. The second color 
+        encountered when going from the focal species leaf up to the root. The second color 
         is assigned to the second internal node encountered along this path, and so on.
         There must be at least as many colors as the number of divergence nodes.
 

@@ -1,6 +1,6 @@
 [SPECIES]
-species = elaeis
-# informal name of the species of interest from the input tree
+focal_species = elaeis
+# informal name of the focal species from the input tree
 
 newick_tree = ((elaeis, oryza), asparagus);
 # input phylogenetic tree in newick format; use the informal names

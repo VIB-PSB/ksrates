@@ -105,7 +105,7 @@ def plot_orthologs_distr(config_file, trios_file):
                 ks_list = literal_eval(ks_list_db.at[species_out, 'Ks_Values'])
                 # run again the bootstrap, only 20 times (very quick) to get the KDE lines
                 # to be plotted onto the ortholog distribution
-                logging.info(f"  Calculating KDEs for species of interest and outspecies [{latinSpecies} - {latinOut}]")
+                logging.info(f"  Calculating KDEs for focal species and outspecies [{latinSpecies} - {latinOut}]")
                 bootstrap_kde = fcPeak.bootstrap_KDE(ks_list, 20, x_lim, bin_width_ortho)
                 # Plotting Ks lists and their KDE lines
                 fcPlot.plot_orthologs_histogram_kdes(ks_list, bin_list_ortho, bin_width_ortho, axes[0, 1], axes[1, 1],

@@ -19,7 +19,7 @@ def setup_correction(config_file, nextflow_flag):
     # Check configfile
     species_of_interest = config.get_species()
     original_tree = config.get_newick_tree()
-    tree = fcTree.reorder_tree_leaves(original_tree, species_of_interest)  # species of interest is the top leaf
+    tree = fcTree.reorder_tree_leaves(original_tree, species_of_interest)  # focal species is the top leaf
     fasta_dict = config.get_fasta_dict()
     gff_dict = config.get_gff_dict(warn_empty_dict=False)
     latin_names = config.get_latin_names()
@@ -71,23 +71,23 @@ def setup_correction(config_file, nextflow_flag):
         logging.info(f"- Each divergent species pair will be corrected by using all the possible outspecies "
                      f"found in the tree.")
 
-    # get tree node object of the species of interest
+    # get tree node object of the focal species
     species_of_interest_node = fcTree.get_species_node(species_of_interest, tree)
-    # get the list of ancestors (as tree node objects) in the lineage that lead to the species of interest
+    # get the list of ancestors (as tree node objects) in the lineage that lead to the focal species
     sp_history = fcTree.get_species_history(species_of_interest_node)
-    # Checking if the species of interest has at least one outgroup in the provided tree
+    # Checking if the focal species has at least one outgroup in the provided tree
     if len(sp_history)-2 == 0:
         logging.error("")
         logging.error(f"Species [{species_of_interest}] has no outgroup in the provided Newick tree "
                       f"and the rate-correction can't be performed.")
-        logging.error(f"Please add at least one outgroup species or change the species of interest.")
+        logging.error(f"Please add at least one outgroup species or change the focal species.")
         sys.exit(1)
 
     trios_array = []  # list of trios
     outfile_drawing_path = os.path.join("correction_analysis", f"{species_of_interest}",
                                         f"tree_{species_of_interest}.txt")
     with open(outfile_drawing_path, "w+") as outfile_drawing:
-        outfile_drawing.write(f"Species of interest: {species_of_interest}\n\n")
+        outfile_drawing.write(f"Focal species: {species_of_interest}\n\n")
 
         # Obtaining the numeric labels for internal nodes relevant in the species analysis
         fcTree.labeling_internal_nodes(species_of_interest_node)
@@ -106,7 +106,7 @@ def setup_correction(config_file, nextflow_flag):
             outspecies = fcTree.get_outspecies_of_a_node(currentnode, max_num_outspecies)
             outfile_drawing.write(f"Outgroup species:    {', '.join(outspecies)}\n\n")
 
-            # APPENDING TRIOS (a trio is composed of species of interest, sister species and outgroup species)
+            # APPENDING TRIOS (a trio is composed of focal species, sister species and outgroup species)
             for s in sisters:
                 for o in outspecies:
                     trios_array.append([node+1, species_of_interest, s, o])

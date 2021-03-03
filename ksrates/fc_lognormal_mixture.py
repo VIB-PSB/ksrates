@@ -240,7 +240,7 @@ def lmm(
     :param max_x_axis_lim: upper limit in the x-axis 
     :param data_type: strings stating whether the data are "paralogs" or "anchor pairs"
     :param tsv_file: wgd output file containing either paranome or anchor pairs Ks values (suffix formats: ".ks.tsv", "ks_anchors.tsv")
-    :param species: informal name of the species of interest
+    :param species: informal name of the focal species
     :param axis: axis object
     :param ks_range: Ks range used for models
     :param components: number of components to use (tuple: (min, max))
@@ -317,7 +317,7 @@ def save_lmm(fig, axis, species, best_model, datatype):
 
     :param fig: figure object of the corrected mixed distribution
     :param axis: axis object of the corrected mixed distribution
-    :param species: species of interest
+    :param species: focal species
     :param datatype: string for figure title stating whether data is paranome or comes from "colinearity" analysis
     """
     num_mixture_model_lines = len(best_model.means_) + 1 # components + total PDF
@@ -336,7 +336,7 @@ def make_parameter_table_file(parameter_table, species, datatype):
   Generates the text output file with the dataframe containing all component parameters.
 
   :param parameter_table: list collecting the component parameters
-  :param species: informal name of the species of interest
+  :param species: informal name of the focal species
   :param datatype: string for figure title stating whether data is paranome or comes from "colinearity" analysis
   """
   #headers = ["Model", "Iteration", "BIC", "Loglikelihood", "Convergence", 

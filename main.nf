@@ -140,7 +140,7 @@ process setupCorrection {
     processDir=\$PWD
     cd $PWD
 
-    species=`grep "^[[:space:]]*species[[:space:]]*=" ${config} | cut -d "=" -f 2 | xargs`
+    species=`grep "^[[:space:]]*focal_species[[:space:]]*=" ${config} | cut -d "=" -f 2 | xargs`
 
     # Generating folders for output files, especially to have the log_folder since the very beginning
     if [ ! -d correction_analysis ]; then
@@ -197,7 +197,7 @@ if (LOG) {
 
 /*
  * Process that checks if the .ks.tsv file containing the paralog Ks values
- * for the species of interest is already present. If not, triggers 
+ * for the focal species is already present. If not, triggers 
  * wgdParalogs for their estimate.
  */ 
 process setParalogAnalysis {
@@ -448,7 +448,7 @@ if (LOG) {
 
 /*
  * Process that estimates the paranome and/or anchor pair Ks values
- * for the species of interest.
+ * for the focal species.
  */
 process wgdParalogs {
 

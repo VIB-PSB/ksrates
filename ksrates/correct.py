@@ -95,8 +95,8 @@ def correct(config_file, trios_file):
     logging.info(f"Correction results for each trio saved in TSV format [correction_table_{species_of_interest}_all.tsv]")
     logging.info("")
 
-    # FILLING IN THE DATAFRAME FOR ALL ORTHOLOG PAIRS WITH SPECIES OF INTEREST
-    # (ALL DIVERGENCE EVENTS OF SPECIES OF INTEREST)
+    # FILLING IN THE DATAFRAME FOR ALL ORTHOLOG PAIRS WITH FOCAL SPECIES
+    # (ALL DIVERGENCE EVENTS OF FOCAL SPECIES)
     if len(sisters_per_node) != 0:
         logging.info(f"Finding a consensus value in case multiple outgroups have been used to correct a divergent pair [strategy: {consensus_peak_for_multiple_outgroups}]")
 

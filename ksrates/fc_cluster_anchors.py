@@ -338,8 +338,8 @@ def plot_clusters_of_medians(medians_per_cluster, cluster_color_letter_list, x_a
     :param cluster_color_letter_list: dictionary assigning to each cluster the right color and letter according to age
     :param x_axis_max_limit_mixed_plot: upper range limit for the x axis
     :param bin_list: list of the edges of each bin (e.g. [0.0, 0.1, 0.2 ... ]); regulates how many bins are there per tick in the x axis 
-    :param species: informal name of the species of interest
-    :param latin_name: latin name of the species of interest
+    :param species: informal name of the focal species
+    :param latin_name: latin name of the focal species
     :param output: name of the directory where the figure is saved in
     """
     # Plotting the clusters of the segment pair medians
@@ -552,7 +552,7 @@ def update_figure_title_cluster_anchors(fig, ax, corrected_or_not, species, lati
     :param fig: mixed plot figure object
     :param ax: axis object in the figure 
     :param corrected_or_not: flag that states whether the figure shows "rate-adjusted" or "un-corrected" divergence lines 
-    :param species: informal name of the species of interest
+    :param species: informal name of the focal species
     :param latin_names: dictionary of scientific names
     :param correction_table_available: tag to state if the correction table data are available or not (allowed values: True or False)
     :param cluster_of_ks: dictionary that associates to each cluster its anchor Ks list
@@ -610,7 +610,7 @@ def save_anchor_cluster_plot(fig_corr, fig_uncorr, ax_corr, ax_uncorr, species, 
     :param fig_uncorr: figure object of the un-corrected mixed distribution
     :param ax_corr: axis object of the corrected mixed distribution
     :param ax_uncorr: axis object of the un-corrected mixed distribution
-    :param species: species of interest
+    :param species: focal species
     :param latin_names: dictionary of scientific names
     :param correction_table_available: boolean to state if the correction table data are available or not
     :param cluster_of_ks: dictionary that associates to each cluster its anchor Ks list

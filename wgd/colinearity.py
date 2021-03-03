@@ -135,7 +135,7 @@ def write_families_file(families, all_genes, output_file='families.tsv'):
     Write out families file
 
     :param families: gene families
-    :param all_genes: set object with all genes for the species of interest
+    :param all_genes: set object with all genes for the focal species
     :param output_file: output file name
     :return: nada
     """
