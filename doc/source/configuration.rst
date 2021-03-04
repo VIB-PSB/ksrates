@@ -44,7 +44,7 @@ The analysis configuration file is composed of a first section defining the spec
     bin_width_para = 0.1
     y_axis_limit_paralogs_plot = None
 
-    num_iterations = 200
+    num_bootstrap_iterations = 200
     divergence_colors =  Red, MediumBlue, Goldenrod, Crimson, ForestGreen, Gray, SaddleBrown, Black
 
     x_axis_max_limit_orthologs_plots = 5
@@ -84,7 +84,7 @@ The [PARAMETERS] section includes:
     
 * For ortholog divergence *K*:sub:`S`
 
-    * **num_iterations**: number of bootstrap iterations for mode/median estimate [default: 200]
+    * **num_bootstrap_iterations**: number of bootstrap iterations for mode/median estimate [default: 200]
     * **divergence_colors**: list of colors assigned to the divergence nodes: all divergence lines coming from the same divergence node share the same color [Default: 8 colors]
     
 * For the ortholog *K*:sub:`S` distribution plots
@@ -175,7 +175,7 @@ It is an optional configuration file containing expert parameters for fine-tunin
     logging_level = info
     peak_stats = mode
     kde_bandwidth_modifier = 0.4
-    plot_correction_arrows = no
+    plot_adjustment_arrows = no
     max_mixture_model_iterations = 300
     num_mixture_model_initializations = 10
     extra_paralogs_analyses_methods = no
@@ -186,7 +186,7 @@ It is an optional configuration file containing expert parameters for fine-tunin
 * **logging_level**: the logging message level to be shown in the screen (critical, error, warning, info, debug, notset) [Default: info]
 * **peak_stats**: the statistics measure that is used to get a representative peak *K*:sub:`S` value of an ortholog distribution or of an anchor *K*:sub:`S` cluster (options: mode or median) [Default: mode]
 * **kde_bandwidth_modifier**: modifier to adjust the fitting of the KDE curve on the underlying paranome or anchor *K*:sub:`S` distribution. The kde Scott's factor computed by SciPy tends to produce an overly smooth KDE curve, especially with steep WGD peaks, and therefore it is reduced by multiplying it by a modifier. Decreasing the modifier leads to tighter fits, increasing it leads to smoother fits and setting it at 1 gives the default kde factor. Note that a too small factor is likely to take into account data noise [Default: 0.4]
-* **plot_correction_arrows**: flag to turn on or off the presence of rate-adjustment arrows, which start from the original ortholog peak position and end on the rate-adjusted position
+* **plot_adjustment_arrows**: flag to turn on or off the presence of rate-adjustment arrows, which start from the original ortholog peak position and end on the rate-adjusted position
 * **max_mixture_model_iterations**: maximum number of EM iterations during mixture modeling [Default: 300] 
 * **num_mixture_model_initializations**: number of times the EM algorithm is initialized (either for the random initialization in exp-log mixture model or for k-means in lognormal mixture model)
 * **max_mixture_model_components**: maximum number of components considered during the execution of mixture models

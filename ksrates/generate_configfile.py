@@ -57,7 +57,7 @@ def generate_configfile(configfile_name):
     Config.set("PARAMETERS", "y_axis_limit_paralogs_plot", "None")
     Config.set("PARAMETERS", "# highest value of the y axis in the mixed distribution plot  (default: None)\n")
 
-    Config.set("PARAMETERS", "num_iterations", "500")
+    Config.set("PARAMETERS", "num_bootstrap_iterations", "200")
     Config.set("PARAMETERS", "# number of bootstrap iterations for ortholog peak estimate\n")
 
     Config.set("PARAMETERS", "divergence_colors", "Red, MediumBlue, DarkGoldenrod, ForestGreen, HotPink, DarkCyan, SaddleBrown, Black")

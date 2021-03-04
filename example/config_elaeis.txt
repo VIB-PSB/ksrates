@@ -45,7 +45,7 @@ bin_width_para = 0.1
 y_axis_limit_paralogs_plot = None
 # highest value of the y axis in the mixed distribution plot  (default: none)
 
-num_iterations = 200
+num_bootstrap_iterations = 200
 # number of bootstrap iterations for ortholog peak estimate
 
 divergence_colors =  Red, MediumBlue, Goldenrod, Crimson, ForestGreen, Gray, SaddleBrown, Black

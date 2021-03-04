@@ -3,7 +3,7 @@
 logging_level = info
 peak_stats = mode
 kde_bandwidth_modifier = 0.4
-plot_correction_arrows = yes
+plot_adjustment_arrows = yes
 max_mixture_model_iterations = 300
 num_mixture_model_initializations = 1
 extra_paralogs_analyses_methods = yes

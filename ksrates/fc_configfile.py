@@ -376,7 +376,7 @@ class Configuration:
 
         :return n_inter: integer
         """
-        n_iter = int(self.config.get("PARAMETERS", "num_iterations"))
+        n_iter = int(self.config.get("PARAMETERS", "num_bootstrap_iterations"))
         return n_iter
 
     def get_bin_width_para(self):
@@ -499,7 +499,7 @@ class Configuration:
         """
         if self.expert_config is not None:
             try:
-                correction_arrows = self.expert_config.get("EXPERT PARAMETERS", "plot_correction_arrows").lower()
+                correction_arrows = self.expert_config.get("EXPERT PARAMETERS", "plot_adjustment_arrows").lower()
                 if correction_arrows not in ["yes", "no"]:
                     logging.warning(f'Unrecognized field in expert configuration file [correction_arrows = {correction_arrows}]. Please choose between "yes" and "no". Default choice will be applied [no]')
                     correction_arrows = False
