@@ -58,7 +58,7 @@ The [SPECIES] section includes:
 .. TODO: are spaces tolerated in species name?
 
 * **focal_species**: name of the focal species. A *K*:sub:`S` paralog distribution is generated for this species and its *K*:sub:`S`-scale is used as the rate-adjustment reference. It is advised to use a short name (for example, the genus or family name) or common abbreviation here. For example, "elaeis" or "eguineensis" instead of "Elaeis guineensis".
-* **newick_tree**: phylogenetic relationships among the involved species as Newick format (more info on the ETE toolkit `website <http://etetoolkit.org/docs/latest/tutorial/tutorial_trees.html#reading-and-writing-newick-trees>`__). It has to contain the focal species as named in parameter `focal_species`. It is advised to use short names or abbreviations for the other species as well.
+* **newick_tree**: phylogenetic relationships among the involved species as Newick format showing leaf nodes only (more info on the ETE toolkit `website <http://etetoolkit.org/docs/latest/tutorial/tutorial_trees.html#reading-and-writing-newick-trees>`__). It has to contain the focal species as named in parameter `focal_species`. It is advised to use short names or abbreviations for the other species as well.
 * **latin_names**: list of associations between each of the species names in parameter `newick_tree` and their scientific names, which will be used in legends and plot titles. The association is made with a colon (':').
 * **fasta_filenames**: list of associations between each of the species names in parameter `newick_tree` and the corresponding paths to their FASTA files. The association is made with a colon (':').
 * **gff_filename**: association between the focal species as named in parameter `focal_species` and the path to the GFF3 file for the focal species (only required for collinearity analysis). The association is made with a colon (':').
@@ -184,7 +184,7 @@ It is an optional configuration file containing expert parameters for fine-tunin
     max_gene_family_size = 200
 
 * **logging_level**: the logging message level to be shown in the screen (critical, error, warning, info, debug, notset) [Default: info]
-* **peak_stats**: the statistics measure that is used to get a representative peak *K*:sub:`S` value of an ortholog distribution or of an anchor *K*:sub:`S` cluster (options: mode or median) [Default: mode]
+* **peak_stats**: the statistics measure that is used to get a representative peak *K*:sub:`S` value of an ortholog distribution, of an anchor *K*:sub:`S` cluster and of a lognormal component in the mixture models (options: mode or median) [Default: mode]
 * **kde_bandwidth_modifier**: modifier to adjust the fitting of the KDE curve on the underlying paranome or anchor *K*:sub:`S` distribution. The kde Scott's factor computed by SciPy tends to produce an overly smooth KDE curve, especially with steep WGD peaks, and therefore it is reduced by multiplying it by a modifier. Decreasing the modifier leads to tighter fits, increasing it leads to smoother fits and setting it at 1 gives the default kde factor. Note that a too small factor is likely to take into account data noise [Default: 0.4]
 * **plot_adjustment_arrows**: flag to turn on or off the presence of rate-adjustment arrows, which start from the original ortholog peak position and end on the rate-adjusted position
 * **max_mixture_model_iterations**: maximum number of EM iterations during mixture modeling [Default: 300] 
