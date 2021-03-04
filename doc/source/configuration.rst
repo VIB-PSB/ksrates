@@ -180,7 +180,7 @@ It is an optional configuration file containing expert parameters for fine-tunin
     num_mixture_model_initializations = 10
     extra_paralogs_analyses_methods = no
     max_mixture_model_components = 5
-    max_ks_for_mixture_model = 5
+    max_mixture_model_ks = 5
     max_gene_family_size = 200
 
 * **logging_level**: the logging message level to be shown in the screen (increasing severity: *notset*, *debug*, *info*, *warning*, *error*, *critical*). Messages which are less severe than *level* will be ignored; *notset* causes all messages to be processed. [Default: info]
@@ -190,5 +190,5 @@ It is an optional configuration file containing expert parameters for fine-tunin
 * **max_mixture_model_iterations**: maximum number of EM iterations during mixture modeling [Default: 300] 
 * **num_mixture_model_initializations**: number of times the EM algorithm is initialized (either for the random initialization in exp-log mixture model or for k-means in lognormal mixture model)
 * **max_mixture_model_components**: maximum number of components considered during the execution of mixture models
-* **max_ks_for_mixture_model**: upper limit for the Ks range considered during the execution of mixture models 
+* **max_mixture_model_ks**: upper limit for the Ks range considered during the execution of mixture models 
 * **max_gene_family_size**: maximum number of members in a paralog gene family to be taken into account during Ks estimate (larger families will probably increase the computation time, but they may also provide a significant contribute for the Ks distribution) [Default: 200]

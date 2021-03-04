@@ -712,21 +712,21 @@ class Configuration:
         [Default: 5].
 
         :param max_ks_para: maximum paralog Ks accepted in the analysis
-        :return max_ks_for_mixture_model: number of times that the expectation-maximization
+        :return max_ks_EM: number of times that the expectation-maximization
         algorithm is initialized
         """
         if self.expert_config is not None:
             try:
-                max_ks_EM = self.expert_config.get("EXPERT PARAMETERS", "max_ks_for_mixture_model")
+                max_ks_EM = self.expert_config.get("EXPERT PARAMETERS", "max_mixture_model_ks")
                 try:
                     max_ks_EM = literal_eval(max_ks_EM)
                 except Exception:
                     pass
                 if (not isinstance(max_ks_EM, int) and not isinstance(max_ks_EM, float)) or max_ks_EM <= 0:
-                    logging.warning(f'Unrecognized field in expert configuration file [max_ks_for_mixture_model = {max_ks_EM}]. Please enter a positive integer or float. Default choice will be applied [5]')
+                    logging.warning(f'Unrecognized field in expert configuration file [max_mixture_model_ks = {max_ks_EM}]. Please enter a positive integer or float. Default choice will be applied [5]')
                     max_ks_EM = 5
             except Exception:
-                logging.warning(f'Missing field in expert configuration file [max_ks_for_mixture_model]. Please enter a positive integer or float. Default choice will be applied [5]')
+                logging.warning(f'Missing field in expert configuration file [max_mixture_model_ks]. Please enter a positive integer or float. Default choice will be applied [5]')
                 max_ks_EM = 5
         else:
             max_ks_EM = 5
