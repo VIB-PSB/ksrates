@@ -79,7 +79,7 @@ def setup_correction(config_file, nextflow_flag):
     if len(sp_history)-2 == 0:
         logging.error("")
         logging.error(f"Species [{species_of_interest}] has no outgroup in the provided Newick tree "
-                      f"and the rate-correction can't be performed.")
+                      f"and the rate-adjustment can't be performed.")
         logging.error(f"Please add at least one outgroup species or change the focal species.")
         sys.exit(1)
 

@@ -12,7 +12,7 @@ def generate_configfile(configfile_name):
 
     Config.add_section("SPECIES")
     Config.set("SPECIES", "focal_species", "")
-    Config.set("SPECIES", "# informal name of the species that will be used to perform the rate-correction\n")
+    Config.set("SPECIES", "# informal name of the species that will be used to perform the rate-adjustment\n")
 
     Config.set("SPECIES", "newick_tree", "();")
     Config.set("SPECIES", "# input phylogenetic tree in Newick format; use the informal names of the species\n")

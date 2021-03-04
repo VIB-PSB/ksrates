@@ -55,7 +55,7 @@ def compute_ks_distances(ortholog_db, idx_species_sister, idx_species_outgroup, 
 
 def compute_corrected_ks_species_sister(rel_rate_species, rel_rate_species_sd):
     """
-    Performs substitution rate-correction on the original peak of the ortholog distribution between
+    Performs substitution rate-adjustment on the original peak of the ortholog distribution between
     the focal species (species A) and sister species (species B).
 
     :param rel_rate_species: branch-specific Ks contribution of the focal species, namely the synonymous substitutions occurred 
