@@ -17,6 +17,8 @@ def plot_paralogs_distr(config_file, correction_table_file, paralog_tsv_file, an
 
     # GET PARAMETERS and INPUT FILES
     species = config.get_species()
+    newick_tree = config.get_newick_tree()
+    latin_names = config.get_latin_names(newick_tree)
     # Get analysis type
     paranome_analysis = config.get_paranome()
     colinearity_analysis = config.get_colinearity()
@@ -66,7 +68,6 @@ def plot_paralogs_distr(config_file, correction_table_file, paralog_tsv_file, an
     consensus_peak_for_multiple_outgroups = config.get_consensus_peak_for_multiple_outgroups()
 
     # Get other parameters
-    latin_names = config.get_latin_names()
     max_ks_para = config.get_max_ks_para()
     bin_width_para = config.get_bin_width_para()
     bin_list = fcPlot.get_bins(max_ks_para, bin_width_para)

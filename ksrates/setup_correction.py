@@ -22,7 +22,7 @@ def setup_correction(config_file, nextflow_flag):
     tree = fcTree.reorder_tree_leaves(original_tree, species_of_interest)  # focal species is the top leaf
     fasta_dict = config.get_fasta_dict()
     gff_dict = config.get_gff_dict(warn_empty_dict=False)
-    latin_names = config.get_latin_names()
+    latin_names = config.get_latin_names(original_tree)
     if latin_names == {}:
         logging.error("Exiting")
         sys.exit(1)
