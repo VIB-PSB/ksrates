@@ -12,7 +12,7 @@ import pandas
 def plot_tree_rates(config_file, correction_table_file, nextflow_flag):
     # INPUT
     config = fcConf.Configuration(config_file)
-    init_logging("Generating PDF of input tree with branch length equal to relative rates", config.get_logging_level())
+    init_logging("Generating PDF of input tree with branch length equal to Ks distances", config.get_logging_level())
     logging.info("Loading parameters and input files")
 
     # GET PARAMETERS and INPUT FILES
@@ -40,8 +40,8 @@ def plot_tree_rates(config_file, correction_table_file, nextflow_flag):
                 sys.exit(1) # exit 1 because plot_tree is executed at the end of the Nextflow pipeline and correction_table should be completed
             elif len(missing_required_rates) != 0:
                 # Having a complete correction table is strictly required for building the tree,
-                # because all the rates contained in there are needed.
-                # Other extra-table rates may be additionally required to fill in all of the branch rates,
+                # because all the branch-specific Ks contributions contained in there are needed.
+                # Other extra-table branch contributions may be additionally required to fill in all the branch lengths,
                 # but their absence is tolerated.
                 logging.warning(f"The Ks distances between {latin_names[species]} and the following species are missing from the rate-adjustment table. Please compute them before building the tree:")
                 for name in sorted(missing_required_rates):

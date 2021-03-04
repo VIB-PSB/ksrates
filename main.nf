@@ -841,7 +841,7 @@ if (LOG) {
 
 /*
  * Process that plots the input tree with branch length equal to 
- * the relative rates.
+ * the Ks distances.
  */
 process drawTree {
 
@@ -864,7 +864,7 @@ process drawTree {
      */
     """
     echo "[$species] `date`"
-    echo "[$species] Plotting tree with branch length proportional to relative rates"
+    echo "[$species] Plotting tree with branch length equal to Ks distances"
 
     processDir=\$PWD
     cd $PWD
