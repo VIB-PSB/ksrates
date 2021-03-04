@@ -12,7 +12,7 @@ VIB-UGent Center for Plant Systems Biology&mdash;[Evolutionary Systems Biology L
 
 ## Quick overview
 
-To position ancient WGD events with respect to speciation events in a phylogeny, the *K*<sub>S</sub> values of WGD paralog pairs in a focal species are often compared with the *K*<sub>S</sub> values of ortholog pairs between this species and other species. For example, it is common practice to superimpose ortholog and paralog *K*<sub>S</sub> distributions in a mixed plot. However, if the lineages involved exhibit different substitution rates, such direct naive comparison of paralog and ortholog *K*<sub>S</sub> estimates can be misleading and result in phylogenetic misinterpretation of WGD signatures. 
+To position ancient WGD events with respect to speciation events in a phylogeny, the *K*<sub>S</sub> values of WGD paralog pairs in a species of interest are often compared with the *K*<sub>S</sub> values of ortholog pairs between this species and other species. For example, it is common practice to superimpose ortholog and paralog *K*<sub>S</sub> distributions in a mixed plot. However, if the lineages involved exhibit different substitution rates, such direct naive comparison of paralog and ortholog *K*<sub>S</sub> estimates can be misleading and result in phylogenetic misinterpretation of WGD signatures. 
 
 *ksrates* is user-friendly command-line tool and [Nextflow](https://github.com/nextflow-io/nextflow) pipeline to compare paralog and ortholog *K*<sub>S</sub> distributions derived from genomic or transcriptomic sequences. *ksrates* estimates differences in synonymous substitution rates among the lineages involved and generates an adjusted mixed plot of paralog and ortholog *K*<sub>S</sub> distributions that allows to assess the relative phylogenetic positioning of presumed WGD and speciation events.
 
@@ -32,9 +32,9 @@ In the following sections we briefly describe how to install, configure and run 
 
 ### Example datasets
 
-To illustrate how to use *ksrates*, two example datasets are provided for a simple example use case analyzing WGD signatures in monocot plants with oil palm (*Elaeis guineensis*) as the focal species.
+To illustrate how to use *ksrates*, two example datasets are provided for a simple example use case analyzing WGD signatures in monocot plants with oil palm (*Elaeis guineensis*) as the species of interest.
 
-- [`example`](example): a full dataset which contains the complete sequence data for the focal species and two other species and may require hours of computations depending on the available computing resources. We advice to run this dataset on a compute cluster and using the *ksrates* Nextflow pipeline should make it fairly easy to configure this for a variety of HPC schedulers.
+- [`example`](example): a full dataset which contains the complete sequence data for the species of interest and two other species and may require hours of computations depending on the available computing resources. We advice to run this dataset on a compute cluster and using the *ksrates* Nextflow pipeline should make it fairly easy to configure this for a variety of HPC schedulers.
 
 - [`test`](test): a small test dataset that contains only a small subset of the sequence data for each of the species and takes only a few minutes to be run. This is intended for a quick check of the tool only and can be run locally, e.g. on a laptop. The results are not very meaningful.
 
@@ -161,7 +161,7 @@ Show usage and all available `COMMAND`s and `OPTIONS`:
 
 	ksrates -h
 
-Generate a template configuration file for a focal species (name):
+Generate a template configuration file for a species of interest (name):
 
 	ksrates generate-config config_elaeis.txt
 
