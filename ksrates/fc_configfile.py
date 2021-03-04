@@ -187,14 +187,18 @@ class Configuration:
         :return: the FASTA file path
         """
         if fasta_dict == {}:
-            logging.warning(f"Default FASTA filename applied for {species} ({species}.fasta)")
-            fasta = f"{species}.fasta"   # fallback name   
+            logging.warning(f"FASTA filename for {species} not found in configuration file; trying with default one ({species}.fasta)")
+            fasta = f"{species}.fasta"  # fallback name
         else:
-            if fasta_dict[species] != "": # if the fasta filename is an acceptable string (not empty)
-                fasta = fasta_dict[species]
-            else:
-                logging.warning(f"FASTA filename for {species} not found in configuration file; default one applied ({species}.fasta)")
-                fasta = f"{species}.fasta"   # fallback name
+            try:  # if species in fasta_dict
+                if fasta_dict[species] != "": # if the fasta filename is an acceptable string (not empty)
+                    fasta = fasta_dict[species]
+                else:
+                    logging.warning(f"FASTA filename for {species} not found in configuration file; trying with default one ({species}.fasta)")
+                    fasta = f"{species}.fasta"  # fallback name
+            except Exception:  # if species is missing from fasta_dict
+                logging.warning(f"FASTA filename for {species} not found in configuration file; trying with default one ({species}.fasta)")
+                fasta = f"{species}.fasta"  # fallback name 
         return fasta
 
     def get_gff_dict(self, warn_empty_dict=True):
