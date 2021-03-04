@@ -203,7 +203,7 @@ class Configuration:
 
         :return gff_names_dict: python dictionary
         """
-        gff_names_string = self.config.get("SPECIES", "gff_filenames")
+        gff_names_string = self.config.get("SPECIES", "gff_filename")
         if gff_names_string != "":
             gff_names_dict = self._get_clean_dict(gff_names_string, "GFF file")
         else:

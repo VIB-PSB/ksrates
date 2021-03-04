@@ -22,7 +22,7 @@ The analysis configuration file is composed of a first section defining the spec
     latin_names = elaeis:Elaeis guineensis, oryza:Oryza sativa, asparagus:Asparagus officinalis
 
     fasta_filenames = elaeis:elaeis.fasta, oryza:oryza.fasta, asparagus:asparagus.fasta
-    gff_filenames = elaeis:elaeis.gff3
+    gff_filename = elaeis:elaeis.gff3
 
     peak_database_path = ortholog_peak_db.tsv
     ks_list_database_path = ortholog_ks_list_db.tsv
@@ -61,7 +61,7 @@ The [SPECIES] section includes:
 * **newick_tree**: phylogenetic relationships among the involved species as Newick format (more info on the ETE toolkit `website <http://etetoolkit.org/docs/latest/tutorial/tutorial_trees.html#reading-and-writing-newick-trees>`__). It has to contain the focal species as named in parameter `focal_species`. It is advised to use short names or abbreviations for the other species as well.
 * **latin_names**: list of associations between each of the species names in parameter `newick_tree` and their scientific names, which will be used in legends and plot titles. The association is made with a colon (':').
 * **fasta_filenames**: list of associations between each of the species names in parameter `newick_tree` and the corresponding paths to their FASTA files. The association is made with a colon (':').
-* **gff_filenames**: association between the focal species as named in parameter `focal_species` and the path to the GFF3 file for the focal species (only required for collinearity analysis). The association is made with a colon (':').
+* **gff_filename**: association between the focal species as named in parameter `focal_species` and the path to the GFF3 file for the focal species (only required for collinearity analysis). The association is made with a colon (':').
 * **peak_database_path**: path to the database of ortholog *K*:sub:`S` distribution peaks. If the file is not present yet, it will be automatically generated.
 * **ks_list_database_path**: path to the database of ortholog *K*:sub:`S` lists. If the file is not present, it will be automatically generated.
 

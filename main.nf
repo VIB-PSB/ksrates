@@ -77,7 +77,7 @@ process checkConfig {
     if [ ! -f ${config} ]; then
         echo "Configuration file [${config}] not found: it will be now generated"
         echo "Please fill in with the required parameters:"
-        echo "species, newick_tree, latin_names, fasta_filenames and if applicable gff_filenames, gff_feature and gff_attribute"
+        echo "species, newick_tree, latin_names, fasta_filenames and if applicable gff_filename, gff_feature and gff_attribute"
         echo "Then rerun the Nextflow pipeline."
         ksrates generate-config ${config} >> \$processDir/generate_config.txt
         trigger_pipeline=false

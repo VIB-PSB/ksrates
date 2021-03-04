@@ -21,7 +21,7 @@ def generate_configfile(configfile_name):
     Config.set("SPECIES", "# informal names associated to their scientific names through a colon and separated by comma\n")
 
     Config.set("SPECIES", "fasta_filenames", "")
-    Config.set("SPECIES", "gff_filenames", "")
+    Config.set("SPECIES", "gff_filename", "")
     Config.set("SPECIES", "# informal names associated to their FASTA or GFF filenames/paths through a colon and separated by commas\n")
 
     Config.set("SPECIES", "Peak_database_path", "ortholog_peak_db.tsv")
@@ -79,6 +79,6 @@ def generate_configfile(configfile_name):
     logging.basicConfig(format='%(levelname)s\t%(message)s', level="INFO", stream=sys.stdout)
     logging.info(f"Configuration file [{configfile_name}] not found: it will be now generated")
     logging.info(f"Please fill in the required input parameters:")
-    logging.info(f"species, newick_tree, latin_names, fasta_filenames and if applicable gff_filenames, gff_feature and gff_attribute")
+    logging.info(f"species, newick_tree, latin_names, fasta_filenames and if applicable gff_filename, gff_feature and gff_attribute")
     Config.write(cfgfile)
     cfgfile.close()

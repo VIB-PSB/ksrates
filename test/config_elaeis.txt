@@ -9,7 +9,7 @@ latin_names = elaeis: Elaeis guineensis, oryza: Oryza sativa, asparagus: Asparag
 # informal names associated to their latin name through a colon and separated by comma
 
 fasta_filenames =  elaeis: elaeis.fasta, oryza: oryza.fasta, asparagus: asparagus.fasta
-gff_filenames = elaeis: elaeis.gff3
+gff_filename = elaeis: elaeis.gff3
 # informal names associated to their filename/path through a colon and separated by comma
 
 peak_database_path = ortholog_peak_db.tsv
