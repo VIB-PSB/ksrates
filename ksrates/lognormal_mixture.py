@@ -28,7 +28,6 @@ def lognormal_mixture(config_file, paralog_tsv_file, anchors_ks_tsv_file, correc
     latinSpecies = latin_names[species]
     species_escape_whitespace = latinSpecies.replace(' ', '\ ')
     max_ks_para = config.get_max_ks_para()
-    latin_names = config.get_latin_names()
     bin_width_para = config.get_bin_width_para()
     bin_list = fcPlot.get_bins(max_ks_para, bin_width_para)
     x_max_lim = config.get_x_max_lim()
