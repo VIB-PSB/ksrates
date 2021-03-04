@@ -183,7 +183,7 @@ It is an optional configuration file containing expert parameters for fine-tunin
     max_ks_for_mixture_model = 5
     max_gene_family_size = 200
 
-* **logging_level**: the logging message level to be shown in the screen (critical, error, warning, info, debug, notset) [Default: info]
+* **logging_level**: the logging message level to be shown in the screen (increasing severity: *notset*, *debug*, *info*, *warning*, *error*, *critical*). Messages which are less severe than *level* will be ignored; *notset* causes all messages to be processed. [Default: info]
 * **peak_stats**: the statistics measure that is used to get a representative peak *K*:sub:`S` value of an ortholog distribution, of an anchor *K*:sub:`S` cluster and of a lognormal component in the mixture models (options: mode or median) [Default: mode]
 * **kde_bandwidth_modifier**: modifier to adjust the fitting of the KDE curve on the underlying paranome or anchor *K*:sub:`S` distribution. The kde Scott's factor computed by SciPy tends to produce an overly smooth KDE curve, especially with steep WGD peaks, and therefore it is reduced by multiplying it by a modifier. Decreasing the modifier leads to tighter fits, increasing it leads to smoother fits and setting it at 1 gives the default kde factor. Note that a too small factor is likely to take into account data noise [Default: 0.4]
 * **plot_adjustment_arrows**: flag to turn on or off the presence of rate-adjustment arrows, which start from the original ortholog peak position and end on the rate-adjusted position
