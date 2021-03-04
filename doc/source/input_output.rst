@@ -26,8 +26,6 @@ Output files
 Main output files:
 ------------------
 
-.. TODO: rename "corrected" and "rates" in output file names
-
 * Rate-adjusted mixed paralog--ortholog *K*:sub:`S` distribution plot in PDF format (``mixed_species_adjusted.pdf``)
 * Rate-adjusted mixed anchor pair--ortholog *K*:sub:`S` distribution clustered to infer putative WGD components (``mixed_species_anchor_clusters.pdf``)
 * Rate-adjusted mixed paralog--ortholog *K*:sub:`S` distribution with superimposed exponential-lognormal mixture model (``mixed_species_elmm.pdf``)
@@ -42,7 +40,7 @@ Secondary output files:
 * Original input phylogenetic tree in ASCII format and list of sister species and outgroup species per node (``tree_species.txt``)
 * List of trios used for substitution rate-adjustment (``ortholog_trios_species.tsv``)
 * List of species pairs to be submitted to ``wgd`` ortholog pipeline (``ortholog_pairs_species.txt``)
-* Databases storing the *K*:sub:`S` list and the estimated divergence time Ks estimate of each ortholog distribution needed for the rate-adjustment
+* Databases storing the ortholog *K*:sub:`S` lists (``ks_list_database_path.txt``) and the estimated divergence time Ks estimate (``peak_database_path``) of each ortholog distribution needed for the rate-adjustment
 * Un-adjusted naive mixed paralog--ortholog *K*:sub:`S` distribution plot in PDF format (``mixed_species_unadjusted.pdf``)
 * Multi-panel figure(s) of the ortholog *K*:sub:`S` distributions used to adjust a divergent species pair (``orthologs_species1_species2.pdf``)
 * Rate-adjusted mixed anchor pair paralog--ortholog *K*:sub:`S` distribution clustered to infer putative WGD components, with *all* inferred clusters (``mixed_species_anchor_clusters_unfiltered.pdf``)
