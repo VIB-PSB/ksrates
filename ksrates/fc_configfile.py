@@ -127,10 +127,11 @@ class Configuration:
             sys.exit(1)
 
 
-    def get_latin_names(self):
+    def get_latin_names(self, newick_tree):
         """
-        Gets the config file field of the dictionary that associates the informal species name to its latin (scientific) name.
+        Gets the config file field of the dictionary that associates the informal species name to its latin (scientific) name.                                      
 
+        :param newick_tree:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
         :return latin_names_dict: python dictionary
         """
         latin_names = self.config.get("SPECIES", "latin_names")
@@ -139,6 +140,17 @@ class Configuration:
         else:
             logging.warning("Latin names field in configuration file is empty.")
             latin_names_dict = {}
+        # Check if latin_names contains all the species present in the Newick tree
+        all_leaves = []
+        for leaf in newick_tree.get_leaves():
+            all_leaves.append(leaf.name)
+        missing_latin_names = list(set.difference(set(all_leaves), set(latin_names_dict.keys())))
+        if len(missing_latin_names) != 0:
+            logging.error(f"The scientific names of the following species are missing from the configuration file [latin_names]:")
+            for missing_name in missing_latin_names:
+                logging.error(f" - {missing_name}")
+            logging.error("Please add them and rerun the analysis.")
+            sys.exit(1)
         return latin_names_dict
 
     def get_ortho_db(self):

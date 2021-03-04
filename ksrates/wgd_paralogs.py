@@ -15,7 +15,8 @@ def wgd_paralogs(config_file, n_threads):
     species = config.get_species()
     init_logging(f"Paralog wgd analysis for species [{species}]", config.get_logging_level())
 
-    latin_names = config.get_latin_names()
+    newick_tree = config.get_newick_tree()
+    latin_names = config.get_latin_names(newick_tree)
     fasta_names_dict = config.get_fasta_dict()
     species_fasta_file = config.get_fasta_name(fasta_names_dict, species)
     fcCheck.check_inputfile(species_fasta_file, "FASTA file")

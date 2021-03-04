@@ -18,7 +18,8 @@ def correct(config_file, trios_file):
 
     # Get parameters from configfile
     species_of_interest = config.get_species()
-    latin_names = config.get_latin_names()
+    newick_tree = config.get_newick_tree()
+    latin_names = config.get_latin_names(newick_tree)
     db_path = config.get_ortho_db()
 
     default_path_trios_file = os.path.join("rate_adjustment", f"{species_of_interest}", f"ortholog_trios_{species_of_interest}.tsv")
