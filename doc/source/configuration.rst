@@ -67,8 +67,8 @@ The [SPECIES] section includes:
 
 The [ANALYSIS SETTING] section includes:
 
-* **paranome**: whether to build/plot the whole-paranome *K*:sub:`S` distribution of the focal species \[yes/no\]
-* **colinearity**: whether to build/plot the anchor pair *K*:sub:`S` distribution of the focal species \[yes/no\]
+* **paranome**: whether to build/plot the whole-paranome *K*:sub:`S` distribution of the focal species (options: "yes" and "no") [Default: "yes"]
+* **colinearity**: whether to build/plot the anchor pair *K*:sub:`S` distribution of the focal species (options: "yes" and "no") [Default: "no"]
 * **gff_feature**: parsing keyword from the third column of the GFF file (e.g. gene, mrna...). Case insensitive.
 * **gff_attribute**: parsing keyword from the ninth column of the GFF file (e.g. id, name...). Case insensitive. 
 * **max_number_outspecies**: maximum number of trios/outspecies allowed to adjust a divergent pair; if None, all possible outspecies obtained from the phylogenetic tree will be used to form trios and adjust the pair. For more details see below. [Default: 4]
@@ -184,11 +184,11 @@ It is an optional configuration file containing expert parameters for fine-tunin
     max_gene_family_size = 200
 
 * **logging_level**: the logging message level to be shown in the screen (increasing severity: *notset*, *debug*, *info*, *warning*, *error*, *critical*). Messages which are less severe than *level* will be ignored; *notset* causes all messages to be processed. [Default: info]
-* **distribution_peak_estimate**: the statistics measure that is used to get a representative peak *K*:sub:`S` value of an ortholog *K*:sub:`S` distribution, of an anchor *K*:sub:`S` cluster and of a lognormal component in the mixture models (options: mode or median) [Default: mode]
+* **distribution_peak_estimate**: the statistics measure that is used to get a representative peak *K*:sub:`S` value of an ortholog *K*:sub:`S` distribution, of an anchor *K*:sub:`S` cluster and of a lognormal component in the mixture models (options: "mode" or "median") [Default: "mode"]
 * **kde_bandwidth_modifier**: modifier to adjust the fitting of the KDE curve on the underlying paranome or anchor *K*:sub:`S` distribution. The kde Scott's factor computed by SciPy tends to produce an overly smooth KDE curve, especially with steep WGD peaks, and therefore it is reduced by multiplying it by a modifier. Decreasing the modifier leads to tighter fits, increasing it leads to smoother fits and setting it at 1 gives the default kde factor. Note that a too small factor is likely to take into account data noise [Default: 0.4]
-* **plot_adjustment_arrows**: flag to turn on or off the presence of rate-adjustment arrows, which start from the original ortholog peak position and end on the rate-adjusted position
+* **plot_adjustment_arrows**: flag to turn on or off the presence of rate-adjustment arrows, which start from the original ortholog peak position and end on the rate-adjusted position (options: "yes" and "no") [Default: "no"]
 * **max_mixture_model_iterations**: maximum number of EM iterations during mixture modeling [Default: 300] 
-* **num_mixture_model_initializations**: number of times the EM algorithm is initialized (either for the random initialization in exp-log mixture model or for k-means in lognormal mixture model)
-* **max_mixture_model_components**: maximum number of components considered during the execution of mixture models
-* **max_mixture_model_ks**: upper limit for the Ks range considered during the execution of mixture models 
+* **num_mixture_model_initializations**: number of times the EM algorithm is initialized (either for the random initialization in exp-log mixture model or for k-means in lognormal mixture model) [Default: 10]
+* **max_mixture_model_components**: maximum number of components considered during the execution of exponential-lognormal and lognormal-only mixture models [Default: 5]
+* **max_mixture_model_ks**: upper limit for the Ks range in which the exponential-lognormal and lognormal-only mixture models are performed [Default: 5]
 * **max_gene_family_size**: maximum number of members in a paralog gene family to be taken into account during Ks estimate (larger families will probably increase the computation time, but they may also provide a significant contribute for the Ks distribution) [Default: 200]
