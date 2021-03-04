@@ -67,8 +67,8 @@ The [SPECIES] section includes:
 
 The [ANALYSIS SETTING] section includes:
 
-* **paranome**: whether to build/plot the whole-paranome *K*:sub:`S` distribution of the focal species \[yes/no\]
-* **colinearity**: whether to build/plot the anchor pair *K*:sub:`S` distribution of the focal species \[yes/no\]
+* **paranome**: whether to build/plot the whole-paranome *K*:sub:`S` distribution of the focal species. \[yes/no\]
+* **colinearity**: whether to build/plot the anchor pair *K*:sub:`S` distribution of the focal species. \[yes/no\]
 * **gff_feature**: parsing keyword from the third column of the GFF file (e.g. gene, mrna...). Case insensitive.
 * **gff_attribute**: parsing keyword from the ninth column of the GFF file (e.g. id, name...). Case insensitive. 
 * **max_number_outspecies**: maximum number of trios/outspecies allowed to adjust a divergent pair; if None, all possible outspecies obtained from the phylogenetic tree will be used to form trios and adjust the pair. For more details see below. [Default: 4]
@@ -78,24 +78,24 @@ The [PARAMETERS] section includes:
 
 * For the mixed *K*:sub:`S` distributions plot
 
-    * **x_axis_max_limit_paralogs_plot**: highest value of the x axis in the mixed distribution plot [Default: 5]
-    * **bin_width_para**: bin width in paralog *K*:sub:`S` distribution histogram. By default there are ten bins per unit [Default: 0.1]
-    * **y_axis_limit_paralogs_plot**: customized highest value of the y axis in the mixed plot [Default: None]
+    * **x_axis_max_limit_paralogs_plot**: highest value of the x axis in the mixed distribution plot. [Default: 5]
+    * **bin_width_para**: bin width in paralog *K*:sub:`S` distribution histogram. By default there are ten bins per unit. [Default: 0.1]
+    * **y_axis_limit_paralogs_plot**: customized highest value of the y axis in the mixed plot. [Default: None]
     
 * For ortholog divergence *K*:sub:`S`
 
-    * **num_iterations**: number of bootstrap iterations for mode/median estimate [default: 200]
-    * **divergence_colors**: list of colors assigned to the divergence nodes: all divergence lines coming from the same divergence node share the same color [Default: 8 colors]
+    * **num_iterations**: number of bootstrap iterations for mode/median estimate. [Default: 200]
+    * **divergence_colors**: list of colors assigned to the divergence nodes: all divergence lines coming from the same divergence node share the same color. [Default: 8 colors]
     
 * For the ortholog *K*:sub:`S` distribution plots
 
-    * **x_axis_max_limit_orthologs_plots**: highest value of the x axis in the ortholog distribution plots [Default: 5]
-    * **bin_width_ortho**: bin width in ortholog *K*:sub:`S` distribution histogram. By default there are ten bins per unit [Default: 0.1]
+    * **x_axis_max_limit_orthologs_plots**: highest value of the x axis in the ortholog distribution plots. [Default: 5]
+    * **bin_width_ortho**: bin width in ortholog *K*:sub:`S` distribution histogram. By default there are ten bins per unit. [Default: 0.1]
     
 * *K*:sub:`S` value thresholds
 
-    * **max_ks_para**: maximum value accepted for paralog *K*:sub:`S` from data table [Default: 5]
-    * **max_ks_ortho**: maximum value accepted for ortholog *K*:sub:`S` from data table [Default: 10]
+    * **max_ks_para**: maximum value accepted for paralog *K*:sub:`S` from data table. [Default: 5]
+    * **max_ks_ortho**: maximum value accepted for ortholog *K*:sub:`S` from data table. [Default: 10]
 
 
 Guidelines to set the maximum number of outgroups per rate-adjustment
@@ -122,16 +122,18 @@ A consensus value for the rate-adjustment is needed when multiple rate-adjustmen
 Nextflow configuration file
 ===========================
 
-It is a configuration file used to set the communication with the cluster system, the use of a container and to define parameters or variables for the Nextflow pipeline. For a more complete description please refer to `Nextflow documentation <https://www.nextflow.io/docs/latest/config.html#configuration>`_. The user can download a configuration file template from the GitHub repository documentation and adapt it according to their resources and requirements. Below is explained the basic file structure::
+The Nextflow configuration file is used to configure various settings for the *ksrates* Nextflow pipeline, including the settings to use and configure resources on a compute cluster and to use the *ksrates* Singularity or Docker container. We provide a few general template Nextflow configuration files for the *ksrates* Nextflow pipeline in the `doc <https://github.com/VIB-PSB/ksrates/blob/master/doc/source>`_ directory in the GitHub repository. These can be adapted to a user's specific resources and requirements. Below, we briefly explain some of the basic key settings. For a more complete description please refer to the `Nextflow documentation <https://www.nextflow.io/docs/latest/config.html#configuration>`_. ::
 
     singularity {
         enabled = true
         cacheDir = ''
     }
-    docker.enabled = true
+    docker {
+        enabled = false
+    }
 
     executor.name = ''
-
+								
     process {
         container = ''
 
@@ -141,26 +143,34 @@ It is a configuration file used to set the communication with the cluster system
         }
     }
 
-    env.SOME_ENV_VARIABLE = ''
+    env {
+    	SOME_ENV_VARIABLE = ''
+    	ANOTHER_ENV_VARIABLE = ''
+    }
 
-* The **singularity** and **docker** scopes deal with container-related specifications:
+* The **singularity** and **docker** scopes configure container type usage and execution:
 
-    * **enable** enables or disables the use of a container
-    * **cacheDir** defines the directory where to download and store the Singularity image file from Docker Hub
+    * **enable** enables or disables the use of the respective container
+    * **cacheDir** the directory where remote the Singularity image from Docker Hub is stored. When using a computing cluster it must be a shared folder accessible to all computing nodes.
 
-* The **executor** scope defines the cluster system type (e.g. SGE) which the jobs are submitted to
-* The **process** scope defines the container image and the pipeline configuration on the cluster:
+* The **executor.name** setting defines the system type or HPC scheduler to be used (e.g. ``sge``, ``local``)
+* The **process** scope defines the configuration for the processes of the *ksrates* pipeline:
 
-    * **container** defines the *ksrates* container image (from Docker Hub or from a local copy if already downloaded).
+    * **container** defines the Singularity or Docker *ksrates* container image to be used (from Docker Hub or from a local copy if already downloaded):
 
         * to pull a Singularity container from Docker Hub: ``docker://vibpsb/ksrates:latest``
         * to pull a Docker container from Docker Hub: ``vibpsb/ksrates:latest``
+        
+      Has to match enabled container type (see above).
 
-    * **withName** defines settings for individual processes in the Nextflow pipeline; ``wgdParalogs`` and ``wgdOrthologs`` are the most computationally demanding and it is advised to assign them a higher computational power than the other processes.
-    * **clusterOption** defines cluster options (allocated memory, number of threads...)
-    * **beforeScript** can be used to load required dependencies in the cluster; it is necessary only if the container is not available, provided that the cluster has all dependencies installed
+    * **withName** defines settings for individual processes in the *ksrates* Nextflow pipeline, for example:
+    
+    	* **clusterOption** any native configuration option accepted by your cluster submit command. You can use it to request non-standard resources or use settings that are specific to your cluster and not supported out of the box by Nextflow.
+    	* **beforeScript** allows you to execute a custom (Bash) snippet before the main process script is run. This may be useful to initialise the underlying cluster environment or for other custom initialisation, for example it can be used to load required dependencies if one of the container is not used, provided that the cluster has those dependencies installed.
+    	
+      For a complete list of available settings, see the `Nextflow documentation <https://www.nextflow.io/docs/latest/process.html#process-directives>`_. The processes ``wgdParalogs`` and ``wgdOrthologs`` are the most computationally demanding and it is advised to assign them a higher computational power than the other processes.
 
-* The **env** scope defines variables exported in the workflow environment
+* The **env** scope allows the definition one or more variable that will be exported in the environment where the workflow tasks will be executed.
 
 
 .. _`expert_config_section`:
@@ -168,7 +178,7 @@ It is a configuration file used to set the communication with the cluster system
 Expert configuration file
 =========================
 
-It is an optional configuration file containing expert parameters for fine-tuning the analysis or for development purposes. The file can be generated using the following template and it is automatically detected when launching the command line (it must be called `config_expert.txt`). ::
+This is an optional configuration file that contains several \"expert\" parameters for fine-tuning the analysis or for development/debug purposes. The file has to be named `config_expert.txt` and is then automatically detected when launching *ksrates*. The following can be used as a template::
 
     [EXPERT PARAMETERS]
     
@@ -183,12 +193,12 @@ It is an optional configuration file containing expert parameters for fine-tunin
     max_ks_for_mixture_model = 5
     max_gene_family_size = 200
 
-* **logging_level**: the logging message level to be shown in the screen (critical, error, warning, info, debug, notset) [Default: info]
-* **peak_stats**: the statistics measure that is used to get a representative peak *K*:sub:`S` value of an ortholog distribution or of an anchor *K*:sub:`S` cluster (options: mode or median) [Default: mode]
-* **kde_bandwidth_modifier**: modifier to adjust the fitting of the KDE curve on the underlying paranome or anchor *K*:sub:`S` distribution. The kde Scott's factor computed by SciPy tends to produce an overly smooth KDE curve, especially with steep WGD peaks, and therefore it is reduced by multiplying it by a modifier. Decreasing the modifier leads to tighter fits, increasing it leads to smoother fits and setting it at 1 gives the default kde factor. Note that a too small factor is likely to take into account data noise [Default: 0.4]
-* **plot_correction_arrows**: flag to turn on or off the presence of rate-adjustment arrows, which start from the original ortholog peak position and end on the rate-adjusted position
-* **max_mixture_model_iterations**: maximum number of EM iterations during mixture modeling [Default: 300] 
-* **num_mixture_model_initializations**: number of times the EM algorithm is initialized (either for the random initialization in exp-log mixture model or for k-means in lognormal mixture model)
-* **max_mixture_model_components**: maximum number of components considered during the execution of mixture models
-* **max_ks_for_mixture_model**: upper limit for the Ks range considered during the execution of mixture models 
-* **max_gene_family_size**: maximum number of members in a paralog gene family to be taken into account during Ks estimate (larger families will probably increase the computation time, but they may also provide a significant contribute for the Ks distribution) [Default: 200]
+* **logging_level**: the lowest logging/verbosity level of messages printed to the console/logs (options: critical, error, warning, info, debug, notset). [Default: info]
+* **peak_stats**: the statistical method used to obtain a single ortholog *K*:sub:`S` estimate for the divergence time of a species pair from its ortholog distribution or a single paralog *K*:sub:`S` estimate from an anchor *K*:sub:`S` cluster. (options: mode or median). [Default: mode]
+* **kde_bandwidth_modifier**: modifier to adjust the fitting of the KDE curve on the underlying whole-paranome or anchor *K*:sub:`S` distributions. The KDE Scott's factor internally computed by SciPy tends to produce an overly smooth KDE curve, especially with steep WGD peaks, and therefore it is reduced by multiplying it by a modifier. Decreasing the modifier leads to tighter fits, increasing it leads to smoother fits, and setting it to 1 gives the default KDE Scott's factor. Note that a too small factor is likely to take into account data noise. [Default: 0.4]
+* **plot_correction_arrows**: flag to toggle the plotting of rate-adjustment arrows below the adjusted mixed paralog--ortholog *K*:sub:`S plot. These arrows start from the original unadjusted ortholog divergence *K*:sub:`S` estimate and end on the rate-adjusted estimate. [Default: yes]
+* **max_mixture_model_iterations**: maximum number of EM iterations for mixture modeling. [Default: 300] 
+* **num_mixture_model_initializations**: number of times the EM algorithm is initialized (either for the random initialization in the exponential-lognormal mixture model or for k-means in the lognormal mixture model).
+* **max_mixture_model_components**: maximum number of components considered during execution of the mixture models.
+* **max_ks_for_mixture_model**: upper limit for the Ks range considered during execution of the mixture models.
+* **max_gene_family_size**: maximum number of members that any paralog gene family can have to be included in *K*:sub:`S` estimation. Large gene families increase the run time and are often composed of unrelated sequences grouped together by shared protein domains or repetitive sequences. But this is not always the case, so one may want to check manually the gene families in file ``paralog_distributions/wgd_<focal species>/<focal species>.mcl.tsv`` and increase (or even decrease) this number. [Default: 200]
