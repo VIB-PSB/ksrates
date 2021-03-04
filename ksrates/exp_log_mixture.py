@@ -12,6 +12,8 @@ import ksrates.fc_extract_ks_list as fc_extract_ks_list
 from ksrates.fc_plotting import COLOR_ANCHOR_HISTOGRAM
 import ksrates.fc_exp_log_mixture as fcEM
 from ksrates.fc_cluster_anchors import subfolder
+from ksrates.fc_rrt_correction import _ADJUSTMENT_TABLE
+
 
 def exp_log_mixture(config_file, paralog_tsv_file, correction_table_file):
   # INPUT
@@ -71,10 +73,10 @@ def exp_log_mixture(config_file, paralog_tsv_file, correction_table_file):
 
   # Get correction results TSV file
   # If correction_table is (still) missing, it will be equal to empty string (""), but the script will not exit
-  default_path_correction_table_file = os.path.join("correction_analysis", f"{species}", f"correction_table_{species}.tsv")
+  default_path_correction_table_file = os.path.join("rate_adjustment", f"{species}", f"{_ADJUSTMENT_TABLE.format(species)}")
   correction_table_file = fcCheck.get_argument_path(correction_table_file, default_path_correction_table_file, "Correction table file")
   if correction_table_file == "":
-      logging.warning("Correction data are not available yet, only Ks paranome distribution will be plotted.")
+      logging.warning("Rate-adjustment data are not available yet, only Ks paranome distribution will be plotted.")
       correction_table = None
       correction_table_available = False
   else:
@@ -84,10 +86,10 @@ def exp_log_mixture(config_file, paralog_tsv_file, correction_table_file):
 
   # Creating folder for secondary output files
   output = os.path.join(subfolder)
-  if not os.path.isdir(os.path.join("correction_analysis", species, output)):
-      logging.info(f"Creating directory [correction_analysis/{species}/{output}]")
+  if not os.path.isdir(os.path.join("rate_adjustment", species, output)):
+      logging.info(f"Creating directory [rate_adjustment/{species}/{output}]")
       logging.info("")
-      os.makedirs(os.path.join("correction_analysis", species, output))
+      os.makedirs(os.path.join("rate_adjustment", species, output))
 
   # Generating figures for the mixture models
   fig_peaks, ax_peaks_ks, ax_peaks_logks, ax_peaks2_ks, ax_peaks2_logks, sup_peaks = fcEM.generate_peak_model_figure(species_escape_whitespace, x_max_lim)
@@ -107,7 +109,7 @@ def exp_log_mixture(config_file, paralog_tsv_file, correction_table_file):
 
   # -----------------------------------------------------------------------------
 
-  with open (os.path.join("correction_analysis", f"{species}", subfolder, f"elmm_{species}_parameters.txt"), "w+") as outfile:
+  with open (os.path.join("rate_adjustment", f"{species}", subfolder, f"elmm_{species}_parameters.txt"), "w+") as outfile:
     
     # Performing EM algorithm multiple times with different types of initializations
 
@@ -186,7 +188,7 @@ def exp_log_mixture(config_file, paralog_tsv_file, correction_table_file):
     parameters_list[model_id] = final_parameters[argmin(bic_from_same_num_comp)]
 
     plt.close()
-    fig_peaks.savefig(os.path.join("correction_analysis", f"{species}", output, f"elmm_{species}_models_data_driven.pdf"),
+    fig_peaks.savefig(os.path.join("rate_adjustment", f"{species}", output, f"elmm_{species}_models_data_driven.pdf"),
                       bbox_inches="tight", bbox_extra_artists=(sup_peaks,), format="pdf")
     logging.info(f"Saving PDF figure of mixture models [{species}/{output}/elmm_{species}_models_data_driven.pdf]")
     logging.info("")
@@ -232,9 +234,9 @@ def exp_log_mixture(config_file, paralog_tsv_file, correction_table_file):
       parameters_list[model_id] = final_parameters[argmin(bic_from_same_num_comp)]
         
     plt.close()
-    fig_random.savefig(os.path.join("correction_analysis", f"{species}", output, f"elmm_{species}_models_random.pdf"), bbox_inches="tight",
+    fig_random.savefig(os.path.join("rate_adjustment", f"{species}", output, f"elmm_{species}_models_random.pdf"), bbox_inches="tight",
                                     bbox_extra_artists=(sup_random,), format="pdf")
-    logging.info(f"Saving PDF figure of mixture models [{species}/{output}/elmm_{species}_models_random.pdf.pdf]")
+    logging.info(f"Saving PDF figure of mixture models [{species}/{output}/elmm_{species}_models_random.pdf]")
     logging.info("")
 
     # Generating tabular text file with all model parameters 

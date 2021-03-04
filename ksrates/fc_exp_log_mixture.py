@@ -15,6 +15,7 @@ from ksrates.fc_cluster_anchors import ALPHA_ANCHOR_CLUSTERS
 from ksrates.fc_plotting import NEGATIVE_Y_FRACTION
 from ksrates.fc_cluster_anchors import subfolder
 
+
 # TODO: when the script will be moved to the final directory, do we have to change this path?
 plt.style.use(os.path.join(f"{os.path.dirname(os.path.abspath(__file__))}", "ks.mplstyle"))
 # this should be the path to the directory of the current file,
@@ -253,7 +254,7 @@ def get_spline(ks_data_log, ks_weights_log, species, species_escape_whitespace, 
     ax_kde_spl.legend(loc="upper left")
 
   axes_kde_spl[0].set_ylim(0, axes_kde_spl[0].get_ylim()[1] * 1.15) # resize to not overlap with legend
-  kde_spl.savefig(os.path.join("correction_analysis", f"{species}", output, f"elmm_{species}_kde_spline.pdf"), bbox_inches="tight")
+  kde_spl.savefig(os.path.join("rate_adjustment", f"{species}", output, f"elmm_{species}_kde_spline.pdf"), bbox_inches="tight")
   plt.close(kde_spl)
   return spl_x, spl_y
 
@@ -383,7 +384,7 @@ def find_peak_init_parameters(spl_x, spl_y, species, species_escape_whitespace, 
   for w in range(len(axes_refl)):
     for z in [0,1]:
       axes_refl[w][z].set_ylim(0, original_y_lim * 1.2) # resize to not overlap with legend
-  fig_refl_RL.savefig(os.path.join("correction_analysis", f"{species}", output, f"elmm_{species}_peaks.pdf"), bbox_inches="tight")
+  fig_refl_RL.savefig(os.path.join("rate_adjustment", f"{species}", output, f"elmm_{species}_peaks.pdf"), bbox_inches="tight")
   plt.close(fig_refl_RL)
 
   # Guessing the component means and stdevs based on reflected peaks
@@ -740,7 +741,7 @@ def make_parameter_table_file(parameter_table, species):
   headers = ["Model", "Iteration", "BIC", "Loglikelihood", "Convergence", 
             "Exponential_Rate", "Exponential_Weight", "Normal_Mean", "Normal_SD", "Normal_Weight"]
   parameter_df = DataFrame.from_records(array(parameter_table), columns=headers)
-  with open (os.path.join("correction_analysis", f"{species}", subfolder, f"elmm_{species}_parameters.tsv"), "w+") as outfile:
+  with open (os.path.join("rate_adjustment", f"{species}", subfolder, f"elmm_{species}_parameters.tsv"), "w+") as outfile:
     outfile.write(parameter_df.to_csv(sep="\t", index=False))
 
 
@@ -1064,7 +1065,7 @@ def plot_best_model(fig_best_model, ax_best_model, species, ks_data, ks_weights,
   chart_box = ax_best_model.get_position()
   ax_best_model.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
   lgd = create_legend_mixture_model(ax_best_model, legend_size, len(init_means)+2) # number of plotted lines is: exp + lognormals + total PDF
-  fig_best_model.savefig(os.path.join("correction_analysis", f"{species}", f"mixed_{species}_elmm.pdf"),
+  fig_best_model.savefig(os.path.join("rate_adjustment", f"{species}", f"mixed_{species}_elmm.pdf"),
                     bbox_extra_artists=(lgd, fig_best_model._suptitle), bbox_inches="tight", transparent=True, format="pdf")
 
   # # TEMPORARY FOR A FIGURE PLOT WITH DENSITY FOR COMPARISON AFTER SCALING
@@ -1078,7 +1079,7 @@ def plot_best_model(fig_best_model, ax_best_model, species, ks_data, ks_weights,
   # chart_box = ax.get_position()
   # ax.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
   # lgd = create_legend_mixture_model(ax, legend_size, len(init_means)+2) # number of plotted lines is: exp + lognormals + total PDF
-  # fig.savefig(os.path.join("correction_analysis", f"{species}", f"mixed_density_elmm.pdf"),
+  # fig.savefig(os.path.join("rate_adjustment", f"{species}", f"mixed_density_elmm.pdf"),
   #                   bbox_extra_artists=(lgd, fig._suptitle), bbox_inches="tight", transparent=True, format="pdf")
 
 

@@ -50,25 +50,25 @@ def setup_correction(config_file, nextflow_flag):
     logging.info("Completed")
 
     # Creating folders for correction output files
-    if not os.path.exists('correction_analysis'):
-        os.mkdir('correction_analysis')
-    if not os.path.exists(os.path.join("correction_analysis", f"{species_of_interest}")):
-        os.mkdir(os.path.join("correction_analysis", f"{species_of_interest}"))
-        logging.info(f"Creating output folder [correction_analysis/{species_of_interest}]")
+    if not os.path.exists('rate_adjustment'):
+        os.mkdir('rate_adjustment')
+    if not os.path.exists(os.path.join("rate_adjustment", f"{species_of_interest}")):
+        os.mkdir(os.path.join("rate_adjustment", f"{species_of_interest}"))
+        logging.info(f"Creating output folder [rate_adjustment/{species_of_interest}]")
 
     # -----------------------------------------------------------------------------
 
     # 1) FINDING SISTER AND OUTGROUP SPECIES FOR EACH NODE OF INTEREST
 
     logging.info("")
-    logging.info(f"Extracting ortholog trios for rate-correction [ortholog_trios_{species_of_interest}.tsv]")
+    logging.info(f"Extracting ortholog trios for rate-adjustment [ortholog_trios_{species_of_interest}.tsv]")
 
     if isinstance(max_num_outspecies, int):
-        logging.info(f"- Each divergent species pair will be corrected with at maximum {max_num_outspecies} "
+        logging.info(f"- Each divergent species pair will be adjusted with at maximum {max_num_outspecies} "
                      f"trios by using the closest outspecies")
         logging.info(f"  (as required in configuration file field 'maximum_number_outspecies')")
     else:
-        logging.info(f"- Each divergent species pair will be corrected by using all the possible outspecies "
+        logging.info(f"- Each divergent species pair will be adjusted by using all the possible outspecies "
                      f"found in the tree.")
 
     # get tree node object of the focal species
@@ -84,7 +84,7 @@ def setup_correction(config_file, nextflow_flag):
         sys.exit(1)
 
     trios_array = []  # list of trios
-    outfile_drawing_path = os.path.join("correction_analysis", f"{species_of_interest}",
+    outfile_drawing_path = os.path.join("rate_adjustment", f"{species_of_interest}",
                                         f"tree_{species_of_interest}.txt")
     with open(outfile_drawing_path, "w+") as outfile_drawing:
         outfile_drawing.write(f"Focal species: {species_of_interest}\n\n")
@@ -120,7 +120,7 @@ def setup_correction(config_file, nextflow_flag):
 
     # Generate trios DataFrame from trios array
     trios_df = DataFrame.from_records(trios_array, columns=["Node", "Species", "Sister_Species", "Out_Species"])
-    outfile_trios_path = os.path.join("correction_analysis", f"{species_of_interest}",
+    outfile_trios_path = os.path.join("rate_adjustment", f"{species_of_interest}",
                                          f"ortholog_trios_{species_of_interest}.tsv")
     with open(outfile_trios_path, "w+") as outfile:
         outfile.write(trios_df.to_csv(sep="\t", index=False))
@@ -222,7 +222,7 @@ def setup_correction(config_file, nextflow_flag):
     logging.info("")
 
     species_pairs_unknown_df = DataFrame.from_records(species_pairs_unknown, columns=["Species1", "Species2"])
-    outfile_pairs_path = os.path.join("correction_analysis", f"{species_of_interest}",
+    outfile_pairs_path = os.path.join("rate_adjustment", f"{species_of_interest}",
                                       f"ortholog_pairs_{species_of_interest}.tsv")
     with open(outfile_pairs_path, "w+") as outfile_pairs:
         outfile_pairs.write(species_pairs_unknown_df.to_csv(sep="\t", index=False))
@@ -230,7 +230,7 @@ def setup_correction(config_file, nextflow_flag):
     # -----------------------------------------------------------------------------
 
     # 3) PLOTTING THE ORIGINAL UN-CORRECTED TREE in PDF FORMAT
-    logging.info(f"Plotting input phylogenetic tree [tree_{species_of_interest}.pdf]")
+    logging.info(f"Plotting input phylogenetic tree [{fcTree._TREE.format(species_of_interest)}]")
     logging.info("")
     fcTree.plot_uncorrected_phylogeny(tree, species_of_interest, latin_names, sp_history)
 

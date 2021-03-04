@@ -4,6 +4,7 @@ import logging
 import ksrates.fc_manipulate_trees as fcTree
 import ksrates.fc_check_input as fcCheck
 import ksrates.fc_configfile as fcConf
+from ksrates.fc_rrt_correction import _ADJUSTMENT_TABLE
 from ksrates.utils import init_logging
 import pandas
 
@@ -21,10 +22,10 @@ def plot_tree_rates(config_file, correction_table_file, nextflow_flag):
     newick_tree = config.get_newick_tree() # as Tree object by ete3
 
     # Get correction results TSV file
-    default_path_correction_table_file = os.path.join("correction_analysis", f"{species}", f"correction_table_{species}.tsv")
+    default_path_correction_table_file = os.path.join("rate_adjustment", f"{species}", f"{_ADJUSTMENT_TABLE.format(species)}")
     correction_table_file = fcCheck.get_argument_path(correction_table_file, default_path_correction_table_file, "Correction table file")
     if correction_table_file == "": # it means that the correction_table is not present or available yet
-        logging.warning(f"Correction data not available yet: PDF figure of phylogenetic tree not generated.")
+        logging.warning(f"Rate-adjustment data not available yet: PDF figure of phylogenetic tree not generated.")
         logging.info(f"Exiting")
         sys.exit(1) # exit 1 because plot_tree is executed at the end of the Nextflow pipeline and correction_table should exits
     else:
@@ -34,7 +35,7 @@ def plot_tree_rates(config_file, correction_table_file, nextflow_flag):
             missing_required_rates = set(sorted(species_in_correction_table)) - set(sorted(correction_table["Sister_Species"]))
 
             if correction_table.shape[0] == 0:
-                logging.warning(f"Correction data not available yet: PDF figure of phylogenetic tree not generated.")
+                logging.warning(f"Rate-adjustment data not available yet: PDF figure of phylogenetic tree not generated.")
                 logging.info(f"Exiting")
                 sys.exit(1) # exit 1 because plot_tree is executed at the end of the Nextflow pipeline and correction_table should be completed
             elif len(missing_required_rates) != 0:
@@ -42,7 +43,7 @@ def plot_tree_rates(config_file, correction_table_file, nextflow_flag):
                 # because all the rates contained in there are needed.
                 # Other extra-table rates may be additionally required to fill in all of the branch rates,
                 # but their absence is tolerated.
-                logging.warning(f"The rates between {latin_names[species]} and the following species are missing from the correction table. Please compute them before building the tree:")
+                logging.warning(f"The Ks distances between {latin_names[species]} and the following species are missing from the rate-adjustment table. Please compute them before building the tree:")
                 for name in sorted(missing_required_rates):
                     logging.warning(f" - {name}")
                 logging.warning(f"Exiting")
@@ -71,6 +72,6 @@ def plot_tree_rates(config_file, correction_table_file, nextflow_flag):
     logging.info("")
     fcTree.plotting_tree(species, latin_names, newick_tree, correction_table, consensus_peak_for_multiple_outgroups, ortholog_db, peak_stats, nextflow_flag)
     logging.info("")
-    logging.info(f"Saved PDF tree figure [tree_rates_{species}.pdf]")
+    logging.info(f"Saved PDF tree figure [{fcTree._TREE_BRANCH_DISTANCES.format(species)}]")
     logging.info("")
     logging.info("All done")

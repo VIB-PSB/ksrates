@@ -7,7 +7,7 @@ import ksrates.fc_plotting as fcPlot
 import ksrates.fc_extract_ks_list as fc_extract_ks_list
 import ksrates.fc_check_input as fcCheck
 import ksrates.fc_configfile as fcConf
-
+from ksrates.fc_rrt_correction import _ADJUSTMENT_TABLE
 
 def plot_paralogs_distr(config_file, correction_table_file, paralog_tsv_file, anchors_ks_tsv_file):
     # INPUT
@@ -44,16 +44,16 @@ def plot_paralogs_distr(config_file, correction_table_file, paralog_tsv_file, an
 
     # Get correction results TSV file
     # If correction_table is (still) missing, it will be equal to empty string (""), but the script will not exit
-    default_path_correction_table_file = os.path.join("correction_analysis", f"{species}", f"correction_table_{species}.tsv")
+    default_path_correction_table_file = os.path.join("rate_adjustment", f"{species}", f"{_ADJUSTMENT_TABLE.format(species)}")
     correction_table_file = fcCheck.get_argument_path(correction_table_file, default_path_correction_table_file, "Correction table file")
     if correction_table_file == "": # it means that the correction_table is not present or available yet
-        logging.warning("Correction data are not available yet, only paralog distribution will be plotted.")
+        logging.warning("Rate-adjustment data are not available yet, only paralog distribution will be plotted.")
         correction_table_available = False
     else:
         with open(correction_table_file, "r") as f:
             correction_table = pandas.read_csv(f, sep="\t")
             if correction_table.shape[0] == 0:
-                logging.warning(f"Correction table file is present by doesn't contain any data: corrected divergences will not be plotted.")
+                logging.warning(f"Rate-adjustment table file is present by doesn't contain any data: rate-adjusted divergences will not be plotted.")
                 correction_table_available = False
             else:
                 correction_table_available = True
@@ -128,7 +128,7 @@ def plot_paralogs_distr(config_file, correction_table_file, paralog_tsv_file, an
         fcPlot.plot_divergences(correction_table, peak_stats, consensus_peak_for_multiple_outgroups, ax_uncorr, ax_corr, color_list, plot_correction_arrows)
 
     logging.info("")
-    logging.info(f"Saving PDF figures of mixed plots [mixed_{species}_corrected.pdf, mixed_{species}_uncorrected.pdf]")
+    logging.info(f"Saving PDF figures of mixed plots [{fcPlot._MIXED_ADJUSTED_PLOT_FILENAME.format(species)}, {fcPlot._MIXED_UNADJUSTED_PLOT_FILENAME.format(species)}]")
     fcPlot.save_mixed_plot(fig_corr, fig_uncorr, ax_corr, ax_uncorr, species, paranome=paranome_analysis,
                         colinearity=colinearity_analysis)
 

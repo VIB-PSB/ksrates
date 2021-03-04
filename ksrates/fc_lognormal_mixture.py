@@ -327,7 +327,7 @@ def save_lmm(fig, axis, species, best_model, datatype):
     chart_box = axis.get_position()
     axis.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
     lgd = create_legend_mixture_model(axis, legend_size, num_mixture_model_lines, datatype)
-    fig.savefig(os.path.join("correction_analysis", f"{species}", f"mixed_{species}_lmm_{datatype}.pdf"),
+    fig.savefig(os.path.join("rate_adjustment", f"{species}", f"mixed_{species}_lmm_{datatype}.pdf"),
                      bbox_extra_artists=(lgd, fig._suptitle), bbox_inches="tight", transparent=True, format="pdf")
 
 
@@ -343,5 +343,5 @@ def make_parameter_table_file(parameter_table, species, datatype):
   #          "Exponential_Rate", "Exponential_Weight", "Normal_Mean", "Normal_SD", "Normal_Weight"]
   headers = ["Model", "BIC", "Loglikelihood", "Convergence", "Normal_Mean", "Normal_SD", "Normal_Weight"]
   parameter_df = DataFrame.from_records(array(parameter_table), columns=headers)
-  with open (os.path.join("correction_analysis", f"{species}", subfolder, f"lmm_{species}_parameters_{datatype}.tsv"), "w+") as outfile:
+  with open (os.path.join("rate_adjustment", f"{species}", subfolder, f"lmm_{species}_parameters_{datatype}.tsv"), "w+") as outfile:
     outfile.write(parameter_df.to_csv(sep="\t", index=False))

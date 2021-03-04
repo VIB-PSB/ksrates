@@ -12,6 +12,7 @@ import ksrates.fc_extract_ks_list as fc_extract_ks_list
 import ksrates.fc_lognormal_mixture as fcLMM
 from ksrates.fc_plotting import COLOR_ANCHOR_HISTOGRAM
 from ksrates.fc_cluster_anchors import subfolder
+from ksrates.fc_rrt_correction import _ADJUSTMENT_TABLE
 
 def lognormal_mixture(config_file, paralog_tsv_file, anchors_ks_tsv_file, correction_table_file):
     # INPUT
@@ -53,7 +54,7 @@ def lognormal_mixture(config_file, paralog_tsv_file, anchors_ks_tsv_file, correc
     logging.info("")
 
     # Creating folder for secondary output files
-    output_dir = os.path.join("correction_analysis", species, subfolder)
+    output_dir = os.path.join("rate_adjustment", species, subfolder)
     if not os.path.isdir(output_dir):
         logging.info(f"Creating directory [{output_dir}]")
         logging.info("")
@@ -61,10 +62,10 @@ def lognormal_mixture(config_file, paralog_tsv_file, anchors_ks_tsv_file, correc
 
     # Get correction results TSV file
     # If correction_table is (still) missing, it will be equal to empty string (""), but the script will not exit
-    default_path_correction_table_file = os.path.join("correction_analysis", f"{species}", f"correction_table_{species}.tsv")
+    default_path_correction_table_file = os.path.join("rate_adjustment", f"{species}", f"{_ADJUSTMENT_TABLE.format(species)}")
     correction_table_file = fcCheck.get_argument_path(correction_table_file, default_path_correction_table_file, "Correction table file")
     if correction_table_file == "":
-        logging.warning("Correction data are not available yet, only Ks distribution will be plotted.")
+        logging.warning("Rate-adjustment data are not available yet, only Ks distribution will be plotted.")
         correction_table = None
         correction_table_available = False
     else:
@@ -96,7 +97,7 @@ def lognormal_mixture(config_file, paralog_tsv_file, anchors_ks_tsv_file, correc
     parameter_table = []
 
     if paranome_analysis:
-        with open (os.path.join("correction_analysis", f"{species}", subfolder, f"lmm_{species}_parameters_paranome.txt"), "w+") as outfile:
+        with open (os.path.join("rate_adjustment", f"{species}", subfolder, f"lmm_{species}_parameters_paranome.txt"), "w+") as outfile:
             logging.info("Performing lognormal mixture model on whole-paranome Ks distribution")
             paranome_list, weight_list = fc_extract_ks_list.ks_list_from_tsv(paralog_tsv_file, max_ks_para, "paralogs")
             hist_paranome = fcPlot.plot_histogram("Whole-paranome (weighted)", axis_para, paranome_list, bin_list, 
@@ -118,7 +119,7 @@ def lognormal_mixture(config_file, paralog_tsv_file, anchors_ks_tsv_file, correc
         parameter_table = []
 
     if colinearity_analysis:
-        with open (os.path.join("correction_analysis", f"{species}", subfolder, f"lmm_{species}_parameters_colinearity.txt"), "w+") as outfile:
+        with open (os.path.join("rate_adjustment", f"{species}", subfolder, f"lmm_{species}_parameters_colinearity.txt"), "w+") as outfile:
             logging.info("Performing lognormal mixture model on anchor pair Ks distribution")
             anchors_list = fc_extract_ks_list.ks_list_from_tsv(anchors_ks_tsv_file, max_ks_para, "anchor pairs")
             if len(anchors_list) == 0:
@@ -144,12 +145,14 @@ def lognormal_mixture(config_file, paralog_tsv_file, anchors_ks_tsv_file, correc
             dummy_fig, dummy_axis = plt.subplots()
             fcPlot.plot_divergences(correction_table, peak_stats, consensus_peak_for_multiple_outgroups, dummy_axis, axis, color_list, plot_correction_arrows)
 
+    logging.info("")
+
     if paranome_analysis:
         fcLMM.save_lmm(fig_para, axis_para, species, best_model_paranome, "paranome")
+        logging.info(f"Saved PDF figure(s) of lognormal mixture model [mixed_{species}_lmm_paranome.pdf]")
     if colinearity_analysis:
         fcLMM.save_lmm(fig_colin, axis_colin, species, best_model_anchors, "colinearity")
+        logging.info(f"Saved PDF figure(s) of lognormal mixture model [mixed_{species}_lmm_colinearity.pdf]")
 
-    logging.info("")
-    logging.info(f"Saved PDF figure(s) of lognormal mixture model [mixed_{species}_lmm.tsv]")
     logging.info("")
     logging.info("All done")

@@ -47,6 +47,10 @@ LINEWIDTH_CIRCLE_LABEL_BORDER = 1
 # Fraction of total y range by which to extend the plot below if correction arrows are drawn
 NEGATIVE_Y_FRACTION = 0.08
 
+# Filenames
+_MIXED_ADJUSTED_PLOT_FILENAME = "mixed_{}_adjusted.pdf"
+_MIXED_UNADJUSTED_PLOT_FILENAME = "mixed_{}_unadjusted.pdf"
+
 
 def generate_mixed_plot_figure(species, x_max_lim, y_max_lim, corrected_or_not, correction_table_available, plot_correction_arrows):
     """
@@ -485,12 +489,12 @@ def save_mixed_plot(fig_corr, fig_uncorr, ax_corr, ax_uncorr, species, paranome,
     # For the un-corrected plot:
     ax_uncorr.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
     lgd = create_legend(ax_uncorr, paranome, colinearity, legend_size)
-    fig_uncorr.savefig(os.path.join("correction_analysis", f"{species}", f"mixed_{species}_uncorrected.pdf"),
+    fig_uncorr.savefig(os.path.join("rate_adjustment", f"{species}", _MIXED_UNADJUSTED_PLOT_FILENAME.format(species)),
                        bbox_extra_artists=(lgd, fig_uncorr._suptitle), bbox_inches="tight", transparent=True, format="pdf")
     # Same thing for the corrected plot:
     ax_corr.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
     lgd = create_legend(ax_corr, paranome, colinearity, legend_size)
-    fig_corr.savefig(os.path.join("correction_analysis", f"{species}", f"mixed_{species}_corrected.pdf"),
+    fig_corr.savefig(os.path.join("rate_adjustment", f"{species}", _MIXED_ADJUSTED_PLOT_FILENAME.format(species)),
                      bbox_extra_artists=(lgd, fig_corr._suptitle), bbox_inches="tight", transparent=True, format="pdf")
 
 

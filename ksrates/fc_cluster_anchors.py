@@ -12,6 +12,7 @@ from sklearn.cluster import KMeans
 import ksrates.fc_kde_bootstrap as fcPeak
 import ksrates.fc_plotting as fcPlot
 from ksrates.fc_plotting import NEGATIVE_Y_FRACTION
+
 from sklearn.mixture import GaussianMixture      
 from matplotlib.legend import Legend
 from matplotlib.colors import to_rgba
@@ -28,6 +29,10 @@ plt.style.use(os.path.join(f"{os.path.dirname(os.path.abspath(__file__))}", "ks.
 # Some constants
 ALPHA_ANCHOR_CLUSTERS = 0.4
 subfolder = "paralogs_analyses"
+
+_ANCHOR_CLUSTERS_MEDIANS = "anchor_clusters_{}_medians.pdf"
+_ANCHOR_CLUSTERS_UNFILTERED = "mixed_{}_anchor_clusters_unfiltered.pdf"
+_ANCHOR_CLUSTERS_FILTERED = "mixed_{}_anchor_clusters.pdf"
 
 def parse_segments_file(path_segments_txt):
     """
@@ -354,8 +359,8 @@ def plot_clusters_of_medians(medians_per_cluster, cluster_color_letter_list, x_a
     ax_clusters_medians.legend()
     clusters_histo_medians.suptitle(f'Clustering of segment pair medians from ${latin_name}$')
     plt.setp(ax_clusters_medians.yaxis.get_majorticklabels(), rotation=90, verticalalignment='center')
-    clusters_histo_medians.savefig(os.path.join("correction_analysis", f"{species}", output, 
-            f"anchor_clusters_{species}_medians.pdf"), transparent=True, format="pdf")
+    clusters_histo_medians.savefig(os.path.join("rate_adjustment", f"{species}", output, 
+            f"{_ANCHOR_CLUSTERS_MEDIANS.format(species)}"), transparent=True, format="pdf")
 
 
 def assign_cluster_colors(cluster_of_ks):
@@ -626,9 +631,9 @@ def save_anchor_cluster_plot(fig_corr, fig_uncorr, ax_corr, ax_uncorr, species, 
     sup = update_figure_title_cluster_anchors(fig_corr, ax_corr, "corrected", species, latin_names,
                                               correction_table_available, cluster_of_ks, round_number)
     if round_number == "first": # unfiltered
-        figure_file_path = os.path.join("correction_analysis", f"{species}", output, f"mixed_{species}_anchor_clusters_unfiltered.pdf")
+        figure_file_path = os.path.join("rate_adjustment", f"{species}", output, f"{_ANCHOR_CLUSTERS_UNFILTERED.format(species)}")
     elif round_number == "second": # filtered, only significant clusters
-        figure_file_path = os.path.join("correction_analysis", f"{species}", f"mixed_{species}_anchor_clusters.pdf")
+        figure_file_path = os.path.join("rate_adjustment", f"{species}", f"{_ANCHOR_CLUSTERS_FILTERED.format(species)}")
 
     fig_corr.savefig(figure_file_path, bbox_extra_artists=(lgd, sup), bbox_inches="tight",
                      transparent=True, format="pdf")

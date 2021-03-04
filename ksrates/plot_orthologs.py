@@ -30,7 +30,7 @@ def plot_orthologs_distr(config_file, trios_file):
     x_lim = config.get_x_lim_ortho()
 
     # Get input file listing the trios
-    default_path_trios_file = os.path.join("correction_analysis", f"{species_of_interest}", f"ortholog_trios_{species_of_interest}.tsv")
+    default_path_trios_file = os.path.join("rate_adjustment", f"{species_of_interest}", f"ortholog_trios_{species_of_interest}.tsv")
     trios_file = fcCheck.get_argument_path(trios_file, default_path_trios_file, "Trios TSV file")
     if trios_file == "":
         logging.error(f"Trios TSV file not found at default position [{default_path_trios_file}]")
@@ -68,7 +68,7 @@ def plot_orthologs_distr(config_file, trios_file):
             outgroups_per_divergent_pair_dict[divergent_pair_key].append(out)
 
     for divergent_pair in outgroups_per_divergent_pair_dict.keys():
-        with PdfPages(os.path.join("correction_analysis", f"{species_of_interest}", f"orthologs_{divergent_pair}.pdf")) as pdf:
+        with PdfPages(os.path.join("rate_adjustment", f"{species_of_interest}", f"orthologs_{divergent_pair}.pdf")) as pdf:
             species = divergent_pair.split("_")[0]
             latinSpecies = latin_names[species]
             sister = divergent_pair.split("_")[1]

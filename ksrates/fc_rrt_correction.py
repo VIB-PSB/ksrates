@@ -1,5 +1,9 @@
 from math import sqrt
 
+# Filenames
+_ADJUSTMENT_TABLE_ALL = "adjustment_table_{}_all.tsv"
+_ADJUSTMENT_TABLE = "adjustment_table_{}.tsv"
+
 
 def compute_relative_rates(ortholog_db, idx_species_sister, idx_species_outgroup, idx_sister_outgroup, peak_stats):
     """

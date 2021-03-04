@@ -10,6 +10,10 @@ import logging
 from statistics import mean
 import ksrates.fc_rrt_correction as fcCorrect
 
+# Filenames
+_TREE_BRANCH_DISTANCES = "tree_{}_distances.pdf"
+_TREE = "tree_{}.pdf"
+
 class _LabelToggleItem(QGraphicsRectItem):
     # Empty item whose sole purpose is to toggle the display of the branch length label depending on whether it fits
     # in the width given by the branch line. Needs to be as a Face with position="branch-top" so that it has access
@@ -650,9 +654,9 @@ def plotting_tree(species, latin_names, original_tree, correction_table, consens
             unknown_branch_len_style(divergence_node)
 
     if ortholog_db.empty: # relative rates can be get only from correction_tables
-        logging.info("Getting relative rates from correction table data")
+        logging.info("Getting relative rates from rate-adjustment table data")
     else: # if the ortholog DB is available, we can try to compute the rates from there too
-        logging.info("Getting relative rates from correction table data")
+        logging.info("Getting relative rates from rate-adjustment table data")
         logging.info("Computing relative rates from ortholog peak data in database by applying principles of the relative rate test")
 
     rate_dict = {}
@@ -729,7 +733,7 @@ def plotting_tree(species, latin_names, original_tree, correction_table, consens
     ts.scale = 200
     #ts.scale_length =  # to set a fixed scale branch length
     root_of_corrected_tree = species_history[-1]
-    root_of_corrected_tree.render(f"correction_analysis/{species}/tree_{species}_rates.pdf", w=4.5, units="in", tree_style=ts)
+    root_of_corrected_tree.render(os.path.join("rate_adjustment", f"{species}", f"{_TREE_BRANCH_DISTANCES.format(species)}"), w=4.5, units="in", tree_style=ts)
 
 
 def plot_uncorrected_phylogeny(tree, species, latin_names, species_history):
@@ -755,4 +759,4 @@ def plot_uncorrected_phylogeny(tree, species, latin_names, species_history):
     ts.margin_bottom = 25
     ts.scale = 200
     ts.show_scale = False
-    tree.render(f"correction_analysis/{species}/tree_{species}.pdf", w=4.5, units="in", tree_style=ts)
+    tree.render(os.path.join("rate_adjustment", f"{species}", f"{_TREE.format(species)}"), w=4.5, units="in", tree_style=ts)

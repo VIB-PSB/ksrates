@@ -25,7 +25,7 @@ def compute_peaks(config_file, ortholog_pairs_file):
     bin_width_ortho = config.get_bin_width_ortho()
     x_lim_ortho = config.get_x_lim_ortho()
 
-    default_path_ortholog_pairs_file = os.path.join("correction_analysis", f"{species}", f"ortholog_pairs_{species}.tsv")
+    default_path_ortholog_pairs_file = os.path.join("rate_adjustment", f"{species}", f"ortholog_pairs_{species}.tsv")
     ortholog_pairs_file = fcCheck.get_argument_path(ortholog_pairs_file, default_path_ortholog_pairs_file,  "Ortholog pairs file")
     if ortholog_pairs_file == "":
         logging.error(f"Ortholog pairs file not found at default position [{default_path_ortholog_pairs_file}].")

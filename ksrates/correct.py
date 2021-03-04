@@ -13,7 +13,7 @@ from ksrates.utils import init_logging
 def correct(config_file, trios_file):
     # INPUT
     config = fcConf.Configuration(config_file)
-    init_logging("Rate-correction of ortholog Ks distributions", config.get_logging_level())
+    init_logging("Rate-adjustment of ortholog Ks distributions", config.get_logging_level())
     logging.info("Loading parameters and input files")
 
     # Get parameters from configfile
@@ -21,7 +21,7 @@ def correct(config_file, trios_file):
     latin_names = config.get_latin_names()
     db_path = config.get_ortho_db()
 
-    default_path_trios_file = os.path.join("correction_analysis", f"{species_of_interest}", f"ortholog_trios_{species_of_interest}.tsv")
+    default_path_trios_file = os.path.join("rate_adjustment", f"{species_of_interest}", f"ortholog_trios_{species_of_interest}.tsv")
     trios_file = fcCheck.get_argument_path(trios_file, default_path_trios_file, "Trios TSV file")
     if trios_file == "":
         logging.error(f"Trios TSV file not found at default position [{default_path_trios_file}].")
@@ -53,7 +53,7 @@ def correct(config_file, trios_file):
     # FILLING IN THE DATAFRAME FOR ALL TRIOS
     # It lists the correction results for each outgroup that has been used
     logging.info("")
-    logging.info(f"Performing rate-correction of each divergent pair by using one or more outgroups:")
+    logging.info(f"Performing rate-adjustment of each divergent pair by using one or more outgroups:")
     with open(trios_file, "r") as f:
         trios = pd.read_csv(f, sep="\t")
 
@@ -61,7 +61,7 @@ def correct(config_file, trios_file):
         node = row['Node']
         species, sister, out = row['Species'], row['Sister_Species'], row['Out_Species']
         latinSpecies, latinSister, latinOut = latin_names[species], latin_names[sister], latin_names[out]
-        logging.info(f" - Correcting the peak for [{latinSpecies}] and [{latinSister}] with outspecies [{latinOut}]")
+        logging.info(f" - Adjusting the peak for [{latinSpecies}] and [{latinSister}] with outspecies [{latinOut}]")
 
         species_sister = "_".join(sorted([latinSpecies, latinSister], key=str.casefold))  # e.g. A.filiculoides_S.cucullata
         species_out = "_".join(sorted([latinSpecies, latinOut], key=str.casefold))
@@ -89,16 +89,16 @@ def correct(config_file, trios_file):
     # Generating file with correction data for each trio.
     all_trios_correction_df = DataFrame.from_records(all_trios_correction_array, columns=["Node", "Species", "Sister_Species",
                                                         "Out_Species", "Ks_OC", "Mode", "SD", "Ks_Species", "Ks_Sister"])
-    with open(os.path.join("correction_analysis", f"{species_of_interest}", f"correction_table_{species_of_interest}_all.tsv"),
+    with open(os.path.join("rate_adjustment", f"{species_of_interest}", f"{fcCorrect._ADJUSTMENT_TABLE_ALL.format(species_of_interest)}"),
             "w+") as outfile:
         outfile.write(all_trios_correction_df.to_csv(sep="\t", index=False))
-    logging.info(f"Correction results for each trio saved in TSV format [correction_table_{species_of_interest}_all.tsv]")
+    logging.info(f"Rate-adjustment results for each trio saved in TSV format [{fcCorrect._ADJUSTMENT_TABLE_ALL.format(species_of_interest)}]")
     logging.info("")
 
     # FILLING IN THE DATAFRAME FOR ALL ORTHOLOG PAIRS WITH FOCAL SPECIES
     # (ALL DIVERGENCE EVENTS OF FOCAL SPECIES)
     if len(sisters_per_node) != 0:
-        logging.info(f"Finding a consensus value in case multiple outgroups have been used to correct a divergent pair [strategy: {consensus_peak_for_multiple_outgroups}]")
+        logging.info(f"Finding a consensus value in case multiple outgroups have been used to adjust a divergent pair [strategy: {consensus_peak_for_multiple_outgroups}]")
 
     # Get the headers for the file with data to plot the tree
     df_tested_outgroups_per_sister = all_trios_correction_df.loc[all_trios_correction_df['Node'] == 1]
@@ -159,10 +159,10 @@ def correct(config_file, trios_file):
                                                         "Peak_MeanOut", "Peak_MeanOut_SD", "Rate_Species_MeanOut", "Rate_Sister_MeanOut",
                                                         "Peak_BestOut", "Peak_BestOut_SD", "Rate_Species_BestOut", "Rate_Sister_BestOut", 
                                                         "Original_Mode", "Original_Mode_SD", "Original_Median", "Original_Median_SD"])
-    with open(os.path.join("correction_analysis", f"{species_of_interest}", f"correction_table_{species_of_interest}.tsv"),
+    with open(os.path.join("rate_adjustment", f"{species_of_interest}", f"{fcCorrect._ADJUSTMENT_TABLE.format(species_of_interest)}"),
             "w+") as outfile:
         outfile.write(all_pairs_df.to_csv(sep="\t", index=False))
-        logging.info(f"Correction results as consensus values saved in TSV format [correction_table_{species_of_interest}.tsv]")
+        logging.info(f"Rate-adjustment results as consensus values saved in TSV format [{fcCorrect._ADJUSTMENT_TABLE.format(species_of_interest)}]")
 
     logging.info("")
     logging.info("All done")
