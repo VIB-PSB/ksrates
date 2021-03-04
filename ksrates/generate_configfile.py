@@ -24,8 +24,8 @@ def generate_configfile(configfile_name):
     Config.set("SPECIES", "gff_filename", "")
     Config.set("SPECIES", "# informal names associated to their FASTA or GFF filenames/paths through a colon and separated by commas\n")
 
-    Config.set("SPECIES", "Peak_database_path", "ortholog_peak_db.tsv")
-    Config.set("SPECIES", "Ks_list_database_path", "ortholog_ks_list_db.tsv")
+    Config.set("SPECIES", "peak_database_path", "ortholog_peak_db.tsv")
+    Config.set("SPECIES", "ks_list_database_path", "ortholog_ks_list_db.tsv")
     Config.set("SPECIES", "# filenames/paths of the ortholog data databases\n")
 
     Config.add_section("ANALYSIS SETTING")

@@ -140,7 +140,7 @@ def init_parameters_from_data(ax_ks, species, ks_data_log, ks_weights_log, ks_da
     :return init_weights: initial component weights (they all have even weights)
     """
     # NOTE: This histogram has by convention bin_width equal to 0.1,
-    # the height of its first bin is used to guess rate of the exponential component
+    # the height of its first bin is used to guess the rate of the exponential component
     bin_list_for_lambda = arange(0, 5.1, 0.1)
     hist_data = histogram(ks_data, weights=ks_weights, bins=bin_list_for_lambda, density=True) 
     init_lambd = round(hist_data[0][0], 2) 

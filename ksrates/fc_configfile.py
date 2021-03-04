@@ -501,7 +501,7 @@ class Configuration:
             try:
                 correction_arrows = self.expert_config.get("EXPERT PARAMETERS", "plot_adjustment_arrows").lower()
                 if correction_arrows not in ["yes", "no"]:
-                    logging.warning(f'Unrecognized field in expert configuration file [correction_arrows = {correction_arrows}]. Please choose between "yes" and "no". Default choice will be applied [no]')
+                    logging.warning(f'Unrecognized field in expert configuration file [plot_adjustment_arrows = {correction_arrows}]. Please choose between "yes" and "no". Default choice will be applied [no]')
                     correction_arrows = False
                 else:
                     if correction_arrows == "yes":
@@ -509,7 +509,7 @@ class Configuration:
                     elif correction_arrows == "no":
                         correction_arrows = False
             except Exception:
-                logging.warning(f'Missing field in expert configuration file [correction_arrows]. Please choose between "yes" and "no". Default choice will be applied [no]')
+                logging.warning(f'Missing field in expert configuration file [plot_adjustment_arrows]. Please choose between "yes" and "no". Default choice will be applied [no]')
                 correction_arrows = False
         else:
             correction_arrows = False
@@ -690,7 +690,7 @@ class Configuration:
         Ks coordinate where the paralog distribution starts showing only a flat right tail
         without any WGM trace. Species with low substitution rates are likely to have 
         visible signals only up around 3 Ks, thus this parameter makes sure that the mixture model
-        is performed only on the relative range 0-to-3 Ks. Species with fast rates are instead
+        is performed only on the relative range 0-to-3 Ks. Species with high rates are instead
         likely to have some signal up to a higher Ks, such as 5 Ks. It is not advised to
         set this parameter at more than 5 Ks since high Ks are not reliable.
         [Default: 5].
