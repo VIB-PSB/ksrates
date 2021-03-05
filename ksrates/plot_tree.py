@@ -19,7 +19,7 @@ def plot_tree_rates(config_file, correction_table_file, nextflow_flag):
     species = config.get_species()
     peak_db_path = config.get_ortho_db()
     newick_tree = config.get_newick_tree() # as Tree object by ete3
-    latin_names = config.get_latin_names(newick_tree)
+    latin_names = config.get_latin_names()
 
     # Get correction results TSV file
     default_path_correction_table_file = os.path.join("rate_adjustment", f"{species}", f"{_ADJUSTMENT_TABLE.format(species)}")

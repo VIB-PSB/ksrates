@@ -23,8 +23,7 @@ def plot_orthologs_distr(config_file, trios_file):
 
     # Get parameters from configuration file
     species_of_interest = config.get_species()
-    newick_tree = config.get_newick_tree()
-    latin_names = config.get_latin_names(newick_tree)
+    latin_names = config.get_latin_names()
     max_ks_ortho = config.get_max_ks_ortho()
     bin_width_ortho = config.get_bin_width_ortho()
     bin_list_ortho = fcPlot.get_bins(max_ks_ortho, bin_width_ortho)

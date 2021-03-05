@@ -16,7 +16,6 @@ def wgd_orthologs(config_file, species_one, species_two, n_threads):
     init_logging(f"Ortholog wgd analysis for species pair [{species1} - {species2}]", config.get_logging_level())
 
     # Get parameters and FASTA files from configuration file
-    newick_tree = config.get_newick_tree()
     latin_names = config.get_latin_names()
 
     fasta_names_dict = config.get_fasta_dict()

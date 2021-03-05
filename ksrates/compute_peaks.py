@@ -19,7 +19,7 @@ def compute_peaks(config_file, ortholog_pairs_file):
     # Get parameters and input files
     species = config.get_species()
     tree = config.get_newick_tree()
-    latin_names = config.get_latin_names(tree)
+    latin_names = config.get_latin_names()
     max_ks_ortho = config.get_max_ks_ortho()
     n_iter = config.get_num_iteration()
     bin_width_ortho = config.get_bin_width_ortho()

@@ -27,8 +27,7 @@ def cluster_anchor_ks(config_file, correction_table_file, path_anchorpoints_txt,
         sys.exit(0) # exit code 0 because no actual errors were thrown
 
     species = config.get_species()
-    newick_tree = config.get_newick_tree()
-    latin_names = config.get_latin_names(newick_tree)
+    latin_names = config.get_latin_names()
     latin_name = latin_names[species].replace(' ', '\ ') # replace the space to have the correct format in titles
     max_ks_para = config.get_max_ks_para()
     bin_width = config.get_bin_width_para()

@@ -23,8 +23,7 @@ def exp_log_mixture(config_file, paralog_tsv_file, correction_table_file):
 
   # GET PARAMETERS and INPUT FILES
   species = config.get_species()
-  newick_tree = config.get_newick_tree()
-  latin_names = config.get_latin_names(newick_tree)
+  latin_names = config.get_latin_names()
   latinSpecies = latin_names[species]
   species_escape_whitespace = latinSpecies.replace(' ', '\ ')
   # NOTE: only for this script, the max accepted Ks value is constrained to 5,

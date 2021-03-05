@@ -17,8 +17,7 @@ def plot_paralogs_distr(config_file, correction_table_file, paralog_tsv_file, an
 
     # GET PARAMETERS and INPUT FILES
     species = config.get_species()
-    newick_tree = config.get_newick_tree()
-    latin_names = config.get_latin_names(newick_tree)
+    latin_names = config.get_latin_names()
     # Get analysis type
     paranome_analysis = config.get_paranome()
     colinearity_analysis = config.get_colinearity()
