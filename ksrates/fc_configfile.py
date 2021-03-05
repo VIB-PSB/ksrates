@@ -126,14 +126,12 @@ class Configuration:
             logging.error("Unrecognized format for parameter newick_tree in configuration file (for example, parentheses do not match)")
             sys.exit(1)
 
-    def check_complete_dictionary(self, dictionary, field_name):
+    def check_complete_dictionary(self, dictionary):
         """
-        Checks if a dictionary field from the configuration file (latin_names or fasta_filenames) 
-        contains all the species present in the Newick tree. 
-        If a species is missing latin_names, it will exit.
+        Checks if a dictionary field from latin_names contains all the species present in the Newick tree. 
+        If one or more species are missing, it exits.
 
-        :param dictionary: the dictionary coming from a configuration file field
-        :param field_name: the configuration file field name
+        :param dictionary: the dictionary coming from latin_names
         """
         all_leaves = []
         for leaf in self.get_newick_tree().get_leaves():
@@ -141,14 +139,15 @@ class Configuration:
         missing_species = list(set.difference(set(all_leaves), set(dictionary.keys())))
         if len(missing_species) != 0:
             if len(missing_species) == 1:
-                logging.error(f"The following species is missing from [{field_name}] configuration file field:")
+                logging.error(f"The following species is missing from [latin_names] configuration file field:")
             else:
-                logging.error(f"The following species are missing from [{field_name}] configuration file field:")
+                logging.error(f"The following species are missing from [latin_names] configuration file field:")
             for missing_name in missing_species:
                 logging.error(f" - {missing_name}")
-            if field_name == "latin_names":  # if missing FASTA filename, will try to apply default
-                logging.error("Please add the missing information and rerun the analysis.")
-                sys.exit(1)
+            
+            logging.error(f"Please add the missing information and rerun the analysis.")
+            logging.error("Exiting.")
+            sys.exit(1)
 
     def get_latin_names(self):
         """
@@ -160,10 +159,11 @@ class Configuration:
         if latin_names != "":
             latin_names_dict = self._get_clean_dict_stringent(latin_names, "latin_names")
         else:
-            logging.warning("Latin names field in configuration file is empty.")
-            latin_names_dict = {}
-        # Check if latin_names contains all the species present in the Newick tree
-        self.check_complete_dictionary(latin_names_dict, "latin_names")
+            logging.error("Configuration file field [latin_names] is empty, please fill in and rerun.")
+            logging.error("Exiting.")
+            sys.exit(1)
+        # Check if latin_names contains all the species present in the Newick tree; if not, exits
+        self.check_complete_dictionary(latin_names_dict)
         return latin_names_dict
 
     def get_ortho_db(self):
@@ -198,10 +198,8 @@ class Configuration:
         if fasta_names_string != "":
             fasta_names_dict = self._get_clean_dict(fasta_names_string, "FASTA file")
         else:
-            logging.warning("Empty string in FASTA filename field in configuration file.")
+            logging.warning("Configuration file field [fasta_filenames] is empty")
             fasta_names_dict = {}
-        # Check if fasta_filenames contains all the species present in the Newick tree
-        self.check_complete_dictionary(fasta_names_dict, "fasta_filenames")
         return fasta_names_dict
 
     def get_fasta_name(self, fasta_dict, species):
@@ -213,19 +211,15 @@ class Configuration:
         :param species: the species informal name
         :return: the FASTA file path
         """
-        if fasta_dict == {}:
-            logging.warning(f"FASTA filename for {species} not found in configuration file; trying with default one ({species}.fasta)")
-            fasta = f"{species}.fasta"  # fallback name
-        else:
-            if species in fasta_dict:  # if species in fasta_dict
-                if fasta_dict[species] != "": # if the fasta filename is an acceptable string (not empty)
-                    fasta = fasta_dict[species]
-                else:
-                    logging.warning(f"FASTA filename for {species} not found in configuration file; trying with default one ({species}.fasta)")
-                    fasta = f"{species}.fasta"  # fallback name
-            else:  # if species is missing from fasta_dict
-                logging.warning(f"FASTA filename for {species} not found in configuration file; trying with default one ({species}.fasta)")
-                fasta = f"{species}.fasta"  # fallback name 
+        if species in fasta_dict:
+            if fasta_dict[species] != "": # if the fasta filename is an acceptable string (not empty)
+                fasta = fasta_dict[species]
+            else:
+                logging.warning(f"FASTA filename for {species} not found in configuration file; assuming default one ({species}.fasta)")
+                fasta = f"{species}.fasta"  # fallback name
+        else:  # if species is missing from fasta_dict
+            logging.warning(f"FASTA filename for {species} not found in configuration file; assuming default one ({species}.fasta)")
+            fasta = f"{species}.fasta"  # fallback name 
         return fasta
 
     def get_gff_dict(self, warn_empty_dict=True):
@@ -253,13 +247,13 @@ class Configuration:
         :return: the GFF file path
         """
         if gff_dict == {}:
-            logging.warning(f"GFF filename for {species} not found in configuration file; trying with default one ({species}.gff)")
+            logging.warning(f"GFF filename for {species} not found in configuration file; assuming default one ({species}.gff)")
             gff = f"{species}.gff"   # fallback name   
         else:
             if species in gff_dict and gff_dict[species] != "": # if the gff filename is an acceptable string (not empty)
                 gff = gff_dict[species]
             else:
-                logging.warning(f"GFF filename for {species} not found in configuration file; default one applied ({species}.gff)")
+                logging.warning(f"GFF filename for {species} not found in configuration file; assuming default one ({species}.gff)")
                 gff = f"{species}.gff"   # fallback name
         return gff
 
