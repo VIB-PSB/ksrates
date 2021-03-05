@@ -17,7 +17,7 @@ def wgd_orthologs(config_file, species_one, species_two, n_threads):
 
     # Get parameters and FASTA files from configuration file
     newick_tree = config.get_newick_tree()
-    latin_names = config.get_latin_names(newick_tree)
+    latin_names = config.get_latin_names()
 
     fasta_names_dict = config.get_fasta_dict()
     species1_fasta_file = config.get_fasta_name(fasta_names_dict, species1)
