@@ -266,9 +266,10 @@ def lmm(
 
     inspect_aic(aic, outfile)
     inspect_bic(bic, outfile)
-    logging.info("Plotting AIC and BIC")
-    plot_aic_bic(aic, bic, components[0], components[1],
-                     os.path.join(output_dir, f"lmm_{species}_aic_bic_{datatype}.pdf"))
+    # For now, let's not generate the AIC and BIC PDF plots
+    # logging.info("Plotting AIC and BIC")
+    # plot_aic_bic(aic, bic, components[0], components[1],
+    #                  os.path.join(output_dir, f"lmm_{species}_aic_bic_{datatype}.pdf"))
 
     logging.info("Plotting mixtures")
     plot_all_models_gmm(models, deconvoluted_data, ks_range[0], ks_range[1], bins=bins,
