@@ -64,7 +64,7 @@ The syntax to run a command depends on how the package is installed:
 
     Docker pulls the container image from Docker Hub and from then on makes use of the local copy.
 
-In order to submit the command as a job on a cluster, wrap the command in the appropriate syntax for the executor system/HPC scheduler (e.g. for SGE: ``qsub -b y``) and provide enough memory and computational power.
+In order to submit the command as a job on a cluster, wrap the command in the appropriate syntax for the executor system/HPC scheduler (e.g. for SGE: ``qsub -b y``). It is suggested to run the *K*:sub:`S` estimate steps with the aid of parallel computing (see commands below).
 
 An overview of the commands is available by accessing the package help menu (``ksrates -h``)::
 
@@ -79,9 +79,9 @@ An overview of the commands is available by accessing the package help menu (``k
     plot-paralogs         Generates rate-adjusted mixed Ks plot.
     plot-tree             Generates phylogram with Ks-unit branch lengths.
 
-The order of execution of the single commands to run the whole workflow is the following. We here assume a local installation.
+The order of execution of the single commands to run the whole workflow is the following. We assume here a local installation.
 
-1.  Open in a terminal the directory that will host the rate-adjustment results (assumed here to be ``example``). ::
+1.  Open in a terminal the directory that will host the rate-adjustment results (assumed here to be ``example``)::
 
         cd ksrates/example
 
@@ -90,47 +90,58 @@ The order of execution of the single commands to run the whole workflow is the f
     .. note ::
         To generate a new configuration file for your own analyses, run the following command and fill in the template as described in :ref:`pipeline_config_section` section::
 
-            ksrates generate-config config_elaeis.txt
+            ksrates generate-config config_filename.txt
 
-3.  Run the initialization script to obtain the ortholog trios for the rate-adjustment (``ortholog_triplets_elaeis.tsv``) and to extract the species pairs to be run through to the ortholog ``wgd`` analysis (``ortholog_pairs_elaeis.txt``)::
+3.  Run the initialization script to obtain the ortholog trios for the rate-adjustment (``rate_adjustment/elaeis/ortholog_trios_elaeis.tsv``) and to extract the species pairs to be run through to the ortholog *wgd* analysis (``rate_adjustment/elaeis/ortholog_pairs_elaeis.txt``)::
 
         ksrates init config_elaeis.txt
 
-    This step also generates ``wgd_runs_elaeis.txt`` in the current directory, which lists all the commands necessary to be run in steps 4 and 5. 
+    This step also generates ``wgd_runs_elaeis.txt`` in the launching directory, which lists all the commands to be run in steps 4 and 5. 
 
-4.  Launch the paralog ``wgd`` analysis to estimate the paranome (and optionally anchor pair) *K*:sub:`S` values. The command generates the output file ``elaeis.ks.tsv`` (and ``elaeis.ks_anchors.tsv``). ::
+4.  Launch the paralog *wgd* analysis to estimate the paranome *K*:sub:`S` values (``paralogs_distributions/wgd_elaies/elaeis.ks.tsv``) and optionally anchor pair *K*:sub:`S` values (``paralogs_distributions/wgd_elaies/elaeis.ks_anchors.tsv``)::
 
         ksrates paralogs-ks config_elaeis.txt [--n-threads 4]
-   
-5.  Launch the ortholog ``wgd`` analysis to estimate the ortholog *K*:sub:`S` values *for each required species pair* listed in ``ortholog_pairs_elaeis.txt``. The command generates the output files in the ``ortholog_distributions`` directory: for example, for species pair palm-rice the output file is named ``elaeis_oryza.ks.tsv``, with names in case-insensitive alphabetic order. ::
- 
-        ksrates orthologs-ks config_elaeis.txt elaeis oryza [--n-threads 4]
+
+    Running this step in parallel with the ``--n-threads`` option reduces the computational time (please set the number of threads according to your resources; suggested: 10).
+
+5.  Launch the ortholog *wgd* analysis to estimate the ortholog *K*:sub:`S` values *for each required species pair* listed in ``ortholog_pairs_elaeis.txt``::
+
         ksrates orthologs-ks config_elaeis.txt elaeis asparagus [--n-threads 4]
+        ksrates orthologs-ks config_elaeis.txt elaeis oryza [--n-threads 4]
         ksrates orthologs-ks config_elaeis.txt oryza asparagus [--n-threads 4]
 
-6.  Compute the mode (or median) of each ortholog *K*:sub:`S` distribution and store it in a local database::
+    Running this step in parallel with the ``--n-threads`` option reduces the computational time (please set the number of threads according to your resources; suggested: 10).
+
+    Taking the first command as example, it generates the output file ``ortholog_distributions/wgd_asparagus_elaeis/asparagus_elaeis.ks.tsv``, with species names in case-insensitive alphabetic order.
+
+6.  Estimate the mode and associated standard deviation for each ortholog *K*:sub:`S` distribution::
     
         ksrates orthologs-analysis config_elaeis.txt
-    
-7.  Plot all the ortholog distributions used for the rate-adjustment::
+
+    The results are stored in a local database, namely a TSV file called by default ``ortholog_peak_db.tsv`` and generated in the launching directory.
+
+7.  Plot the ortholog *K*:sub:`S` distributions obtained for the rate-adjustment of the divergent species pairs::
     
         ksrates plot-orthologs config_elaeis.txt
-    
-8.  Perform the rate-adjustment. *Pre-requisites: all paralog and ortholog pipelines (step 4 and 5) and mode/median estimates (step 6) must have been already completed.* ::
+
+    The command generates a file for each species pair whose ortholog distribution will be adjusted; in this example case only elaeis-oryza is adjusted and the correspondent file is ``rate_adjustment/elaeis/orthologs_elaeis_oryza.pdf``, with species names in case-insensitive alphabetic order. The file shows the three ortholog *K*:sub:`S` distributions obtained from the species trio involved in this rate-adjustment. Note that if multiple trios/outgroups are being used, the file is a multi-page PDF showing one trio per page.
+     
+8.  Perform the rate-adjustment. *Pre-requisite: all paralog and ortholog pipelines (step 4 and 5) and mode estimates (step 6) must have been already completed.* ::
     
         ksrates orthologs-adjustment config_elaeis.txt
-    
-9.  Plot the adjusted mixed paralog--ortholog *K*:sub:`S distribution plot::
-    
+
+    The branch-specific *K*:sub:`S` contributions and the rate-adjusted ortholog *K*:sub:`S` estimates are collected in ``rate_adjustment/elaeis/adjustment_table_elaeis.tsv``.
+
+9.  Plot the adjusted mixed paralog--ortholog *K*:sub:`S` distributions (``rate_adjustment/elaeis/mixed_elaeis_adjusted.pdf``)::
+
         ksrates plot-paralogs config_elaeis.txt
     
-10. Plot the input tree with branch lengths equal to *K*:sub:`S` distances::
+10. Plot the input tree with branch lengths equal to *K*:sub:`S` distances (``rate_adjustment/elaeis/tree_elaeis_distances.pdf``)::
     
         ksrates plot-tree config_elaeis.txt
 
-11. Plot the adjusted mixed paralog--ortholog *K*:sub:`S distribution plot with the inferred WGD components::
+11. Plot the adjusted mixed paralog--ortholog *K*:sub:`S` distributions with inferred WGD components::
     
         ksrates paralogs-analyses config_elaeis.txt
     
-    The method used for detecting WGD signatures depends on the analysis settings in the configuration file: if ``colinearity`` is turned on, then the anchor *K*:sub:`S` clustering is performed, otherwise an exponential-lognormal mixture model is performed. Additional methods can be executed upon specification in the expert configuration file (see :ref:`expert_config_section`).
-    
+    The method used for detecting WGD signatures depends on the analysis settings in the configuration file: if ``colinearity`` is turned on, the anchor *K*:sub:`S` clustering is performed (``rate_adjustment/elaeis/mixed_elaeis_anchor_clusters.pdf``), otherwise an exponential-lognormal mixture model is performed (``rate_adjustment/elaeis/mixed_species_elmm.pdf``). Additional methods can be executed upon specification in the expert configuration file (``rate_adjustment/elaeis/mixed_species_lmm_paranome.pdf`` and ``rate_adjustment/elaeis/mixed_species_lmm_colinearity.pdf``) (see :ref:`expert_config_section`).
