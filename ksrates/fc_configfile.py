@@ -343,7 +343,7 @@ class Configuration:
 
     def get_colinearity(self):
         """
-        Gets the config file field specifying if the mixed distribution will show or not the anchor pairs of the focal species.
+        Gets the config file field specifying if the mixed distribution will show the anchor pairs of the focal species or not.
 
         :return boolean: flags whether the colinearity analysis is required
         """
