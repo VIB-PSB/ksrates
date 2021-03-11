@@ -431,9 +431,9 @@ def get_rates_from_current_analysis(rate_dict, correction_table, species, specie
 def get_rates_from_ortholog_peak_db(rate_dict, sister_node, latin_names, ortholog_db, peak_stats, missing_ortholog_data_from_database):
     """
     It's possible that some branches in the tree can't be assigned a length equal to branch-specific Ks contributions based only on the data\\
-    coming from this current correction/analysis. In this case, the code tries to compute the missing branch-specific Ks contributions on the spot\\
+    coming from the current rate-adjustment analysis. In this case, the code tries to compute the missing branch-specific Ks contributions on the spot\\
     with the relative rate test formulas by looking for the missing ortholog data in the ortholog peak database: \\
-    in fact, other corrections based on other focal species may have already provided such missing ortholog peaks needed for the RRT formulas,\\
+    in fact, other rate-adjustments based on other focal species may have already provided such missing ortholog peaks needed for the RRT formulas,\\
     or perhaps the user can decide to run separately from this analysis the wgd ortholog pipeline needed to get the missing ortholog peaks\\
     and then they can try again to obtain the tree figure with complete branch lengths.
 
@@ -476,7 +476,7 @@ def get_rates_from_ortholog_peak_db(rate_dict, sister_node, latin_names, ortholo
                         missing_ortholog_data_from_database = True
 
                     # Check if there are ortholog data in database to use a species as an outgroup for the two leaves
-                    # There should always been at least the focal species of the current analysis, except if deleted from DB for some reasons
+                    # There should always be at least the focal species of the current analysis, except if deleted from DB for some reasons
                     list_of_successful_outspecies = []
                     for outspecies in outspecies_list:
                         latinSister1_latinOut = "_".join(sorted([latinSister1, latin_names[outspecies]]))
@@ -654,7 +654,7 @@ def plotting_tree(species, latin_names, original_tree, correction_table, consens
             draw_branch_length_label(divergence_node, known_distance=False)
             unknown_branch_len_style(divergence_node)
 
-    if ortholog_db.empty: # branch-specific Ks contributions can be get only from adjustment_tables
+    if ortholog_db.empty: # branch-specific Ks contributions can be obtained only from adjustment_tables
         logging.info("Getting branch-specific Ks contributions from rate-adjustment table data")
     else: # if the ortholog DB is available, we can try to compute the branch-specific Ks contributions from there too
         logging.info("Getting branch-specific Ks contributions from rate-adjustment table data")
