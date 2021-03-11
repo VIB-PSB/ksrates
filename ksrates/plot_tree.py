@@ -39,11 +39,11 @@ def plot_tree_rates(config_file, correction_table_file, nextflow_flag):
                 logging.info(f"Exiting")
                 sys.exit(1) # exit 1 because plot_tree is executed at the end of the Nextflow pipeline and correction_table should be completed
             elif len(missing_required_rates) != 0:
-                # Having a complete correction table is strictly required for building the tree,
+                # Having a complete adjustment table is strictly required for building the tree,
                 # because all the branch-specific Ks contributions contained in there are needed.
                 # Other extra-table branch contributions may be additionally required to fill in all the branch lengths,
                 # but their absence is tolerated.
-                logging.warning(f"The Ks distances between {latin_names[species]} and the following species are missing from the rate-adjustment table. Please compute them before building the tree:")
+                logging.warning(f"The branch-specific Ks contributions between {latin_names[species]} and the following species are missing from the rate-adjustment table. Please compute them before building the tree:")
                 for name in sorted(missing_required_rates):
                     logging.warning(f" - {name}")
                 logging.warning(f"Exiting")

@@ -54,7 +54,7 @@ def plot_paralogs_distr(config_file, correction_table_file, paralog_tsv_file, an
         with open(correction_table_file, "r") as f:
             correction_table = pandas.read_csv(f, sep="\t")
             if correction_table.shape[0] == 0:
-                logging.warning(f"Rate-adjustment table file is present by doesn't contain any data: rate-adjusted divergences will not be plotted.")
+                logging.warning(f"Rate-adjustment table file is present but doesn't contain any data: rate-adjusted divergences will not be plotted.")
                 correction_table_available = False
             else:
                 correction_table_available = True

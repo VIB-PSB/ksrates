@@ -100,7 +100,7 @@ class Configuration:
         """
         Gets the config file field of the name of the focal species.
         The focal species is one of the leaves of the input tree and is the one\\
-        whose paralog distribution is plotted and which the correction will be relative to. 
+        whose paralog distribution is plotted and which the rate-adjustment will be relative to. 
 
         :return species: informal species name 
         """
@@ -139,13 +139,13 @@ class Configuration:
         missing_species = list(set.difference(set(all_leaves), set(dictionary.keys())))
         if len(missing_species) != 0:
             if len(missing_species) == 1:
-                logging.error(f"The following species is missing from [latin_names] configuration file field:")
+                logging.error(f"The following species is missing from the [latin_names] configuration file field:")
             else:
-                logging.error(f"The following species are missing from [latin_names] configuration file field:")
+                logging.error(f"The following species are missing from the [latin_names] configuration file field:")
             for missing_name in missing_species:
                 logging.error(f" - {missing_name}")
             
-            logging.error(f"Please add the missing information and rerun the analysis.")
+            logging.error(f"Please add the missing information and restart the analysis.")
             logging.error("Exiting.")
             sys.exit(1)
 
@@ -159,7 +159,7 @@ class Configuration:
         if latin_names != "":
             latin_names_dict = self._get_clean_dict_stringent(latin_names, "latin_names")
         else:
-            logging.error("Configuration file field [latin_names] is empty, please fill in and rerun.")
+            logging.error("Configuration file field [latin_names] is empty, please fill in and restart the analysis.")
             logging.error("Exiting.")
             sys.exit(1)
         # Check if latin_names contains all the species present in the Newick tree; if not, exits
@@ -198,7 +198,7 @@ class Configuration:
         if fasta_names_string != "":
             fasta_names_dict = self._get_clean_dict(fasta_names_string, "FASTA file")
         else:
-            logging.warning("Configuration file field [fasta_filenames] is empty")
+            logging.warning("Configuration file field [fasta_filenames] is empty.")
             fasta_names_dict = {}
         return fasta_names_dict
 

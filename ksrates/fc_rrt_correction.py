@@ -60,9 +60,9 @@ def compute_corrected_ks_species_sister(rel_rate_species, rel_rate_species_sd):
 
     :param rel_rate_species: branch-specific Ks contribution of the focal species, namely the synonymous substitutions occurred 
         in the focal species since the speciation event with the sister species; also called K_OA
-    :param rel_rate_species_sd: standard deviation associated to rel_rate_species; also called k_AO_sd
-    :return: corrected_peak, rate-corrected ortholog Ks distribution peak of focal species and sister species
-    :return: corrected_peak_sd, standard deviation associated to corrected_peak
+    :param rel_rate_species_sd: standard deviation associated to rel_rate_species; also called K_OA_sd
+    :return: adjusted_peak, rate-adjusted ortholog Ks distribution peak of focal species and sister species
+    :return: adjusted_peak_sd, standard deviation associated to adjusted_peak
     """
     corrected_peak = rel_rate_species * 2
     corrected_peak_sd = sqrt(2) * rel_rate_species_sd

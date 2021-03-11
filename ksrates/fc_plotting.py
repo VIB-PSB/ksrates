@@ -383,7 +383,7 @@ def plot_divergence_id(axis, divergence_id, x, y_max, n_ids, circle_color, zorde
     This way, when a new number/circle pair is added it leis in the background of all the already existing labels.
 
     :param axis: axis object where the divergence line will be drawn on
-    :param divergence_id: identification number for the speciation event in the focal species evolutionary history;
+    :param divergence_id: identification number for the speciation event in the evolutionary history of the focal species;
         the older the speciation, the higher the number; starts from 1
     :param x: x-coordinate of the corrected peak
     :param y_max: height of the y axis

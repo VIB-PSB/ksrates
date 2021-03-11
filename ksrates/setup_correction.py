@@ -42,7 +42,7 @@ def setup_correction(config_file, nextflow_flag):
     # Checking if the IDs in FASTA (and GFF) files are likely to raise an error when using the PAML package.
     # For example, paml 4.4 gives "Node" Keyerror if the len(IDs) > 50, and/or there are special characters,
     # and/or there are two spaces in a row.
-    logging.info(f"Checking input file existence and sequence IDs compatibility with wgd pipeline...")
+    logging.info(f"Checking if sequence data files exist and if sequence IDs are compatible with wgd pipeline...")
     all_species = []
     for leaf in tree.get_leaves():
         all_species.append(leaf.name)
@@ -78,11 +78,11 @@ def setup_correction(config_file, nextflow_flag):
     logging.info(f"Extracting ortholog trios for rate-adjustment [ortholog_trios_{species_of_interest}.tsv]")
 
     if isinstance(max_num_outspecies, int):
-        logging.info(f"- Each divergent species pair will be adjusted with at maximum {max_num_outspecies} "
+        logging.info(f"- Each divergent species pair will be rate-adjusted with at maximum {max_num_outspecies} "
                      f"trios by using the closest outspecies")
         logging.info(f"  (as required in configuration file field 'maximum_number_outspecies')")
     else:
-        logging.info(f"- Each divergent species pair will be adjusted by using all the possible outspecies "
+        logging.info(f"- Each divergent species pair will be rate-adjusted by using all the possible outspecies "
                      f"found in the tree.")
 
     # get tree node object of the focal species
