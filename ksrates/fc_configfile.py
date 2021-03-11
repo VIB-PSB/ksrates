@@ -126,7 +126,7 @@ class Configuration:
             logging.error("Unrecognized format for parameter newick_tree in configuration file (for example, parentheses do not match)")
             sys.exit(1)
 
-    def check_complete_dictionary(self, dictionary):
+    def check_complete_latin_names_dict(self, dictionary):
         """
         Checks if a dictionary field from latin_names contains all the species present in the Newick tree. 
         If one or more species are missing, it exits.
@@ -163,7 +163,7 @@ class Configuration:
             logging.error("Exiting.")
             sys.exit(1)
         # Check if latin_names contains all the species present in the Newick tree; if not, exits
-        self.check_complete_dictionary(latin_names_dict)
+        self.check_complete_latin_names_dict(latin_names_dict)
         return latin_names_dict
 
     def get_ortho_db(self):
