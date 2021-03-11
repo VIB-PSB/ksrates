@@ -490,7 +490,7 @@ def get_rates_from_ortholog_peak_db(rate_dict, sister_node, latin_names, ortholo
                             pass
 
                         try: # Trying to compute the branch-specific Ks contributions (relative rate test formulas)
-                            rate_species, __, rate_sister, __ = fcCorrect.compute_ks_distances(ortholog_db, latinSister1_latinSister2, latinSister1_latinOut, latinSister2_latinOut, peak_stats)
+                            rate_species, __, rate_sister, __ = fcCorrect.decompose_ortholog_ks(ortholog_db, latinSister1_latinSister2, latinSister1_latinOut, latinSister2_latinOut, peak_stats)
                             if sister1 not in rate_dict[node]:
                                 rate_dict[node][sister1] = rate_species
                             if sister2 not in rate_dict[node]:

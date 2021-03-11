@@ -5,7 +5,7 @@ _ADJUSTMENT_TABLE_ALL = "adjustment_table_{}_all.tsv"
 _ADJUSTMENT_TABLE = "adjustment_table_{}.tsv"
 
 
-def compute_ks_distances(ortholog_db, idx_species_sister, idx_species_outgroup, idx_sister_outgroup, peak_stats):
+def decompose_ortholog_ks(ortholog_db, idx_species_sister, idx_species_outgroup, idx_sister_outgroup, peak_stats):
     """
     Starting from a trio of species that includes the focal species, a sister species and their outgroup,
     the function computes the branch-specific Ks contributions of the focal species and of the sister species

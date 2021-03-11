@@ -68,7 +68,7 @@ def correct(config_file, trios_file):
         sister_out = "_".join(sorted([latinSister, latinOut], key=str.casefold))
 
         if species_sister in db.index and species_out in db.index and sister_out in db.index:
-            rate_species, rate_species_sd, rate_sister, rate_sister_sd = fcCorrect.compute_ks_distances(db, species_sister, species_out, sister_out, peak_stats)
+            rate_species, rate_species_sd, rate_sister, rate_sister_sd = fcCorrect.decompose_ortholog_ks(db, species_sister, species_out, sister_out, peak_stats)
             correct_peak, correct_sd = fcCorrect.compute_corrected_ks_species_sister(rate_species, rate_species_sd)
             # OC_segment is a measure of better/worse outgroup choices for the decomposition into branch-specific Ks contributions; see documentation.
             OC_segment = db.loc[species_out]['Ortholog_Mode'] - rate_species
