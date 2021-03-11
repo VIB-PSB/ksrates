@@ -73,7 +73,7 @@ def check_inputfile(filename, msg_prefix=""):
         logging.error(f"{msg_prefix} [{filename}] is empty. Exiting.")
         sys.exit() # not with error code 1 (successive parts will call exit code 1 in case this file was really necessary) 
 
-def check_inputfile_without_exiting(filename, msg_prefix=""):
+def check_file_nonexistent_or_empty(filename, msg_prefix=""):
     """
     Returns an error message when the provided file doesn't exist or is empty.
     

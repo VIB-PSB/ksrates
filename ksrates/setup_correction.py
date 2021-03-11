@@ -28,7 +28,7 @@ def setup_correction(config_file, nextflow_flag):
     # If a GFF is provided, check existence and content
     if species_of_interest in gff_dict:
         gff = config.get_gff_name(gff_dict, species_of_interest)
-        if fcCheck.check_inputfile_without_exiting(gff, "GFF file") == True:
+        if fcCheck.check_file_nonexistent_or_empty(gff, "GFF file") == True:
             trigger_exit = True
 
     db_path = config.get_ortho_db()
@@ -50,7 +50,7 @@ def setup_correction(config_file, nextflow_flag):
     for species in all_species:
         # Check existence and content of FASTA file
         fasta = config.get_fasta_name(fasta_dict, species)
-        if fcCheck.check_inputfile_without_exiting(fasta, "FASTA file") == True:
+        if fcCheck.check_file_nonexistent_or_empty(fasta, "FASTA file") == True:
             trigger_exit = True
             continue
         # Check the IDs in FASTA file
