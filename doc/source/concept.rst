@@ -13,7 +13,7 @@ The reliability of a mixed plot can be jeopardized in case of (remarkable) subst
 The *K*:sub:`S` rate-adjustment package offers an adjustment procedure that brings all the distributions to a common *K*:sub:`S` scale by compensating for the substitution rate differences relatively to one "main" species. 
 The rate-adjusted mixed plot obtained through ``ksrates`` is composed of a) a single paralog distribution coming from the focal species and b) one or more ortholog distributions between the focal species and the another species. The analysis is thus focused on the genome duplication history of the focal species in the context of its evolutionary history with the other species. 
 
-The rate-adjustment is applied to all the ortholog distributions. For each ortholog distribution, principles from the relative rate test (RRT) are used to detect the branch-specific Ks contributions of the focal species and the other species to their overall ortholog Ks distance. During the rate-adjustment, the ortholog *K*:sub:`S`  peak is re-encoded as twice the branch contribution of the focal species, so that the age of the ortholog distribution is adapted to the *K*:sub:`S` scale of the paralog distribution. At the end, all ortholog distributions are seen from the perspective of the focal species rate.
+The rate-adjustment is applied to all the ortholog distributions. For each ortholog distribution, principles from the relative rate test (RRT) are used to detect the branch-specific *K*:sub:`S` contributions of the focal species and the other species to their overall ortholog *K*:sub:`S` distance. During the rate-adjustment, the ortholog *K*:sub:`S` peak is re-encoded as twice the branch contribution of the focal species, so that the age of the ortholog distribution is adapted to the *K*:sub:`S` scale of the paralog distribution. At the end, all ortholog distributions are seen from the perspective of the focal species rate.
 The rate-adjustment generates horizontal shifts of the ortholog distribution peak towards left if the focal species is slower than the other species, or towards right if it is faster. The new disposition of the divergence events can lead to a different and more reliable interpretation of WGD placement or of the order of the divergences themselves.
 For more details about the rate-adjustment strategy, see [...].
 
@@ -43,4 +43,3 @@ The RRT uses the *K*:sub:`S` values of the three ortholog peaks to compute the b
     :width: 800
 
     The ortholog distribution peak (red line) has been shifted towards left after rate-adjustment, as highlighted by the red arrows starting from the original position and pointing at the new rate-adjusted position. 
-
