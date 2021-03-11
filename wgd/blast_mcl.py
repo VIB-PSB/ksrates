@@ -146,7 +146,7 @@ def ava_blast_to_abc(ava_file, col_1=0, col_2=1, col_3=10):
 def run_mcl_ava(graph, output_dir='./', inflation=2, output_file='out.mcl',
                 preserve=False, return_dict=False):
     """
-    Run ``mcl`` on all-vs-all Blast results for a focal species.
+    Run ``mcl`` on all-vs-all Blast results for a species of interest.
     Note if the parameter ``output_file`` is not given and the parameter
     ``return_dict`` is set to True, only a python dictionary is returned and no
     file is written.
