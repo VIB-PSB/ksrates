@@ -68,7 +68,7 @@ The [SPECIES] section includes:
 The [ANALYSIS SETTING] section includes:
 
 * **paranome**: whether to build/plot the whole-paranome *K*:sub:`S` distribution of the focal species (options: "yes" and "no"). [Default: "yes"]
-* **colinearity**: whether to build/plot the anchor pair *K*:sub:`S` distribution of the focal species (options: "yes" and "no"). [Default: "no"]
+* **colinearity**: whether to build/plot the anchor pair *K*:sub:`S` distribution of the focal species (options: "yes" and "no"). A GFF file for the focal species is required, see parameter `gff_filename` above. [Default: "no"]
 * **gff_feature**: parsing keyword from the third column of the GFF file (e.g. gene, mrna...). Case insensitive.
 * **gff_attribute**: parsing keyword from the ninth column of the GFF file (e.g. id, name...). Case insensitive. 
 * **max_number_outspecies**: maximum number of trios/outspecies allowed to adjust a divergent pair; if None, all possible outspecies obtained from the phylogenetic tree will be used to form trios and adjust the pair. For more details see below. [Default: 4]
