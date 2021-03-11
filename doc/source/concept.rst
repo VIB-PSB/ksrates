@@ -36,7 +36,7 @@ Further on, the pipeline breaks down the trios into the three possible species p
 
     The ortholog distribution for palm and rice is approximated to its mode (1.53 *K*:sub:`S`).
     
-The RRT uses the *K*:sub:`S` values of the three ortholog peaks to compute the branch-specific Ks contributions of the divergent pair: palm has a branch contribution of about 0.36 while rice of 1.17, therefore palm accumulates substitution much more slowly than rice. Lastly, the rate-adjustment reinterprets the ortholog *K*:sub:`S` peak of palm-rice by encoding it as twice the branch contribution of palm (*K*:sub:`S`' = 0.73). The ortholog peak has therefore been largely shifted to the left from 1.53 to 0.73 *K*:sub:`S` (Figure 2), and it is now adapted to the slow scale of palm paralog distribution. The shift has important consequences in the interpretation of the mixed plot concerning the older WGD signal around 0.9 *K*:sub:`S`.
+The  *K*:sub:`S`decomposition uses the *K*:sub:`S` values of the three ortholog peaks to compute the branch-specific *K*:sub:`S` contributions of the divergent pair: palm has a branch contribution of about 0.36 while rice of 1.17, therefore palm accumulates substitution much more slowly than rice. Lastly, the rate-adjustment reinterprets the ortholog *K*:sub:`S` peak of palm-rice by encoding it as twice the branch contribution of palm (*K*:sub:`S`' = 0.73). The ortholog peak has therefore been largely shifted to the left from 1.53 to 0.73 *K*:sub:`S` (Figure 2), and it is now adapted to the slow scale of palm paralog distribution. The shift has important consequences in the interpretation of the mixed plot concerning the older WGD signal around 0.9 *K*:sub:`S`.
 
 .. figure:: _images/mixed_palm_corrected.svg
     :align: center
