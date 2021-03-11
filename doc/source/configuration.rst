@@ -168,10 +168,10 @@ The Nextflow configuration file is used to configure various settings for the *k
       Examples of available settings are (for a complete list see the `Nextflow documentation <https://www.nextflow.io/docs/latest/process.html#process-directives>`__):
     
     	* **clusterOption** any native configuration option accepted by your cluster submit command. You can use it to request non-standard resources or use settings that are specific to your cluster and not supported out of the box by Nextflow.
-    	* **beforeScript** allows you to execute a custom (Bash) snippet before the main process script is run. This may be useful to initialise the underlying cluster environment or for other custom initialisation, for example it can be used to load required dependencies if one of the container is not used, provided that the cluster has those dependencies installed. The dependencies per process are the following:
+        * **beforeScript** allows you to execute a custom (Bash) snippet before the main process script is run. This may be useful to initialise the underlying compute cluster environment or for other custom initialisation, for example it can be used to load required dependencies if one of the *ksrates* containers is not used, provided that the cluster has those dependencies installed. In that case, the required external dependencies (see also the `wgd Documentation <https://wgd.readthedocs.io/en/latest/index.html#external-software>`__) for the *ksrates* Nextflow processes are:
 
             * ``wgdParalogs``: Python dependencies listed in requirements.txt, plus BLAST, MUSCLE, MCL, PAML, FastTree and i-ADHoRe (if collinearity analysis is configured).
-            * ``wgdOrthologs``: Python dependencies listed in requirements.txt, BLAST, MUSCLE, MCL, PAML.
+            * ``wgdOrthologs``: Python dependencies listed in requirements.txt, plus BLAST, MUSCLE and PAML.
             * All other processes: Python dependencies listed in requirements.txt.
 
 * The **env** scope allows the definition one or more variable that will be exported in the environment where the workflow tasks will be executed.
