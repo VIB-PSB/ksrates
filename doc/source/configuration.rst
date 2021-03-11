@@ -84,7 +84,7 @@ The [PARAMETERS] section includes:
     
 * For ortholog divergence *K*:sub:`S`
 
-    * **num_bootstrap_iterations**: number of bootstrap iterations for mode/median estimate. [default: 200]
+    * **num_bootstrap_iterations**: number of bootstrap iterations for mode/median estimation. [Default: 200]
     * **divergence_colors**: list of colors assigned to the divergence nodes: all divergence lines coming from the same divergence node share the same color. [Default: 8 colors]
     
 * For the ortholog *K*:sub:`S` distribution plots
