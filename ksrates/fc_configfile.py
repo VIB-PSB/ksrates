@@ -328,7 +328,7 @@ class Configuration:
 
     def get_paranome(self):
         """
-        Gets the config file field specifying if the mixed distribution will show or not the whole-paranome of the focal species.
+        Gets the config file field specifying if the mixed distribution will show the whole-paranome of the focal species or not.
 
         :return boolean: flags whether the paranome analysis is required
         """
