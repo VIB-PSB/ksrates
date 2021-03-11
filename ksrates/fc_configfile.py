@@ -247,7 +247,7 @@ class Configuration:
         :return: the GFF file path
         """
         if gff_dict == {}:
-            logging.warning(f"GFF filename for {species} not found in configuration file; assuming default one ({species}.gff)")
+            logging.warning(f"GFF filename for focal species {species} not found in configuration file; assuming default one ({species}.gff)")
             gff = f"{species}.gff"   # fallback name   
         else:
             if species in gff_dict and gff_dict[species] != "": # if the gff filename is an acceptable string (not empty)
