@@ -70,7 +70,7 @@ def correct(config_file, trios_file):
         if species_sister in db.index and species_out in db.index and sister_out in db.index:
             rate_species, rate_species_sd, rate_sister, rate_sister_sd = fcCorrect.compute_ks_distances(db, species_sister, species_out, sister_out, peak_stats)
             correct_peak, correct_sd = fcCorrect.compute_corrected_ks_species_sister(rate_species, rate_species_sd)
-            # OC_segment is a measure of better/worse outgroup choices for the detection of branch-specific Ks contributions through RRT; see documentation.
+            # OC_segment is a measure of better/worse outgroup choices for the decomposition into branch-specific Ks contributions; see documentation.
             OC_segment = db.loc[species_out]['Ortholog_Mode'] - rate_species
 
             all_trios_correction_array.append([node, latinSpecies, latinSister, latinOut, round(OC_segment, 6), round(correct_peak, 6), round(correct_sd, 6), round(rate_species, 6), round(rate_sister, 6)])
