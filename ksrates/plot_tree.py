@@ -27,7 +27,7 @@ def plot_tree_rates(config_file, correction_table_file, nextflow_flag):
     if correction_table_file == "": # it means that the correction_table is not present or available yet
         logging.warning(f"Rate-adjustment data not available yet: PDF figure of phylogenetic tree not generated.")
         logging.info(f"Exiting")
-        sys.exit(1) # exit 1 because plot_tree is executed at the end of the Nextflow pipeline and correction_table should exits
+        sys.exit(1) # exit 1 because the adjustment_table data is required
     else:
         with open(correction_table_file, "r") as f:
             correction_table = pandas.read_csv(f, sep="\t")
@@ -37,7 +37,7 @@ def plot_tree_rates(config_file, correction_table_file, nextflow_flag):
             if correction_table.shape[0] == 0:
                 logging.warning(f"Rate-adjustment data not available yet: PDF figure of phylogenetic tree not generated.")
                 logging.info(f"Exiting")
-                sys.exit(1) # exit 1 because plot_tree is executed at the end of the Nextflow pipeline and correction_table should be completed
+                sys.exit(1) # exit 1 because the adjustment_table data is required
             elif len(missing_required_rates) != 0:
                 # Having a complete adjustment table is strictly required for building the tree,
                 # because all the branch-specific Ks contributions contained in there are needed.
@@ -47,7 +47,7 @@ def plot_tree_rates(config_file, correction_table_file, nextflow_flag):
                 for name in sorted(missing_required_rates):
                     logging.warning(f" - {name}")
                 logging.warning(f"Exiting")
-                sys.exit(1) # exit 1 because plot_tree is executed at the end of the Nextflow pipeline and correction_table should be completed
+                sys.exit(1) # exit 1 because the adjustment_table data is required
 
     # Getting the choice on how to deal with the presence of multiple corrections for the same divergent pair
     # due to the use of multiple trios/outgroup during correction
@@ -70,7 +70,8 @@ def plot_tree_rates(config_file, correction_table_file, nextflow_flag):
         ortholog_db = pandas.DataFrame() # since there is no ortholog database, just assign an empty dataframe to this variable
 
     logging.info("")
-    fcTree.plotting_tree(species, latin_names, newick_tree, correction_table, consensus_peak_for_multiple_outgroups, ortholog_db, peak_stats, nextflow_flag)
+    fcTree.plotting_tree(species, latin_names, newick_tree, correction_table, consensus_peak_for_multiple_outgroups, 
+                         ortholog_db, peak_stats, nextflow_flag)
     logging.info("")
     logging.info(f"Saved PDF tree figure [{fcTree._TREE_BRANCH_DISTANCES.format(species)}]")
     logging.info("")
