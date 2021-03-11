@@ -55,7 +55,7 @@ The analysis configuration file is composed of a first section defining the spec
 
 The [SPECIES] section includes:
 
-* **species**: name of the focal species. A *K*:sub:`S` paralog distribution is generated for this species and its *K*:sub:`S`-scale is used as the rate-adjustment reference. The name must be composed of a single word since spaces are not tolerated; it is advised to use a short name (for example, the genus or family name) or common abbreviation here. For example, "elaeis" or "eguineensis" instead of "Elaeis guineensis".
+* **species**: name of the focal species. A *K*:sub:`S` paralog distribution is generated for this species and its *K*:sub:`S`-scale is used as the rate-adjustment reference. It is advised to use a short name (for example, the genus or family name) or common abbreviation here, spaces are not tolerated. For example, "elaeis" or "eguineensis" instead of "Elaeis guineensis".
 * **newick_tree**: phylogenetic relationships among the involved species as Newick format (more info on the ETE toolkit `website <http://etetoolkit.org/docs/latest/tutorial/tutorial_trees.html#reading-and-writing-newick-trees>`__). It has to contain the focal species as named in parameter `species`. It is advised to use short names or abbreviations for the other species as well.
 * **latin_names**: list of associations between each of the species names in parameter `newick_tree` and their scientific names, which will be used in legends and plot titles. The association is made with a colon (':').
 * **fasta_filenames**: list of associations between each of the species names in parameter `newick_tree` and the corresponding paths to their FASTA files. The association is made with a colon (':').
@@ -170,7 +170,7 @@ The Nextflow configuration file is used to configure various settings for the *k
     	* **clusterOption** any native configuration option accepted by your cluster submit command. You can use it to request non-standard resources or use settings that are specific to your cluster and not supported out of the box by Nextflow.
     	* **beforeScript** allows you to execute a custom (Bash) snippet before the main process script is run. This may be useful to initialise the underlying cluster environment or for other custom initialisation, for example it can be used to load required dependencies if one of the container is not used, provided that the cluster has those dependencies installed. The dependencies per process are the following:
 
-            * ``wgdParalogs``: Python dependencies listed in requirements.txt, BLAST, MUSCLE, MCL, PAML, FastTree, i-ADHoRe (if collinearity analysis is perfomed).
+            * ``wgdParalogs``: Python dependencies listed in requirements.txt, plus BLAST, MUSCLE, MCL, PAML, FastTree and i-ADHoRe (if collinearity analysis is configured).
             * ``wgdOrthologs``: Python dependencies listed in requirements.txt, BLAST, MUSCLE, MCL, PAML.
             * All other processes: Python dependencies listed in requirements.txt.
 
