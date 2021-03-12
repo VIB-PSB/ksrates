@@ -10,7 +10,7 @@ Input files
 
 
 Output directories and directory organization
-======================================
+=============================================
 
 *ksrates* generates the following output directories and files within the directory where it is executed from:
 
