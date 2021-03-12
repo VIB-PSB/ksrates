@@ -1,3 +1,5 @@
+.. _`paralogs_analyses`:
+
 Paralog distribution analyses
 *****************************
 

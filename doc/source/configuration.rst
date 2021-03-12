@@ -206,4 +206,4 @@ This is an optional configuration file that contains several \"expert\" paramete
 * **max_mixture_model_iterations**: maximum number of EM iterations for mixture modeling. [Default: 300]
 * **max_mixture_model_components**: maximum number of components considered during execution of the mixture models. [Default: 5]
 * **max_mixture_model_ks**: upper limit for the *K*:sub:`S` range in which the exponential-lognormal and lognormal-only mixture models are performed. [Default: 5]
-* **extra_paralogs_analyses_methods**: flag to toggle the optional analysis of the paralog *K*:sub:`S` distribution with non default mixture model methods. [Default: "no"]
+* **extra_paralogs_analyses_methods**: flag to toggle the optional analysis of the paralog *K*:sub:`S` distribution with non default mixture model methods (see section :ref:`paralogs_analyses` and Supplementary Materials) [Default: "no"]
