@@ -32,9 +32,9 @@ In the following sections we briefly describe how to install, configure and run 
 
 ### Example datasets
 
-To illustrate how to use *ksrates*, two example datasets are provided for a simple example use case analyzing WGD signatures in monocot plants with oil palm (*Elaeis guineensis*) as the species of interest.
+To illustrate how to use *ksrates*, two example datasets are provided for a simple example use case analyzing WGD signatures in monocot plants with oil palm (*Elaeis guineensis*) as the focal species.
 
-- [`example`](example): a full dataset which contains the complete sequence data for the species of interest and two other species and may require hours of computations depending on the available computing resources. We advice to run this dataset on a compute cluster and using the *ksrates* Nextflow pipeline should make it fairly easy to configure this for a variety of HPC schedulers.
+- [`example`](example): a full dataset which contains the complete sequence data for the focal species and two other species and may require hours of computations depending on the available computing resources. We advice to run this dataset on a compute cluster and using the *ksrates* Nextflow pipeline should make it fairly easy to configure this for a variety of HPC schedulers.
 
 - [`test`](test): a small test dataset that contains only a small subset of the sequence data for each of the species and takes only a few minutes to be run. This is intended for a quick check of the tool only and can be run locally, e.g. on a laptop. The results are not very meaningful.
 
