@@ -58,10 +58,11 @@ def setup_correction(config_file, nextflow_flag):
             fcCheck.check_IDs(fasta, latin_names[species], gff)
         else:  # Warn only about FASTA file
             fcCheck.check_IDs(fasta, latin_names[species])
-    logging.info("Completed")
+            
     if trigger_exit:
         logging.error("Please add the missing information in [fasta_filenames] configuration file field and rerun the analysis. Exiting.")
         exit(1)
+    logging.info("Completed")
 
     # Creating folders for correction output files
     if not os.path.exists('rate_adjustment'):
