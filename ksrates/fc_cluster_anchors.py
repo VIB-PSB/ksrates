@@ -418,9 +418,9 @@ def plot_clusters(axis, cluster_of_ks, bin_width, max_ks_para, peak_stats, corre
         polygon_color = to_rgba(cluster_color_letter_list[cluster_id][0], ALPHA_ANCHOR_CLUSTERS)
 
         if peak_stats == "mode":
-            cluster_label = f"Cluster {cluster_color_letter_list[cluster_id][1]} (mode {round(mode_of_the_cluster_KDE, 2)})"
+            cluster_label = "Anchor $K_\mathregular{S}$ " + f"cluster {cluster_color_letter_list[cluster_id][1]} (mode {round(mode_of_the_cluster_KDE, 2)})"
         elif peak_stats == "median":
-            cluster_label = f"Cluster {cluster_color_letter_list[cluster_id][1]} (median {round(median_of_the_cluster, 2)})"
+            cluster_label = "Anchor $K_\mathregular{S}$ " + f"cluster {cluster_color_letter_list[cluster_id][1]} (median {round(median_of_the_cluster, 2)})"
 
         polygon = mpatches.Polygon(kde_area_xy, facecolor=polygon_color, edgecolor='None', label=cluster_label,
                                    zorder=zorder_ID)
@@ -548,33 +548,20 @@ def filter_degenerated_clusters(cluster_of_ks, clusters_sorted_by_median, cluste
 
 # TODO: why update the figure title later, set correct in the first place
 # --> Not possible since at the very beginning we don't know the number of clusters
-def update_figure_title_cluster_anchors(fig, ax, corrected_or_not, species, latin_names, correction_table_available, cluster_of_ks, round_number):
+def update_figure_title_cluster_anchors(fig, species, latin_names):
     """
     Updates the title of the figure showing anchor Ks clusters.
     In case the correction data are not available (yet), the figure title 
     will not mention the corrected divergence lines.
 
     :param fig: mixed plot figure object
-    :param ax: axis object in the figure 
-    :param corrected_or_not: flag that states whether the figure shows "rate-adjusted" or "un-corrected" divergence lines 
     :param species: informal name of the focal species
     :param latin_names: dictionary of scientific names
-    :param correction_table_available: tag to state if the correction table data are available or not (allowed values: True or False)
-    :param cluster_of_ks: dictionary that associates to each cluster its anchor Ks list
-    :param round_number: tag to state if it is the first or the second clustering round (allowed values: "first" or "second")
     :return: the figure suptitle object
     """
     latinSpecies = latin_names[species]
     species_escape_whitespace = latinSpecies.replace(' ', '\ ')
-    if round_number == "first":
-        filtered_or_not = "Non-filtered anchor "
-    elif round_number == "second":
-        filtered_or_not = "Anchor "
-
-    if not correction_table_available:
-        sup = fig.suptitle(filtered_or_not + "$K_\mathregular{S}$ " + f"clusters for ${species_escape_whitespace}$", y=0.98)
-    else:
-        sup = fig.suptitle(filtered_or_not + "$K_\mathregular{S}$ " + f"clusters with {corrected_or_not} divergences for ${species_escape_whitespace}$", y=0.98)
+    sup = fig._suptitle
     return sup
 
 
@@ -628,8 +615,7 @@ def save_anchor_cluster_plot(fig_corr, fig_uncorr, ax_corr, ax_uncorr, species, 
 
     ax_corr.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
     lgd = create_legend(ax_corr, legend_size)
-    sup = update_figure_title_cluster_anchors(fig_corr, ax_corr, "corrected", species, latin_names,
-                                              correction_table_available, cluster_of_ks, round_number)
+    sup = update_figure_title_cluster_anchors(fig_corr, species, latin_names)
     if round_number == "first": # unfiltered
         figure_file_path = os.path.join("rate_adjustment", f"{species}", output, f"{_ANCHOR_CLUSTERS_UNFILTERED.format(species)}")
     elif round_number == "second": # filtered, only significant clusters
