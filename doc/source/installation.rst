@@ -95,24 +95,41 @@ Without the use of a container the installation of *ksrates* and its dependencie
     	cd ksrates
     	pip3 install .
 
-3.  Non-Python dependencies can be installed in two possible ways.
+3.  Most of non-Python dependencies can be installed in two possible ways.
 
 		*   Through ``apt-get`` and ``wget``::
 
-				sudo apt-get -yq install default-jdk build-essential ncbi-blast+ muscle mafft prank fasttree mcl phyml paml
-				wget -qO- https://get.nextflow.io | bash
+			   sudo apt-get -yq install default-jdk build-essential ncbi-blast+ muscle mafft prank fasttree mcl phyml
+			   wget -qO- https://get.nextflow.io | bash
 
 		*   Through ``apt-get`` and ``bioconda`` (more info on how to setup ``bioconda`` `here <https://bioconda.github.io/user/install.html>`__)::
-				
-				TODO: check these two commands
+
 				sudo apt-get -yq install default-jdk build-essential
-				conda install muscle blast mafft prank fasttree mcl phyml paml nextflow
+				conda install muscle blast mafft prank fasttree mcl phyml nextflow
 
-   Optionally make Nextflow accessible by your ``$PATH`` variable, for example::
+    Optionally make Nextflow accessible by your ``$PATH`` variable, for example::
 
-        mv nextflow /usr/local/bin 
+        mv nextflow /usr/local/bin
+    
+4.  Install PAML from source (version 4.9j) to avoid compatibility issues::
 
-4. Install I-ADHoRe 3.0 from its GitHub `page <https://github.com/VIB-PSB/i-ADHoRe>`__ (required only for collinearity analysis of genome data).
+        wget http://abacus.gene.ucl.ac.uk/software/paml4.9j.tgz
+        tar -xzf paml4.9j.tgz
+        cd paml4.9j/src && make -f Makefile
+
+    Then make ``codeml`` available by the ``$PATH`` variable:
+    
+        *   Either move the executable to a directory already present in ``$PATH``, e.g. ``usr/local/bin``::
+
+                mv codeml usr/local/bin
+        
+        *   Or move it to another directory (e.g. ~/bin) and add such directory to ``$PATH`` by copying this line in the initialization file for the shell (e.g. ``.bashrc``)::
+
+                export PATH=$PATH:~/bin
+    
+    Please refer to PAML `website <http://abacus.gene.ucl.ac.uk/software/paml.html#download>`__ for more information about its installation.
+
+5. Install I-ADHoRe 3.0 from its GitHub `page <https://github.com/VIB-PSB/i-ADHoRe>`__ (required only for collinearity analysis of genome data).
 
 
 Testing your installation
