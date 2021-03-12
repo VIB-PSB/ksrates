@@ -40,4 +40,4 @@ jobs:
           nextflow run ../main.nf --config config_elaeis.txt -with-docker ksrates
         
       - name: Visualize output files
-        run: ls -l test/rate_adjustment/elaeis
+        run: ls -l test/correction_analysis/elaeis
