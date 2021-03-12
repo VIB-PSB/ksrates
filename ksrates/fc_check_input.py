@@ -79,7 +79,7 @@ def check_file_nonexistent_or_empty(filename, msg_prefix=""):
     
     :param filename: name of the file to be checked
     :param msg_prefix: (default: empty string) string to describe the file content (e.g. "Ortholog peak database")
-    :return: a boolean stating whether the file doesn't exit or it's empty (True) of it is alright (False)
+    :return: a boolean stating whether the file doesn't exist or is empty (True) or whether it does exist and is not empty (False)
     """
     if not os.path.exists(filename):
         # print error message separate to ensure print out
