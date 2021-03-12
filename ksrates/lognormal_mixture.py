@@ -118,7 +118,7 @@ def lognormal_mixture(config_file, paralog_tsv_file, anchors_ks_tsv_file, correc
         parameter_table = []
 
     if colinearity_analysis:
-        with open (os.path.join("rate_adjustment", f"{species}", subfolder, f"lmm_{species}_parameters_colinearity.txt"), "w+") as outfile:
+        with open (os.path.join("rate_adjustment", f"{species}", subfolder, f"lmm_{species}_parameters_anchors.txt"), "w+") as outfile:
             logging.info("Performing lognormal mixture model on anchor pair Ks distribution")
             anchors_list = fc_extract_ks_list.ks_list_from_tsv(anchors_ks_tsv_file, max_ks_para, "anchor pairs")
             if len(anchors_list) == 0:
@@ -133,10 +133,10 @@ def lognormal_mixture(config_file, paralog_tsv_file, anchors_ks_tsv_file, correc
             best_model_anchors = fcLMM.lmm(
                     fig_colin, x_max_lim, "anchor pairs", anchors_ks_tsv_file, species, axis_colin, (0, max_ks_EM),
                     (1, max_num_comp), arange(-10, max_ks_EM + bin_width_para, bin_width_para), bin_width_para, max_EM_iterations, num_EM_initializations,
-                    output_dir, outfile, parameter_table, "colinearity", peak_stats, correction_table_available, plot_correction_arrows)
+                    output_dir, outfile, parameter_table, "anchors", peak_stats, correction_table_available, plot_correction_arrows)
 
             # Generating tabular text file with all model parameters 
-            fcLMM.make_parameter_table_file(parameter_table, species, "colinearity")
+            fcLMM.make_parameter_table_file(parameter_table, species, "anchors")
 
     for axis in [axis_para, axis_colin]:
         # PLOTTING THE ORTHOLOG DIVERGENCE LINES
@@ -150,8 +150,8 @@ def lognormal_mixture(config_file, paralog_tsv_file, anchors_ks_tsv_file, correc
         fcLMM.save_lmm(fig_para, axis_para, species, best_model_paranome, "paranome")
         logging.info(f"Saved PDF figure(s) of lognormal mixture model [mixed_{species}_lmm_paranome.pdf]")
     if colinearity_analysis:
-        fcLMM.save_lmm(fig_colin, axis_colin, species, best_model_anchors, "colinearity")
-        logging.info(f"Saved PDF figure(s) of lognormal mixture model [mixed_{species}_lmm_colinearity.pdf]")
+        fcLMM.save_lmm(fig_colin, axis_colin, species, best_model_anchors, "anchors")
+        logging.info(f"Saved PDF figure(s) of lognormal mixture model [mixed_{species}_lmm_anchors.pdf]")
 
     logging.info("")
     logging.info("All done")

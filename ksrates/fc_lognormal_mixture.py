@@ -278,7 +278,8 @@ def lmm(
     # Plotting the components of the best model on the final picture;
     # Components are scaled up to the size of actual count data and not to density histogram
     scaling = bin_width_para * len(deconvoluted_data)
-    plot_mixture_model(best, deconvoluted_data, max_x_axis_lim, axis, bin_width_para, scaling, peak_stats, correction_table_available, plot_correction_arrows, ks_range[0], ks_range[1], bins=bins)
+    plot_mixture_model(best, deconvoluted_data, max_x_axis_lim, axis, bin_width_para, scaling, peak_stats,
+                       correction_table_available, plot_correction_arrows, ks_range[0], ks_range[1], bins=bins)
     return best
 
 
@@ -297,7 +298,7 @@ def create_legend_mixture_model(axis, legend_size, num_mixture_model_lines, data
     sorted_handles, sorted_labels = handles.copy(), labels.copy()
     if datatype == "paranome":
         paralog_rect = Patch(facecolor=fcPlot.COLOR_PARANOME_HISTOGRAM, edgecolor="w")
-    elif datatype == "colinearity":
+    elif datatype == "anchors":
         paralog_rect = Patch(facecolor=fcPlot.COLOR_ANCHOR_HISTOGRAM, edgecolor="w")
     # empty patch used as spacer between histograms and divergence line legend entries
     empty_rect = Patch(fill=False, edgecolor='none', visible=False)

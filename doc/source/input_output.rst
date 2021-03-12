@@ -30,7 +30,7 @@ Main output files:
 * Rate-adjusted mixed paralog--ortholog *K*:sub:`S` distribution plot in PDF format (``mixed_species_adjusted.pdf``).
 * Rate-adjusted mixed anchor pair--ortholog *K*:sub:`S` distribution clustered to infer putative WGD components (``mixed_species_anchor_clusters.pdf``).
 * Rate-adjusted mixed paralog--ortholog *K*:sub:`S` distribution with superimposed exponential-lognormal mixture model for putative WGD inference (``mixed_species_elmm.pdf``).
-* Rate-adjusted mixed paralog-- or anchor pair--ortholog *K*:sub:`S` distribution with superimposed lognormal-only mixture model for putative WGD inference (``mixed_species_lmm_colinearity.pdf`` and ``mixed_species_lmm_paranome.pdf``).
+* Rate-adjusted mixed paralog-- or anchor pair--ortholog *K*:sub:`S` distribution with superimposed lognormal-only mixture model for putative WGD inference (``mixed_species_lmm_anchors.pdf`` and ``mixed_species_lmm_paranome.pdf``).
 * Rate-adjustment results in tab-separated format: raw results for each trio (``adjustment_table_species_all.tsv``) and final results for each divergent pair after finding a consensus value in case of multiple outgroups (``adjustment_table_species.tsv``).
 * Input tree with branch length set to *K*:sub:`S` distances estimated from ortholog *K*:sub:`S` distributions (``tree_species_distances.pdf``).
 
@@ -60,8 +60,8 @@ Secondary output files:
 
 * From lognormal-only mixture modeling:
 
-    * Best-fitted mixture model on whole-paranome and / or anchor pair Ks distributions obtained for each number of components (``lmm_species_all_models_paranome.pdf`` and ``lmm_species_all_models_colinearity.pdf``).
-    * TSV and TXT files collecting component parameters (``lmm_species_parameters_colinearity.tsv``, ``lmm_species_parameters_colinearity.txt``, ``lmm_species_parameters_paranome.tsv`` and ``lmm_species_parameters_paranome.txt``).
+    * Best-fitted mixture model on whole-paranome and / or anchor pair Ks distributions obtained for each number of components (``lmm_species_all_models_paranome.pdf`` and ``lmm_species_all_models_anchors.pdf``).
+    * TSV and TXT files collecting component parameters (``lmm_species_parameters_anchors.tsv``, ``lmm_species_parameters_anchors.txt``, ``lmm_species_parameters_paranome.tsv`` and ``lmm_species_parameters_paranome.txt``).
 
 Nextflow log files:
 -------------------
