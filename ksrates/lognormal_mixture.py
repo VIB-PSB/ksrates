@@ -145,9 +145,9 @@ def lognormal_mixture(config_file, paralog_tsv_file, anchors_ks_tsv_file, correc
             fcPlot.plot_divergences(correction_table, peak_stats, consensus_peak_for_multiple_outgroups, dummy_axis, axis, color_list, plot_correction_arrows)
 
     if paranome_analysis:
-        fcLMM.save_lmm(fig_para, axis_para, species, best_model_paranome, "paranome")
+        fcLMM.save_lmm(fig_para, axis_para, species, best_model_paranome, "paranome", correction_table_available)
     if colinearity_analysis:
-        fcLMM.save_lmm(fig_colin, axis_colin, species, best_model_anchors, "colinearity")
+        fcLMM.save_lmm(fig_colin, axis_colin, species, best_model_anchors, "colinearity", correction_table_available)
 
     logging.info("")
     logging.info(f"Saved PDF figure(s) of lognormal mixture model [mixed_{species}_lmm.tsv]")

@@ -309,7 +309,7 @@ def create_legend_mixture_model(axis, legend_size, num_mixture_model_lines, data
     return lgd
 
 
-def save_lmm(fig, axis, species, best_model, datatype):
+def save_lmm(fig, axis, species, best_model, datatype, correction_table_available):
     """
     This function must be called to save the mixed plot figure with lognormal mixture model
     in order to adjust the figure layout: the plot area is shrunk to the left and some reasonable 
@@ -323,12 +323,17 @@ def save_lmm(fig, axis, species, best_model, datatype):
     num_mixture_model_lines = len(best_model.means_) + 1 # components + total PDF
 
     legend_size = fcPlot.define_legend_size(axis)
-
     chart_box = axis.get_position()
-    axis.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
-    lgd = create_legend_mixture_model(axis, legend_size, num_mixture_model_lines, datatype)
+
+    if correction_table_available:
+        axis.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
+        lgd = create_legend_mixture_model(axis, legend_size, num_mixture_model_lines, datatype)
+    else:
+        lgd = axis.legend(handlelength=1.5, mode="expand", loc="upper left", bbox_to_anchor=(0.54, 0.0, 0.75, 1))
+        axis.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.9, chart_box.height])
+
     fig.savefig(os.path.join("correction_analysis", f"{species}", f"mixed_{species}_lmm_{datatype}.pdf"),
-                     bbox_extra_artists=(lgd, fig._suptitle), bbox_inches="tight", transparent=True, format="pdf")
+                     bbox_extra_artists=(axis, lgd, fig._suptitle), bbox_inches="tight", transparent=True, format="pdf")
 
 
 def make_parameter_table_file(parameter_table, species, datatype):
