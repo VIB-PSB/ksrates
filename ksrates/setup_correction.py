@@ -21,15 +21,7 @@ def setup_correction(config_file, nextflow_flag):
     original_tree = config.get_newick_tree()
     tree = fcTree.reorder_tree_leaves(original_tree, species_of_interest)  # focal species is the top leaf
     latin_names = config.get_latin_names()
-
-    trigger_exit = False # will trigger exit if FASTA or GFF files are missing or empty
-    fasta_dict = config.get_fasta_dict()
-    gff_dict = config.get_gff_dict(warn_empty_dict=False)
-    # If a GFF is provided, check existence and content
-    if species_of_interest in gff_dict:
-        gff = config.get_gff_name(gff_dict, species_of_interest)
-        if fcCheck.check_file_nonexistent_or_empty(gff, "GFF file") == True:
-            trigger_exit = True
+    colinearity = config.get_colinearity()
 
     db_path = config.get_ortho_db()
     ks_list_db_path = config.get_ks_db()
@@ -43,25 +35,32 @@ def setup_correction(config_file, nextflow_flag):
     # For example, paml 4.4 gives "Node" Keyerror if the len(IDs) > 50, and/or there are special characters,
     # and/or there are two spaces in a row.
     logging.info(f"Checking if sequence data files exist and if sequence IDs are compatible with wgd pipeline...")
+    trigger_exit = False # will trigger exit if FASTA or GFF files are missing or empty
+
+    if colinearity: # If a GFF is required, check existence and content
+        gff = config.get_gff(species_of_interest)
+        if fcCheck.check_file_nonexistent_or_empty(gff, "GFF file"):  # if missing/empty
+            trigger_exit = True
+
+    fasta_dict = config.get_fasta_dict()
     all_species = []
     for leaf in tree.get_leaves():
         all_species.append(leaf.name)
-
     for species in all_species:
         # Check existence and content of FASTA file
         fasta = config.get_fasta_name(fasta_dict, species)
-        if fcCheck.check_file_nonexistent_or_empty(fasta, "FASTA file") == True:
+        if fcCheck.check_file_nonexistent_or_empty(fasta, "FASTA file"):  # if missing/empty
             trigger_exit = True
             continue
         # Check the IDs in FASTA file
-        if species == species_of_interest and species in gff_dict:  # Warn about both FASTA and GFF files
+        if species == species_of_interest and colinearity:  # Warn about both FASTA and GFF files
             fcCheck.check_IDs(fasta, latin_names[species], gff)
         else:  # Warn only about FASTA file
             fcCheck.check_IDs(fasta, latin_names[species])
             
     if trigger_exit:
-        logging.error("Please add the missing information in [fasta_filenames] configuration file field and rerun the analysis. Exiting.")
-        exit(1)
+        logging.error("Please add the missing information to the configuration file and rerun the analysis. Exiting.")
+        sys.exit(1)
     logging.info("Completed")
 
     # Creating folders for correction output files

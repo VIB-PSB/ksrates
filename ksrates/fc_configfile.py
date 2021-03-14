@@ -222,39 +222,17 @@ class Configuration:
             fasta = f"{species}.fasta"  # fallback name 
         return fasta
 
-    def get_gff_dict(self, warn_empty_dict=True):
+    def get_gff(self, species):
         """
-        Gets the config file field of the dictionary that associates the informal species names to the their GFF files.
+        Gets the config file field of the focal species's GFF file.
 
-        :return gff_names_dict: python dictionary
+        :species: focal species
+        :return gff: GFF filename
         """
-        gff_names_string = self.config.get("SPECIES", "gff_filename")
-        if gff_names_string != "":
-            gff_names_dict = self._get_clean_dict(gff_names_string, "GFF file")
-        else:
-            if warn_empty_dict == True:
-                logging.warning("Empty string in GFF filename field in configuration file.")
-            gff_names_dict = {}
-        return gff_names_dict
-
-    def get_gff_name(self, gff_dict, species):
-        """
-        Gets the path to the GFF file of the focal species from the dictionary.
-        If the value is an empty string, it applies the fallback filename "species + .gff".
-
-        :param gff_dict: Python dictionary that associates the focal species informal name to the path of its GFF file 
-        :param species: the informal name of the focal species
-        :return: the GFF file path
-        """
-        if gff_dict == {}:
-            logging.warning(f"GFF filename for focal species {species} not found in configuration file; assuming default one ({species}.gff)")
-            gff = f"{species}.gff"   # fallback name   
-        else:
-            if species in gff_dict and gff_dict[species] != "": # if the gff filename is an acceptable string (not empty)
-                gff = gff_dict[species]
-            else:
-                logging.warning(f"GFF filename for focal species {species} not found in configuration file; assuming default one ({species}.gff)")
-                gff = f"{species}.gff"   # fallback name
+        gff = self.config.get("SPECIES", "gff_filename")
+        if gff == "":
+            logging.warning(f"GFF filename for focal species [{species}] not found in configuration file; assuming default one ({species}.gff)")
+            gff = f"{species}.gff"   # fallback name
         return gff
 
     def get_feature(self):

@@ -32,7 +32,7 @@ def check_IDs(fasta, species, gff=None):
                         if gff is None:
                             logging.warning(f"{species}: sequence IDs in FASTA file [{fasta}] could raise an error due to:")
                         else:
-                            logging.warning(f"{species}: sequence IDs in FASTA and possibly GFF files [{fasta}, {gff}] could raise an error due to:")
+                            logging.warning(f"{species}: sequence IDs in FASTA and GFF files [{fasta}, {gff}] could raise an error due to:")
                 if too_long_ID:
                     if "too_long_ID" not in list_of_triggered_warnings:
                         list_of_triggered_warnings.append("too_long_ID")
