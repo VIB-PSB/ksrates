@@ -621,14 +621,20 @@ def save_anchor_cluster_plot(fig_corr, fig_uncorr, ax_corr, ax_uncorr, species, 
     legend_size = fcPlot.define_legend_size(ax_corr)
     chart_box = ax_uncorr.get_position()
 
-    ax_corr.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
-    lgd = create_legend(ax_corr, legend_size)
-    sup = update_figure_title_cluster_anchors(fig_corr, ax_corr, "corrected", species, latin_names,
-                                              correction_table_available, cluster_of_ks, round_number)
+    if correction_table_available:
+        ax_corr.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
+        lgd = create_legend(ax_corr, legend_size)
+    else:
+        ax_corr.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.9, chart_box.height])
+        lgd = ax_corr.legend(handlelength=1.5, mode="expand", loc="upper left", bbox_to_anchor=(0.63, 0.0, 0.75, 1))
+
+    update_figure_title_cluster_anchors(fig_corr, ax_corr, "corrected", species, latin_names,     
+                                         correction_table_available, cluster_of_ks, round_number)
+
     if round_number == "first": # unfiltered
         figure_file_path = os.path.join("correction_analysis", f"{species}", output, f"mixed_{species}_anchor_clusters_unfiltered.pdf")
     elif round_number == "second": # filtered, only significant clusters
         figure_file_path = os.path.join("correction_analysis", f"{species}", f"mixed_{species}_anchor_clusters.pdf")
 
-    fig_corr.savefig(figure_file_path, bbox_extra_artists=(lgd, sup), bbox_inches="tight",
+    fig_corr.savefig(figure_file_path, bbox_extra_artists=(ax_corr, lgd, fig_corr._suptitle), bbox_inches="tight",
                      transparent=True, format="pdf")
