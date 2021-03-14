@@ -626,7 +626,7 @@ def save_anchor_cluster_plot(fig_corr, fig_uncorr, ax_corr, ax_uncorr, species, 
         lgd = create_legend(ax_corr, legend_size)
     else:
         ax_corr.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.9, chart_box.height])
-        lgd = ax_corr.legend(handlelength=1.5, mode="expand", loc="upper left", bbox_to_anchor=(0.63, 0.0, 0.75, 1))
+        lgd = ax_corr.legend(handlelength=1.5, mode="expand", loc="upper left", bbox_to_anchor=(0.63, 0.0, 0.66, 1))
 
     update_figure_title_cluster_anchors(fig_corr, ax_corr, "corrected", species, latin_names,     
                                          correction_table_available, cluster_of_ks, round_number)
