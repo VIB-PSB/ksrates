@@ -1062,10 +1062,16 @@ def plot_best_model(fig_best_model, ax_best_model, species, ks_data, ks_weights,
 
   legend_size = fcPlot.define_legend_size(ax_best_model)
   chart_box = ax_best_model.get_position()
-  ax_best_model.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
-  lgd = create_legend_mixture_model(ax_best_model, legend_size, len(init_means)+2) # number of plotted lines is: exp + lognormals + total PDF
+
+  if correction_table_available:
+    ax_best_model.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
+    lgd = create_legend_mixture_model(ax_best_model, legend_size, len(init_means)+2) # number of plotted lines is: exp + lognormals + total PDF
+  else:
+    lgd = ax_best_model.legend(handlelength=1.5, mode="expand", loc="upper left", bbox_to_anchor=(0.53, 0.0, 0.75, 1))
+    ax_best_model.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.9, chart_box.height])
+  
   fig_best_model.savefig(os.path.join("correction_analysis", f"{species}", f"mixed_{species}_elmm.pdf"),
-                    bbox_extra_artists=(lgd, fig_best_model._suptitle), bbox_inches="tight", transparent=True, format="pdf")
+                    bbox_extra_artists=(ax_best_model, lgd, fig_best_model._suptitle), bbox_inches="tight", transparent=True, format="pdf")
 
   # # TEMPORARY FOR A FIGURE PLOT WITH DENSITY FOR COMPARISON AFTER SCALING
   # fig, ax = generate_best_model_figure("elaeis", "Elaeis guineensis", 3, None, True, True)
