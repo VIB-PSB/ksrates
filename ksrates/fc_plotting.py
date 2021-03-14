@@ -67,7 +67,7 @@ def generate_mixed_plot_figure(species, x_max_lim, y_max_lim, corrected_or_not, 
     if plot_correction_arrows and correction_table_available:
         fig, ax = plt.subplots(1, 1, figsize=(14.0, 7.6))
     else:
-        fig, ax = plt.subplots(1, 1, figsize=(14.0, 7.0))
+        fig, ax = plt.subplots(1, 1, figsize=(10.0, 7.0))
 
     if correction_table_available:
         if corrected_or_not == "corrected":
@@ -466,7 +466,7 @@ def create_legend(axis, paranome, colinearity, legend_size):
     return lgd
 
 
-def save_mixed_plot(fig_corr, fig_uncorr, ax_corr, ax_uncorr, species, paranome, colinearity):
+def save_mixed_plot(fig_corr, fig_uncorr, ax_corr, ax_uncorr, species, correction_table_available, paranome, colinearity):
     """
     This function must be called to save the mixed distribution figure in order to adjust the figure layout:
     the plot area is shrunk to the left and some reasonable space is left on the right side for the legend.
@@ -480,18 +480,28 @@ def save_mixed_plot(fig_corr, fig_uncorr, ax_corr, ax_uncorr, species, paranome,
     :param colinearity: the config file field that states if the anchor pairs have to be plotted [True/False]
     """
     legend_size = define_legend_size(ax_corr)
-
     chart_box = ax_uncorr.get_position()
+
     # For the un-corrected plot:
-    ax_uncorr.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
-    lgd = create_legend(ax_uncorr, paranome, colinearity, legend_size)
+    if correction_table_available:
+        ax_uncorr.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
+        lgd = create_legend(ax_uncorr, paranome, colinearity, legend_size)
+    else:
+        lgd = ax_uncorr.legend(handlelength=1.5, mode="expand", loc="upper left", bbox_to_anchor=(0.54, 0.0, 0.75, 1))
+        ax_uncorr.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.9, chart_box.height])
     fig_uncorr.savefig(os.path.join("correction_analysis", f"{species}", f"mixed_{species}_uncorrected.pdf"),
-                       bbox_extra_artists=(lgd, fig_uncorr._suptitle), bbox_inches="tight", transparent=True, format="pdf")
+        bbox_extra_artists=(ax_uncorr, lgd, fig_uncorr._suptitle), bbox_inches="tight", transparent=True, format="pdf")
+
     # Same thing for the corrected plot:
-    ax_corr.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
-    lgd = create_legend(ax_corr, paranome, colinearity, legend_size)
-    fig_corr.savefig(os.path.join("correction_analysis", f"{species}", f"mixed_{species}_corrected.pdf"),
-                     bbox_extra_artists=(lgd, fig_corr._suptitle), bbox_inches="tight", transparent=True, format="pdf")
+    if correction_table_available:
+        ax_corr.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
+        lgd = create_legend(ax_corr, paranome, colinearity, legend_size)
+    else:
+        lgd = ax_corr.legend(handlelength=1.5, mode="expand", loc="upper left", bbox_to_anchor=(0.54, 0.0, 0.75, 1))
+        ax_corr.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.9, chart_box.height])
+
+    fig_corr.savefig(os.path.join("correction_analysis", f"{species}", f"mixed_{species}_corrected.pdf"), 
+        bbox_extra_artists=(ax_corr, lgd, fig_corr._suptitle), bbox_inches="tight", transparent=True, format="pdf")
 
 
 def generate_orthologs_figure(species, sister_species, outgroup_species, x_lim):
