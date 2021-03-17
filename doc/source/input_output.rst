@@ -32,7 +32,7 @@ Output directories and directory organization
 
 * ``rate_adjustment/species/paralogs_analyses`` collects secondary output files produced during the inference of putative WGD signals through mixture modeling (see next section).
 
-* ``rate_adjustment/species/log_XXXXXXXX``: when launching *ksrates* as a Nextflow pipeline, the run generates a log directory named with a unique 8-character ID stated at beginning of the Nextflow run. Details about how the workflow is proceding and about encountered warnings or errors are stored in log files collected in this folder:
+* ``rate_adjustment/species/log_XXXXXXXX``: when launching *ksrates* as a Nextflow pipeline, each execution generates a log directory named with a unique 8-character ID stated at the beginning of a Nextflow run. Details about how the processes of the workflow are proceeding and about encountered warnings or errors are stored in log files collected in this folder:
 
     * ``setup_adjustment.log`` shows the progress in checking input files and setting up species trios and pairs for rate-adjustment. 
     * ``wgd_paralogs.log`` shows the progress in estimating paralog *K*:sub:`S` values.
@@ -40,8 +40,8 @@ Output directories and directory organization
     * ``estimate_peak.log`` shows the progress in updating the ortholog *K*:sub:`S` databases from already existing ortholog *K*:sub:`S` data.
     * ``wgd_orthologs_species1_species2.log`` shows the progress in estimating ortholog *K*:sub:`S` values for a species pair.
     * ``plot_ortholog_distributions.log`` shows the progress in plotting the ortholog *K*:sub:`S` distributions.
-    * ``rate_adjustment.log`` shows the progress in performing rate-adjustment.
-    * ``paralogs_analyses.log`` shows the progress in analyzing paralog distribution signals through anchor *K*:sub:`S` clustering, exponential-lognormal mixture modeling and lognormal-only mixture modeling. 
+    * ``rate_adjustment.log`` shows the progress in performing the actual rate-adjustment step.
+    * ``paralogs_analyses.log`` shows the progress in analyzing the paralog distribution to detect potential WGD signatures through anchor *K*:sub:`S` clustering, exponential-lognormal mixture modeling and/or lognormal-only mixture modeling. 
 
 
 Output files
@@ -51,9 +51,9 @@ Main output files:
 ------------------
 
 * Rate-adjusted mixed paralog--ortholog *K*:sub:`S` distribution plot in PDF format (``mixed_species_adjusted.pdf``).
-* Rate-adjusted mixed anchor pair--ortholog *K*:sub:`S` distribution clustered for putative WGD inference, with only significant clusters retained (``mixed_species_anchor_clusters.pdf``).
-* Rate-adjusted mixed paralog--ortholog *K*:sub:`S` distribution with superimposed exponential-lognormal mixture model for putative WGD inference (``mixed_species_elmm.pdf``).
-* Rate-adjusted mixed paralog-- or anchor pair--ortholog *K*:sub:`S` distribution with superimposed lognormal-only mixture model for putative WGD inference (``mixed_species_lmm_colinearity.pdf`` and ``mixed_species_lmm_paranome.pdf``).
+* Rate-adjusted mixed anchor pair--ortholog *K*:sub:`S` distribution clustered for inference of putative WGDs, with only significant clusters retained (``mixed_species_anchor_clusters.pdf``).
+* Rate-adjusted mixed paralog--ortholog *K*:sub:`S` distribution with superimposed exponential-lognormal mixture model inference of putative WGDs (``mixed_species_elmm.pdf``).
+* Rate-adjusted mixed paralog-- or anchor pair--ortholog *K*:sub:`S` distribution with superimposed lognormal-only mixture model for inference of putative WGDs (``mixed_species_lmm_colinearity.pdf`` and ``mixed_species_lmm_paranome.pdf``).
 * Rate-adjustment results in tab-separated format: raw results for each trio (``adjustment_table_species_all.tsv``) and final results for each divergent pair after finding a consensus value in case of multiple outgroups (``adjustment_table_species.tsv``).
 * Input tree with branch length set to *K*:sub:`S` distances estimated from ortholog *K*:sub:`S` distributions (``tree_species_distances.pdf``).
 
@@ -75,11 +75,11 @@ Secondary output files:
 * From anchor *K*:sub:`S` clustering:
 
     * Anchor pair *K*:sub:`S` distribution with highlighted clusters of segment pair medians (``anchor_clusters_species_medians.pdf``).
-    * Rate-adjusted mixed anchor pair--ortholog *K*:sub:`S` distributions clustered to infer putative WGD components, with all inferred clusters (``mixed_species_anchor_clusters_unfiltered.pdf``).
+    * Rate-adjusted mixed anchor pair--ortholog *K*:sub:`S` distributions clustered for inference of putative WGDs, with all inferred clusters (``mixed_species_anchor_clusters_unfiltered.pdf``).
 
 * From exponential-lognormal mixture modeling:
   
-    * Plots showing the kernel density estimation and spline obtained from log-transformed whole-paranome *K*:sub:`S` distribution (``elmm_species_kde_spline.pdf``).
+    * Plots showing the kernel density estimation (KDE) and spline obtained from the log-transformed whole-paranome *K*:sub:`S` distribution (``elmm_species_kde_spline.pdf``).
     * Plots showing the peaks detected in the spline (``elmm_species_peaks.pdf``).
     * Multi-panel figure showing fitted mixture models obtained with data-driven and hybrid initializations (``elmm_species_models_data_driven.pdf``).
     * Multi-panel figure showing the best-fitted mixture model obtained for each number of components with random initialization (``elmm_species_models_random.pdf``).
