@@ -92,10 +92,12 @@ def exp_log_mixture(config_file, paralog_tsv_file, correction_table_file):
       os.makedirs(os.path.join("rate_adjustment", species, output))
 
   # Generating figures for the mixture models
-  fig_peaks, ax_peaks_ks, ax_peaks_logks, ax_peaks2_ks, ax_peaks2_logks, sup_peaks = fcEM.generate_peak_model_figure(species_escape_whitespace, x_max_lim)
-  fig_random, axes_random, sup_random = fcEM.generate_random_model_figure(species_escape_whitespace, min_num_comp, max_num_comp, x_max_lim)
-  fig_best_model, ax_best_ks = fcEM.generate_best_model_figure(species_escape_whitespace, latinSpecies, x_max_lim, y_max_lim, 
-                                                                         correction_table_available, plot_correction_arrows)
+  fig_peaks, ax_peaks_ks, ax_peaks_logks, ax_peaks2_ks, ax_peaks2_logks, sup_peaks = fcEM.generate_peak_model_figure(
+                                                                                species_escape_whitespace, x_max_lim)
+  fig_random, axes_random, sup_random = fcEM.generate_random_model_figure(species_escape_whitespace, 
+                                                                          min_num_comp, max_num_comp, x_max_lim)
+  fig_best_model, ax_best_ks = fcEM.generate_best_model_figure(latinSpecies, x_max_lim, y_max_lim, 
+                                                               correction_table_available, plot_correction_arrows)
 
   # Generating a proxy dataset for the weighted Ks paranome (deconvoluting the histogram)
   deconvoluted_data = fcEM.deconvolute_data(paralog_tsv_file, max_ks_EM, "paralogs")

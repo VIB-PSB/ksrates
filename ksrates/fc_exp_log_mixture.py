@@ -63,12 +63,11 @@ def generate_random_model_figure(species_escape_whitespace, min_num_comp, max_nu
   return fig_random, axes_random, sup_random
 
 
-def generate_best_model_figure(species_escape_whitespace, latin_species, x_max_lim, y_max_lim, correction_table_available, plot_correction_arrows):
+def generate_best_model_figure(latin_species, x_max_lim, y_max_lim, correction_table_available, plot_correction_arrows):
   """
   Generates the figure hosting the best mixture model
   (according to lowest BIC score).
 
-  :param species_escape_whitespace: scientific name of the focal species with space escape
   :param latin_species: scientific name of the focal species
   :param x_max_lim: upper Ks limit in the x-axis range
   :param y_max_lim: upper Ks limit in the y-axis range
