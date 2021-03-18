@@ -95,7 +95,7 @@ def log_subprocess(program, process):
 
 def get_gfs_for_species(gene_family_dict, gene_pattern):
     """
-    Get non-singleton gene families for a species of interest
+    Get non-singleton gene families for a species of interest.
 
     :param gene_family_dict: gene family dictionary
     :param species: species of interest

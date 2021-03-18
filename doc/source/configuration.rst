@@ -17,12 +17,12 @@ Description
 The analysis configuration file is composed of a first section defining the species used, their phylogenetic relationships and their sequence data files, a second section concerning general analysis settings and a third section concerning mainly figure parameters. Below is an example for an analysis with oil palm (*Elaeis guineensis*) as the focal species. ::
 
     [SPECIES]
-    species = elaeis
+    focal_species = elaeis
     newick_tree = ((elaeis, oryza), asparagus);
     latin_names = elaeis:Elaeis guineensis, oryza:Oryza sativa, asparagus:Asparagus officinalis
 
     fasta_filenames = elaeis:elaeis.fasta, oryza:oryza.fasta, asparagus:asparagus.fasta
-    gff_filenames = elaeis:elaeis.gff3
+    gff_filename = elaeis:elaeis.gff3
 
     peak_database_path = ortholog_peak_db.tsv
     ks_list_database_path = ortholog_ks_list_db.tsv
@@ -44,7 +44,7 @@ The analysis configuration file is composed of a first section defining the spec
     bin_width_para = 0.1
     y_axis_limit_paralogs_plot = None
 
-    num_iterations = 200
+    num_bootstrap_iterations = 200
     divergence_colors =  Red, MediumBlue, Goldenrod, Crimson, ForestGreen, Gray, SaddleBrown, Black
 
     x_axis_max_limit_orthologs_plots = 5
@@ -55,20 +55,18 @@ The analysis configuration file is composed of a first section defining the spec
 
 The [SPECIES] section includes:
 
-.. TODO: are spaces tolerated in species name?
-
-* **species**: name of the focal species. A *K*:sub:`S` paralog distribution is generated for this species and its *K*:sub:`S`-scale is used as the rate-adjustment reference. It is advised to use a short name (for example, the genus or family name) or common abbreviation here. For example, "elaeis" or "eguineensis" instead of "Elaeis guineensis".
-* **newick_tree**: phylogenetic relationships among the involved species as Newick format (more info on the ETE toolkit `website <http://etetoolkit.org/docs/latest/tutorial/tutorial_trees.html#reading-and-writing-newick-trees>`__). It has to contain the focal species as named in parameter `species`. It is advised to use short names or abbreviations for the other species as well.
+* **focal_species**: name of the focal species. A *K*:sub:`S` paralog distribution is generated for this species and its *K*:sub:`S`-scale is used as the rate-adjustment reference. It is advised to use a short name (for example, the genus or family name) or common abbreviation here, spaces are not tolerated. For example, "elaeis" or "eguineensis" instead of "Elaeis guineensis".
+* **newick_tree**: phylogenetic relationships among the involved species as Newick format using leaf nodes only (more info e.g. on this `website <https://evolution.genetics.washington.edu/phylip/newicktree.html>`__). It has to contain the focal species as named in parameter `focal_species`. It is advised to use short names or abbreviations for the other species as well.
 * **latin_names**: list of associations between each of the species names in parameter `newick_tree` and their scientific names, which will be used in legends and plot titles. The association is made with a colon (':').
 * **fasta_filenames**: list of associations between each of the species names in parameter `newick_tree` and the corresponding paths to their FASTA files. The association is made with a colon (':').
-* **gff_filenames**: association between the focal species as named in parameter `species` and the path to the GFF3 file for the focal species (only required for collinearity analysis). The association is made with a colon (':').
+* **gff_filename**: association between the focal species as named in parameter `focal_species` and the path to the GFF3 file for the focal species (only required for collinearity analysis). The association is made with a colon (':').
 * **peak_database_path**: path to the database of ortholog *K*:sub:`S` distribution peaks. If the file is not present yet, it will be automatically generated.
 * **ks_list_database_path**: path to the database of ortholog *K*:sub:`S` lists. If the file is not present, it will be automatically generated.
 
 The [ANALYSIS SETTING] section includes:
 
-* **paranome**: whether to build/plot the whole-paranome *K*:sub:`S` distribution of the focal species. \[yes/no\]
-* **colinearity**: whether to build/plot the anchor pair *K*:sub:`S` distribution of the focal species. \[yes/no\]
+* **paranome**: whether to build/plot the whole-paranome *K*:sub:`S` distribution of the focal species (options: "yes" and "no"). [Default: "yes"]
+* **colinearity**: whether to build/plot the anchor pair *K*:sub:`S` distribution of the focal species (options: "yes" and "no"). A GFF file for the focal species is required, see parameter `gff_filename` above. [Default: "no"]
 * **gff_feature**: parsing keyword from the third column of the GFF file (e.g. gene, mrna...). Case insensitive.
 * **gff_attribute**: parsing keyword from the ninth column of the GFF file (e.g. id, name...). Case insensitive. 
 * **max_number_outspecies**: maximum number of trios/outspecies allowed to adjust a divergent pair; if None, all possible outspecies obtained from the phylogenetic tree will be used to form trios and adjust the pair. For more details see below. [Default: 4]
@@ -84,7 +82,7 @@ The [PARAMETERS] section includes:
     
 * For ortholog divergence *K*:sub:`S`
 
-    * **num_iterations**: number of bootstrap iterations for mode/median estimate. [Default: 200]
+    * **num_bootstrap_iterations**: number of bootstrap iterations for mode estimation. [Default: 200]
     * **divergence_colors**: list of colors assigned to the divergence nodes: all divergence lines coming from the same divergence node share the same color. [Default: 8 colors]
     
 * For the ortholog *K*:sub:`S` distribution plots
@@ -114,7 +112,7 @@ Guidelines to set the consensus method for multiple rate-adjustments
 A consensus value for the rate-adjustment is needed when multiple rate-adjustments are performed for a species pair. The pipeline computes two consensus strategies, but then generates the divergence lines in the mixed plot according to the method specified in the configuration file under ``consensus_peak_for_multiple_outgroups``.
 
 * ``mean among outgroups``: with this option, the final rate-adjustment of a species pair is the mean of the rate-adjustments obtained from all the used outgroups. It is the default method because it avoids to rely on a single voice that could be biased (e.g. bad quality data).
-* ``best outgroup``: with this option, only the rate-adjustment obtained from the best outgroup is considered for the final rate-adjustment of a species pair. The best outgroup is the one with the smallest OC segment, which is computed during the relative rate detection. The OC segment is a combined measure of how close is the outgroup and how slow is its rate; the smaller the OC segment, the better can the outgroup detect the relative rates. The OC is stored in ``correction_table_species.tsv``. If one outgroup shows a remarkably slower OC than the others, then it can be worth it to re-run the pipeline (or just the plotting of the mixed distribution) by setting in the configuration file the ``best outgroup`` method. However, it's first better to check the quality of the rate-adjustment result coming from it, especially if the outgroup species has transcriptome data: its ortholog distributions in ``orthologs_species1_species2.pdf`` should have clear peaks in order to give a reliable rate-adjustment.
+* ``best outgroup``: with this option, only the rate-adjustment obtained from the best outgroup is considered for the final rate-adjustment of a species pair. The best outgroup is the one with the smallest OC segment, which is also computed through *K*:sub:`S` value decomposition as during relative rate testing. The OC segment is a combined measure of how close is the outgroup and how low is its rate; the smaller the OC segment, the better can the outgroup detect the branch-specific *K*:sub:`S` contributions of the two ingroups. The OC is stored in ``adjustment_table_species.tsv``. If one outgroup shows a remarkably smaller OC than the others, then it can be worth it to re-run the pipeline (or just the plotting of the mixed distribution) by setting in the configuration file the ``best outgroup`` method. However, it's first better to check the quality of the rate-adjustment result coming from it, especially if the outgroup species has transcriptome data: its ortholog distributions in ``orthologs_species1_species2.pdf`` should have clear peaks in order to give a reliable rate-adjustment.
 
 
 .. _`nextflow_config_section`:
@@ -122,7 +120,7 @@ A consensus value for the rate-adjustment is needed when multiple rate-adjustmen
 Nextflow configuration file
 ===========================
 
-The Nextflow configuration file is used to configure various settings for the *ksrates* Nextflow pipeline, including the settings to use and configure resources on a compute cluster and to use the *ksrates* Singularity or Docker container. We provide a few general template Nextflow configuration files for the *ksrates* Nextflow pipeline in the `doc <https://github.com/VIB-PSB/ksrates/blob/master/doc/source>`_ directory in the GitHub repository. These can be adapted to a user's specific resources and requirements. Below, we briefly explain some of the basic key settings. For a more complete description please refer to the `Nextflow documentation <https://www.nextflow.io/docs/latest/config.html#configuration>`_. ::
+The Nextflow configuration file is used to configure various settings for the *ksrates* Nextflow pipeline, including the settings to use and configure resources on a compute cluster and to use the *ksrates* Singularity or Docker container. We provide a few general template Nextflow configuration files for the *ksrates* Nextflow pipeline in the `doc <https://github.com/VIB-PSB/ksrates/blob/master/doc/source>`_ directory in the GitHub repository. These can be adapted to a user's specific resources and requirements. Below, we briefly explain some of the basic key settings. For a more complete description please refer to the `Nextflow documentation <https://www.nextflow.io/docs/latest/config.html#configuration>`__. ::
 
     singularity {
         enabled = true
@@ -163,12 +161,18 @@ The Nextflow configuration file is used to configure various settings for the *k
         
       Has to match enabled container type (see above).
 
-    * **withName** defines settings for individual processes in the *ksrates* Nextflow pipeline, for example:
+    * **withName** defines settings for individual processes in the *ksrates* Nextflow pipeline.
+    
+      There are 11 processes in the pipeline, 6 of which (``checkConfig``, ``setupCorrection``, ``setParalogAnalysis``, ``setOrthologAnalysis``,  ``doRateCorrection`` and ``drawTree``) are by default run locally because they execute minimal calculations. The remaining 5 processes (``estimatePeak``, ``plotOrthologDistrib``, ``paralogsAnalyses``, ``wgdParalogs`` and ``wgdOrthologs``) are instead run by default on a cluster, if available, and can be configured under this section of the Nextflow configuration file. ``wgdParalogs`` and ``wgdOrthologs`` are the most computationally demanding and it is advised to assign them a higher computational power than the other processes. If available, we suggest to configure about 10 CPUs/cores/slots/threads and about 20GB memory (or, on average, about 2GB per configured CPU) for each of these two processes.
+    
+      Examples of available settings are (for a complete list see the `Nextflow documentation <https://www.nextflow.io/docs/latest/process.html#process-directives>`__):
     
     	* **clusterOption** any native configuration option accepted by your cluster submit command. You can use it to request non-standard resources or use settings that are specific to your cluster and not supported out of the box by Nextflow.
-    	* **beforeScript** allows you to execute a custom (Bash) snippet before the main process script is run. This may be useful to initialise the underlying cluster environment or for other custom initialisation, for example it can be used to load required dependencies if one of the container is not used, provided that the cluster has those dependencies installed.
-    	
-      For a complete list of available settings, see the `Nextflow documentation <https://www.nextflow.io/docs/latest/process.html#process-directives>`_. The processes ``wgdParalogs`` and ``wgdOrthologs`` are the most computationally demanding and it is advised to assign them a higher computational power than the other processes.
+        * **beforeScript** allows you to execute a custom (Bash) snippet before the main process script is run. This may be useful to initialise the underlying compute cluster environment or for other custom initialisation, for example it can be used to load required dependencies if one of the *ksrates* containers is not used, provided that the cluster has those dependencies installed. In that case, the required external dependencies (see also the `wgd Documentation <https://wgd.readthedocs.io/en/latest/index.html#external-software>`__) for the *ksrates* Nextflow processes are:
+
+            * ``wgdParalogs``: Python dependencies listed in requirements.txt, plus BLAST, MUSCLE, MCL, PAML, FastTree and i-ADHoRe (if collinearity analysis is configured).
+            * ``wgdOrthologs``: Python dependencies listed in requirements.txt, plus BLAST, MUSCLE and PAML.
+            * All other processes: Python dependencies listed in requirements.txt.
 
 * The **env** scope allows the definition one or more variable that will be exported in the environment where the workflow tasks will be executed.
 
@@ -183,22 +187,23 @@ This is an optional configuration file that contains several \"expert\" paramete
     [EXPERT PARAMETERS]
     
     logging_level = info
-    peak_stats = mode
-    kde_bandwidth_modifier = 0.4
-    plot_correction_arrows = no
-    max_mixture_model_iterations = 300
-    num_mixture_model_initializations = 10
-    extra_paralogs_analyses_methods = no
-    max_mixture_model_components = 5
-    max_ks_for_mixture_model = 5
     max_gene_family_size = 200
+    distribution_peak_estimate = mode
+    kde_bandwidth_modifier = 0.4
+    plot_adjustment_arrows = no
+    num_mixture_model_initializations = 10
+    max_mixture_model_iterations = 300
+    max_mixture_model_components = 5
+    max_mixture_model_ks = 5
+    extra_paralogs_analyses_methods = no
 
-* **logging_level**: the lowest logging/verbosity level of messages printed to the console/logs (options: critical, error, warning, info, debug, notset). [Default: info]
-* **peak_stats**: the statistical method used to obtain a single ortholog *K*:sub:`S` estimate for the divergence time of a species pair from its ortholog distribution or a single paralog *K*:sub:`S` estimate from an anchor *K*:sub:`S` cluster. (options: mode or median). [Default: mode]
-* **kde_bandwidth_modifier**: modifier to adjust the fitting of the KDE curve on the underlying whole-paranome or anchor *K*:sub:`S` distributions. The KDE Scott's factor internally computed by SciPy tends to produce an overly smooth KDE curve, especially with steep WGD peaks, and therefore it is reduced by multiplying it by a modifier. Decreasing the modifier leads to tighter fits, increasing it leads to smoother fits, and setting it to 1 gives the default KDE Scott's factor. Note that a too small factor is likely to take into account data noise. [Default: 0.4]
-* **plot_correction_arrows**: flag to toggle the plotting of rate-adjustment arrows below the adjusted mixed paralog--ortholog *K*:sub:`S plot. These arrows start from the original unadjusted ortholog divergence *K*:sub:`S` estimate and end on the rate-adjusted estimate. [Default: yes]
-* **max_mixture_model_iterations**: maximum number of EM iterations for mixture modeling. [Default: 300] 
-* **num_mixture_model_initializations**: number of times the EM algorithm is initialized (either for the random initialization in the exponential-lognormal mixture model or for k-means in the lognormal mixture model).
-* **max_mixture_model_components**: maximum number of components considered during execution of the mixture models.
-* **max_ks_for_mixture_model**: upper limit for the Ks range considered during execution of the mixture models.
+* **logging_level**: the lowest logging/verbosity level of messages printed to the console/logs (increasing severity levels: *notset*, *debug*, *info*, *warning*, *error*, *critical*). Messages less severe than *level* will be ignored; *notset* causes all messages to be processed. [Default: "info"]
 * **max_gene_family_size**: maximum number of members that any paralog gene family can have to be included in *K*:sub:`S` estimation. Large gene families increase the run time and are often composed of unrelated sequences grouped together by shared protein domains or repetitive sequences. But this is not always the case, so one may want to check manually the gene families in file ``paralog_distributions/wgd_<focal species>/<focal species>.mcl.tsv`` and increase (or even decrease) this number. [Default: 200]
+* **distribution_peak_estimate**: the statistical method used to obtain a single ortholog *K*:sub:`S` estimate for the divergence time of a species pair from its ortholog distribution or to obtain a single paralog *K*:sub:`S` estimate from an anchor *K*:sub:`S` cluster or from lognormal components in mixture models (options: "mode" or "median"). [Default: "mode"]
+* **kde_bandwidth_modifier**: modifier to adjust the fitting of the KDE curve on the underlying whole-paranome or anchor *K*:sub:`S` distribution. The KDE Scott's factor internally computed by SciPy tends to produce an overly smooth KDE curve, especially with steep WGD peaks, and therefore it is reduced by multiplying it by a modifier. Decreasing the modifier leads to tighter fits, increasing it leads to smoother fits, and setting it to 1 gives the default KDE factor. Note that a too small factor is likely to take into account data noise. [Default: 0.4]
+* **plot_adjustment_arrows**: flag to toggle the plotting of rate-adjustment arrows below the adjusted mixed paralog--ortholog *K*:sub:`S` plot. These arrows start from the original unadjusted ortholog divergence *K*:sub:`S` estimate and end on the rate-adjusted estimate (options: "yes" and "no"). [Default: "no"]
+* **num_mixture_model_initializations**: number of times the EM algorithm is initialized (either for the random initialization in the exponential-lognormal mixture model or for k-means in the lognormal mixture model). [Default: 10]
+* **max_mixture_model_iterations**: maximum number of EM iterations for mixture modeling. [Default: 300]
+* **max_mixture_model_components**: maximum number of components considered during execution of the mixture models. [Default: 5]
+* **max_mixture_model_ks**: upper limit for the *K*:sub:`S` range in which the exponential-lognormal and lognormal-only mixture models are performed. [Default: 5]
+* **extra_paralogs_analyses_methods**: flag to toggle the optional analysis of the paralog *K*:sub:`S` distribution with non default mixture model methods (see section :ref:`paralogs_analyses` and Supplementary Materials) [Default: "no"]

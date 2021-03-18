@@ -16,35 +16,43 @@ def wgd_paralogs(config_file, n_threads):
     init_logging(f"Paralog wgd analysis for species [{species}]", config.get_logging_level())
 
     latin_names = config.get_latin_names()
-    fasta_names_dict = config.get_fasta_dict()
-    species_fasta_file = config.get_fasta_name(fasta_names_dict, species)
-    fcCheck.check_inputfile(species_fasta_file, "FASTA file")
     max_gene_family_size = config.get_max_gene_family_size()
-
     paranome = config.get_paranome()
     colinearity = config.get_colinearity()
 
-    if colinearity:  # if colinearity analysis is required, load extra parameters
-        gff_names_dict = config.get_gff_dict()
-        species_gff_file = config.get_gff_name(gff_names_dict, species)
-        fcCheck.check_inputfile(species_gff_file, "GFF file")
+    logging.info(f"Checking if sequence data files exist and if sequence IDs are compatible with wgd pipeline...")
+    # Will exit if FASTA or GFF files are missing or empty or if GFF feature/attribute are missing
+    trigger_exit = False
+
+    if colinearity:  # if colinearity analysis is required, load related parameters
+        gff = config.get_gff(species)
+        if fcCheck.check_file_nonexistent_or_empty(gff, "GFF file"):
+            trigger_exit = True
 
         gff_feature = config.get_feature()
         gff_gene_attribute = config.get_attribute()
         if gff_feature == "":
-            logging.error("No GFF attribute provided in configuration file.")
+            logging.error("No GFF attribute provided in configuration file. Will exit.")
+            trigger_exit = True
         if gff_gene_attribute == "":
-            logging.error("No GFF feature provided in configuration file.")
-        if gff_feature == "" or gff_gene_attribute == "":
-            logging.error("Will exit the colinearity analysis.")
-            sys.exit(1)
-    # Checking if IDs in FASTA (and in GFF if applicable) are compatible with wgd pipeline (paml)
-    logging.info("")
-    if colinearity:
-        fcCheck.check_IDs(species_fasta_file, latin_names[species], species_gff_file)
-    else:
-        fcCheck.check_IDs(species_fasta_file, latin_names[species])
+            logging.error("No GFF feature provided in configuration file. Will exit.")
+            trigger_exit = True
 
+    # Checking if FASTA file exists and if sequence IDs are compatible with wgd pipeline (paml)
+    fasta_names_dict = config.get_fasta_dict()
+    species_fasta_file = config.get_fasta_name(fasta_names_dict, species)
+    if fcCheck.check_file_nonexistent_or_empty(species_fasta_file, "FASTA file"):  # if missing/empty
+        trigger_exit = True
+    else: # If FASTA file exists, check for ID compatibility
+        if colinearity:
+            fcCheck.check_IDs(species_fasta_file, latin_names[species], gff)
+        else:
+            fcCheck.check_IDs(species_fasta_file, latin_names[species])
+
+    if trigger_exit:
+        logging.error("Please add the missing information to the configuration file and rerun the analysis. Exiting.")
+        sys.exit(1)
+    logging.info("Completed")
 
     # Creating folder for output files of wgd paralog pipeline
     paralog_dists_dir = os.path.join("paralog_distributions", "")
@@ -62,7 +70,7 @@ def wgd_paralogs(config_file, n_threads):
     if colinearity:
         logging.info('---')
         logging.info("Running wgd colinearity Ks pipeline...")
-        fc_wgd.ks_colinearity(species, species_gff_file, base_dir=paralog_dists_dir, gff_feature=gff_feature,
+        fc_wgd.ks_colinearity(species, gff, base_dir=paralog_dists_dir, gff_feature=gff_feature,
                             gff_gene_attribute=gff_gene_attribute, n_threads=n_threads)
 
     logging.info(datetime.datetime.today().ctime())

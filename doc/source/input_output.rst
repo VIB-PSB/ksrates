@@ -9,30 +9,52 @@ Input files
 * *ksrates* configuration file(s) (for more details see :ref:`config_sections`).
 
 
-Output directories and directory organization
-=============================================
+Output files and directory organization
+=======================================
 
-*ksrates* generates the following output directories and files within the directory where it is executed from:
+* ``rate_adjustment/species``: collects the output files of the substitution rate-adjustment relative to the focal species.
 
-* ``paralog_distributions/wgd_species`` contains the files of the *wgd* paralog *K*:sub:`S` estimate for the focal species:
+    Figures:
 
-    * ``species.blast.tsv`` contains all-vs-all BLAST table results
-    * ``species.mcl.tsv`` lists gene families from largest to smallest
-    * ``species.ks.tsv`` lists paralog *K*:sub:`S` estimates
-    * ``species.ks_anchors.tsv`` lists anchor pair *K*:sub:`S` estimates
-    * ``species_i-adhore`` directory contains i-ADHoRe output files used during anchor *K*:sub:`S` clustering
+        * Rate-adjusted mixed paralog--ortholog *K*:sub:`S` distribution plot in PDF format (``mixed_species_adjusted.pdf``).
+        * Input tree with branch length set to *K*:sub:`S` distances estimated from ortholog *K*:sub:`S` distributions (``tree_species_distances.pdf``).
+        * Multi-panel figure(s) of the ortholog *K*:sub:`S` distributions used to adjust a divergent species pair (``orthologs_species1_species2.pdf``).
+        * Rate-adjusted mixed anchor pair--ortholog *K*:sub:`S` distribution clustered for inference of putative WGDs, with only significant clusters retained (``mixed_species_anchor_clusters.pdf``).
+        * Rate-adjusted mixed paralog--ortholog *K*:sub:`S` distribution with superimposed exponential-lognormal mixture model inference of putative WGDs (``mixed_species_elmm.pdf``).
+        * Rate-adjusted mixed paralog-- or anchor pair--ortholog *K*:sub:`S` distribution with superimposed lognormal-only mixture model for inference of putative WGDs (``mixed_species_lmm_colinearity.pdf`` and ``mixed_species_lmm_paranome.pdf``).
+        * Unadjusted naive mixed paralog--ortholog *K*:sub:`S` distribution plot in PDF format (``mixed_species_unadjusted.pdf``).
+        * Original input phylogenetic tree in PDF format with fixed branch length (``tree_species.pdf``)
 
-* ``ortholog_distributions/wgd_species1_species2`` contains the files of the *wgd* one-to-one ortholog *K*:sub:`S` estimate of a species pair:
+    Files:
 
-    * ``species1_species2.blast.tsv`` contains all-vs-all BLAST table results. When the execution of the *wgd* ortholog run is over it is possible to delete this file to save disk space.
-    * ``species1_species2.orthologs.tsv`` lists the one-to-one ortholog pairs
-    * ``species1_species2.ks.tsv`` lists ortholog *K*:sub:`S` estimates
+        * Rate-adjustment results in tab-separated format: raw results for each trio (``adjustment_table_species_all.tsv``) and final results for each divergent pair after finding a consensus value in case of multiple outgroups (``adjustment_table_species.tsv``).
+        * Original input phylogenetic tree in ASCII format and list of sister species and outgroup species per node (``tree_species.txt``).
+        * List of trios used for substitution rate-adjustment (``ortholog_trios_species.tsv``).
+        * List of species pairs to be submitted to *wgd* ortholog runs (``ortholog_pairs_species.txt``).
 
-* ``rate_adjustment/species``: contains the output files of the substitution rate-adjustment relative to the focal species (figures and data files, see next section).
 
-* ``rate_adjustment/species/paralogs_analyses`` collects secondary output files produced during the inference of putative WGD signals through mixture modeling (see next section).
+* ``rate_adjustment/species/paralogs_analyses`` collects secondary output files produced during the inference of putative WGD signals through mixture modeling (see also section :ref:`paralogs_analyses`).
 
-* ``rate_adjustment/species/log_XXXXXXXX``: when launching *ksrates* as a Nextflow pipeline, each execution generates a log directory named with a unique 8-character ID stated at the beginning of a Nextflow run. Details about how the processes of the workflow are proceeding and about encountered warnings or errors are stored in log files collected in this folder:
+    From anchor *K*:sub:`S` clustering:
+
+        * Anchor pair *K*:sub:`S` distribution with highlighted clusters of segment pair medians (``anchor_clusters_species_medians.pdf``).
+        * Rate-adjusted mixed anchor pair--ortholog *K*:sub:`S` distributions clustered for inference of putative WGDs, with all inferred clusters (``mixed_species_anchor_clusters_unfiltered.pdf``).
+
+    From exponential-lognormal mixture modeling:
+    
+        * Plots showing the kernel density estimation (KDE) and spline obtained from the log-transformed whole-paranome *K*:sub:`S` distribution (``elmm_species_kde_spline.pdf``).
+        * Plots showing the peaks detected in the spline (``elmm_species_peaks.pdf``).
+        * Multi-panel figure showing fitted mixture models obtained with data-driven and hybrid initializations (``elmm_species_models_data_driven.pdf``).
+        * Multi-panel figure showing the best-fitted mixture model obtained for each number of components with random initialization (``elmm_species_models_random.pdf``).
+        * TSV and TXT files collecting component parameters (``elmm_species_parameters.tsv`` and ``elmm_species_parameters.txt``).
+
+    From lognormal-only mixture modeling:
+
+        * Multi-panel figure showing the best-fitted mixture model on whole-paranome and anchor pair *K*:sub:`S` distributions obtained for each number of components (``lmm_species_all_models_paranome.pdf`` and ``lmm_species_all_models_colinearity.pdf``).
+        * TSV and TXT files collecting component parameters (``lmm_species_parameters_colinearity.tsv``, ``lmm_species_parameters_colinearity.txt``, ``lmm_species_parameters_paranome.tsv`` and ``lmm_species_parameters_paranome.txt``).
+
+
+* ``rate_adjustment/species/log_XXXXXXXX``: when launching *ksrates* as a Nextflow pipeline, each execution generates a log directory named with a unique 8-character ID stated at the beginning of a Nextflow run. Details about how the processes of the workflow are proceeding and about encountered warnings or errors are stored in log files collected in this directory:
 
     * ``setup_adjustment.log`` shows the progress in checking input files and setting up species trios and pairs for rate-adjustment. 
     * ``wgd_paralogs.log`` shows the progress in estimating paralog *K*:sub:`S` values.
@@ -44,51 +66,30 @@ Output directories and directory organization
     * ``paralogs_analyses.log`` shows the progress in analyzing the paralog distribution to detect potential WGD signatures through anchor *K*:sub:`S` clustering, exponential-lognormal mixture modeling and/or lognormal-only mixture modeling. 
 
 
-Output files
-============
+* ``paralog_distributions/wgd_species`` contains the files generated during the paralog *K*:sub:`S` estimate for the focal species:
 
-Main output files:
-------------------
+    * ``species.blast.tsv`` contains all-vs-all BLAST table results
+    * ``species.mcl.tsv`` lists gene families from largest to smallest
+    * ``species.ks.tsv`` lists paralog *K*:sub:`S` estimates
+    * ``species.ks_anchors.tsv`` lists anchor pair *K*:sub:`S` estimates
+    * ``species_i-adhore`` directory contains i-ADHoRe output files used during anchor *K*:sub:`S` clustering (see section :ref:`anchor_ks_clustering`)
 
-* Rate-adjusted mixed paralog--ortholog *K*:sub:`S` distribution plot in PDF format (``mixed_species_adjusted.pdf``).
-* Rate-adjusted mixed anchor pair--ortholog *K*:sub:`S` distribution clustered for inference of putative WGDs, with only significant clusters retained (``mixed_species_anchor_clusters.pdf``).
-* Rate-adjusted mixed paralog--ortholog *K*:sub:`S` distribution with superimposed exponential-lognormal mixture model inference of putative WGDs (``mixed_species_elmm.pdf``).
-* Rate-adjusted mixed paralog-- or anchor pair--ortholog *K*:sub:`S` distribution with superimposed lognormal-only mixture model for inference of putative WGDs (``mixed_species_lmm_colinearity.pdf`` and ``mixed_species_lmm_paranome.pdf``).
-* Rate-adjustment results in tab-separated format: raw results for each trio (``adjustment_table_species_all.tsv``) and final results for each divergent pair after finding a consensus value in case of multiple outgroups (``adjustment_table_species.tsv``).
-* Input tree with branch length set to *K*:sub:`S` distances estimated from ortholog *K*:sub:`S` distributions (``tree_species_distances.pdf``).
 
-Secondary output files:
------------------------
+* ``ortholog_distributions/wgd_species1_species2`` contains the files generated during the one-to-one ortholog *K*:sub:`S` estimate of a species pair:
 
-* From substitution rate difference detection:
+    * ``species1_species2.blast.tsv`` contains all-vs-all BLAST table results. When the execution of the *wgd* ortholog run is over it is possible to delete this file to save disk space.
+    * ``species1_species2.orthologs.tsv`` lists the one-to-one ortholog pairs
+    * ``species1_species2.ks.tsv`` lists ortholog *K*:sub:`S` estimates
 
-    * Original input phylogenetic tree in ASCII format and list of sister species and outgroup species per node (``tree_species.txt``).
-    * List of trios used for substitution rate-adjustment (``ortholog_trios_species.tsv``).
-    * List of species pairs to be submitted to *wgd* ortholog runs (``ortholog_pairs_species.txt``).
-    * List of commands to launch the ortholog *wgd* runs in the manual pipeline (``wgd_runs_species.txt``).
-    * Multi-panel figure(s) of the ortholog *K*:sub:`S` distributions used to adjust a divergent species pair (``orthologs_species1_species2.pdf``).
+
+* Files generated directly in the launching directory:
+
     * Databases storing the ortholog *K*:sub:`S` lists (``ks_list_database_path.txt``) and the estimated divergence time *K*:sub:`S` estimate (``peak_database_path.txt``) of the ortholog *K*:sub:`S` distributions.
+    * List of commands to launch the ortholog *wgd* runs in the manual pipeline (``wgd_runs_species.txt``). Note that this file is not generated if launching the Nextflow pipeline.
 
-* Unadjusted naive mixed paralog--ortholog *K*:sub:`S` distribution plot in PDF format (``mixed_species_unadjusted.pdf``).
-* Original input phylogenetic tree in PDF format with fixed branch length (``tree_species.pdf``).
 
-* From anchor *K*:sub:`S` clustering:
+* ``work`` is automatically generated by Nextflow to handle process organization and communication between processes (for more details see Nextflow documentation, e.g. the Get started `page <https://www.nextflow.io/docs/latest/getstarted.html#your-first-script>`__)
 
-    * Anchor pair *K*:sub:`S` distribution with highlighted clusters of segment pair medians (``anchor_clusters_species_medians.pdf``).
-    * Rate-adjusted mixed anchor pair--ortholog *K*:sub:`S` distributions clustered for inference of putative WGDs, with all inferred clusters (``mixed_species_anchor_clusters_unfiltered.pdf``).
-
-* From exponential-lognormal mixture modeling:
-  
-    * Plots showing the kernel density estimation (KDE) and spline obtained from the log-transformed whole-paranome *K*:sub:`S` distribution (``elmm_species_kde_spline.pdf``).
-    * Plots showing the peaks detected in the spline (``elmm_species_peaks.pdf``).
-    * Multi-panel figure showing fitted mixture models obtained with data-driven and hybrid initializations (``elmm_species_models_data_driven.pdf``).
-    * Multi-panel figure showing the best-fitted mixture model obtained for each number of components with random initialization (``elmm_species_models_random.pdf``).
-    * TSV and TXT files collecting component parameters (``elmm_species_parameters.tsv`` and ``elmm_species_parameters.txt``).
-
-* From lognormal-only mixture modeling:
-
-    * Multi-panel figure showing the best-fitted mixture model on whole-paranome and anchor pair *K*:sub:`S` distributions obtained for each number of components (``lmm_species_all_models_paranome.pdf`` and ``lmm_species_all_models_colinearity.pdf``).
-    * TSV and TXT files collecting component parameters (``lmm_species_parameters_colinearity.tsv``, ``lmm_species_parameters_colinearity.txt``, ``lmm_species_parameters_paranome.tsv`` and ``lmm_species_parameters_paranome.txt``).
 
 Note on *wgd* output files
 ==========================
