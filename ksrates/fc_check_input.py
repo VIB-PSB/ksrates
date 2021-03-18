@@ -32,7 +32,7 @@ def check_IDs(fasta, species, gff=None):
                         if gff is None:
                             logging.warning(f"{species}: sequence IDs in FASTA file [{fasta}] could raise an error due to:")
                         else:
-                            logging.warning(f"{species}: sequence IDs in FASTA and possibly GFF files [{fasta}, {gff}] could raise an error due to:")
+                            logging.warning(f"{species}: sequence IDs in FASTA and GFF files [{fasta}, {gff}] could raise an error due to:")
                 if too_long_ID:
                     if "too_long_ID" not in list_of_triggered_warnings:
                         list_of_triggered_warnings.append("too_long_ID")
@@ -72,7 +72,28 @@ def check_inputfile(filename, msg_prefix=""):
         # print error message separate to ensure print out
         logging.error(f"{msg_prefix} [{filename}] is empty. Exiting.")
         sys.exit() # not with error code 1 (successive parts will call exit code 1 in case this file was really necessary) 
-        
+
+def check_file_nonexistent_or_empty(filename, msg_prefix=""):
+    """
+    Returns an error message when the provided file doesn't exist or is empty.
+    
+    :param filename: name of the file to be checked
+    :param msg_prefix: (default: empty string) string to describe the file content (e.g. "Ortholog peak database")
+    :return: a boolean stating whether the file doesn't exist or is empty (True) or whether it does exist and is not empty (False)
+    """
+    if not os.path.exists(filename):
+        # print error message separate to ensure print out
+        logging.error(f"{msg_prefix} [{filename}] not found. Will exit.")
+        return True
+    else:
+        return False
+    if os.path.getsize(filename) == 0:
+        # print error message separate to ensure print out
+        logging.error(f"{msg_prefix} [{filename}] is empty. Will exit.")
+        return True
+    else:
+        return False
+
 
 def get_possible_subpaths_for_file(path):
     """

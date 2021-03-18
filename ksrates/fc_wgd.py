@@ -683,7 +683,7 @@ def _write_families_file(families_mcl_file, all_genes, output_file='families.tsv
 
     Write out gene families file as expected by i-ADHoRe (one gene per line)
     :param families_mcl_file: gene families file from MCL (one family per line)
-    :param all_genes: set object with all genes for the species of interest
+    :param all_genes: set object with all genes for the focal species
     :param output_file: output file name
     :param split_on_pipe: boolean, split gene IDs in the MCL gene families file on '|' character and take first part
     :return: number of (gene) IDs from MCL gene families file matched to GFF file

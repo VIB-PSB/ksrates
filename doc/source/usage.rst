@@ -120,7 +120,7 @@ The order of execution of the single commands to run the whole workflow is the f
     
         ksrates orthologs-adjustment config_elaeis.txt
     
-9.  Plot the adjusted mixed paralog--ortholog *K*:sub:`S distribution plot::
+9.  Plot the adjusted mixed paralog--ortholog *K*:sub:`S` distribution plot::
     
         ksrates plot-paralogs config_elaeis.txt
     
@@ -128,7 +128,7 @@ The order of execution of the single commands to run the whole workflow is the f
     
         ksrates plot-tree config_elaeis.txt
 
-11. Plot the adjusted mixed paralog--ortholog *K*:sub:`S distribution plot with the inferred WGD components::
+11. Plot the adjusted mixed paralog--ortholog *K*:sub:`S` distribution plot with the inferred WGD components::
     
         ksrates paralogs-analyses config_elaeis.txt
     

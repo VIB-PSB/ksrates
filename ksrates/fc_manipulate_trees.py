@@ -10,6 +10,10 @@ import logging
 from statistics import mean
 import ksrates.fc_rrt_correction as fcCorrect
 
+# Filenames
+_TREE_BRANCH_DISTANCES = "tree_{}_distances.pdf"
+_TREE = "tree_{}.pdf"
+
 class _LabelToggleItem(QGraphicsRectItem):
     # Empty item whose sole purpose is to toggle the display of the branch length label depending on whether it fits
     # in the width given by the branch line. Needs to be as a Face with position="branch-top" so that it has access
@@ -110,7 +114,7 @@ def counts_expected_line_number_in_correction_table(species, tree, latin_names):
     interest itself and the species of the deepest outgroup branching from the root
     and that cannot be corrected.
 
-    :param species: node of the species of interest
+    :param species: node of the focal species
     :param tree: input tree object
     :param latin_names: a dictionary-like data structure that associates each informal species name to its latin name
     :return expected_species_in_correction_table: list of expected species in the correction table
@@ -136,8 +140,8 @@ def find_missing_pairs_for_tree_rates(tree, species, species_history, latin_name
     for all the branches present in the tree (with the exception of the base-most species).
     
     :param tree: input tree object
-    :param species: node of the species of interest
-    :param species_history: the list of ancestor nodes of the species of interest; includes the species of interest and goes up to the root included
+    :param species: node of the focal species
+    :param species_history: the list of ancestor nodes of the focal species; includes the focal species and goes up to the root included
     :param latin_names: a dictionary-like data structure that associates each informal species name to its latin name
     :return missing_pairs_with_latin_names: list of lists, contains the missing necessary species name (both latin and informal names)
     :return missing_pairs: list of lists, contains the missing informal species names
@@ -162,8 +166,8 @@ def find_missing_pairs_for_tree_rates(tree, species, species_history, latin_name
 def reorder_tree_leaves(tree, species):
     """
     :param tree: the original tree object
-    :param species: the name of the species of interest
-    :return: a new equivalent tree object with the species of interest as top leaf
+    :param species: the name of the focal species
+    :return: a new equivalent tree object with the focal species as top leaf
     """
     species_node = get_species_node(species, tree)[0]
     sister_node = species_node.get_sisters()[0]
@@ -240,13 +244,13 @@ def unknown_branch_len_style(unknown_node, root=False):
 
 def get_species_node(species_name, tree):
     """
-    :param species_name: the name of the species of interest as it appears in the Newick tree
+    :param species_name: the name of the focal species as it appears in the Newick tree
     :param tree: the Newick tree 
-    :return species_node: the tree node object associated to the species of interest
+    :return species_node: the tree node object associated to the focal species
     """
     species_node = tree.search_nodes(name=species_name)
     if len(species_node) == 0:
-        logging.error(f"The species of interest ({species_name}) was not found in the provided tree. "
+        logging.error(f"The focal species ({species_name}) was not found in the provided tree. "
                                f"Exiting.")
         sys.exit(1)
     return species_node
@@ -254,8 +258,8 @@ def get_species_node(species_name, tree):
 
 def get_species_history(species_node):
     """
-    :param species_node: the tree node object associated to the species of interest
-    :return species_history: list of the ancestor nodes of the species of interest, from the species of interest
+    :param species_node: the tree node object associated to the focal species
+    :return species_history: list of the ancestor nodes of the focal species, from the focal species
                              included until the root included
     """
     species_history = []
@@ -267,10 +271,10 @@ def get_species_history(species_node):
 
 def labeling_internal_nodes(species_node):
     """
-    Labels the ancestor nodes of the species of interest with numbers, starting from 1, until the root.
-    Also labels the species of interest and its ancestor nodes with a specific type feature.
+    Labels the ancestor nodes of the focal species with numbers, starting from 1, until the root.
+    Also labels the focal species and its ancestor nodes with a specific type feature.
     
-    :param species_node: the tree node object associated to the species of interest
+    :param species_node: the tree node object associated to the focal species
     """
     species_node[0].add_feature("type", "species_of_interest")
     node_label = 1
@@ -321,7 +325,7 @@ def get_outspecies_of_a_node(currentnode, max_num_outspecies):
 def get_branch_length_and_errorbox(species, ancestor_node, correction_table, consensus_strategy_for_multi_outgroups, latin_names, rate_species_dict, rate_sister_dict):
     """
     NOTE: the average_peak_of_divergence_event, margin_error_box and error_text are not used later in the code, for now; they will be removed or re-integrated.
-    The main purpose of this function is to update the two dictionaries collecting the relative rates present in the correction_table (rate_species_dict and
+    The main purpose of this function is to update the two dictionaries collecting the branch-specific Ks contributions present in the correction_table (rate_species_dict and
     rate_sister_dict).
 
     Given an ancestor node belonging to the species history, it takes into account all the sister species that diverged at that node.
@@ -330,14 +334,14 @@ def get_branch_length_and_errorbox(species, ancestor_node, correction_table, con
     The functions takes into account the user choice on how to deal with multiple outgroup.
     Returns the (mean) Ks value for the current divergence node in the tree, and the left and right margin values for delimiting an error box around it.
     
-    :param species: the current species of interest
-    :param ancestor_node: one of the internal nodes belonging to the path that goes from the tree root to the species of interest
+    :param species: the current focal species
+    :param ancestor_node: one of the internal nodes belonging to the path that goes from the tree root to the focal species
     :param correction_table: correction results in DataFrame format (contains both possible types of consensus strategy for how to deal with multiple outgroups)
     :param consensus_strategy_for_multi_outgroups: user choice about which consensus strategy to use when dealing with multiple outgroups
     :param latin_names: a dictionary-like data structure that associates each informal species name to its latin name
-    :param rate_species_dict: empty dictionary that will associate the species of interest with its relative rate at each divergence 
-    :param rate_sister_dict: empty dictionary that will associate each sister species with its own relative rate
-    :return: average_peak_of_divergence_event, corrected Ks value of the current divergence (it is a mean value in case of multiple species diverged at that node with the species of interest)  
+    :param rate_species_dict: empty dictionary that will associate the focal species with its branch-specific Ks contribution at each divergence
+    :param rate_sister_dict: empty dictionary that will associate each sister species with its own branch-specific Ks contribution
+    :return: average_peak_of_divergence_event, corrected Ks value of the current divergence (it is a mean value in case of multiple species diverged at that node with the focal species)  
     :return: margin_error_box, dictionary containing the smallest left error margin and the highest right error margin for the divergence when considering all the species diverging from that node
     :return: error_text, same as margin_error_box but in string format (left and right margins within brackets)
     """ 
@@ -371,11 +375,11 @@ def get_branch_length_and_errorbox(species, ancestor_node, correction_table, con
         right_margin_error = corrected_peak_float + corrected_peak_sd_float
         errors_dict[sister] = [left_margin_error, right_margin_error]
 
-        # Get the branch length for the species of interest at each divergence node
+        # Get the branch length for the focal species at each divergence node
         rate_species = correction_table.loc[correction_table['Sister_Species'] == latinSister, [column_header_rate_species]]
         rate_species_float = rate_species.iat[0,0] # to convert from DataFrame type to Float type
         rate_species_dict[species] = rate_species_float
-        # Get the branch length of the sister species (it's the relative rate of the species) and adding it to a dictionary
+        # Get the branch length of the sister species (it's the branch-specific Ks contribution of the species) and adding it to a dictionary
         rate_sister = correction_table.loc[correction_table['Sister_Species'] == latinSister, [column_header_rate_sister]]
         rate_sister_float = rate_sister.iat[0,0] # to convert from DataFrame type to Float type
         rate_sister_dict[sister] = rate_sister_float
@@ -403,13 +407,13 @@ def get_branch_length_and_errorbox(species, ancestor_node, correction_table, con
 
 def get_rates_from_current_analysis(rate_dict, correction_table, species, species_history, latin_names):
     """
-    Gets the relative rates obtained from the current analysis, namely the ones computed between the species of interest\\
-    and each of the other species. Updates rate_dict with such relative rates.
+    Gets the branch-specific Ks contributions obtained from the current analysis, namely the ones computed between the focal species\\
+    and each of the other species. Updates rate_dict with such branch-specific Ks contributions.
 
-    :param rate_dict: empty dictionary that will collect the known relative rates per tree node
-    :param correction_table: correction data from which the relative rates coming from the current analysis will be extracted
-    :param species: the species of interest of the current analysis
-    :param species_history: the list of ancestor nodes of the species of interest; includes the species of interest and goes up to the root included
+    :param rate_dict: empty dictionary that will collect the known branch-specific Ks contributions per tree node
+    :param correction_table: adjustment data from which the branch-specific Ks contributions coming from the current analysis will be extracted
+    :param species: the focal species of the current analysis
+    :param species_history: the list of ancestor nodes of the focal species; includes the focal species and goes up to the root included
     :param latin_names: dictionary associating the informal species names to their latin names
     """
     already_used_leaves = []
@@ -426,19 +430,19 @@ def get_rates_from_current_analysis(rate_dict, correction_table, species, specie
 
 def get_rates_from_ortholog_peak_db(rate_dict, sister_node, latin_names, ortholog_db, peak_stats, missing_ortholog_data_from_database):
     """
-    It's possible that some branches in the tree can't be assigned a length proportional to relative rates based only on the data\\
-    coming from this current correction/analysis. In this case, the code tries to compute the missing relative rates on the spot\\
+    It's possible that some branches in the tree can't be assigned a length equal to branch-specific Ks contributions based only on the data\\
+    coming from the current rate-adjustment analysis. In this case, the code tries to compute the missing branch-specific Ks contributions on the spot\\
     with the relative rate test formulas by looking for the missing ortholog data in the ortholog peak database: \\
-    in fact, other corrections based on other species of interest may have already provided such missing ortholog peaks needed for the RRT formulas,\\
+    in fact, other rate-adjustments based on other focal species may have already provided such missing ortholog peaks needed for the RRT formulas,\\
     or perhaps the user can decide to run separately from this analysis the wgd ortholog pipeline needed to get the missing ortholog peaks\\
     and then they can try again to obtain the tree figure with complete branch lengths.
 
-    :param rate_dict: dictionary that collects the known relative rates per tree node
-    :param sister_node: the sister node (it's only one!) of the current ancestor node of the species of interest (which belongs to species_history)
+    :param rate_dict: dictionary that collects the known branch-specific Ks contributions per tree node
+    :param sister_node: the sister node (it's only one!) of the current ancestor node of the focal species (which belongs to species_history)
     :param latin_names: dictionary associating the informal species names to their latin names
     :param ortholog_db: filename/path to the ortholog peak database
     :param peak_stats: flag to specify whether the ortholog distribution peak is the mode or the median
-    :param missing_ortholog_data_from_database: flag to state if one or more branches are lacking relative rates due to missing data in the ortholog peak database 
+    :param missing_ortholog_data_from_database: flag to state if one or more branches are lacking Ks contributions due to missing data in the ortholog peak database 
     :return: the updated flag (set to True if there are missing ortholog data and some branch lengths are unknown)
     """
     list_of_nodes = []
@@ -464,14 +468,15 @@ def get_rates_from_ortholog_peak_db(rate_dict, sister_node, latin_names, ortholo
                     latinSister1_latinSister2 = "_".join([latinSister1, latinSister2])
 
                     # Check if the ortholog distribution peak of the two species is present in the database
-                    # If not, warn the user that it has to be computed separately to have all branch length proportional to relative rates
+                    # If not, warn the user that it has to be computed separately to have all branch length
+                    # equal to branch-specific Ks contributions
                     try:
                         __ = ortholog_db.at[latinSister1_latinSister2, 'Ortholog_Mode']
                     except Exception:
                         missing_ortholog_data_from_database = True
 
                     # Check if there are ortholog data in database to use a species as an outgroup for the two leaves
-                    # There should always been at least the species of interest of the current analysis, except if deleted from DB for some reasons
+                    # There should always be at least the focal species of the current analysis, except if deleted from DB for some reasons
                     list_of_successful_outspecies = []
                     for outspecies in outspecies_list:
                         latinSister1_latinOut = "_".join(sorted([latinSister1, latin_names[outspecies]]))
@@ -484,8 +489,8 @@ def get_rates_from_ortholog_peak_db(rate_dict, sister_node, latin_names, ortholo
                         except Exception:
                             pass
 
-                        try: # Trying to compute the rates (relative rate test formulas)
-                            rate_species, __, rate_sister, __ = fcCorrect.compute_relative_rates(ortholog_db, latinSister1_latinSister2, latinSister1_latinOut, latinSister2_latinOut, peak_stats)
+                        try: # Trying to compute the branch-specific Ks contributions (relative rate test formulas)
+                            rate_species, __, rate_sister, __ = fcCorrect.decompose_ortholog_ks(ortholog_db, latinSister1_latinSister2, latinSister1_latinOut, latinSister2_latinOut, peak_stats)
                             if sister1 not in rate_dict[node]:
                                 rate_dict[node][sister1] = rate_species
                             if sister2 not in rate_dict[node]:
@@ -597,11 +602,11 @@ def adapt_unknown_branch_length(tree):
 
 def plotting_tree(species, latin_names, original_tree, correction_table, consensus_strategy_for_multi_outgroups, ortholog_db, peak_stats, nextflow_flag):
     """
-    Generate a PDF figure of the input tree with branch lengths equal to relative rates.
+    Generate a PDF figure of the input tree with branch lengths equal to Ks distances.
     If it is not possible to compute the branch length for a branch, the branch line is dashed. This happens when some\\
-    ortholog data to compute the relative rates are missing.
+    ortholog data to compute the branch-specific Ks contribution are missing.
 
-    :param species: the current species of interest
+    :param species: the current focal species
     :param latin_names: a dictionary-like data structure that associates each informal species name to its latin name
     :param original_tree: Newick tree format of the phylogenetic tree among the involved species
     :param correction_table: correction results in DataFrame format (contains both possible types of consensus strategy for how to deal with multiple outgroups)
@@ -610,7 +615,7 @@ def plotting_tree(species, latin_names, original_tree, correction_table, consens
     :param peak_stats: flag to specify whether the ortholog distribution peak is the mode or the median
     :param nextflow_flag: boolean flag to state whether the script is run in the Nextflow pipeline or not
     """
-    # Get an equivalent tree where the species of interest is the top leaf
+    # Get an equivalent tree where the focal species is the top leaf
     tree = reorder_tree_leaves(original_tree, species)
     node_and_branch_style(tree)
     
@@ -621,12 +626,12 @@ def plotting_tree(species, latin_names, original_tree, correction_table, consens
     rate_species_dict, rate_sister_dict = {}, {}
 
     for ancestor_node in species_history[:-2]:
-        # NOTE: at the moment the following function is only used to fill in the dictionaries of relative rates
+        # NOTE: at the moment the following function is only used to fill in the dictionaries of branch-specific Ks contributions
         average_peak_of_divergence_event, margin_error_box, error_text = get_branch_length_and_errorbox(species, ancestor_node,
                                                                                                         correction_table, consensus_strategy_for_multi_outgroups,
                                                                                                         latin_names, rate_species_dict, rate_sister_dict)
 
-        # Adding the branch length to the species of interest node, otherwise it lacks it
+        # Adding the branch length to the focal species node, otherwise it lacks it
         if ancestor_node.name == species:
             ancestor_node.dist = rate_species_dict[species]
             draw_branch_length_label(ancestor_node, known_distance=True)
@@ -638,7 +643,7 @@ def plotting_tree(species, latin_names, original_tree, correction_table, consens
         divergence_node.add_feature("margins", f"({error_text[0]}, {error_text[1]})")
         ### divergence_node.add_face(AttrFace("margins", fsize=5), column=0, position="branch-right") [ NOT USED FOR NOW ]
 
-    # Setting the branch length of the nodes belonging to the speciation history of the species of interest
+    # Setting the branch length of the nodes belonging to the speciation history of the focal species
     for divergence_node in species_history[1:]:
         parent_node = divergence_node.up
         try:
@@ -649,11 +654,11 @@ def plotting_tree(species, latin_names, original_tree, correction_table, consens
             draw_branch_length_label(divergence_node, known_distance=False)
             unknown_branch_len_style(divergence_node)
 
-    if ortholog_db.empty: # relative rates can be get only from correction_tables
-        logging.info("Getting relative rates from correction table data")
-    else: # if the ortholog DB is available, we can try to compute the rates from there too
-        logging.info("Getting relative rates from correction table data")
-        logging.info("Computing relative rates from ortholog peak data in database by applying principles of the relative rate test")
+    if ortholog_db.empty: # branch-specific Ks contributions can be obtained only from adjustment_tables
+        logging.info("Getting branch-specific Ks contributions from rate-adjustment table data")
+    else: # if the ortholog DB is available, we can try to compute the branch-specific Ks contributions from there too
+        logging.info("Getting branch-specific Ks contributions from rate-adjustment table data")
+        logging.info("Computing branch-specific Ks contributions from ortholog peak data in database by applying principles of the relative rate test")
 
     rate_dict = {}
     get_rates_from_current_analysis(rate_dict, correction_table, species, species_history, latin_names)
@@ -700,7 +705,7 @@ def plotting_tree(species, latin_names, original_tree, correction_table, consens
                     unknown_branch_len_style(leaf)
     
     # If the ortholog peak database is lacking some required data (must have been deleted by the user) or
-    # if the peak database has been deleted and only the correction_table has been used for the rates, gives a warning
+    # if the peak database has been deleted and only the correction_table has been used for the branch contributions, gives a warning
     if missing_ortholog_data_from_database or missing_ortholog_data_from_correction_table:
         logging.warning("")
         logging.warning("One or more branch lengths are unknown (dashed line) due to missing ortholog distribution peak data")
@@ -718,7 +723,7 @@ def plotting_tree(species, latin_names, original_tree, correction_table, consens
     adapt_unknown_branch_length(tree)
 
     ts = TreeStyle()
-    # ts.title.add_face(TextFace("  Input tree with branch length equal to relative rate  ", ftype="Arial", fsize=18), column=0)
+    # ts.title.add_face(TextFace("  Input tree with branch length equal to Ks distances  ", ftype="Arial", fsize=18), column=0)
     ts.orientation = 1
     ts.branch_vertical_margin = 14
     ts.show_leaf_name = False # because there is a Face showing it
@@ -729,7 +734,7 @@ def plotting_tree(species, latin_names, original_tree, correction_table, consens
     ts.scale = 200
     #ts.scale_length =  # to set a fixed scale branch length
     root_of_corrected_tree = species_history[-1]
-    root_of_corrected_tree.render(f"correction_analysis/{species}/tree_{species}_rates.pdf", w=4.5, units="in", tree_style=ts)
+    root_of_corrected_tree.render(os.path.join("rate_adjustment", f"{species}", f"{_TREE_BRANCH_DISTANCES.format(species)}"), w=4.5, units="in", tree_style=ts)
 
 
 def plot_uncorrected_phylogeny(tree, species, latin_names, species_history):
@@ -737,9 +742,9 @@ def plot_uncorrected_phylogeny(tree, species, latin_names, species_history):
     Generates a PDF figure of the input tree with same length for all branches.
 
     :param tree: input tree from configuration file
-    :param species: the current species of interest
+    :param species: the current focal species
     :param latin_names: a dictionary-like data structure that associates each informal species name to its latin name
-    :param species_history: the list of ancestor nodes of the species of interest, including the species of interest and going up to the root.
+    :param species_history: the list of ancestor nodes of the focal species, including the focal species and going up to the root.
     """
     label_leaves_with_latin_names(tree, latin_names)
     node_and_branch_style(tree)
@@ -755,4 +760,4 @@ def plot_uncorrected_phylogeny(tree, species, latin_names, species_history):
     ts.margin_bottom = 25
     ts.scale = 200
     ts.show_scale = False
-    tree.render(f"correction_analysis/{species}/tree_{species}.pdf", w=4.5, units="in", tree_style=ts)
+    tree.render(os.path.join("rate_adjustment", f"{species}", f"{_TREE.format(species)}"), w=4.5, units="in", tree_style=ts)
