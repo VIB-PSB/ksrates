@@ -64,7 +64,7 @@ The syntax to run a command depends on how the package is installed:
 
     Docker pulls the container image from Docker Hub and from then on makes use of the local copy.
 
-In order to submit the command as a job on a cluster, wrap the command in the appropriate syntax for the executor system/HPC scheduler (e.g. for SGE: ``qsub -b y``). It is strongly recommended to run the *K*:sub:`S` paralog and orthologs (see commands below) estimation steps on a compute cluster.
+In order to submit the command as a job on a cluster, wrap the command in the appropriate syntax for the executor system/HPC scheduler (e.g. for SGE: ``qsub``). It is strongly recommended to run the *K*:sub:`S` paralog and orthologs (see commands below) estimation steps on a compute cluster.
 
 An overview of the commands is available by accessing the package help menu (``ksrates -h``)::
 
