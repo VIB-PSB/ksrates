@@ -12,7 +12,7 @@ Input files
 Output files and directory organization
 =======================================
 
-* ``rate_adjustment/species``: collects the output files of the substitution rate-adjustment relative to the focal species.
+* ``rate_adjustment/species`` directory collects the output files of the substitution rate-adjustment relative to the focal species.
 
     Figures:
 
@@ -33,7 +33,7 @@ Output files and directory organization
         * List of species pairs to be submitted to *wgd* ortholog runs (``ortholog_pairs_species.txt``).
 
 
-* ``rate_adjustment/species/paralogs_analyses`` collects secondary output files produced during the inference of putative WGD signals through mixture modeling (see also section :ref:`paralogs_analyses`).
+* ``rate_adjustment/species/paralogs_analyses`` directory collects secondary output files produced during the inference of putative WGD signals through mixture modeling (see also section :ref:`paralogs_analyses`).
 
     From anchor *K*:sub:`S` clustering:
 
@@ -54,7 +54,7 @@ Output files and directory organization
         * TSV and TXT files collecting component parameters (``lmm_species_parameters_colinearity.tsv``, ``lmm_species_parameters_colinearity.txt``, ``lmm_species_parameters_paranome.tsv`` and ``lmm_species_parameters_paranome.txt``).
 
 
-* ``rate_adjustment/species/log_XXXXXXXX``: when launching *ksrates* as a Nextflow pipeline, each execution generates a log directory named with a unique 8-character ID stated at the beginning of a Nextflow run. Details about how the processes of the workflow are proceeding and about encountered warnings or errors are stored in log files collected in this directory:
+* ``rate_adjustment/species/log_XXXXXXXX`` directory: when launching *ksrates* as a Nextflow pipeline, each execution generates a log directory named with a unique 8-character ID stated at the beginning of a Nextflow run. Details about how the processes of the workflow are proceeding and about encountered warnings or errors are stored in log files collected in this directory:
 
     * ``setup_adjustment.log`` shows the progress in checking input files and setting up species trios and pairs for rate-adjustment. 
     * ``wgd_paralogs.log`` shows the progress in estimating paralog *K*:sub:`S` values.
@@ -66,20 +66,24 @@ Output files and directory organization
     * ``paralogs_analyses.log`` shows the progress in analyzing the paralog distribution to detect potential WGD signatures through anchor *K*:sub:`S` clustering, exponential-lognormal mixture modeling and/or lognormal-only mixture modeling. 
 
 
-* ``paralog_distributions/wgd_species`` contains the files generated during the paralog *K*:sub:`S` estimate for the focal species:
+* ``paralog_distributions/wgd_species`` directory contains the files generated during the paralog *K*:sub:`S` estimate for the focal species:
 
-    * ``species.blast.tsv`` contains all-vs-all BLAST table results
-    * ``species.mcl.tsv`` lists gene families from largest to smallest
-    * ``species.ks.tsv`` lists paralog *K*:sub:`S` estimates
-    * ``species.ks_anchors.tsv`` lists anchor pair *K*:sub:`S` estimates
+    * ``species.blast.tsv`` lists the paralog BLAST homology hits.
+    * ``species.mcl.tsv`` lists the paralog gene families, one family per line from the largest to the smallest.
+    * ``species.ks.tsv`` and  ``species.ks_anchors.tsv`` are tabular format files listing paralog or anchor pair hits (column 1) together with their *K*:sub:`S` estimate (column 9). Other pieces of information include alignment coverage, identity and length (columns 2 to 5) and gene family, tree node and weight (column 7, 10 and last column). For more details, see `wgd documentation <https://wgd.readthedocs.io/en/latest/methods.html?highlight=some%20information>`__.
+
+    .. figure:: _images/ks_tsv.png
+        :align: center
+        :width: 800
+
     * ``species_i-adhore`` directory contains i-ADHoRe output files used during anchor *K*:sub:`S` clustering (see section :ref:`anchor_ks_clustering`)
 
 
-* ``ortholog_distributions/wgd_species1_species2`` contains the files generated during the one-to-one ortholog *K*:sub:`S` estimate of a species pair:
+* ``ortholog_distributions/wgd_species1_species2`` directory contains the files generated during the one-to-one ortholog *K*:sub:`S` estimate of a species pair:
 
-    * ``species1_species2.blast.tsv`` contains all-vs-all BLAST table results. When the execution of the *wgd* ortholog run is over it is possible to delete this file to save disk space.
-    * ``species1_species2.orthologs.tsv`` lists the one-to-one ortholog pairs
-    * ``species1_species2.ks.tsv`` lists ortholog *K*:sub:`S` estimates
+    * ``species1_species2.blast.tsv`` lists the ortholog BLAST homology hits. When the execution of the *wgd* ortholog run is over it is possible to delete this file to save disk space.
+    * ``species1_species2.orthologs.tsv`` lists the one-to-one ortholog reciprocal best hits between the two species, one hit per line.
+    * ``species1_species2.ks.tsv`` lists the one-to-one ortholog reciprocal best hits (column 1) together with their *K*:sub:`S` estimate (column 9). The tabular file format is identical to the paralog ``.ks.tsv`` file described above. However, gene family, tree node and weight columns are of less interest for orthologs since each family is composed of only two members.
 
 
 * Files generated directly in the launching directory:
@@ -88,7 +92,7 @@ Output files and directory organization
     * List of commands to launch the ortholog *wgd* runs in the manual pipeline (``wgd_runs_species.txt``). Note that this file is not generated if launching the Nextflow pipeline.
 
 
-* ``work`` is automatically generated by Nextflow to handle process organization and communication between processes (for more details see Nextflow documentation, e.g. the Get started `page <https://www.nextflow.io/docs/latest/getstarted.html#your-first-script>`__)
+* ``work`` directory is automatically generated by Nextflow to handle process organization and communication between processes (for more details see Nextflow documentation, e.g. the Get started `page <https://www.nextflow.io/docs/latest/getstarted.html#your-first-script>`__).
 
 
 Note on *wgd* output files
