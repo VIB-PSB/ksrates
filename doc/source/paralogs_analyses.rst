@@ -1,15 +1,37 @@
 .. _`paralogs_analyses`:
 
-Paralog distribution analyses
-*****************************
+Mixture modeling of paralog *K*:sub:`S` distributions
+*****************************************************
 
-The package offers a feature for WGM peak calling, where an attempt is made to reconstruct the underlying WGM trace(s) in the *K*:sub:`S` distribution through mixture models or through anchor *K*:sub:`S` clustering. Peak calling is not a trivial task due to many factors, such as presence of overlapping WGM signals, *K*:sub:`S` saturation and stochasticity, errors in *K*:sub:`S` estimations and poor sequencing quality. Therefore, the tool can't guarantee the exactness of the peak calling.
+The interpretation of mixed paralog–ortholog *K*:sub:`S` distributions is sometimes challenged by the fact that paralog WGD peaks are often not clearly distinguishable due to progressive WGD signal erosion over time and due to potential overlaps between peaks of successive WGDs. In order to more objectively define the *K*:sub:`S` age of WGD peaks, a clustering feature based on mixture modeling has been implemented in *ksrates*.
+
+Three methods are available: anchor *K*:sub:`S` clustering, exponential-lognormal mixture modeling and lognormal-only mixture modeling.
+For an extended description of these methods, please refer to the `Supplementary Materials <https://www.biorxiv.org/content/10.1101/2021.02.28.433234v1.supplementary-material>`__, currently in preprint. A short overview can be found below.
+
+The analysis configuration determines which are applied and which are not (see also sections :ref:`pipeline_config_section` and :ref:`expert_config_section`).
+
+    * If collinearity analysis is selected in the *ksrates* configuration file (``collinearity`` =  yes), the default method performed is a clustering based on the anchor pair *K*:sub:`S` values in collinear segment pairs. 
+    * Otherwise (``collinearity`` = no and ``paranome`` = yes), the default method is exponential-lognormal mixture modeling of the whole-paranome *K*:sub:`S` distribution.
+    * Lognormal-only mixture modeling is never applied by default, since it is more prone to produce spurious peaks.
+
+The execution of non-default methods can be triggered in the expert configuration file and follows the table below. For example, when both collinearity and paranome analyses are selected (last column), only the anchor *K*:sub:`S` clustering is perfomed by default and all the other methods can be optionally triggered.
+
+.. table:: Default methods are marked by a bold capitalized "X", while optional methods are marked by a lower-case "x".
+
+    =======================================  ================  =============  ========================
+    Method                                   Colinearity-only  Paranome-only  Collinearity and paranome
+    =======================================  ================  =============  ========================
+    Anchor *K*:sub:`S` clustering            **X**                            **X**
+    Exponential-lognormal mixture model                        **X**          x
+    Lognormal mixture model on anchor pairs  x                                x
+    Lognormal mixture model on paranome                        x              x
+    =======================================  ================  =============  ========================
 
 
 .. _`anchor_ks_clustering`:
 
 Anchor *K*:sub:`S` clustering
-=============================
++++++++++++++++++++++++++++++
 
 The anchor *K*:sub:`S` clustering is based on i-ADHoRe output files and on the ``.ks_anchors.tsv`` file produced by the pipeline. i-ADHoRe runs a colinearity analysis on the input sequences by using the GFF file, which contains the location of the sequences in the genome. When i-ADHoRe detects different regions that contain the same paralog genes in the same order (colinear blocks), it stacks and aligns such segments together to form a multiplicon. The genes in the multiplicon are called anchors and are likely to be paralogs due to large- or whole-genome multiplications. By performing a profile search, the program can build multiplicons that are composed of more than two segments, reflecting the presence of multiple WGMs. For more details refer to i-ADHoRe documentation. The *K*:sub:`S` associated to the anchor pairs in a multiplicon are called anchor *K*:sub:`S`, and they are estimated by ``wgd`` software and collected in the ``.ks_anchors.tsv`` file.
 
@@ -40,21 +62,18 @@ Finally, a second round of lognormal mixture model is performed on the remaining
 The plot also includes the rate-adjusted divergence lines so to have a mixed plot where it is possible to compare the temporal relationship between the called WGD peaks and the speciation events. The final plot is saved in PDF format as ``mixed_species_anchor_clusters_unfiltered.pdf``, where species is the name of the focal species.
 
 
-.. _`mixture_models`:
+.. _`elmm`:
 
-Mixture models
-==============
-
-Despite the frequent application of this technique on *K*:sub:`S` distributions, the interpretation of mixture models requires caution due to the tendency of overfitting and overclustering. Note also that the reliability of components covering medium-high *K*:sub:`S` values (i.e. above 3 *K*:sub:`S`) is uncertain.
-
-Exponential-lognormal mixture model (ELMM) for paranome
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Exponential-lognormal mixture model
++++++++++++++++++++++++++++++++++++
 
 A customized algorithm for mixture modeling with exponential and lognormal components has been implemented in the attempt to identify WGM traces in paranome distributions. The EM algorithm is based on Zhang et al. 2019. and is the default mixture modeling choice.
 
 The exponential component is used to model the L-shaped background distribution of small-scale duplications (SSDs), whose chance to be kept tends to exponentially decrease as older they get. The lognormal components are instead used to model the WGM traces and are preferred to normal components because *K*:sub:`S` values can't be negatives and because WGMs tend to have a longer right tail.
 
 The code performs the expectation-maximization (EM) algorithm to fit the mixture model on the paranome. Since the initialization of the component parameters plays an delicate role in mixture models, three strategies are followed and the best result is separately plotted: 1) guessing the parameters from the *K*:sub:`S` data itself, 2) starting with random parameters and 3) a hybrid initialization. In all the three strategies, an extra "buffer" lognormal component is by default initialized around 5 *K*:sub:`S` to avoid that the other components are forced to stretch towards higher values in the attempt to cover the entire distribution.
+
+Despite the frequent application of this technique on *K*:sub:`S` distributions, the interpretation of mixture models requires caution due to the tendency of overfitting and overclustering. Note also that the reliability of components covering medium-high *K*:sub:`S` values (i.e. above 3 *K*:sub:`S`) is uncertain.
 
 
 Initialization through data
@@ -107,6 +126,8 @@ Among the output files (for a complete list see section :ref:`output_files`), th
 
 * ``elmm_species_parameters.txt`` reports the results in a more descriptive and easy-to-read layout.
 
+
+.. _`lmm`:
 
 Lognormal mixture model
 +++++++++++++++++++++++

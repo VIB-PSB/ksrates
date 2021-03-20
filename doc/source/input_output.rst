@@ -48,12 +48,12 @@ Output files and directory organization
         * Plots showing the peaks detected in the spline (``elmm_species_peaks.pdf``).
         * Multi-panel figure showing fitted mixture models obtained with data-driven and hybrid initializations (``elmm_species_models_data_driven.pdf``).
         * Multi-panel figure showing the best-fitted mixture model obtained for each number of components with random initialization (``elmm_species_models_random.pdf``).
-        * TSV and TXT files collecting component parameters (``elmm_species_parameters.tsv`` and ``elmm_species_parameters.txt``) (more details on the file format in section :ref:`mixture_models`).
+        * TSV and TXT files collecting component parameters (``elmm_species_parameters.tsv`` and ``elmm_species_parameters.txt``) (more details on the file format in section :ref:`elmm`).
 
     From lognormal-only mixture modeling:
 
         * Multi-panel figure showing the best-fitted mixture model on whole-paranome and anchor pair *K*:sub:`S` distributions obtained for each number of components (``lmm_species_all_models_paranome.pdf`` and ``lmm_species_all_models_colinearity.pdf``).
-        * TSV and TXT files collecting component parameters (``lmm_species_parameters_colinearity.tsv``, ``lmm_species_parameters_colinearity.txt``, ``lmm_species_parameters_paranome.tsv`` and ``lmm_species_parameters_paranome.txt``) (more details on the file format in section :ref:`mixture_models`).
+        * TSV and TXT files collecting component parameters (``lmm_species_parameters_colinearity.tsv``, ``lmm_species_parameters_colinearity.txt``, ``lmm_species_parameters_paranome.tsv`` and ``lmm_species_parameters_paranome.txt``) (more details on the file format in section :ref:`lmm`).
 
 
 * ``rate_adjustment/species/log_XXXXXXXX`` directory: when launching *ksrates* as a Nextflow pipeline, each execution generates a log directory named with a unique 8-character ID stated at the beginning of a Nextflow run. Details about how the processes of the workflow are proceeding and about encountered warnings or errors are stored in log files collected in this directory:
