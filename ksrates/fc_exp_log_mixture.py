@@ -737,7 +737,7 @@ def make_parameter_table_file(parameter_table, species):
   :param parameter_table: list collecting the component parameters
   :param species: informal name of the focal species
   """
-  headers = ["Model", "Iteration", "BIC", "Loglikelihood", "Convergence", 
+  headers = ["Model", "Initialization", "BIC", "Loglikelihood", "Convergence", 
             "Exponential_Rate", "Exponential_Weight", "Normal_Mean", "Normal_SD", "Normal_Weight"]
   parameter_df = DataFrame.from_records(array(parameter_table), columns=headers)
   with open (os.path.join("rate_adjustment", f"{species}", subfolder, f"elmm_{species}_parameters.tsv"), "w+") as outfile:
