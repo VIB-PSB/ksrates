@@ -40,6 +40,8 @@ Finally, a second round of lognormal mixture model is performed on the remaining
 The plot also includes the rate-adjusted divergence lines so to have a mixed plot where it is possible to compare the temporal relationship between the called WGD peaks and the speciation events. The final plot is saved in PDF format as ``mixed_species_anchor_clusters_unfiltered.pdf``, where species is the name of the focal species.
 
 
+.. _`mixture_models`:
+
 Mixture models
 ==============
 
@@ -52,7 +54,8 @@ A customized algorithm for mixture modeling with exponential and lognormal compo
 
 The exponential component is used to model the L-shaped background distribution of small-scale duplications (SSDs), whose chance to be kept tends to exponentially decrease as older they get. The lognormal components are instead used to model the WGM traces and are preferred to normal components because *K*:sub:`S` values can't be negatives and because WGMs tend to have a longer right tail.
 
-The code performs the expectation-maximization (EM) algorithm to fit the mixture model on the paranome. Since the initialization of the component parameters plays an delicate role in mixture models, three strategies are followed and the best result is separately plotted: 1) guessing the parameters from the *K*:sub:`S` data itself, 2) starting with random parameters and 3) a hybrid initialization. In all the three strategies, an extra "buffer" lognormal component is by default initialized around 5 *K*:sub:`S` to avoid that the other components are forced to stretch towards higher values in the attempt to cover the entire distribution. Note that due to the implementation of the buffer lognormal, the maximum accepted *K*:sub:`S` value is set to the default 5 *K*:sub:`S` and any customization in the configuration file under ``max_ks_para`` is ignored.
+The code performs the expectation-maximization (EM) algorithm to fit the mixture model on the paranome. Since the initialization of the component parameters plays an delicate role in mixture models, three strategies are followed and the best result is separately plotted: 1) guessing the parameters from the *K*:sub:`S` data itself, 2) starting with random parameters and 3) a hybrid initialization. In all the three strategies, an extra "buffer" lognormal component is by default initialized around 5 *K*:sub:`S` to avoid that the other components are forced to stretch towards higher values in the attempt to cover the entire distribution.
+
 
 Initialization through data
 ---------------------------
@@ -85,9 +88,45 @@ Model evaluation
 
 After having run the EM with all the three methods, the model with lowest BIC is considered the best one and plotted in a separate figure. The others are compared to it by the difference in their BIC scores (delta BIC).
 
+Among the output files (for a complete list see section :ref:`output_files`), the ELMM produces a tabular (TSV) file and a text file where to store parameters and fitting results: 
+
+* ``elmm_species_parameters.tsv``:
+
+    * The type of model initialization is stored in column 1 according to a numerical code (1: data-driven, 2: data-driven plus a random lognormal component, 3: random initialization with exponential component and one lognormal component, 4: random initialization with exponential component and two lognormal components; higher numbers feature increasing number of lognormal components).
+    * The initialization round is stored in column 2. By default each model type (execpt type 1) is initialized and fitted 10 times, so this column shows numbers from 1 to 10. 
+    * The BIC and loglikelihood scores for the fitted model are stored in columns 3 and 4.
+    * The number of EM iterations needed to reach convergence is stored in column 5. If greater than 300, the convergence is not reached and the cell shows *NA*.
+    * The fitted exponential rate parameter and its component weight are stored in columns 6 and 7.
+    * The mean, standard deviation and weight of the fitted Normal components used to define the correspondent lognormal components are stored in columns 8 to 10. When there are multiple lognormal components, the data for each of them are stored in a separate rows (the number of rows is thus equal to the number of lognormal components).
+
+    .. figure:: _images/elmm.png
+        :align: center
+        :width: 800
+
+        This file section shows the result for the first initalization of model 5: each row stores the same data for the exponential component plus the data for one of the three lognromal components.
+
+* ``elmm_species_parameters.txt`` reports the results in a more descriptive and easy-to-read layout.
+
 
 Lognormal mixture model
 +++++++++++++++++++++++
 
-The lognormal mixture modeling uses only lognormal components and works by fitting Gaussians on the log-transformed *K*:sub:`S` distribution. The absence of the exponential component to model SSDs makes it less appropriate for paranome distributions, while this doesn't affect its application on anchor *K*:sub:`S` distributions. By default this method is turned off and can be switched on in the expert configuration file through ``extra_paralogs_analyses_methods``.
+The lognormal-only mixture modeling (LMM) uses only lognormal components and works by fitting Gaussians on the log-transformed *K*:sub:`S` distribution. The absence of the exponential component to model SSDs makes it less appropriate for paranome distributions, while this doesn't affect its application on anchor *K*:sub:`S` distributions. By default this method is turned off and can be switched on in the expert configuration file through ``extra_paralogs_analyses_methods``.
 
+
+Among the output files (for a complete list see section :ref:`output_files`), the LMM produces tabular (TSV) files and text files where to store parameters and fitting results:
+
+* ``lmm_species_parameters_paranome.tsv`` and ``lmm_species_parameters_anchors.tsv``:
+
+    * The Model type is stored in column 1 according to a numerical code (1: one lognormal component, 2: two lognormal components, 3: three lognormal components; and so on).
+    * The BIC and loglikelihood scores for the fitted model are stored in columns 2 and 3.
+    * The number of EM iterations needed to reach convergence is stored in column 4. If greater than 300, the convergence is not reached and the cell shows *NA*.
+    * The mean, standard deviation and weight of the fitted Normal components used to define the correspondent lognormal components are stored in columns 5 to 7. When there are multiple lognormal components, the data for each of them are stored in a separate rows (the number of rows is thus equal to the number of lognormal components).
+
+    .. figure:: _images/lmm.png
+        :align: center
+        :width: 800
+
+        This file section shows the result for model 5: each row stores the data for one of the five lognromal components.
+
+* ``lmm_species_parameters_paranome.txt`` and ``lmm_species_parameters_anchors.txt`` collect the model results in a more descriptive and easy-to-read layout.
