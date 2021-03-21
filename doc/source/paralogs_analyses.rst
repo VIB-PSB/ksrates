@@ -1,3 +1,5 @@
+.. _`paralogs_analyses`:
+
 Paralog distribution analyses
 *****************************
 
@@ -33,7 +35,7 @@ Subsequently, a filtering step detects clusters with non-significant signal for 
 
 Finally, a second round of lognormal mixture model is performed on the remaining *K*:sub:`S` values, using the number of clusters remaining after the filtering. Just as before, what is clustered are the medians of the remaining segment pairs. The clusters of the *K*:sub:`S` values are then again obtained from the clusters of medians. This second clustering step may look (slightly) different from the first clustering result since it starts from a different input median list.
 
-The plot also includes the rate-corrected divergence lines so to have a mixed plot where it is possible to compare the temporal relationship between the called WGD peaks and the speciation events. The final plot is saved in PDF format as ``mixed_species_anchor_N_clusters_corrected.pdf``, where species is the name of the species of interest and N is the number of clusters.
+The plot also includes the rate-adjusted divergence lines so to have a mixed plot where it is possible to compare the temporal relationship between the called WGD peaks and the speciation events. The final plot is saved in PDF format as ``mixed_species_anchor_clusters_unfiltered.pdf``, where species is the name of the focal species.
 
 
 Mixture models
@@ -86,5 +88,4 @@ Lognormal mixture model
 +++++++++++++++++++++++
 
 The lognormal mixture modeling uses only lognormal components and works by fitting Gaussians on the log-transformed *K*:sub:`S` distribution. The absence of the exponential component to model SSDs makes it less appropriate for paranome distributions, while this doesn't affect its application on anchor *K*:sub:`S` distributions. By default this method is turned off and can be switched on in the expert configuration file through ``extra_paralogs_analyses_methods``.
-
 

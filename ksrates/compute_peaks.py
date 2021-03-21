@@ -18,14 +18,14 @@ def compute_peaks(config_file, ortholog_pairs_file):
 
     # Get parameters and input files
     species = config.get_species()
-    latin_names = config.get_latin_names()
     tree = config.get_newick_tree()
+    latin_names = config.get_latin_names()
     max_ks_ortho = config.get_max_ks_ortho()
     n_iter = config.get_num_iteration()
     bin_width_ortho = config.get_bin_width_ortho()
     x_lim_ortho = config.get_x_lim_ortho()
 
-    default_path_ortholog_pairs_file = os.path.join("correction_analysis", f"{species}", f"ortholog_pairs_{species}.tsv")
+    default_path_ortholog_pairs_file = os.path.join("rate_adjustment", f"{species}", f"ortholog_pairs_{species}.tsv")
     ortholog_pairs_file = fcCheck.get_argument_path(ortholog_pairs_file, default_path_ortholog_pairs_file,  "Ortholog pairs file")
     if ortholog_pairs_file == "":
         logging.error(f"Ortholog pairs file not found at default position [{default_path_ortholog_pairs_file}].")
@@ -61,7 +61,6 @@ def compute_peaks(config_file, ortholog_pairs_file):
         with open(ks_list_db_path, "w+") as outfile:
             outfile.write('\tSpecies1\tSpecies2\tKs_Values\n')
 
-    latin_names = config.get_latin_names()
     logging.info("")
 
     # -----------------------------------------------------------------------------

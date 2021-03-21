@@ -240,7 +240,7 @@ def lmm(
     :param max_x_axis_lim: upper limit in the x-axis 
     :param data_type: strings stating whether the data are "paralogs" or "anchor pairs"
     :param tsv_file: wgd output file containing either paranome or anchor pairs Ks values (suffix formats: ".ks.tsv", "ks_anchors.tsv")
-    :param species: informal name of the species of interest
+    :param species: informal name of the focal species
     :param axis: axis object
     :param ks_range: Ks range used for models
     :param components: number of components to use (tuple: (min, max))
@@ -266,9 +266,10 @@ def lmm(
 
     inspect_aic(aic, outfile)
     inspect_bic(bic, outfile)
-    logging.info("Plotting AIC and BIC")
-    plot_aic_bic(aic, bic, components[0], components[1],
-                     os.path.join(output_dir, f"lmm_{species}_aic_bic_{datatype}.pdf"))
+    # For now, let's not generate the AIC and BIC PDF plots
+    # logging.info("Plotting AIC and BIC")
+    # plot_aic_bic(aic, bic, components[0], components[1],
+    #                  os.path.join(output_dir, f"lmm_{species}_aic_bic_{datatype}.pdf"))
 
     logging.info("Plotting mixtures")
     plot_all_models_gmm(models, deconvoluted_data, ks_range[0], ks_range[1], bins=bins,
@@ -277,7 +278,8 @@ def lmm(
     # Plotting the components of the best model on the final picture;
     # Components are scaled up to the size of actual count data and not to density histogram
     scaling = bin_width_para * len(deconvoluted_data)
-    plot_mixture_model(best, deconvoluted_data, max_x_axis_lim, axis, bin_width_para, scaling, peak_stats, correction_table_available, plot_correction_arrows, ks_range[0], ks_range[1], bins=bins)
+    plot_mixture_model(best, deconvoluted_data, max_x_axis_lim, axis, bin_width_para, scaling, peak_stats,
+                       correction_table_available, plot_correction_arrows, ks_range[0], ks_range[1], bins=bins)
     return best
 
 
@@ -296,7 +298,7 @@ def create_legend_mixture_model(axis, legend_size, num_mixture_model_lines, data
     sorted_handles, sorted_labels = handles.copy(), labels.copy()
     if datatype == "paranome":
         paralog_rect = Patch(facecolor=fcPlot.COLOR_PARANOME_HISTOGRAM, edgecolor="w")
-    elif datatype == "colinearity":
+    elif datatype == "anchors":
         paralog_rect = Patch(facecolor=fcPlot.COLOR_ANCHOR_HISTOGRAM, edgecolor="w")
     # empty patch used as spacer between histograms and divergence line legend entries
     empty_rect = Patch(fill=False, edgecolor='none', visible=False)
@@ -317,7 +319,7 @@ def save_lmm(fig, axis, species, best_model, datatype, correction_table_availabl
 
     :param fig: figure object of the corrected mixed distribution
     :param axis: axis object of the corrected mixed distribution
-    :param species: species of interest
+    :param species: focal species
     :param datatype: string for figure title stating whether data is paranome or comes from "colinearity" analysis
     """
     num_mixture_model_lines = len(best_model.means_) + 1 # components + total PDF
@@ -332,7 +334,7 @@ def save_lmm(fig, axis, species, best_model, datatype, correction_table_availabl
         lgd = axis.legend(handlelength=1.5, mode="expand", loc="upper left", bbox_to_anchor=(0.54, 0.0, 0.75, 1))
         axis.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.9, chart_box.height])
 
-    fig.savefig(os.path.join("correction_analysis", f"{species}", f"mixed_{species}_lmm_{datatype}.pdf"),
+    fig.savefig(os.path.join("rate_adjustment", f"{species}", f"mixed_{species}_lmm_{datatype}.pdf"),
                      bbox_extra_artists=(axis, lgd, fig._suptitle), bbox_inches="tight", transparent=True, format="pdf")
 
 
@@ -341,12 +343,12 @@ def make_parameter_table_file(parameter_table, species, datatype):
   Generates the text output file with the dataframe containing all component parameters.
 
   :param parameter_table: list collecting the component parameters
-  :param species: informal name of the species of interest
+  :param species: informal name of the focal species
   :param datatype: string for figure title stating whether data is paranome or comes from "colinearity" analysis
   """
   #headers = ["Model", "Iteration", "BIC", "Loglikelihood", "Convergence", 
   #          "Exponential_Rate", "Exponential_Weight", "Normal_Mean", "Normal_SD", "Normal_Weight"]
   headers = ["Model", "BIC", "Loglikelihood", "Convergence", "Normal_Mean", "Normal_SD", "Normal_Weight"]
   parameter_df = DataFrame.from_records(array(parameter_table), columns=headers)
-  with open (os.path.join("correction_analysis", f"{species}", subfolder, f"lmm_{species}_parameters_{datatype}.tsv"), "w+") as outfile:
+  with open (os.path.join("rate_adjustment", f"{species}", subfolder, f"lmm_{species}_parameters_{datatype}.tsv"), "w+") as outfile:
     outfile.write(parameter_df.to_csv(sep="\t", index=False))

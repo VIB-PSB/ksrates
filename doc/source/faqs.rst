@@ -8,7 +8,7 @@ Nextflow
 If Nextflow crashes, where do I look for the error message?
 -----------------------------------------------------------
 
-When Nextflow crashes, an error message appears on the screen indicating which process exited the pipeline and reporting the error code. More details about the error that stopped the pipeline are stored in log files accessible in ``correction_analysis/<focal_species>/log_XXXXXXXX``. The log folder name is unique for each run and is reported on the terminal at the beginning of a Nextflow run.
+When Nextflow crashes, an error message appears on the screen indicating which process exited the pipeline and reporting the error code. More details about the error that stopped the pipeline are stored in log files accessible in ``rate_adjustment/<focal_species>/log_XXXXXXXX``. The log folder name is unique for each run and is reported on the terminal at the beginning of a Nextflow run.
 
 
 How do I update a previously downloaded *ksrates* pipeline if a new version becomes available?

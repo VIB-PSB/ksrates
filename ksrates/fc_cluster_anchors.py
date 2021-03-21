@@ -12,6 +12,7 @@ from sklearn.cluster import KMeans
 import ksrates.fc_kde_bootstrap as fcPeak
 import ksrates.fc_plotting as fcPlot
 from ksrates.fc_plotting import NEGATIVE_Y_FRACTION
+
 from sklearn.mixture import GaussianMixture      
 from matplotlib.legend import Legend
 from matplotlib.colors import to_rgba
@@ -28,6 +29,10 @@ plt.style.use(os.path.join(f"{os.path.dirname(os.path.abspath(__file__))}", "ks.
 # Some constants
 ALPHA_ANCHOR_CLUSTERS = 0.4
 subfolder = "paralogs_analyses"
+
+_ANCHOR_CLUSTERS_MEDIANS = "anchor_clusters_{}_medians.pdf"
+_ANCHOR_CLUSTERS_UNFILTERED = "mixed_{}_anchor_clusters_unfiltered.pdf"
+_ANCHOR_CLUSTERS_FILTERED = "mixed_{}_anchor_clusters.pdf"
 
 def parse_segments_file(path_segments_txt):
     """
@@ -338,8 +343,8 @@ def plot_clusters_of_medians(medians_per_cluster, cluster_color_letter_list, x_a
     :param cluster_color_letter_list: dictionary assigning to each cluster the right color and letter according to age
     :param x_axis_max_limit_mixed_plot: upper range limit for the x axis
     :param bin_list: list of the edges of each bin (e.g. [0.0, 0.1, 0.2 ... ]); regulates how many bins are there per tick in the x axis 
-    :param species: informal name of the species of interest
-    :param latin_name: latin name of the species of interest
+    :param species: informal name of the focal species
+    :param latin_name: latin name of the focal species
     :param output: name of the directory where the figure is saved in
     """
     # Plotting the clusters of the segment pair medians
@@ -354,8 +359,8 @@ def plot_clusters_of_medians(medians_per_cluster, cluster_color_letter_list, x_a
     ax_clusters_medians.legend()
     clusters_histo_medians.suptitle(f'Clustering of segment pair medians from ${latin_name}$')
     plt.setp(ax_clusters_medians.yaxis.get_majorticklabels(), rotation=90, verticalalignment='center')
-    clusters_histo_medians.savefig(os.path.join("correction_analysis", f"{species}", output, 
-            f"anchor_clusters_{species}_medians.pdf"), transparent=True, format="pdf")
+    clusters_histo_medians.savefig(os.path.join("rate_adjustment", f"{species}", output, 
+            f"{_ANCHOR_CLUSTERS_MEDIANS.format(species)}"), transparent=True, format="pdf")
 
 
 def assign_cluster_colors(cluster_of_ks):
@@ -413,9 +418,9 @@ def plot_clusters(axis, cluster_of_ks, bin_width, max_ks_para, peak_stats, corre
         polygon_color = to_rgba(cluster_color_letter_list[cluster_id][0], ALPHA_ANCHOR_CLUSTERS)
 
         if peak_stats == "mode":
-            cluster_label = f"Cluster {cluster_color_letter_list[cluster_id][1]} (mode {round(mode_of_the_cluster_KDE, 2)})"
+            cluster_label = "Anchor $K_\mathregular{S}$ " + f"cluster {cluster_color_letter_list[cluster_id][1]} (mode {round(mode_of_the_cluster_KDE, 2)})"
         elif peak_stats == "median":
-            cluster_label = f"Cluster {cluster_color_letter_list[cluster_id][1]} (median {round(median_of_the_cluster, 2)})"
+            cluster_label = "Anchor $K_\mathregular{S}$ " + f"cluster {cluster_color_letter_list[cluster_id][1]} (median {round(median_of_the_cluster, 2)})"
 
         polygon = mpatches.Polygon(kde_area_xy, facecolor=polygon_color, edgecolor='None', label=cluster_label,
                                    zorder=zorder_ID)
@@ -543,33 +548,20 @@ def filter_degenerated_clusters(cluster_of_ks, clusters_sorted_by_median, cluste
 
 # TODO: why update the figure title later, set correct in the first place
 # --> Not possible since at the very beginning we don't know the number of clusters
-def update_figure_title_cluster_anchors(fig, ax, corrected_or_not, species, latin_names, correction_table_available, cluster_of_ks, round_number):
+def update_figure_title_cluster_anchors(fig, species, latin_names):
     """
     Updates the title of the figure showing anchor Ks clusters.
     In case the correction data are not available (yet), the figure title 
     will not mention the corrected divergence lines.
 
     :param fig: mixed plot figure object
-    :param ax: axis object in the figure 
-    :param corrected_or_not: flag that states whether the figure shows "rate-adjusted" or "un-corrected" divergence lines 
-    :param species: informal name of the species of interest
+    :param species: informal name of the focal species
     :param latin_names: dictionary of scientific names
-    :param correction_table_available: tag to state if the correction table data are available or not (allowed values: True or False)
-    :param cluster_of_ks: dictionary that associates to each cluster its anchor Ks list
-    :param round_number: tag to state if it is the first or the second clustering round (allowed values: "first" or "second")
     :return: the figure suptitle object
     """
     latinSpecies = latin_names[species]
     species_escape_whitespace = latinSpecies.replace(' ', '\ ')
-    if round_number == "first":
-        filtered_or_not = "Non-filtered anchor "
-    elif round_number == "second":
-        filtered_or_not = "Anchor "
-
-    if not correction_table_available:
-        sup = fig.suptitle(filtered_or_not + "$K_\mathregular{S}$ " + f"clusters for ${species_escape_whitespace}$", y=0.98)
-    else:
-        sup = fig.suptitle(filtered_or_not + "$K_\mathregular{S}$ " + f"clusters with {corrected_or_not} divergences for ${species_escape_whitespace}$", y=0.98)
+    sup = fig._suptitle
     return sup
 
 
@@ -610,7 +602,7 @@ def save_anchor_cluster_plot(fig_corr, fig_uncorr, ax_corr, ax_uncorr, species, 
     :param fig_uncorr: figure object of the un-corrected mixed distribution
     :param ax_corr: axis object of the corrected mixed distribution
     :param ax_uncorr: axis object of the un-corrected mixed distribution
-    :param species: species of interest
+    :param species: focal species
     :param latin_names: dictionary of scientific names
     :param correction_table_available: boolean to state if the correction table data are available or not
     :param cluster_of_ks: dictionary that associates to each cluster its anchor Ks list
@@ -628,13 +620,12 @@ def save_anchor_cluster_plot(fig_corr, fig_uncorr, ax_corr, ax_uncorr, species, 
         ax_corr.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.9, chart_box.height])
         lgd = ax_corr.legend(handlelength=1.5, mode="expand", loc="upper left", bbox_to_anchor=(0.63, 0.0, 0.66, 1))
 
-    update_figure_title_cluster_anchors(fig_corr, ax_corr, "corrected", species, latin_names,     
-                                         correction_table_available, cluster_of_ks, round_number)
+    update_figure_title_cluster_anchors(fig_corr, species, latin_names)
 
     if round_number == "first": # unfiltered
-        figure_file_path = os.path.join("correction_analysis", f"{species}", output, f"mixed_{species}_anchor_clusters_unfiltered.pdf")
+        figure_file_path = os.path.join("rate_adjustment", f"{species}", output, f"{_ANCHOR_CLUSTERS_UNFILTERED.format(species)}")
     elif round_number == "second": # filtered, only significant clusters
-        figure_file_path = os.path.join("correction_analysis", f"{species}", f"mixed_{species}_anchor_clusters.pdf")
+        figure_file_path = os.path.join("rate_adjustment", f"{species}", f"{_ANCHOR_CLUSTERS_FILTERED.format(species)}")
 
     fig_corr.savefig(figure_file_path, bbox_extra_artists=(ax_corr, lgd, fig_corr._suptitle), bbox_inches="tight",
                      transparent=True, format="pdf")

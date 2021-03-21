@@ -77,7 +77,7 @@ def orthologs_ks(config_file, species1, species2, n_threads):
 @cli.command(context_settings={'help_option_names': ['-h', '--help']}, 
              short_help="Computes ortholog divergence times Ks estimates.")
 @click.argument('config_file', type=click.Path(exists=True))
-@click.option('--ortholog-pairs', type=click.Path(exists=True), help="User-defined path to file containing the ortholog pairs with missing ortholog Ks peak in database (default: correction_analysis/species/ortholog_pairs_species.tsv)")
+@click.option('--ortholog-pairs', type=click.Path(exists=True), help="User-defined path to file containing the ortholog pairs with missing ortholog Ks peak in database (default: rate_adjustment/species/ortholog_pairs_species.tsv)")
 def orthologs_analysis(config_file, ortholog_pairs):
     """
     Computes ortholog Ks distribution mode (or median) and updates the ortholog databases.
@@ -96,7 +96,7 @@ def orthologs_analysis(config_file, ortholog_pairs):
 @cli.command(context_settings={'help_option_names': ['-h', '--help']}, 
              short_help="Performs ortholog substitution rate-adjustment.")
 @click.argument('config_file', type=click.Path(exists=True))
-@click.option("--trios", type=click.Path(exists=True), help="User-defined path to file containing the ortholog trios (default: correction_analysis/species/orthologs_trios_species.tsv)")
+@click.option("--trios", type=click.Path(exists=True), help="User-defined path to file containing the ortholog trios (default: rate_adjustment/species/orthologs_trios_species.tsv)")
 def orthologs_adjustment(config_file, trios):
     """
     Performs substitution rate-adjustment relative to the focal species.
@@ -114,10 +114,10 @@ def orthologs_adjustment(config_file, trios):
 
 @cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Generates rate-adjusted mixed Ks plot.")
 @click.argument('config_file', type=click.Path(exists=True))
-@click.option("--correction-table", type=click.Path(exists=True), help="User-defined path to file containing adjustment results (default: correction_analysis/species/correction_table_species.tsv)")
+@click.option("--adjustment-table", type=click.Path(exists=True), help="User-defined path to file containing adjustment results (default: rate_adjustment/species/adjustment_table_species.tsv)")
 @click.option("--paranome-table", type=click.Path(exists=True), help="User-defined path to file containing paranome Ks (default: paralog_distributions/wgd_species/species.ks.tsv)")
 @click.option("--anchors-table", type=click.Path(exists=True), help="User-defined path to file containing anchor pair Ks (default: paralog_distribution/wgd_species/species.ks_anchors.tsv)")
-def plot_paralogs(config_file, correction_table, paranome_table, anchors_table):
+def plot_paralogs(config_file, adjustment_table, paranome_table, anchors_table):
     """
     Plots rate-adjusted mixed paralog-ortholog Ks distribution.
         
@@ -127,20 +127,20 @@ def plot_paralogs(config_file, correction_table, paranome_table, anchors_table):
     """
     from ksrates.plot_paralogs import plot_paralogs_distr
     click.format_filename(config_file)
-    if correction_table:
-        click.format_filename(correction_table)
+    if adjustment_table:
+        click.format_filename(adjustment_table)
     if paranome_table:
         click.format_filename(paranome_table)
     if anchors_table:
         click.format_filename(anchors_table)
-    plot_paralogs_distr(config_file, correction_table, paranome_table, anchors_table)
+    plot_paralogs_distr(config_file, adjustment_table, paranome_table, anchors_table)
 
 
 @cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Generates phylogram with Ks-unit branch lengths.")
 @click.argument('config_file', type=click.Path(exists=True))
-@click.option("--correction-table", type=click.Path(exists=True), help="User-defined path to file containing adjustment results (default: correction_analysis/species/correction_table_species.tsv)")
+@click.option("--adjustment-table", type=click.Path(exists=True), help="User-defined path to file containing adjustment results (default: rate_adjustment/species/adjustment_table_species.tsv)")
 @click.option("-n", "--nextflow", is_flag=True, help="Flag for Nextflow pipeline (Default: False)")
-def plot_tree(config_file, correction_table, nextflow):
+def plot_tree(config_file, adjustment_table, nextflow):
     """
     Generates a phylogram of the input dataset with branch lengths set to\
     Ks distances estimated from ortholog KS distributions.
@@ -151,14 +151,14 @@ def plot_tree(config_file, correction_table, nextflow):
     """
     from ksrates.plot_tree import plot_tree_rates
     click.format_filename(config_file)
-    if correction_table:
-        click.format_filename(correction_table)
-    plot_tree_rates(config_file, correction_table, nextflow)
+    if adjustment_table:
+        click.format_filename(adjustment_table)
+    plot_tree_rates(config_file, adjustment_table, nextflow)
 
 
 @cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Generates ortholog Ks distributions plot.")
 @click.argument('config_file', type=click.Path(exists=True))
-@click.option("--trios", type=click.Path(exists=True), help="User-defined path to file containing the ortholog trios (default: correction_analysis/species/orthologs_trios_species.tsv)")
+@click.option("--trios", type=click.Path(exists=True), help="User-defined path to file containing the ortholog trios (default: rate_adjustment/species/orthologs_trios_species.tsv)")
 def plot_orthologs(config_file, trios):
     """
     Plots ortholog Ks distributions used for rate-adjustment.
@@ -178,13 +178,13 @@ def plot_orthologs(config_file, trios):
 @click.argument('config_file', type=click.Path(exists=True))
 @click.option("--paranome-table", type=click.Path(exists=True), help="User-defined path to file containing paranome Ks (default: paralog_distributions/wgd_species/species.ks.tsv)")
 @click.option("--anchors-table", type=click.Path(exists=True), help="User-defined path to file containing anchor pair Ks (default: paralog_distribution/wgd_species/species.ks_anchors.tsv)")
-@click.option("--correction-table", type=click.Path(exists=True), help="User-defined path to file containing adjustment results (default: correction_analysis/species/correction_table_species.tsv)")
+@click.option("--adjustment-table", type=click.Path(exists=True), help="User-defined path to file containing adjustment results (default: rate_adjustment/species/adjustment_table_species.tsv)")
 @click.option("--anchorpoints", type=click.Path(exists=True), help="User-defined path to i-ADHoRe file anchorpoints.txt (default: paralog_distributions/wgd_species/species_i-adhore/anchorpoints.txt)")
 @click.option("--multiplicons", type=click.Path(exists=True), help="User-defined path to i-ADHoRe file multiplicons.txt (default: paralog_distributions/wgd_species/species_i-adhore/multiplicons.txt)")
 @click.option("--segments", type=click.Path(exists=True), help="User-defined path to i-ADHoRe file segments.txt (default: paralog_distributions/wgd_species/species_i-adhore/segments.txt)")
 @click.option("--list-elements", type=click.Path(exists=True), help="User-defined path to i-ADHoRe file list_elements.txt (default: paralog_distributions/wgd_species/species_i-adhore/list_elements.txt)")
 @click.option("--multiplicon-pairs", type=click.Path(exists=True), help="User-defined path to i-ADHoRe file multiplicons_pairs.txt (default: paralog_distributions/wgd_species/species_i-adhore/multiplicons_pairs.txt)")
-def paralogs_analyses(config_file, paranome_table, anchors_table, correction_table, anchorpoints, multiplicons, segments, list_elements, multiplicon_pairs):
+def paralogs_analyses(config_file, paranome_table, anchors_table, adjustment_table, anchorpoints, multiplicons, segments, list_elements, multiplicon_pairs):
     """
     Reconstructs potential WGD peaks in the paralog Ks distributions.
 
@@ -202,8 +202,8 @@ def paralogs_analyses(config_file, paranome_table, anchors_table, correction_tab
         click.format_filename(paranome_table)
     if anchors_table:
         click.format_filename(anchors_table)
-    if correction_table:
-        click.format_filename(correction_table)
+    if adjustment_table:
+        click.format_filename(adjustment_table)
     if anchorpoints:
         click.format_filename(anchorpoints)
     if multiplicons:
@@ -214,7 +214,7 @@ def paralogs_analyses(config_file, paranome_table, anchors_table, correction_tab
         click.format_filename(list_elements)
     if multiplicon_pairs:
         click.format_filename(multiplicon_pairs)
-    paralogs_analyses_methods(config_file, paranome_table, anchors_table, correction_table, 
+    paralogs_analyses_methods(config_file, paranome_table, anchors_table, adjustment_table, 
                   anchorpoints, multiplicons, segments, list_elements, multiplicon_pairs)
 
 

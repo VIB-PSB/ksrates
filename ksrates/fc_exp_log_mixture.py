@@ -15,6 +15,7 @@ from ksrates.fc_cluster_anchors import ALPHA_ANCHOR_CLUSTERS
 from ksrates.fc_plotting import NEGATIVE_Y_FRACTION
 from ksrates.fc_cluster_anchors import subfolder
 
+
 # TODO: when the script will be moved to the final directory, do we have to change this path?
 plt.style.use(os.path.join(f"{os.path.dirname(os.path.abspath(__file__))}", "ks.mplstyle"))
 # this should be the path to the directory of the current file,
@@ -25,7 +26,7 @@ def generate_peak_model_figure(species_escape_whitespace, x_max_lim):
   Generates the figure hosting the plots for the mixture models
   obtained from Ks data and from data plus a random lognormal.
 
-  :param species_escape_whitespace: scientific name of the species of interest with space escape
+  :param species_escape_whitespace: scientific name of the focal species with space escape
   :param x_max_lim: upper Ks limit in the x-axis range
   :return: figure, axes and figure title
   """
@@ -44,7 +45,7 @@ def generate_random_model_figure(species_escape_whitespace, min_num_comp, max_nu
   Generates the figure hosting the plots for the mixture models
   obtained from random initialization.
 
-  :param species_escape_whitespace: scientific name of the species of interest with space escape
+  :param species_escape_whitespace: scientific name of the focal species with space escape
   :param min_num_comp: minimum number of components used in the mixture model
   :param max_num_comp: maximum number of components used in the mixture model
   :param x_max_lim: upper Ks limit in the x-axis range
@@ -62,13 +63,12 @@ def generate_random_model_figure(species_escape_whitespace, min_num_comp, max_nu
   return fig_random, axes_random, sup_random
 
 
-def generate_best_model_figure(species_escape_whitespace, latin_species, x_max_lim, y_max_lim, correction_table_available, plot_correction_arrows):
+def generate_best_model_figure(latin_species, x_max_lim, y_max_lim, correction_table_available, plot_correction_arrows):
   """
   Generates the figure hosting the best mixture model
   (according to lowest BIC score).
 
-  :param species_escape_whitespace: scientific name of the species of interest with space escape
-  :param latin_species: scientific name of the species of interest
+  :param latin_species: scientific name of the focal species
   :param x_max_lim: upper Ks limit in the x-axis range
   :param y_max_lim: upper Ks limit in the y-axis range
   :param correction_table_available: boolean stating whether the correction results are available or not
@@ -125,10 +125,10 @@ def init_parameters_from_data(ax_ks, species, ks_data_log, ks_weights_log, ks_da
     Prints the initial parameters on screen.
 
     :param ax_ks: axis object showing Ks paranome in background 
-    :param species: informal name of the species of interest
+    :param species: informal name of the focal species
     :param ks_data_log: log-transformed paranome Ks values
     :param ks_weights_log: weights associated to the log-transformed paranome Ks values
-    :param ks_data: paranome Ks values of the species of interest
+    :param ks_data: paranome Ks values of the focal species
     :param ks_weights: weights associated to the paranome Ks values
     :param species_escape_whitespace: species name escaping the white space
     :param output: output folder
@@ -139,7 +139,7 @@ def init_parameters_from_data(ax_ks, species, ks_data_log, ks_weights_log, ks_da
     :return init_weights: initial component weights (they all have even weights)
     """
     # NOTE: This histogram has by convention bin_width equal to 0.1,
-    # the height of its first bin is used to guess rate of the exponential component
+    # the height of its first bin is used to guess the rate of the exponential component
     bin_list_for_lambda = arange(0, 5.1, 0.1)
     hist_data = histogram(ks_data, weights=ks_weights, bins=bin_list_for_lambda, density=True) 
     init_lambd = round(hist_data[0][0], 2) 
@@ -206,7 +206,7 @@ def get_spline(ks_data_log, ks_weights_log, species, species_escape_whitespace, 
 
   :param ks_data_log: log-transformed paranome Ks values
   :param ks_weights_log: weights associated to the log-transformed paranome Ks values
-  :param species: informal name of the species of interest
+  :param species: informal name of the focal species
   :param species_escape_whitespace: species latin name escaping the white space
   :param output: output folder
   :return spl_x: x-axis coordinates of the spline
@@ -253,7 +253,7 @@ def get_spline(ks_data_log, ks_weights_log, species, species_escape_whitespace, 
     ax_kde_spl.legend(loc="upper left")
 
   axes_kde_spl[0].set_ylim(0, axes_kde_spl[0].get_ylim()[1] * 1.15) # resize to not overlap with legend
-  kde_spl.savefig(os.path.join("correction_analysis", f"{species}", output, f"elmm_{species}_kde_spline.pdf"), bbox_inches="tight")
+  kde_spl.savefig(os.path.join("rate_adjustment", f"{species}", output, f"elmm_{species}_kde_spline.pdf"), bbox_inches="tight")
   plt.close(kde_spl)
   return spl_x, spl_y
 
@@ -281,7 +281,7 @@ def find_peak_init_parameters(spl_x, spl_y, species, species_escape_whitespace, 
 
   :param spl_x: x-axis coordinates of the spline
   :param spl_y: y-axis coordinates of the spline
-  :param species: informal name of the species of interest
+  :param species: informal name of the focal species
   :param species_escape_whitespace: species name escaping the white space
   :param output: output folder
   :return init_means: list of randomly initialized means for the lognormal components
@@ -383,7 +383,7 @@ def find_peak_init_parameters(spl_x, spl_y, species, species_escape_whitespace, 
   for w in range(len(axes_refl)):
     for z in [0,1]:
       axes_refl[w][z].set_ylim(0, original_y_lim * 1.2) # resize to not overlap with legend
-  fig_refl_RL.savefig(os.path.join("correction_analysis", f"{species}", output, f"elmm_{species}_peaks.pdf"), bbox_inches="tight")
+  fig_refl_RL.savefig(os.path.join("rate_adjustment", f"{species}", output, f"elmm_{species}_peaks.pdf"), bbox_inches="tight")
   plt.close(fig_refl_RL)
 
   # Guessing the component means and stdevs based on reflected peaks
@@ -508,7 +508,7 @@ def remove_ks_zeros(ks_data, ks_weights):
   Removes the zeroes from the original Ks paranome dataset and the weights
   associated to those zeroes, preparing the data for the log-transformation.
 
-  :param ks_data: paranome Ks values of the species of interest
+  :param ks_data: paranome Ks values of the focal species
   :param ks_weights: weights associated to the paranome Ks values
   :return ks_data_clean: paranome Ks values without zero values
   :return ks_weights_clean: weights associated to non-zero paranome Ks values
@@ -735,12 +735,12 @@ def make_parameter_table_file(parameter_table, species):
   Generates the text output file with the dataframe containing all component parameters.
 
   :param parameter_table: list collecting the component parameters
-  :param species: informal name of the species of interest
+  :param species: informal name of the focal species
   """
   headers = ["Model", "Iteration", "BIC", "Loglikelihood", "Convergence", 
             "Exponential_Rate", "Exponential_Weight", "Normal_Mean", "Normal_SD", "Normal_Weight"]
   parameter_df = DataFrame.from_records(array(parameter_table), columns=headers)
-  with open (os.path.join("correction_analysis", f"{species}", subfolder, f"elmm_{species}_parameters.tsv"), "w+") as outfile:
+  with open (os.path.join("rate_adjustment", f"{species}", subfolder, f"elmm_{species}_parameters.tsv"), "w+") as outfile:
     outfile.write(parameter_df.to_csv(sep="\t", index=False))
 
 
@@ -867,14 +867,14 @@ def plot_fitted_comp(ax_ks, ax_logks, means, stdevs, lambd, weights, max_x_axis_
 
 def plot_histograms_mixture(ax_ks, ax_logks, ks_data, ks_weights, ks_data_log, ks_weights_log, bin_list, bin_width, y_lim, best_model=False):
   """
-  Plots the weighted Ks paranome of the species of interest on the left axis object,
+  Plots the weighted Ks paranome of the focal species on the left axis object,
   where the fitting of exponential and lognormal will be performed.
   Plots the weighted log-transformed Ks paranome on the right axis object, where the
   Gaussians related to the lognormal components will be plotted.
 
   :param ax_ks: axis object showing Ks paranome in background 
   :param ax_logks: axis object showing log-transformed Ks paranome in background  
-  :param ks_data: paranome Ks values of the species of interest
+  :param ks_data: paranome Ks values of the focal species
   :param ks_weights: weights associated to the paranome Ks values
   :param ks_data_log: log-transformed paranome Ks values
   :param ks_weights_log: weights associated to the log-transformed paranome Ks values
@@ -1023,8 +1023,8 @@ def plot_best_model(fig_best_model, ax_best_model, species, ks_data, ks_weights,
 
   :param fig_best_model: figure object that will show the best mixture model
   :param ax_best_model: axis object where the best model result will be plotted
-  :param species: informal name of the species of interest
-  :param ks_data: paranome Ks values of the species of interest
+  :param species: informal name of the focal species
+  :param ks_data: paranome Ks values of the focal species
   :param ks_weights: weights associated to the paranome Ks values
   :param bin_list: list of the edges of each bin (e.g. [0.0, 0.1, 0.2 ... ]); regulates how many bins are there per tick in the x axis 
   :param bin_width: width of the histogram bins
@@ -1070,7 +1070,7 @@ def plot_best_model(fig_best_model, ax_best_model, species, ks_data, ks_weights,
     lgd = ax_best_model.legend(handlelength=1.5, mode="expand", loc="upper left", bbox_to_anchor=(0.53, 0.0, 0.75, 1))
     ax_best_model.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.9, chart_box.height])
   
-  fig_best_model.savefig(os.path.join("correction_analysis", f"{species}", f"mixed_{species}_elmm.pdf"),
+  fig_best_model.savefig(os.path.join("rate_adjustment", f"{species}", f"mixed_{species}_elmm.pdf"),
                     bbox_extra_artists=(ax_best_model, lgd, fig_best_model._suptitle), bbox_inches="tight", transparent=True, format="pdf")
 
   # # TEMPORARY FOR A FIGURE PLOT WITH DENSITY FOR COMPARISON AFTER SCALING
@@ -1084,7 +1084,7 @@ def plot_best_model(fig_best_model, ax_best_model, species, ks_data, ks_weights,
   # chart_box = ax.get_position()
   # ax.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
   # lgd = create_legend_mixture_model(ax, legend_size, len(init_means)+2) # number of plotted lines is: exp + lognormals + total PDF
-  # fig.savefig(os.path.join("correction_analysis", f"{species}", f"mixed_density_elmm.pdf"),
+  # fig.savefig(os.path.join("rate_adjustment", f"{species}", f"mixed_density_elmm.pdf"),
   #                   bbox_extra_artists=(lgd, fig._suptitle), bbox_inches="tight", transparent=True, format="pdf")
 
 
