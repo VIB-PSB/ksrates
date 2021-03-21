@@ -85,7 +85,7 @@ def generate_mixed_plot_figure(species, x_max_lim, y_max_lim, corrected_or_not, 
         elif corrected_or_not == "un-corrected":
             fig.suptitle(f"Mixed " + "$K_\mathregular{S}$" + f" distribution for ${species_escape_whitespaces}$", y=0.98)
     else:
-        fig.suptitle("$K_\mathregular{S}$" + f" distribution for ${species_escape_whitespaces}$", y=0.98)
+        fig.suptitle("$K_\mathregular{S}$" + f" distribution for ${species_escape_whitespaces}$")
 
     seaborn.despine(offset=10)
     ax.set_xlabel("$K_\mathregular{S}$")
@@ -99,7 +99,7 @@ def generate_mixed_plot_figure(species, x_max_lim, y_max_lim, corrected_or_not, 
     if not correction_table_available:
         # if not correction_table_available tighten the layout 
         # to reduce clipping
-        plt.tight_layout()
+        plt.tight_layout(rect=(0,0,1,0.96))
 
     return fig, ax
 
