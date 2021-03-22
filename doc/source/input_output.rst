@@ -14,6 +14,9 @@ Input files
 Output files and directory organization
 =======================================
 
+.. note::
+    In the following list of directory and file names, "species" is used to replace the actual name of the focal species provided under the ``focal_species`` configuration file field (e.g. "elaeis").
+
 * ``rate_adjustment/species`` directory collects the output files of the substitution rate-adjustment relative to the focal species.
 
     Figures:
