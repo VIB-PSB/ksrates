@@ -865,9 +865,9 @@ def _write_anchor_pairs_ks(anchor_points_file, ks_file, out_file='ks_anchors.tsv
 
         ks_anchors = ks.loc[ks.index.intersection(pd.Series(anchor_points_id_list))]
 
-        # Compute anchor pair weights
-        ks_anchor_weights = compute_weights_anchor_pairs(ks_anchors)
+        # (Re)calculate weights of anchor pairs
+        ks_anchors_weighted = compute_weights_anchor_pairs(ks_anchors)
 
         if out_file:
             with open(out_file, "w+") as of:
-                of.write(ks_anchor_weights.to_csv(sep='\t'))
+                of.write(ks_anchors_weighted.to_csv(sep='\t'))
