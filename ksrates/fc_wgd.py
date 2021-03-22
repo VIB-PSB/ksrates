@@ -9,6 +9,7 @@ from wgd.blast_mcl import run_mcl_ava, ava_blast_to_abc, get_one_v_one_orthologs
 from wgd.ks_distribution import ks_analysis_paranome, ks_analysis_one_vs_one
 from wgd.colinearity import gff_parser
 from ksrates.utils import merge_dicts, concat_files, can_i_run_software, translate_cds, write_fasta
+from ksrates.fc_extract_ks_list import compute_weights_anchor_pairs
 
 _OUTPUT_BLAST_FILE_PATTERN = '{}.blast.tsv'
 _OUTPUT_MCL_FILE_PATTERN = '{}.mcl.tsv'
@@ -864,6 +865,9 @@ def _write_anchor_pairs_ks(anchor_points_file, ks_file, out_file='ks_anchors.tsv
 
         ks_anchors = ks.loc[ks.index.intersection(pd.Series(anchor_points_id_list))]
 
+        # Compute anchor pair weights
+        ks_anchor_weights = compute_weights_anchor_pairs(ks_anchors)
+
         if out_file:
             with open(out_file, "w+") as of:
-                of.write(ks_anchors.to_csv(sep='\t'))
+                of.write(ks_anchor_weights.to_csv(sep='\t'))

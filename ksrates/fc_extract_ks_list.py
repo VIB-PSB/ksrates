@@ -28,3 +28,27 @@ def ks_list_from_tsv(tsv_file, max_ks, data_type):
         return ks_list_filtered, weight_list_filtered
     if data_type == "orthologs" or data_type == "anchor pairs":
         return ks_list_filtered
+
+
+def compute_weights_anchor_pairs(df, min_ks=0.05, max_ks=20, aln_id=0, aln_len=300,
+        aln_cov=0):
+    """
+    Modified from wgd.
+    Computes the weights of anchor pair Ks estimates.
+    The min_ks is set to 0.5 Ks.
+    """
+    df = df[~df.index.duplicated()]  # for safety
+    df["WeightOutliersIncluded"] = 1 / df.groupby(['Family', 'Node'])[
+        'Ks'].transform('count')
+    df_ = df[df["Ks"] <= max_ks]
+    df_ = df_[df_["Ks"] >= min_ks]
+    df_ = df_[df_["AlignmentCoverage"] >= aln_cov]
+    df_ = df_[df_["AlignmentIdentity"] >= aln_id]
+    df_ = df_[df_["AlignmentLength"] >= aln_len]
+    df["WeightOutliersExcluded"] = np.zeros(len(df.index))
+    df.loc[df_.index, "WeightOutliersExcluded"] = 1 / df_.groupby(
+            ['Family', 'Node'])['Ks'].transform('count')
+    
+    def df["WeightOutliersIncluded"] # it's only paranome related and not used anyways
+
+    return df
