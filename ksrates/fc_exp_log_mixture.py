@@ -427,9 +427,9 @@ def deconvolute_data(tsv_file, max_ks, data_type):
   """
   tail_length = 0.5 # tail spans for 0.5 extra Ks range
 
-  if data_type == "paralogs":
+  if data_type == "paralogs" or data_type == "anchor pairs":
     ks_data, ks_weights = fc_extract_ks_list.ks_list_from_tsv(tsv_file, max_ks, data_type)
-  else:
+  elif data_type == "orthologs":
     ks_data = fc_extract_ks_list.ks_list_from_tsv(tsv_file, max_ks, data_type)
     ks_weights = [1] * len(ks_data) # dummy weights all equal to 1
 

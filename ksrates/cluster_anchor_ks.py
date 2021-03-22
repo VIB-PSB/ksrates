@@ -112,7 +112,7 @@ def cluster_anchor_ks(config_file, correction_table_file, path_anchorpoints_txt,
 
     anchorpoints_per_multipl, multipl_per_anchorpoint, levels_of_anchorpoints = fcCluster.parse_anchorpoints_file(path_anchorpoints_txt, level_of_each_multipl)
 
-    anchor_ks_list = fc_extract_ks_list.ks_list_from_tsv(path_ks_anchor_file, max_ks_para, "anchor pairs") # Get complete anchor Ks list to be plotted in the background
+    anchor_ks_list, anchors_weights = fc_extract_ks_list.ks_list_from_tsv(path_ks_anchor_file, max_ks_para, "anchor pairs") # Get complete anchor Ks list to be plotted in the background
 
     # -----------------------------------------------------------------------------
 
@@ -292,8 +292,8 @@ def cluster_anchor_ks(config_file, correction_table_file, path_anchorpoints_txt,
     fig_uncorr_first, ax_uncorr_first = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_max_lim, "un-corrected", correction_table_available, plot_correction_arrows)
 
     # Plot the original complete anchor distribution in the background
-    fcPlot.plot_histogram_for_anchor_clustering(ax_corr_first, anchor_ks_list, bin_list, y_max_lim)
-    fcPlot.plot_histogram_for_anchor_clustering(ax_uncorr_first, anchor_ks_list, bin_list, y_max_lim)
+    fcPlot.plot_histogram_for_anchor_clustering(ax_corr_first, anchor_ks_list, anchors_weights, bin_list, y_max_lim)
+    fcPlot.plot_histogram_for_anchor_clustering(ax_uncorr_first, anchor_ks_list, anchors_weights, bin_list, y_max_lim)
 
     # Plot the clusters of anchor Ks and on top of them their KDEs
     clusters_sorted_by_median, cluster_color_letter_list = fcCluster.plot_clusters(ax_corr_first, cluster_of_ks, bin_width, max_ks_para, peak_stats, correction_table_available, plot_correction_arrows)
@@ -361,8 +361,8 @@ def cluster_anchor_ks(config_file, correction_table_file, path_anchorpoints_txt,
         fig_uncorr_second, ax_uncorr_second = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_max_lim, "un-corrected", correction_table_available, plot_correction_arrows)
         
         # Plot the original complete anchor distribution in the background
-        fcPlot.plot_histogram_for_anchor_clustering(ax_corr_second, anchor_ks_list, bin_list, y_max_lim)
-        fcPlot.plot_histogram_for_anchor_clustering(ax_uncorr_second, anchor_ks_list, bin_list, y_max_lim)
+        fcPlot.plot_histogram_for_anchor_clustering(ax_corr_second, anchor_ks_list, anchors_weights, bin_list, y_max_lim)
+        fcPlot.plot_histogram_for_anchor_clustering(ax_uncorr_second, anchor_ks_list, anchors_weights, bin_list, y_max_lim)
 
         # Plot the clusters of anchor Ks and on top of them their KDEs
         fcCluster.plot_clusters(ax_corr_second, filtered_cluster_of_ks, bin_width, max_ks_para, peak_stats, correction_table_available, plot_correction_arrows)

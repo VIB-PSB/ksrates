@@ -1,5 +1,5 @@
 from pandas import read_csv
-from numpy import float64
+from numpy import float64, zeros
 
 
 def ks_list_from_tsv(tsv_file, max_ks, data_type):
@@ -24,9 +24,9 @@ def ks_list_from_tsv(tsv_file, max_ks, data_type):
     ks_list_filtered = filtered_tsv["Ks"].to_list()
     weight_list_filtered = filtered_tsv["WeightOutliersExcluded"].to_list()
 
-    if data_type == "paralogs":
+    if data_type == "paralogs" or data_type == "anchor pairs":
         return ks_list_filtered, weight_list_filtered
-    if data_type == "orthologs" or data_type == "anchor pairs":
+    if data_type == "orthologs":
         return ks_list_filtered
 
 
@@ -35,20 +35,24 @@ def compute_weights_anchor_pairs(df, min_ks=0.05, max_ks=20, aln_id=0, aln_len=3
     """
     Modified from wgd.
     Computes the weights of anchor pair Ks estimates.
-    The min_ks is set to 0.5 Ks.
+    
+    :param min_ks: minimum Ks value considered (hard coded to 0.5 Ks)
+    :param max_ks: maximum Ks value considered
+    :param aln_id: minimum alignment identity considered
+    :param aln_len: minimum alignment length (with gaps) considered
+    :param aln_cov: minimum alignment coverage considered
+    :return: dataframe with updated weights (outliers excluded)
     """
     df = df[~df.index.duplicated()]  # for safety
-    df["WeightOutliersIncluded"] = 1 / df.groupby(['Family', 'Node'])[
-        'Ks'].transform('count')
     df_ = df[df["Ks"] <= max_ks]
     df_ = df_[df_["Ks"] >= min_ks]
     df_ = df_[df_["AlignmentCoverage"] >= aln_cov]
     df_ = df_[df_["AlignmentIdentity"] >= aln_id]
     df_ = df_[df_["AlignmentLength"] >= aln_len]
-    df["WeightOutliersExcluded"] = np.zeros(len(df.index))
+    df["WeightOutliersExcluded"] = zeros(len(df.index))
     df.loc[df_.index, "WeightOutliersExcluded"] = 1 / df_.groupby(
             ['Family', 'Node'])['Ks'].transform('count')
     
-    def df["WeightOutliersIncluded"] # it's only paranome related and not used anyways
+    df = df.drop(columns=["WeightOutliersIncluded"])  # it's only paranome related and not used anyways
 
     return df
