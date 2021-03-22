@@ -4,12 +4,12 @@ import logging
 import shutil
 import subprocess
 import pandas as pd
+from numpy import zeros
 from wgd.utils import read_fasta
 from wgd.blast_mcl import run_mcl_ava, ava_blast_to_abc, get_one_v_one_orthologs_rbh
 from wgd.ks_distribution import ks_analysis_paranome, ks_analysis_one_vs_one
 from wgd.colinearity import gff_parser
 from ksrates.utils import merge_dicts, concat_files, can_i_run_software, translate_cds, write_fasta
-from ksrates.fc_extract_ks_list import compute_weights_anchor_pairs
 
 _OUTPUT_BLAST_FILE_PATTERN = '{}.blast.tsv'
 _OUTPUT_MCL_FILE_PATTERN = '{}.mcl.tsv'
@@ -801,6 +801,35 @@ def _run_iadhore(config_file):
         sys.exit(e.returncode)
 
     return
+
+def compute_weights_anchor_pairs(df, min_ks=0.05, max_ks=20, aln_id=0, aln_len=300,
+        aln_cov=0):
+    """
+    Modified from wgd.
+    Computes the weights of anchor pair Ks estimates.
+    
+    :param min_ks: minimum Ks value considered (hard coded to 0.05 Ks)
+    :param max_ks: maximum Ks value considered
+    :param aln_id: minimum alignment identity considered
+    :param aln_len: minimum alignment length (with gaps) considered
+    :param aln_cov: minimum alignment coverage considered
+    :return: dataframe with updated weights ("outliers excluded", i.e.
+             weights are updated only for pairs which have alignment lenght greater
+             than 300 and with a Ks value between 0.05 and max_ks)
+    """
+    df = df[~df.index.duplicated()]  # for safety
+    df_ = df[df["Ks"] <= max_ks]
+    df_ = df_[df_["Ks"] >= min_ks]
+    df_ = df_[df_["AlignmentCoverage"] >= aln_cov]
+    df_ = df_[df_["AlignmentIdentity"] >= aln_id]
+    df_ = df_[df_["AlignmentLength"] >= aln_len]
+    df["WeightOutliersExcluded"] = zeros(len(df.index))
+    df.loc[df_.index, "WeightOutliersExcluded"] = 1 / df_.groupby(
+            ['Family', 'Node'])['Ks'].transform('count')
+    
+    df = df.drop(columns=["WeightOutliersIncluded"])  # it's only paranome related and not used anyways
+
+    return df
 
 def _write_anchor_pairs_ks(anchor_points_file, ks_file, out_file='ks_anchors.tsv'):
     """
