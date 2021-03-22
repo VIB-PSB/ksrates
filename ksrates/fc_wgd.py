@@ -808,14 +808,16 @@ def compute_weights_anchor_pairs(df, min_ks=0.05, max_ks=20, aln_id=0, aln_len=3
     Modified from wgd.
     Computes the weights of anchor pair Ks estimates.
     
-    :param min_ks: minimum Ks value considered (hard coded to 0.05 Ks)
-    :param max_ks: maximum Ks value considered
-    :param aln_id: minimum alignment identity considered
-    :param aln_len: minimum alignment length (with gaps) considered
-    :param aln_cov: minimum alignment coverage considered
+    :param min_ks: minimum Ks value considered (default 0.05 Ks)
+    :param max_ks: maximum Ks value considered (default 20 Ks)
+    :param aln_id: minimum alignment identity considered (default 0)
+    :param aln_len: minimum alignment length (with gaps) considered (default 300)
+    :param aln_cov: minimum alignment coverage considered (default 0)
     :return: dataframe with updated weights ("outliers excluded", i.e.
-             weights are updated only for pairs which have alignment lenght greater
-             than 300 and with a Ks value between 0.05 and max_ks)
+             weights are set only for pairs which have alignment identity, length 
+             and coverage greater than or equal to aln_id, aln_len and all_cov, 
+             respectively, and have a Ks value between min_ks inclusive and
+             max_ks inclusive; all other pairs will have the weight set to zero.)
     """
     df = df[~df.index.duplicated()]  # for safety
     df_ = df[df["Ks"] <= max_ks]
@@ -894,7 +896,7 @@ def _write_anchor_pairs_ks(anchor_points_file, ks_file, out_file='ks_anchors.tsv
 
         ks_anchors = ks.loc[ks.index.intersection(pd.Series(anchor_points_id_list))]
 
-        # (Re)calculate weights of anchor pairs
+        # (Re)calculate and update weights of anchor pairs
         ks_anchors_weighted = compute_weights_anchor_pairs(ks_anchors)
 
         if out_file:
