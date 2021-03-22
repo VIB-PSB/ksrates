@@ -99,7 +99,7 @@ def generate_mixed_plot_figure(species, x_max_lim, y_max_lim, corrected_or_not, 
     if not correction_table_available:
         # if not correction_table_available tighten the layout 
         # to reduce clipping
-        plt.tight_layout(rect=(0,0,1,0.96))
+        plt.tight_layout()
 
     return fig, ax
 
