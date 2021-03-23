@@ -22,7 +22,7 @@ configfile = file(params.config)
 
 log.info ""
 log.info """\
-         K S  R A T E  C O R R E C T I O N  -  N F   P I P E L I N E
+         K S  R A T E  A D J U S T M E N T  -  N F   P I P E L I N E
          -----------------------------------------------------------
          
          Configuration file:                    $params.config
