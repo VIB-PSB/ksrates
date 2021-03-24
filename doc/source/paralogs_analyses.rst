@@ -12,22 +12,23 @@ Three methods are available: anchor *K*:sub:`S` clustering, exponential-lognorma
 
 Settings in the *ksrates* configuration files determine which methods are applied and which are not (see also sections :ref:`pipeline_config_section` and :ref:`expert_config_section`):
 
-    * If collinearity analysis is selected in the *ksrates* configuration file (``collinearity`` =  yes), the default method performed is a clustering based on the anchor pair *K*:sub:`S` values in collinear segment pairs. 
+    * If collinearity analysis is selected in the *ksrates* configuration file (``collinearity = yes``), the default method performed is a clustering based on the anchor pair *K*:sub:`S` values in collinear segment pairs. 
     * Otherwise (``collinearity = no`` and ``paranome = yes``), the default method performed is exponential-lognormal mixture modeling of the whole-paranome *K*:sub:`S` distribution.
     * Lognormal-only mixture modeling can be turned on for comparison. It is never applied by default, since it is more prone to produce spurious peaks.
 
 The execution of non-default methods according to the scheme in the table below  can be turned on with a setting in the expert configuration file. For example, when both collinearity and paranome analyses are selected (last column), only the anchor *K*:sub:`S` clustering is perfomed by default and all the other methods can be turned on optionally.
 
-.. table:: Default methods are marked by a bold capitalized "X", while optional methods are marked by a lower-case "x".
+.. include:: <isopub.txt>
+.. table:: Default methods are marked by |check|, while optional methods are marked by (|check|).
 
-    =======================================  ================  =============  ========================
+    =======================================  ================  =============  =========================
     Method                                   Colinearity-only  Paranome-only  Collinearity and paranome
-    =======================================  ================  =============  ========================
-    Anchor *K*:sub:`S` clustering            **X**                            **X**
-    Exponential-lognormal mixture model                        **X**          x
-    Lognormal mixture model on anchor pairs  x                                x
-    Lognormal mixture model on paranome                        x              x
-    =======================================  ================  =============  ========================
+    =======================================  ================  =============  =========================
+    Anchor *K*:sub:`S` clustering            |check|                          |check|
+    Exponential-lognormal mixture model                        |check|        (|check|)
+    Lognormal mixture model on anchor pairs  (|check|)                        (|check|)
+    Lognormal mixture model on paranome                        (|check|)      (|check|)
+    =======================================  ================  =============  =========================
 
 
 .. _`anchor_ks_clustering`:
@@ -37,12 +38,8 @@ Anchor *K*:sub:`S` clustering
 
 A clustering approach is used in order to classify anchor pair *K*:sub:`S` values into groups that potentially stem from different WGDs in the ancestry of the focal species. The approach does not cluster the anchor pair *K*:sub:`S` values directly, but instead uses lognormal mixture modeling to cluster median *K*:sub:`S` values for the collinear segment pairs, i.e. pairs of sequence regions with conserved gene content and order, that the anchor pairs reside on. Segment pairs originated by the same WGD are likely to share a similar *K*:sub:`S` age and to fall into the same cluster.
 
-The age of each segment-pair is temporarily represented by the median among the *K*:sub:`S` values residing on it.
-Such segment-pair medians are then clustered through lognormal mixture modeling. The number of clusters is set equal to the number of whole-genome duplications that can be inferred from the largest block of homologous segments, e.g. 3 WGDs from blocks of 8 segments.
-In order to obtain the anchor *K*:sub:`S` clusters, each median *K*:sub:`S` value is replaced by the original *K*:sub:`S` list for the segment pair.
+Such segment-pair medians are then clustered through lognormal mixture modeling. In order to obtain the clusters of the original anchor *K*:sub:`S` data, each median *K*:sub:`S` value is replaced by the *K*:sub:`S` list of the segment pair.
 Anchor *K*:sub:`S` clusters for which a link to a real WGD event is ambiguous or unlikely are removed from the dataset (i.e. small, flat or old clusters).
-
-The rate-adjusted ortholog *K*:sub:`S` estimates are finally added in order to obtain a mixed plot to compare the temporal relationship between the inferred WGD peaks and the speciation events.
 
 
 .. _`elmm`:
@@ -52,7 +49,8 @@ Exponential-lognormal mixture model
 
 *ksrates* implements a custom exponential-lognormal mixture model (ELMM) algorithm for analyzing whole-paranome *K*:sub:`S` distributions. The exponential component is used to model the L-shaped background of a whole-paranome *K*:sub:`S` distribution generated by small-scale duplications, while one or more lognormal components are used to model potential WGD peaks.
 
-Since adequate initialization of the component parameters is crucial for obtaining decent mixture modeling results, *ksrates* uses three different initialization approaches and ultimately chooses the best one based on BIC:
+Since adequate initialization of the component parameters is crucial for obtaining decent mixture modeling results, *ksrates* uses three different initialization approaches and ultimately chooses the best one based on the 
+Bayesian Information Criterion (BIC):
 
 * Data-driven initialization, which infers component parameters from the shape of the *K*:sub:`S` distribution. The exponential component is initialized to match the height of the left boundary of the distribution, while each lognormal component is initialized in correspondence of a peak.
 
@@ -62,13 +60,9 @@ Since adequate initialization of the component parameters is crucial for obtaini
 
 In all three strategies, an extra “buffer” lognormal component is initialized by default at the right boundary of the *K*:sub:`S` range to avoid that other components stretch towards higher values in an attempt to fit the hard-to-fit distribution tail.
 
-The rate-adjusted ortholog *K*:sub:`S` estimates are finally added in order to obtain a mixed plot to compare the temporal relationship between the inferred WGM peaks and the speciation events.
-
-.. warning::
-    Please keep in mind that mixture modeling results on *K*:sub:`S` distributions should be interpreted cautiously due to their tendecy of overfitting and overclustering.
 
 Data output file format
-------------------
+-----------------------
 
 Among its outputs (for a complete list see section :ref:`output_files`), the ELMM produces a tabular (TSV) file and a text file where parameters and fitting results are stored: 
 
@@ -99,14 +93,12 @@ Logormal mixture modeling (LMM) makes use of only lognormal components and is op
 
 The lognormal components are initialized through k-means and fitted by default with two to five components. For each number of components the mixture model is initialized multiple times and the best fit is chosen according to the largest log-likelihood. Among the resulting four models (one for each number of components), the best fitting model is taken to be the one with the lowest BIC score.
 
-The rate-adjusted ortholog *K*:sub:`S` estimates are finally added in order to obtain a mixed plot to compare the temporal relationship between the inferred WGM peaks and the speciation events.
-
 .. warning::
-    LMM is also more prone than ELMM to detect spurious peaks in the left side of the whole-paranome *K*:sub:`S` distribution because it is less suitable to fit the small-scale duplication background.
+    LMM is more prone than ELMM to detect spurious peaks in the left side of the whole-paranome *K*:sub:`S` distribution because it is less suitable to fit the small-scale duplication background.
 
 
 Data output file format
-------------------
+-----------------------
 
 Among its outputs (for a complete list see section :ref:`output_files`), the LMM produces tabular (TSV) files and text files where parameters and fitting results are stored:
 
