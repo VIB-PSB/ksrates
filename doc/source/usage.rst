@@ -64,7 +64,7 @@ The syntax to run a command depends on how the package is installed:
 
     Docker pulls the container image from Docker Hub and from then on makes use of the local copy.
 
-In order to submit the command as a job on a cluster, wrap the command in the appropriate syntax for the executor system/HPC scheduler (e.g. for SGE: ``qsub``). It is strongly recommended to run the *K*:sub:`S` paralog and orthologs (see commands below) estimation steps on a compute cluster.
+In order to submit the command as a job on a compute cluster, wrap the command in the appropriate syntax for the cluster executor system/HPC scheduler (e.g. ``qsub`` for a Sun Grid Engine (SGE) or compatible cluster or a PBS/Torque family scheduler). It is strongly recommended to run the *K*:sub:`S` paralog and orthologs estimation steps (see commands below) on a compute cluster.
 
 An overview of the commands is available by accessing the package help menu (``ksrates -h``)::
 
@@ -104,7 +104,7 @@ The order of execution of the single commands to run the whole workflow is the f
 
     Using multiple threads to parallelize the analysis will reduce the compute time. The ``--n-threads`` option configures the number of threads to use (set this according to your available resources, i.e. CPUs/cores; we recommend a value around 10 and thus the use of a compute cluster).
 
-5.  Launch the *wgd* ortholog *K*:sub:`S`analysis to estimate the ortholog *K*:sub:`S` values *for each required species pair*. These are listed in ``rate_adjustment/elaeis/ortholog_pairs_elaeis.txt``::
+5.  Launch the *wgd* ortholog *K*:sub:`S` analysis to estimate the ortholog *K*:sub:`S` values *for each required species pair*. These are listed in ``rate_adjustment/elaeis/ortholog_pairs_elaeis.txt``::
 
         ksrates orthologs-ks config_elaeis.txt elaeis asparagus [--n-threads 4]
         ksrates orthologs-ks config_elaeis.txt elaeis oryza [--n-threads 4]
@@ -126,7 +126,7 @@ The order of execution of the single commands to run the whole workflow is the f
 
     The command generates a PDF file for each species pair with the three ortholog *K*:sub:`S` distributions obtained from each of the species trios the species pair is involved in. Note that if multiple trios/outgroups exist, the file is a multi-page PDF showing one trio per page. Species names will be in case-insensitive alphabetical order. In this example case there is only the *E. guineensis*--*O. sativa* species pair, thus the correspondent PDF file generated is ``rate_adjustment/elaeis/orthologs_elaeis_oryza.pdf``.
      
-8.  Perform the rate-adjustment. *Pre-requisite: all *wgd* paralog and ortholog *K*:sub:`S`analyses (steps 4 and 5) and ortholog *K*:sub:`S` distribution mode estimates (step 6) must be completed.* ::
+8.  Perform the rate-adjustment. **Pre-requisite**: all *wgd* paralog and ortholog *K*:sub:`S` analyses (steps 4 and 5) and ortholog *K*:sub:`S` distribution mode estimates (step 6) must be completed. ::
     
         ksrates orthologs-adjustment config_elaeis.txt
 
