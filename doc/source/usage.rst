@@ -11,7 +11,7 @@ Clone the GitHub repository to get the use case dataset::
 Run example case as a Nextflow pipeline (recommended)
 =====================================================
 
-The *ksrates* Nextflow pipeline can be automatically run through Nextflow with a few preparation steps.
+The *ksrates* pipeline can be automatically run through Nextflow with a few preparation steps.
 
 1.  Access in a terminal the directory that will host the rate-adjustment results (assumed here to be ``example``). ::
 
@@ -23,21 +23,25 @@ The *ksrates* Nextflow pipeline can be automatically run through Nextflow with a
 
 2.  Prepare the configuration files.
 
-    The directory already contains a pre-filled *ksrates* configuration file (``config_elaeis.txt``) and a Nextflow configuration file template (``custom_nextflow.config``). If running on a cluster or within a container, please fill in the template as described in the :ref:`nextflow_config_section` section.
+    The directory already contains a pre-filled *ksrates configuration file* (``config_elaeis.txt``) and a *Nextflow configuration file* template (``custom_nextflow.config``). If running on a cluster or within a container, please fill in the template as described in the :ref:`nextflow_config_section` section.
 
     .. note ::
-        When running *ksrates* on a new dataset, the configuration files still have to be generated. For the Nextflow configuration file, please either consult the Nextflow documentation or check the templates available in the *ksrates* GitHub repository under ``doc/source`` (Singularity-targeted, Docker-targeted or container-independent templates).
+        When running *ksrates* on a new dataset, the configuration files still have to be generated.
+        
+        For the *Nextflow configuration file*, please either consult the Nextflow documentation or check the templates available in the *ksrates* GitHub repository under ``doc/source`` (Singularity-targeted, Docker-targeted or container-independent templates).
 
-        To generate a new *ksrates* configuration file, launch the pipeline (step 3) specifying a non-existing filename after the ``--config`` option. Not finding the file, the code produces a template to be filled in as described in :ref:`pipeline_config_section` section. After that, repeat step 3 again.
+        To generate a new *ksrates configuration file*, launch the pipeline (step 3 below) specifying a non-existing filename after the ``--config`` option. Not finding the file, the code produces a template to be filled in as described in :ref:`pipeline_config_section` section. After that, repeat step 3 again.
 
 3.  Launch *ksrates* through the following command line::
 
         nextflow run VIB-PSB/ksrates --config ./config_elaeis.txt [-c ./custom_nextflow.config]
 
-    The ``--config`` option takes the *ksrates* configuration file, while ``-c`` takes the optional Nextflow configuration file. If the Nextflow-reserved ``nextflow.config`` name is used, the file is automatically recognized without explicitly calling it in the command line.
+    The ``--config`` option takes the *ksrates configuration file*, while ``-c`` takes the optional *Nextflow configuration file*. If the Nextflow-reserved ``nextflow.config`` name is used, this latter file is automatically recognized without explicitly calling it in the command line.
     
     The first time the command is launched it downloads the *ksrates* Nextflow pipeline from the ``VIB-PSB/ksrates`` GitHub repository; from then on it uses the local copy stored in the ``.nextflow`` directory. If running a container, the image is pulled from Docker Hub and stored locally for successive usage.  
 
+
+.. _`manual_pipeline`:
 
 Run example case as a manual pipeline
 =====================================
@@ -60,7 +64,7 @@ The syntax to run a command depends on how the package is installed:
 
         docker run --rm -v $PWD:/temp -w /temp vibpsb/ksrates ksrates [OPTIONS] COMMAND [ARGS]
 
-    The ``-v`` option mounts the current working directory in the container, while ``-w`` lets the command be run within this directory. The ``--rm`` option is given to remove the container after the command is executed to save disk space (note that the container *image* will not be removed).
+    The ``--rm`` option is given to remove the container after the command is executed to save disk space (note that the container *image* will not be removed). The ``-v`` option mounts the current working directory in the container, while ``-w`` lets the command be run within this directory. 
 
     Docker pulls the container image from Docker Hub and from then on makes use of the local copy.
 
@@ -112,7 +116,7 @@ The order of execution of the single commands to run the whole workflow is the f
 
     Using multiple threads to parallelize the analysis will reduce the compute time. The ``--n-threads`` option configures the number of threads to use (set this according to your available resources, i.e. CPUs/cores; we recommend a value around 10 and thus the use of a compute cluster).
 
-    The output files are generated in the directory ``ortholog_distributions``, e.g. the first command generates the output file ``ortholog_distributions/wgd_asparagus_elaeis/asparagus_elaeis.ks.tsv``. Species names will be in case-insensitive alphabetical order.
+    The output files are generated in the directory ``ortholog_distributions``, e.g. the first command generates the file ``ortholog_distributions/wgd_asparagus_elaeis/asparagus_elaeis.ks.tsv``. The two species names are in case-insensitive alphabetical order.
 
 6.  Estimate the mode and associated standard deviation for each ortholog *K*:sub:`S` distribution::
     
@@ -124,7 +128,7 @@ The order of execution of the single commands to run the whole workflow is the f
     
         ksrates plot-orthologs config_elaeis.txt
 
-    The command generates a PDF file for each species pair with the three ortholog *K*:sub:`S` distributions obtained from each of the species trios the species pair is involved in. Note that if multiple trios/outgroups exist, the file is a multi-page PDF showing one trio per page. Species names will be in case-insensitive alphabetical order. In this example case there is only the *E. guineensis*--*O. sativa* species pair, thus the correspondent PDF file generated is ``rate_adjustment/elaeis/orthologs_elaeis_oryza.pdf``.
+    The command generates a PDF file for each species pair with the three ortholog *K*:sub:`S` distributions obtained from each of the species trios the species pair is involved in. Note that if multiple trios/outgroups exist, the file is a multi-page PDF showing one trio per page. The two species names are in case-insensitive alphabetical order. In this example case there is only the *E. guineensis*--*O. sativa* species pair, thus the correspondent PDF file generated is ``rate_adjustment/elaeis/orthologs_elaeis_oryza.pdf``.
      
 8.  Perform the rate-adjustment. **Pre-requisite**: all *wgd* paralog and ortholog *K*:sub:`S` analyses (steps 4 and 5) and ortholog *K*:sub:`S` distribution mode estimates (step 6) must be completed. ::
     
@@ -140,7 +144,7 @@ The order of execution of the single commands to run the whole workflow is the f
     
         ksrates plot-tree config_elaeis.txt
 
-11. Plot adjusted mixed paralog--ortholog *K*:sub:`S` distribution plots with inferred WGD components::
+11. Plot the adjusted mixed paralog--ortholog *K*:sub:`S` distribution with inferred WGD components::
     
         ksrates paralogs-analyses config_elaeis.txt
     
