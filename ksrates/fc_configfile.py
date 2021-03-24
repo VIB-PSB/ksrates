@@ -486,7 +486,6 @@ class Configuration:
                     logging.warning(f'Unrecognized field in expert configuration file [distribution_peak_estimate = {peak_stats}]. Please choose between "mode" and "median". Default choice will be applied [mode]')
                     peak_stats = "mode"
             except Exception:
-                logging.warning(f'Missing field in expert configuration file [distribution_peak_estimate]. Please choose between "mode" and "median". Default choice will be applied [mode]')
                 peak_stats = "mode"     
         else:
             peak_stats = "mode"
