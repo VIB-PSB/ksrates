@@ -1,7 +1,6 @@
 [EXPERT PARAMETERS]
 
 logging_level = info
-distribution_peak_estimate = mode
 kde_bandwidth_modifier = 0.4
 plot_adjustment_arrows = no
 max_mixture_model_iterations = 300

@@ -22,8 +22,8 @@ configfile = file(params.config)
 
 log.info ""
 log.info """\
-         K S  R A T E  C O R R E C T I O N  -  N F   P I P E L I N E
-         -----------------------------------------------------------
+         K S R A T E S   -   N E X T F L O W   P I P E L I N E
+         -----------------------------------------------------
          
          Configuration file:                    $params.config
          Logs folder:                           logs_${workflow.sessionId.toString().substring(0,8)}
