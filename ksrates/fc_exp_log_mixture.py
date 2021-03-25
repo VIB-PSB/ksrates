@@ -1060,12 +1060,23 @@ def plot_best_model(fig_best_model, ax_best_model, species, ks_data, ks_weights,
   scaling = bin_width * len(deconvoluted_data[deconvoluted_data <= max_ks_EM])
   plot_fitted_comp(ax_best_model, None, final_means, final_stdevs, final_lambd, final_weights, max_x_axis_lim, peak_stats, correction_table_available, plot_correction_arrows, scaling=scaling, plot_peak_markers=True, plot_logtranformed=False)
 
-  legend_size = fcPlot.define_legend_size(ax_best_model)
-  chart_box = ax_best_model.get_position()
-  ax_best_model.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
-  lgd = create_legend_mixture_model(ax_best_model, legend_size, len(init_means)+2) # number of plotted lines is: exp + lognormals + total PDF
-  fig_best_model.savefig(os.path.join("rate_adjustment", f"{species}", f"mixed_{species}_elmm.pdf"),
-                    bbox_extra_artists=(lgd, fig_best_model._suptitle), bbox_inches="tight", transparent=True, format="pdf")
+  if correction_table_available:
+    legend_size = fcPlot.define_legend_size(ax_best_model)
+    chart_box = ax_best_model.get_position()
+    ax_best_model.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
+    lgd = create_legend_mixture_model(ax_best_model, legend_size, len(init_means)+2)
+    # Number of plotted lines is: exp + lognormals + total PDF
+
+    fig_best_model.savefig(os.path.join("rate_adjustment", f"{species}", f"mixed_{species}_elmm.pdf"),
+                  bbox_extra_artists=(ax_best_model, lgd, fig_best_model._suptitle), bbox_inches="tight",
+                  transparent=True, format="pdf")
+  else:
+    # if not correction_table_available use a simpler layout with the legend
+    # inside the plot and no right margin
+    lgd = ax_best_model.legend(handlelength=1.5, loc="upper right")
+    fig_best_model.savefig(os.path.join("rate_adjustment", f"{species}", f"mixed_{species}_elmm.pdf"),
+                  transparent=True, format="pdf")
+
 
   # # TEMPORARY FOR A FIGURE PLOT WITH DENSITY FOR COMPARISON AFTER SCALING
   # fig, ax = generate_best_model_figure("elaeis", "Elaeis guineensis", 3, None, True, True)
@@ -1080,5 +1091,3 @@ def plot_best_model(fig_best_model, ax_best_model, species, ks_data, ks_weights,
   # lgd = create_legend_mixture_model(ax, legend_size, len(init_means)+2) # number of plotted lines is: exp + lognormals + total PDF
   # fig.savefig(os.path.join("rate_adjustment", f"{species}", f"mixed_density_elmm.pdf"),
   #                   bbox_extra_artists=(lgd, fig._suptitle), bbox_inches="tight", transparent=True, format="pdf")
-
-

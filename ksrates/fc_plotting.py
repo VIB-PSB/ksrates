@@ -68,10 +68,16 @@ def generate_mixed_plot_figure(species, x_max_lim, y_max_lim, corrected_or_not, 
 
     # Increase figure size in height if extra space for the correction arrows is required and
     # any divergence line will be actually plotted (thus, the "and" condition) 
-    if plot_correction_arrows and correction_table_available:
-        fig, ax = plt.subplots(1, 1, figsize=(14.0, 7.6))
+    if correction_table_available:
+        if plot_correction_arrows:
+            # make the figure a bit taller to make room for the arrows
+            fig, ax = plt.subplots(1, 1, figsize=(14.0, 7.6))
+        else:
+            fig, ax = plt.subplots(1, 1, figsize=(14.0, 7.0))
     else:
-        fig, ax = plt.subplots(1, 1, figsize=(14.0, 7.0))
+        # if not correction_table_available a simpler less-wide layout with
+        # the legend inside the plot and no right margin is used
+        fig, ax = plt.subplots(1, 1, figsize=(10.0, 7.0))
 
     if correction_table_available:
         if corrected_or_not == "corrected":
@@ -79,7 +85,7 @@ def generate_mixed_plot_figure(species, x_max_lim, y_max_lim, corrected_or_not, 
         elif corrected_or_not == "un-corrected":
             fig.suptitle(f"Mixed " + "$K_\mathregular{S}$" + f" distribution for ${species_escape_whitespaces}$", y=0.98)
     else:
-        fig.suptitle("$K_\mathregular{S}$" + f" distribution for ${species_escape_whitespaces}$", y=0.98)
+        fig.suptitle("$K_\mathregular{S}$" + f" distribution for ${species_escape_whitespaces}$")
 
     seaborn.despine(offset=10)
     ax.set_xlabel("$K_\mathregular{S}$")
@@ -90,6 +96,11 @@ def generate_mixed_plot_figure(species, x_max_lim, y_max_lim, corrected_or_not, 
         y_max_lim = float(y_max_lim)
         ax.set_ylim(0, y_max_lim)
     plt.setp(ax.yaxis.get_majorticklabels(), rotation=90, verticalalignment='center')
+    if not correction_table_available:
+        # if not correction_table_available tighten the layout 
+        # to reduce clipping
+        plt.tight_layout()
+
     return fig, ax
 
 
@@ -470,7 +481,7 @@ def create_legend(axis, paranome, colinearity, legend_size):
     return lgd
 
 
-def save_mixed_plot(fig_corr, fig_uncorr, ax_corr, ax_uncorr, species, paranome, colinearity):
+def save_mixed_plot(fig_corr, fig_uncorr, ax_corr, ax_uncorr, species, correction_table_available, paranome, colinearity):
     """
     This function must be called to save the mixed distribution figure in order to adjust the figure layout:
     the plot area is shrunk to the left and some reasonable space is left on the right side for the legend.
@@ -483,19 +494,29 @@ def save_mixed_plot(fig_corr, fig_uncorr, ax_corr, ax_uncorr, species, paranome,
     :param paranome: the config file field that states if the whole-paranome has to be plotted [True/False]
     :param colinearity: the config file field that states if the anchor pairs have to be plotted [True/False]
     """
-    legend_size = define_legend_size(ax_corr)
+    if correction_table_available:
+        legend_size = define_legend_size(ax_corr)
+        chart_box = ax_uncorr.get_position()
 
-    chart_box = ax_uncorr.get_position()
-    # For the un-corrected plot:
-    ax_uncorr.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
-    lgd = create_legend(ax_uncorr, paranome, colinearity, legend_size)
-    fig_uncorr.savefig(os.path.join("rate_adjustment", f"{species}", _MIXED_UNADJUSTED_PLOT_FILENAME.format(species)),
+        ax_uncorr.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
+        lgd = create_legend(ax_uncorr, paranome, colinearity, legend_size)
+        fig_uncorr.savefig(os.path.join("rate_adjustment", f"{species}", _MIXED_UNADJUSTED_PLOT_FILENAME.format(species)),
                        bbox_extra_artists=(lgd, fig_uncorr._suptitle), bbox_inches="tight", transparent=True, format="pdf")
-    # Same thing for the corrected plot:
-    ax_corr.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
-    lgd = create_legend(ax_corr, paranome, colinearity, legend_size)
-    fig_corr.savefig(os.path.join("rate_adjustment", f"{species}", _MIXED_ADJUSTED_PLOT_FILENAME.format(species)),
+
+        ax_corr.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
+        lgd = create_legend(ax_corr, paranome, colinearity, legend_size)
+        fig_corr.savefig(os.path.join("rate_adjustment", f"{species}", _MIXED_ADJUSTED_PLOT_FILENAME.format(species)),
                      bbox_extra_artists=(lgd, fig_corr._suptitle), bbox_inches="tight", transparent=True, format="pdf")
+    else:
+        # if not correction_table_available use a simpler layout with the legend
+        # inside the plot and no right margin
+        lgd = ax_uncorr.legend(handlelength=1.5, loc="upper right")
+        fig_uncorr.savefig(os.path.join("rate_adjustment", f"{species}", _MIXED_UNADJUSTED_PLOT_FILENAME.format(species)),
+                           transparent=True, format="pdf")
+        lgd = ax_corr.legend(handlelength=1.5, loc="upper right")
+        fig_corr.savefig(os.path.join("rate_adjustment", f"{species}", _MIXED_ADJUSTED_PLOT_FILENAME.format(species)), 
+                         transparent=True, format="pdf")
+
 
 
 def generate_orthologs_figure(species, sister_species, outgroup_species, x_lim):

@@ -129,7 +129,7 @@ def plot_paralogs_distr(config_file, correction_table_file, paralog_tsv_file, an
 
     logging.info("")
     logging.info(f"Saving PDF figures of mixed plots [{fcPlot._MIXED_ADJUSTED_PLOT_FILENAME.format(species)}, {fcPlot._MIXED_UNADJUSTED_PLOT_FILENAME.format(species)}]")
-    fcPlot.save_mixed_plot(fig_corr, fig_uncorr, ax_corr, ax_uncorr, species, paranome=paranome_analysis,
+    fcPlot.save_mixed_plot(fig_corr, fig_uncorr, ax_corr, ax_uncorr, species, correction_table_available, paranome=paranome_analysis,
                         colinearity=colinearity_analysis)
 
     logging.info("")

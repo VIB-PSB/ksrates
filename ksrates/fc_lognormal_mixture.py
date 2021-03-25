@@ -311,7 +311,7 @@ def create_legend_mixture_model(axis, legend_size, num_mixture_model_lines, data
     return lgd
 
 
-def save_lmm(fig, axis, species, best_model, datatype):
+def save_lmm(fig, axis, species, best_model, datatype, correction_table_available):
     """
     This function must be called to save the mixed plot figure with lognormal mixture model
     in order to adjust the figure layout: the plot area is shrunk to the left and some reasonable 
@@ -322,15 +322,23 @@ def save_lmm(fig, axis, species, best_model, datatype):
     :param species: focal species
     :param datatype: string for figure title stating whether data is paranome or comes from "colinearity" analysis
     """
-    num_mixture_model_lines = len(best_model.means_) + 1 # components + total PDF
+    if correction_table_available:
+        num_mixture_model_lines = len(best_model.means_) + 1 # components + total PDF
 
-    legend_size = fcPlot.define_legend_size(axis)
+        legend_size = fcPlot.define_legend_size(axis)
+        chart_box = axis.get_position()
 
-    chart_box = axis.get_position()
-    axis.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
-    lgd = create_legend_mixture_model(axis, legend_size, num_mixture_model_lines, datatype)
-    fig.savefig(os.path.join("rate_adjustment", f"{species}", f"mixed_{species}_lmm_{datatype}.pdf"),
-                     bbox_extra_artists=(lgd, fig._suptitle), bbox_inches="tight", transparent=True, format="pdf")
+        axis.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
+        lgd = create_legend_mixture_model(axis, legend_size, num_mixture_model_lines, datatype)
+
+        fig.savefig(os.path.join("rate_adjustment", f"{species}", f"mixed_{species}_lmm_{datatype}.pdf"),
+                    bbox_extra_artists=(axis, lgd, fig._suptitle), bbox_inches="tight", transparent=True, format="pdf")
+    else:
+        # if not correction_table_available use a simpler layout with the legend
+        # inside the plot and no right margin
+        lgd = axis.legend(handlelength=1.5, loc="upper right")
+        fig.savefig(os.path.join("rate_adjustment", f"{species}", f"mixed_{species}_lmm_{datatype}.pdf"),
+                    transparent=True, format="pdf")
 
 
 def make_parameter_table_file(parameter_table, species, datatype):

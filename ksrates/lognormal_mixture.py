@@ -147,11 +147,11 @@ def lognormal_mixture(config_file, paralog_tsv_file, anchors_ks_tsv_file, correc
     logging.info("")
 
     if paranome_analysis:
-        fcLMM.save_lmm(fig_para, axis_para, species, best_model_paranome, "paranome")
-        logging.info(f"Saved PDF figure(s) of lognormal mixture model [mixed_{species}_lmm_paranome.pdf]")
+        fcLMM.save_lmm(fig_para, axis_para, species, best_model_paranome, "paranome", correction_table_available)
+        logging.info(f"Saved PDF figure of lognormal mixture model [mixed_{species}_lmm_paranome.pdf]")
     if colinearity_analysis:
-        fcLMM.save_lmm(fig_colin, axis_colin, species, best_model_anchors, "anchors")
-        logging.info(f"Saved PDF figure(s) of lognormal mixture model [mixed_{species}_lmm_anchors.pdf]")
+        fcLMM.save_lmm(fig_colin, axis_colin, species, best_model_anchors, "anchors", correction_table_available)
+        logging.info(f"Saved PDF figure of lognormal mixture model [mixed_{species}_lmm_anchors.pdf]")
 
     logging.info("")
     logging.info("All done")

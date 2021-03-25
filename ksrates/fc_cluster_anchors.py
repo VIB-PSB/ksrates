@@ -546,25 +546,6 @@ def filter_degenerated_clusters(cluster_of_ks, clusters_sorted_by_median, cluste
     return clean_clusters_of_ks
 
 
-# TODO: why update the figure title later, set correct in the first place
-# --> Not possible since at the very beginning we don't know the number of clusters
-def update_figure_title_cluster_anchors(fig, species, latin_names):
-    """
-    Updates the title of the figure showing anchor Ks clusters.
-    In case the correction data are not available (yet), the figure title 
-    will not mention the corrected divergence lines.
-
-    :param fig: mixed plot figure object
-    :param species: informal name of the focal species
-    :param latin_names: dictionary of scientific names
-    :return: the figure suptitle object
-    """
-    latinSpecies = latin_names[species]
-    species_escape_whitespace = latinSpecies.replace(' ', '\ ')
-    sup = fig._suptitle
-    return sup
-
-
 def create_legend(axis, legend_size):
     """
     Places the legend elements associated to the total anchor Ks histogram and to the clusters 
@@ -610,16 +591,21 @@ def save_anchor_cluster_plot(fig_corr, fig_uncorr, ax_corr, ax_uncorr, species, 
     :param round_number: tag to state if it is the first or the second clustering round
            (allowed values: "first" or "second")
     """
-    legend_size = fcPlot.define_legend_size(ax_corr)
-    chart_box = ax_uncorr.get_position()
-
-    ax_corr.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
-    lgd = create_legend(ax_corr, legend_size)
-    sup = update_figure_title_cluster_anchors(fig_corr, species, latin_names)
     if round_number == "first": # unfiltered
         figure_file_path = os.path.join("rate_adjustment", f"{species}", output, f"{_ANCHOR_CLUSTERS_UNFILTERED.format(species)}")
     elif round_number == "second": # filtered, only significant clusters
         figure_file_path = os.path.join("rate_adjustment", f"{species}", f"{_ANCHOR_CLUSTERS_FILTERED.format(species)}")
 
-    fig_corr.savefig(figure_file_path, bbox_extra_artists=(lgd, sup), bbox_inches="tight",
+    if correction_table_available:
+        legend_size = fcPlot.define_legend_size(ax_corr)
+        chart_box = ax_corr.get_position()
+        ax_corr.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
+        lgd = create_legend(ax_corr, legend_size)
+    
+        fig_corr.savefig(figure_file_path, bbox_extra_artists=(ax_corr, lgd, fig_corr._suptitle), bbox_inches="tight",
                      transparent=True, format="pdf")
+    else:
+        # if not correction_table_available use a simpler layout with the legend
+        # inside the plot and no right margin
+        lgd = ax_corr.legend(handlelength=1.5, loc="upper right")
+        fig_corr.savefig(figure_file_path, transparent=True, format="pdf")
