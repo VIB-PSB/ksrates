@@ -2,6 +2,6 @@
 How to cite us
 ==============
 
-Preprint deposited in bioRxiv:
+If you publish results generated using *ksrates*, please cite:
 
-Sensalari C., Lohaus R. and Maere S. 2021. *ksrates: positioning whole-genome duplications relative to speciation events using rate-adjusted mixed paralog–ortholog KS distributions*. bioRxiv doi: https://doi.org/10.1101/2021.02.28.433234 
+Sensalari C., Maere S. and Lohaus R. (2021) *ksrates*: positioning whole-genome duplications relative to speciation events using rate-adjusted mixed paralog--ortholog  *K*:sub:`S` distributions. *bioRxiv* 2021.02.28.433234 `doi: https://doi.org/10.1101/2021.02.28.433234 <https://doi.org/10.1101/2021.02.28.433234>`__ 
