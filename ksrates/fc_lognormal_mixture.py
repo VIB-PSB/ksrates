@@ -228,7 +228,7 @@ def plot_mixture_model(model, data, max_x_axis_lim, ax, bin_width, scaling, peak
 def lmm(
     fig, max_x_axis_lim, data_type, tsv_file, species, axis, ks_range, 
     components, bins, bin_width_para, max_iter, n_init,
-    output_dir, outfile, parameter_table, datatype, peak_stats, correction_table_available, plot_correction_arrows):
+    output_dir, outfile, parameter_table, datatype_tag, peak_stats, correction_table_available, plot_correction_arrows):
     """
     Modified from wgd code.
 
@@ -251,7 +251,7 @@ def lmm(
     :param output_dir: output folder
     :param outfile: output file for logging details
     :param parameter_table: list collecting the component parameters
-    :param datatype: string for figure title stating if data is paranome or anchors
+    :param datatype_tag: string for figure title stating if data is paranome or anchors
     :param peak_stats: states whether the cluster peak is intended as median or mode
     :param correction_table_available: boolean stating whether the correction results are available or not
     :param plot_correction_arrows: boolean stating whether there will be plotted correction arrows or not
@@ -269,11 +269,11 @@ def lmm(
     # For now, let's not generate the AIC and BIC PDF plots
     # logging.info("Plotting AIC and BIC")
     # plot_aic_bic(aic, bic, components[0], components[1],
-    #                  os.path.join(output_dir, f"lmm_{species}_aic_bic_{datatype}.pdf"))
+    #                  os.path.join(output_dir, f"lmm_{species}_aic_bic_{datatype_tag}.pdf"))
 
     logging.info("Plotting mixtures")
     plot_all_models_gmm(models, deconvoluted_data, ks_range[0], ks_range[1], bins=bins,
-                        out_file=os.path.join(output_dir, f"lmm_{species}_all_models_{datatype}.pdf"))
+                        out_file=os.path.join(output_dir, f"lmm_{species}_all_models_{datatype_tag}.pdf"))
     
     # Plotting the components of the best model on the final picture;
     # Components are scaled up to the size of actual count data and not to density histogram

@@ -176,7 +176,7 @@ def plot_histogram(legend_label, axis, ks_list, bin_list, bin_width, max_ks, bw_
     return hist
 
 
-def plot_histogram_for_anchor_clustering(axis, anchor_ks_list, bin_list, y_max_lim):
+def plot_histogram_for_anchor_clustering(axis, anchor_ks_list, anchors_weights, bin_list, y_max_lim):
     """
     Plots the histogram distribution of the anchor pair Ks list in the mixed plot showing anchor Ks clusters.
 
@@ -185,7 +185,7 @@ def plot_histogram_for_anchor_clustering(axis, anchor_ks_list, bin_list, y_max_l
     :param bin_list: list of the edges of each bin (e.g. [0.0, 0.1, 0.2 ... ]); regulates how many bins are there
                      per tick in the x axis 
     """
-    hist = axis.hist(anchor_ks_list, bins=bin_list, histtype='stepfilled', color=COLOR_ANCHOR_HISTOGRAM,
+    hist = axis.hist(anchor_ks_list, weights=anchors_weights, bins=bin_list, histtype='stepfilled', color=COLOR_ANCHOR_HISTOGRAM,
                      label="All anchor pairs", zorder=-20)
     if y_max_lim is None:
         set_mixed_plot_height(axis, y_max_lim, hist)

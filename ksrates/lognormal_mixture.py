@@ -98,9 +98,9 @@ def lognormal_mixture(config_file, paralog_tsv_file, anchors_ks_tsv_file, correc
     if paranome_analysis:
         with open (os.path.join("rate_adjustment", f"{species}", subfolder, f"lmm_{species}_parameters_paranome.txt"), "w+") as outfile:
             logging.info("Performing lognormal mixture model on whole-paranome Ks distribution")
-            paranome_list, weight_list = fc_extract_ks_list.ks_list_from_tsv(paralog_tsv_file, max_ks_para, "paralogs")
+            paranome_list, paranome_weights = fc_extract_ks_list.ks_list_from_tsv(paralog_tsv_file, max_ks_para, "paralogs")
             hist_paranome = fcPlot.plot_histogram("Whole-paranome (weighted)", axis_para, paranome_list, bin_list, 
-                                        bin_width_para, max_ks_para, kde_bandwidth_modifier, weight_list, plot_kde=False)
+                                        bin_width_para, max_ks_para, kde_bandwidth_modifier, paranome_weights, plot_kde=False)
             # Setting the plot height based on tallest histogram bin
             if y_lim is None:
                 fcPlot.set_mixed_plot_height(axis_para, y_lim, hist_paranome)
@@ -120,12 +120,12 @@ def lognormal_mixture(config_file, paralog_tsv_file, anchors_ks_tsv_file, correc
     if colinearity_analysis:
         with open (os.path.join("rate_adjustment", f"{species}", subfolder, f"lmm_{species}_parameters_anchors.txt"), "w+") as outfile:
             logging.info("Performing lognormal mixture model on anchor pair Ks distribution")
-            anchors_list = fc_extract_ks_list.ks_list_from_tsv(anchors_ks_tsv_file, max_ks_para, "anchor pairs")
+            anchors_list, anchors_weights = fc_extract_ks_list.ks_list_from_tsv(anchors_ks_tsv_file, max_ks_para, "anchor pairs")
             if len(anchors_list) == 0:
                 logging.warning(f"No anchor pairs found! Maybe check your (gene) IDs between "
                                 f"the [*species*.ks_anchors.tsv] file and the [*species*.ks.tsv] files.")
             hist_anchors = fcPlot.plot_histogram("Anchor pairs", axis_colin, anchors_list, bin_list, bin_width_para,
-                                        max_ks_para, kde_bandwidth_modifier, color=COLOR_ANCHOR_HISTOGRAM, plot_kde=False)
+                                        max_ks_para, kde_bandwidth_modifier, anchors_weights, color=COLOR_ANCHOR_HISTOGRAM, plot_kde=False)
             # Setting the plot height based on tallest histogram bin
             if y_lim is None:
                 fcPlot.set_mixed_plot_height(axis_colin, y_lim, hist_anchors)

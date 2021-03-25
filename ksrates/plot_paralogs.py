@@ -96,22 +96,22 @@ def plot_paralogs_distr(config_file, correction_table_file, paralog_tsv_file, an
     fig_corr, ax_corr = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, "corrected", correction_table_available, plot_correction_arrows)
 
     if paranome_analysis:
-        paranome_list, weight_list = fc_extract_ks_list.ks_list_from_tsv(paralog_tsv_file, max_ks_para, "paralogs")
+        paranome_list, paranome_weights = fc_extract_ks_list.ks_list_from_tsv(paralog_tsv_file, max_ks_para, "paralogs")
         hist_paranome = fcPlot.plot_histogram("Whole-paranome (weighted)", ax_uncorr, paranome_list, bin_list, bin_width_para,
-                            max_ks_para, kde_bandwidth_modifier, weight_list)
+                            max_ks_para, kde_bandwidth_modifier, weight_list=paranome_weights)
         fcPlot.plot_histogram("Whole-paranome (weighted)", ax_corr, paranome_list, bin_list, bin_width_para,
-                            max_ks_para, kde_bandwidth_modifier, weight_list)
+                            max_ks_para, kde_bandwidth_modifier, weight_list=paranome_weights)
 
     if colinearity_analysis:
-        anchors_list = fc_extract_ks_list.ks_list_from_tsv(anchors_ks_tsv_file, max_ks_para, "anchor pairs")
+        anchors_list, anchors_weights = fc_extract_ks_list.ks_list_from_tsv(anchors_ks_tsv_file, max_ks_para, "anchor pairs")
         if len(anchors_list) == 0:
             logging.warning(f"No anchor pairs found! Maybe check your (gene) IDs between "
                             f"the [{species}.ks_anchors.tsv] file and the [{species}.ks.tsv] files.")
         # FOR NOW USE AN UNWEIGHTED HISTOGRAM
         hist_anchors = fcPlot.plot_histogram("Anchor pairs", ax_uncorr, anchors_list, bin_list, bin_width_para, max_ks_para,
-                            kde_bandwidth_modifier, color=fcPlot.COLOR_ANCHOR_HISTOGRAM)
+                            kde_bandwidth_modifier, color=fcPlot.COLOR_ANCHOR_HISTOGRAM, weight_list=anchors_weights)
         fcPlot.plot_histogram("Anchor pairs", ax_corr, anchors_list, bin_list, bin_width_para, max_ks_para,
-                            kde_bandwidth_modifier, color=fcPlot.COLOR_ANCHOR_HISTOGRAM)
+                            kde_bandwidth_modifier, color=fcPlot.COLOR_ANCHOR_HISTOGRAM, weight_list=anchors_weights)
 
     # Setting plot height based on tallest histogram (if paranome analysis is on, it will come from that distribution)
     if y_lim is None:

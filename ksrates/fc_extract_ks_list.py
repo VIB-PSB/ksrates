@@ -1,5 +1,5 @@
 from pandas import read_csv
-from numpy import float64
+from numpy import float64, zeros
 
 
 def ks_list_from_tsv(tsv_file, max_ks, data_type):
@@ -16,15 +16,12 @@ def ks_list_from_tsv(tsv_file, max_ks, data_type):
     with open(tsv_file, "r") as tsv_file:
         tsv = read_csv(tsv_file, sep="\t")
 
-    if data_type == "paralogs" or data_type == "orthologs":
-        filtered_tsv = tsv.loc[(tsv["Ks"].dtypes == float64) & (tsv["Ks"] <= max_ks)]
-    elif data_type == "anchor pairs":
-        filtered_tsv = tsv.loc[(tsv["Ks"].dtypes == float64) & (tsv["Ks"] >= 0.05) & (tsv["Ks"] <= max_ks)]
+    filtered_tsv = tsv.loc[(tsv["Ks"].dtypes == float64) & (tsv["Ks"] <= max_ks)]
 
     ks_list_filtered = filtered_tsv["Ks"].to_list()
     weight_list_filtered = filtered_tsv["WeightOutliersExcluded"].to_list()
 
-    if data_type == "paralogs":
+    if data_type == "paralogs" or data_type == "anchor pairs":
         return ks_list_filtered, weight_list_filtered
-    if data_type == "orthologs" or data_type == "anchor pairs":
+    if data_type == "orthologs":
         return ks_list_filtered
