@@ -14,6 +14,7 @@ import ksrates.fc_check_input as fcCheck
 import ksrates.fc_extract_ks_list as fc_extract_ks_list
 from ksrates.utils import init_logging
 from ksrates.fc_cluster_anchors import subfolder
+from ksrates.fc_rrt_correction import _ADJUSTMENT_TABLE
 
 def cluster_anchor_ks(config_file, correction_table_file, path_anchorpoints_txt, path_multiplicons_txt, path_segments_txt, path_list_elements_txt, path_ks_anchor_file, path_multiplicon_pair_txt):
     config = fcConf.Configuration(config_file)
@@ -48,10 +49,10 @@ def cluster_anchor_ks(config_file, correction_table_file, path_anchorpoints_txt,
     consensus_peak_for_multiple_outgroups = config.get_consensus_peak_for_multiple_outgroups()
 
     # Checking user-defined path and / or default path for each required input file
-    default_path_correction_table_file = os.path.join("correction_analysis", f"{species}", f"correction_table_{species}.tsv")
+    default_path_correction_table_file = os.path.join("rate_adjustment", f"{species}", f"{_ADJUSTMENT_TABLE.format(species)}")
     correction_table_file = fcCheck.get_argument_path(correction_table_file, default_path_correction_table_file, "Correction table file")
     if correction_table_file == "":
-        logging.warning("Correction data are not available yet, only anchor pair distribution will be plotted.")
+        logging.warning("Rate-adjustment data are not available yet, only anchor pair distribution will be plotted.")
         correction_table_available = False
     else:
         with open(correction_table_file, "r") as f:
@@ -94,9 +95,9 @@ def cluster_anchor_ks(config_file, correction_table_file, path_anchorpoints_txt,
 
     # Creating folder for secondary output files
     output = os.path.join(subfolder)
-    if not os.path.isdir(os.path.join("correction_analysis", species, output)):
-        logging.info(f"Creating directory [correction_analysis/{species}/{output}]")
-        os.makedirs(os.path.join("correction_analysis", species, output))
+    if not os.path.isdir(os.path.join("rate_adjustment", species, output)):
+        logging.info(f"Creating directory [rate_adjustment/{species}/{output}]")
+        os.makedirs(os.path.join("rate_adjustment", species, output))
 
     # Parsing I-ADHoRe output files to get information about multiplicons, multiplicon levels, segments, anchorpoints, anchor pairs and Ks values. 
     segments_per_multip = fcCluster.parse_segments_file(path_segments_txt)
@@ -111,7 +112,7 @@ def cluster_anchor_ks(config_file, correction_table_file, path_anchorpoints_txt,
 
     anchorpoints_per_multipl, multipl_per_anchorpoint, levels_of_anchorpoints = fcCluster.parse_anchorpoints_file(path_anchorpoints_txt, level_of_each_multipl)
 
-    anchor_ks_list = fc_extract_ks_list.ks_list_from_tsv(path_ks_anchor_file, max_ks_para, "anchor pairs") # Get complete anchor Ks list to be plotted in the background
+    anchor_ks_list, anchors_weights = fc_extract_ks_list.ks_list_from_tsv(path_ks_anchor_file, max_ks_para, "anchor pairs") # Get complete anchor Ks list to be plotted in the background
 
     # -----------------------------------------------------------------------------
 
@@ -281,7 +282,7 @@ def cluster_anchor_ks(config_file, correction_table_file, path_anchorpoints_txt,
     cluster_of_ks, medians_per_cluster, segments_medians_per_cluster, cluster_color_letter_list = fcCluster.get_clusters_of_ks(gmm_clustered_medians, all_medians_list, all_segment_pairs_ks_median, chosen_nonred_segment_pair_ks_list, "first")
 
 
-    logging.info(f"Saving the distribution of clustered medians [{subfolder}/clustered_medians.pdf]")
+    logging.info(f"Saving the distribution of clustered medians [{subfolder}/{fcCluster._ANCHOR_CLUSTERS_MEDIANS.format(species)}]")
     # Plot the clusters of medians according to the used method
     fcCluster.plot_clusters_of_medians(medians_per_cluster, cluster_color_letter_list, x_max_lim, bin_list, species, latin_name, output)
 
@@ -291,8 +292,8 @@ def cluster_anchor_ks(config_file, correction_table_file, path_anchorpoints_txt,
     fig_uncorr_first, ax_uncorr_first = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_max_lim, "un-corrected", correction_table_available, plot_correction_arrows)
 
     # Plot the original complete anchor distribution in the background
-    fcPlot.plot_histogram_for_anchor_clustering(ax_corr_first, anchor_ks_list, bin_list, y_max_lim)
-    fcPlot.plot_histogram_for_anchor_clustering(ax_uncorr_first, anchor_ks_list, bin_list, y_max_lim)
+    fcPlot.plot_histogram_for_anchor_clustering(ax_corr_first, anchor_ks_list, anchors_weights, bin_list, y_max_lim)
+    fcPlot.plot_histogram_for_anchor_clustering(ax_uncorr_first, anchor_ks_list, anchors_weights, bin_list, y_max_lim)
 
     # Plot the clusters of anchor Ks and on top of them their KDEs
     clusters_sorted_by_median, cluster_color_letter_list = fcCluster.plot_clusters(ax_corr_first, cluster_of_ks, bin_width, max_ks_para, peak_stats, correction_table_available, plot_correction_arrows)
@@ -319,7 +320,7 @@ def cluster_anchor_ks(config_file, correction_table_file, path_anchorpoints_txt,
         logging.info("All clusters were retained")
 
         # Saving the first plot with the final name (leaving away "unfiltered")
-        logging.info(f"Saving mixed Ks plot with anchor Ks clusters [mixed_{species}_anchor_clusters.pdf]")
+        logging.info(f"Saving mixed Ks plot with anchor Ks clusters [{fcCluster._ANCHOR_CLUSTERS_FILTERED.format(species)}]")
         fcCluster.save_anchor_cluster_plot(fig_corr_first, fig_uncorr_first, ax_corr_first, ax_uncorr_first, species, latin_names, correction_table_available, cluster_of_ks, output, "second")
         logging.info("")
 
@@ -328,7 +329,7 @@ def cluster_anchor_ks(config_file, correction_table_file, path_anchorpoints_txt,
         logging.info("")
 
     else: # if one ore more clusters were removed
-        logging.info(f"Saving mixed Ks plot with unfiltered anchor Ks clusters [mixed_{species}_anchor_clusters_unfiltered.pdf]")
+        logging.info(f"Saving mixed Ks plot with unfiltered anchor Ks clusters [{fcCluster._ANCHOR_CLUSTERS_UNFILTERED.format(species)}]")
         fcCluster.save_anchor_cluster_plot(fig_corr_first, fig_uncorr_first, ax_corr_first, ax_uncorr_first, species, latin_names, correction_table_available, cluster_of_ks, output, "first")
         logging.info("")
 
@@ -360,8 +361,8 @@ def cluster_anchor_ks(config_file, correction_table_file, path_anchorpoints_txt,
         fig_uncorr_second, ax_uncorr_second = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_max_lim, "un-corrected", correction_table_available, plot_correction_arrows)
         
         # Plot the original complete anchor distribution in the background
-        fcPlot.plot_histogram_for_anchor_clustering(ax_corr_second, anchor_ks_list, bin_list, y_max_lim)
-        fcPlot.plot_histogram_for_anchor_clustering(ax_uncorr_second, anchor_ks_list, bin_list, y_max_lim)
+        fcPlot.plot_histogram_for_anchor_clustering(ax_corr_second, anchor_ks_list, anchors_weights, bin_list, y_max_lim)
+        fcPlot.plot_histogram_for_anchor_clustering(ax_uncorr_second, anchor_ks_list, anchors_weights, bin_list, y_max_lim)
 
         # Plot the clusters of anchor Ks and on top of them their KDEs
         fcCluster.plot_clusters(ax_corr_second, filtered_cluster_of_ks, bin_width, max_ks_para, peak_stats, correction_table_available, plot_correction_arrows)
@@ -373,7 +374,7 @@ def cluster_anchor_ks(config_file, correction_table_file, path_anchorpoints_txt,
             fcPlot.plot_divergences(correction_table, peak_stats, consensus_peak_for_multiple_outgroups, ax_uncorr_second,
                                     ax_corr_second, color_list, plot_correction_arrows)
 
-        logging.info(f"Saving mixed Ks plot with filtered anchor Ks clusters [mixed_{species}_anchor_clusters.pdf]")
+        logging.info(f"Saving mixed Ks plot with filtered anchor Ks clusters [{fcCluster._ANCHOR_CLUSTERS_FILTERED.format(species)}]")
         logging.info("")
         fcCluster.save_anchor_cluster_plot(fig_corr_second, fig_uncorr_second, ax_corr_second, ax_uncorr_second, species, latin_names, correction_table_available, filtered_cluster_of_ks, output, "second")
 

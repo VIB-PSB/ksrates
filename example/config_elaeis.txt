@@ -1,6 +1,6 @@
 [SPECIES]
-species = elaeis
-# informal name of the species of interest from the input tree
+focal_species = elaeis
+# informal name of the focal species from the input tree
 
 newick_tree = ((elaeis, oryza), asparagus);
 # input phylogenetic tree in newick format; use the informal names
@@ -9,7 +9,7 @@ latin_names = elaeis: Elaeis guineensis, oryza: Oryza sativa, asparagus: Asparag
 # informal names associated to their latin name through a colon and separated by comma
 
 fasta_filenames =  elaeis:elaeis.fasta, oryza: oryza.fasta, asparagus: asparagus.fasta
-gff_filenames = elaeis: elaeis.gff3
+gff_filename = elaeis.gff3
 # informal names associated to their filename/path through a colon and separated by comma
 
 peak_database_path = ortholog_peak_db.tsv
@@ -45,7 +45,7 @@ bin_width_para = 0.1
 y_axis_limit_paralogs_plot = None
 # highest value of the y axis in the mixed distribution plot  (default: none)
 
-num_iterations = 200
+num_bootstrap_iterations = 200
 # number of bootstrap iterations for ortholog peak estimate
 
 divergence_colors =  Red, MediumBlue, Goldenrod, Crimson, ForestGreen, Gray, SaddleBrown, Black

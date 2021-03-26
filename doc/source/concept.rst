@@ -4,18 +4,12 @@
 Substitution rate-adjustment strategy in a nutshell
 ===================================================
 
-``ksrates`` is a package for substitution rate-adjustment in mixed ortholog and paralog *K*:sub:`S` distributions.
+To position ancient whole-genome duplication (WGD) events with respect to speciation events in a phylogeny, it is common practice to superimpose a paralog *K*:sub:`S` distribution for a species of interest with ortholog *K*:sub:`S` distributions between this species and other species, resulting in a mixed paralog--ortholog *K*:sub:`S` plot. 
+However, when the lineages involved exhibit different substitution rates, the various *K*:sub:`S` distributions are built on different *K*:sub:`S` scales and a direct comparison among them is likely to mislead the phylogenetic interpretation of WGD signatures or order of divergences.
 
-Mixed *K*:sub:`S` distributions are one of the approaches applied to detect whole-genome duplications (WGDs) and to locate them in a phylogeny. A mixed plot is composed of ortholog *K*:sub:`S` distributions - representing divergence events - overlapped onto paralog *K*:sub:`S` distributions - representing the duplication history of a species genome. The relative positions of the ortholog peaks and the WGDs peaks are informative about the order of the depicted evolutionary events, allowing to place the occurrence of a WGDs in a specific branch of the evolutionary history of the species.
+*ksrates* is an open-source tool offering a rate-adjustment strategy that brings all the distributions to a common *K*:sub:`S` scale by compensating for the differences in synonymous substitution rates relative to the species of interest, the focal species. The final mixed plot produced by *ksrates* features rate-adjusted positions of the ortholog *K*:sub:`S` estimates of species divergence times that help to clarify the phylogenetic placement of WGDs inferred in the focal species.
 
-The reliability of a mixed plot can be jeopardized in case of (remarkable) substitution rate differences between the involved species. In fact, since the *K*:sub:`S` value of a homolog pair depends on the substitution rate of the species, different distributions end up to be built on different *K*:sub:`S` scales. A direct overlap of distributions is therefore likely to lead to unreliable interpretations.
-
-The *K*:sub:`S` rate-adjustment package offers an adjustment procedure that brings all the distributions to a common *K*:sub:`S` scale by compensating for the substitution rate differences relatively to one "main" species. 
-The rate-adjusted mixed plot obtained through ``ksrates`` is composed of a) a single paralog distribution coming from the main species and b) one or more ortholog distributions between the main species and the another species. The analysis is thus focused on the genome duplication history of the main species in the context of its evolutionary history with the other species. 
-
-The rate-adjustment is applied to all the ortholog distributions. For each ortholog distribution, principles from the relative rate test (RRT) are used to detect the relative rates between the main species and the other species. During the rate-adjustment, the ortholog *K*:sub:`S`  peak is re-encoded as twice the relative rate of the main species, so that the age of the ortholog distribution is adapted to the *K*:sub:`S` scale of the paralog distribution. At the end, all ortholog distributions are seen from the perspective of the main species rate.
-The rate-adjustment generates horizontal shifts of the ortholog distribution peak towards left if the main species is slower than the other species, or towards right if it is faster. The new disposition of the divergence events can lead to a different and more reliable interpretation of WGD placement or of the order of the divergences themselves.
-For more details about the rate-adjustment strategy, see [...].
+For more detail about the methodology, please see our `preprint <https://www.biorxiv.org/content/10.1101/2021.02.28.433234v1>`__.
 
 
 .. _`explained_example`:
@@ -23,24 +17,35 @@ For more details about the rate-adjustment strategy, see [...].
 Explained example
 =================
 
-This example studies the phylogenetic placement of WGD signatures present in oil palm (*Elaeis guineensis*) paralog distribution. The rate-adjustment pipeline needs a input phylogenetic tree and the sequence data of all involved species. The minimum input tree is composed by the focal species (palm), another species (rice) and their outgroup (asparagus): ``((palm, rice)), asparagus)``. 
-..  The mixed plot will show the palm paralog distribution overlapped with the rate-adjusted ortholog distributions involving palm and the other species in the input tree.
+In this explained example use case the phylogenetic placement of WGD signatures present in oil palm's (*Elaeis guineensis*) paralog *K*:sub:`S` distribution is studied. This is done in the context of a small monocot phylogeny composed of the focal species (oil palm), *Oryza sativa* (rice) and *Asparagus officinalis* (asparagus) as their outgroup. The input tree in Newick format for this phylogeny is: ``((palm, rice)), asparagus)``. From the evolutionary perspective of oil palm there are two species divergence nodes: palm--rice and palm--asparagus.
 
-From the perspective of palm history there are two divergence events (i.e. ortholog distributions) in this tree, namely palm-rice and palm-asparagus. The pipeline breaks down the tree into *trios* composed by the species pair of a ortholog distribution and an outgroup used for its rate-adjustment. The example tree gives only one trio, "palm, rice, asparagus", where palm-rice divergence is rate-adjusted with outgroup asparagus. Palm-asparagus divergence has instead no outgroup in this tree and will be ignored; to avoid this, add another outgroup to the phylogeny, e.g. ``(((palm, rice), asparagus), spirodela)``. The user can also decide to perform multiple rate-adjustments for a divergence if the tree structure allows it: for example in this latter tree palm-rice can be rate-adjusted both with asparagus and spirodela (*Spirodela polyrhiza*).
-
-Further on, the pipeline breaks down the trios into the three possible species pairs they are composed of, which in this case are palm-rice, palm-asparagus and rice-asparagus. ``wgd`` package then estimates the ortholog *K*:sub:`S` distribution for each of them. The ortholog distributions are simplified to a vertical line centered on their peak value (Figure 1).
-
-.. figure:: _images/ortholog_distribution_peak.svg
+.. figure:: _images/tree.svg
     :align: center
-    :width: 350
+    :width: 250
+    :alt: Input phylogenetic tree composed by oil palm, rice and asparagus as the outgroup.
 
-    The ortholog distribution for palm and rice is approximated to its mode (1.53 *K*:sub:`S`).
-    
-The RRT uses the *K*:sub:`S` values of the three ortholog peaks to compute the relative rates of the divergent pair: palm has a relative rate of about 0.36 while rice of 1.17, therefore palm accumulates substitution much more slowly than rice. Lastly, the rate-adjustment reinterprets the ortholog *K*:sub:`S` peak of palm-rice by encoding it as twice the relative rate of palm (*K*:sub:`S`' = 0.73). The ortholog peak has therefore been largely shifted to the left from 1.53 to 0.73 *K*:sub:`S` (Figure 2), and it is now adapted to the slow scale of palm paralog distribution. The shift has important consequences in the interpretation of the mixed plot concerning the older WGD signal around 0.9 *K*:sub:`S`.
+The detection of substitution rate differences among lineages and the decomposition of ortholog *K*:sub:`S` mode estimates into branch-specific contributions use methodology similar to relative rate testing and requires the help of an outgroup species.
+Therefore, *ksrates* breaks down the input tree into *trios* composed of the focal species, a diverged species and an outgroup species. The input tree in this examples defines only one such trio, ``palm, rice, asparagus``. Here the ortholog *K*:sub:`S` distribution of the palm--rice species divergence (or more specifically, its mode) will be rate-adjusted using asparagus as an outgroup.
+
+.. note ::
+    The palm--asparagus divergence has no outgroup in this tree and thus can't be rate adjusted; to be able to do so one would need to extend the phylogeny with one additional species that can function as their outgroup, e.g. *Spirodela polyrhiza*: ``(((palm, rice), asparagus), spirodela)``. 
+    By default, if more than one outgroup is available for a species pair, multiple rate-adjustments are performed and the mean among them is taken as consensus. For example, in the extended tree palm--rice would be adjusted both with ``asparagus`` and ``spirodela`` as the outgroup.
+
+The three ortholog *K*:sub:`S` distributions obtained from the ``palm, rice, asparagus`` trio are approximated to their estimated mode with associated standard deviation (Figure 1; for more details please refer to the `Supplementary Materials <https://www.biorxiv.org/content/10.1101/2021.02.28.433234v1.supplementary-material>`__ of our preprint).
+
+.. figure:: _images/orthologs_distribution_trio.svg
+    :align: center
+    :width: 800
+
+    Figure 1: The three ortholog *K*:sub:`S` distributions for the ``palm, rice, asparagus`` trio. Their estimated mean mode is indicated by a black vertical line. A thin colored box ranges from one standard deviation (sd) below to one sd above the mean mode estimate.
+
+Using methodology similar to relative rate testing the ortholog *K*:sub:`S` mode estimate between palm and rice (*K*:sub:`S`\=\1.53) is decomposed into the two branch-specific *K*:sub:`S` contributions: the palm branch contributes a low *K*:sub:`S` of 0.365 while the rice branch contributes a *K*:sub:`S` of 1.17. The considerable difference between them suggests that palm has a much lower synonymous substitution rate than rice.
+
+The ortholog *K*:sub:`S` mode estimate of palm--rice is then rate adjusted by rescaling it to twice the contribution of the palm branch (*K*:sub:`S` --> 2 * 0.365 = 0.73). The position of the (mode) divergence line thus largely shifts towards the left from *K*:sub:`S`\=\1.53 to *K*:sub:`S`\=\0.73 (Figure 2)---it is now rate-adjusted to the *K*:sub:`S` scale of the paralog *K*:sub:`S` distribution of oil palm and shifted to the other side of the second visible WGD peak.
+The rate-adjusted mixed plot offers a different interpretation for the phylogenetic placement of the older WGD signature (located at a *K*:sub:`S` of around 0.9) than a naive mixed plot would: instead of suggesting the WGD to be a palm-specific event it is now suggested to be an event shared by both rice and palm. This would be consistent with the previously proposed monocot *tau* WGD event.
 
 .. figure:: _images/mixed_palm_corrected.svg
     :align: center
     :width: 800
 
-    The ortholog distribution peak (red line) has been shifted towards left after rate-adjustment, as highlighted by the red arrows starting from the original position and pointing at the new rate-adjusted position. 
-
+    Figure 2: Rate-adjusted mixed paralog--ortholog *K*:sub:`S` plot. The rate-adjusted ortholog *K*:sub:`S` estimate for oil palm and rice (red vertical line) is superimposed on the paralog *K*:sub:`S` distribution of oil palm. The vertical line has been shifted towards the left to the other side of the second WGD peak, as indicated by the red arrow below the plot.

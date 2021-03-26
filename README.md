@@ -161,7 +161,7 @@ Show usage and all available `COMMAND`s and `OPTIONS`:
 
 	ksrates -h
 
-Generate a template configuration file for a focal species (name):
+Generate a template configuration file for the focal species:
 
 	ksrates generate-config config_elaeis.txt
 

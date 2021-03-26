@@ -98,13 +98,13 @@ class Configuration:
 
     def get_species(self):
         """
-        Gets the config file field of the name of the species of interest.
-        The species of interest is one of the leaves of the input tree and is the one\\
-        whose paralog distribution is plotted and which the correction will be relative to. 
+        Gets the config file field of the name of the focal species.
+        The focal species is one of the leaves of the input tree and is the one\\
+        whose paralog distribution is plotted and which the rate-adjustment will be relative to. 
 
         :return species: informal species name 
         """
-        species = self.config.get("SPECIES", "species")
+        species = self.config.get("SPECIES", "focal_species")
         return species
 
     def get_newick_tree(self):
@@ -126,10 +126,32 @@ class Configuration:
             logging.error("Unrecognized format for parameter newick_tree in configuration file (for example, parentheses do not match)")
             sys.exit(1)
 
+    def check_complete_latin_names_dict(self, dictionary):
+        """
+        Checks if a dictionary field from latin_names contains all the species present in the Newick tree. 
+        If one or more species are missing, it exits.
+
+        :param dictionary: the dictionary coming from latin_names
+        """
+        all_leaves = []
+        for leaf in self.get_newick_tree().get_leaves():
+            all_leaves.append(leaf.name)
+        missing_species = list(set.difference(set(all_leaves), set(dictionary.keys())))
+        if len(missing_species) != 0:
+            if len(missing_species) == 1:
+                logging.error(f"The following species is missing from the [latin_names] configuration file field:")
+            else:
+                logging.error(f"The following species are missing from the [latin_names] configuration file field:")
+            for missing_name in missing_species:
+                logging.error(f" - {missing_name}")
+            
+            logging.error(f"Please add the missing information and restart the analysis.")
+            logging.error("Exiting.")
+            sys.exit(1)
 
     def get_latin_names(self):
         """
-        Gets the config file field of the dictionary that associates the informal species name to its latin (scientific) name.
+        Gets the config file field of the dictionary that associates the informal species name to its latin (scientific) name.                                      
 
         :return latin_names_dict: python dictionary
         """
@@ -137,8 +159,11 @@ class Configuration:
         if latin_names != "":
             latin_names_dict = self._get_clean_dict_stringent(latin_names, "latin_names")
         else:
-            logging.warning("Latin names field in configuration file is empty.")
-            latin_names_dict = {}
+            logging.error("Configuration file field [latin_names] is empty, please fill in and restart the analysis.")
+            logging.error("Exiting.")
+            sys.exit(1)
+        # Check if latin_names contains all the species present in the Newick tree; if not, exits
+        self.check_complete_latin_names_dict(latin_names_dict)
         return latin_names_dict
 
     def get_ortho_db(self):
@@ -173,7 +198,7 @@ class Configuration:
         if fasta_names_string != "":
             fasta_names_dict = self._get_clean_dict(fasta_names_string, "FASTA file")
         else:
-            logging.warning("Empty string in FASTA filename field in configuration file.")
+            logging.warning("Configuration file field [fasta_filenames] is empty.")
             fasta_names_dict = {}
         return fasta_names_dict
 
@@ -186,50 +211,28 @@ class Configuration:
         :param species: the species informal name
         :return: the FASTA file path
         """
-        if fasta_dict == {}:
-            logging.warning(f"Default FASTA filename applied for {species} ({species}.fasta)")
-            fasta = f"{species}.fasta"   # fallback name   
-        else:
+        if species in fasta_dict:
             if fasta_dict[species] != "": # if the fasta filename is an acceptable string (not empty)
                 fasta = fasta_dict[species]
             else:
-                logging.warning(f"FASTA filename for {species} not found in configuration file; default one applied ({species}.fasta)")
-                fasta = f"{species}.fasta"   # fallback name
+                logging.warning(f"FASTA filename for {species} not found in configuration file; assuming default one ({species}.fasta)")
+                fasta = f"{species}.fasta"  # fallback name
+        else:  # if species is missing from fasta_dict
+            logging.warning(f"FASTA filename for {species} not found in configuration file; assuming default one ({species}.fasta)")
+            fasta = f"{species}.fasta"  # fallback name 
         return fasta
 
-    def get_gff_dict(self, warn_empty_dict=True):
+    def get_gff(self, species):
         """
-        Gets the config file field of the dictionary that associates the informal species names to the their GFF files.
+        Gets the config file field of the focal species's GFF file.
 
-        :return gff_names_dict: python dictionary
+        :species: focal species
+        :return gff: GFF filename
         """
-        gff_names_string = self.config.get("SPECIES", "gff_filenames")
-        if gff_names_string != "":
-            gff_names_dict = self._get_clean_dict(gff_names_string, "GFF file")
-        else:
-            if warn_empty_dict == True:
-                logging.warning("Empty string in GFF filename field in configuration file.")
-            gff_names_dict = {}
-        return gff_names_dict
-
-    def get_gff_name(self, gff_dict, species):
-        """
-        Gets the path to the GFF file of the species of interest from the dictionary.
-        If the value is an empty string, it applies the fallback filename "species + .gff".
-
-        :param fasta_dict: Python dictionary that associates each informal species name to the path of its FASTA file 
-        :param species: the informal name of the species of interest
-        :return: the GFF file path
-        """
-        if gff_dict == {}:
-            logging.warning(f"Default GFF filename applied for {species} ({species}.gff)")
-            gff = f"{species}.gff"   # fallback name   
-        else:
-            if species in gff_dict and gff_dict[species] != "": # if the gff filename is an acceptable string (not empty)
-                gff = gff_dict[species]
-            else:
-                logging.warning(f"GFF filename for {species} not found in configuration file; default one applied ({species}.gff)")
-                gff = f"{species}.gff"   # fallback name
+        gff = self.config.get("SPECIES", "gff_filename")
+        if gff == "":
+            logging.warning(f"GFF filename for focal species [{species}] not found in configuration file; assuming default one ({species}.gff)")
+            gff = f"{species}.gff"   # fallback name
         return gff
 
     def get_feature(self):
@@ -303,7 +306,7 @@ class Configuration:
 
     def get_paranome(self):
         """
-        Gets the config file field specifying if the mixed distribution will show or not the whole-paranome of the species of interest.
+        Gets the config file field specifying if the mixed distribution will show the whole-paranome of the focal species or not.
 
         :return boolean: flags whether the paranome analysis is required
         """
@@ -318,7 +321,7 @@ class Configuration:
 
     def get_colinearity(self):
         """
-        Gets the config file field specifying if the mixed distribution will show or not the anchor pairs of the species of interest.
+        Gets the config file field specifying if the mixed distribution will show the anchor pairs of the focal species or not.
 
         :return boolean: flags whether the colinearity analysis is required
         """
@@ -376,7 +379,7 @@ class Configuration:
 
         :return n_inter: integer
         """
-        n_iter = int(self.config.get("PARAMETERS", "num_iterations"))
+        n_iter = int(self.config.get("PARAMETERS", "num_bootstrap_iterations"))
         return n_iter
 
     def get_bin_width_para(self):
@@ -433,7 +436,7 @@ class Configuration:
         Gets the config file field of the color list for the divergence lines.
         All the divergence lines coming from the same divergence node in the tree share the
         same color. The first color of the list is assigned to the first internal node 
-        encountered when going from the species of interest leaf up to the root. The second color 
+        encountered when going from the focal species leaf up to the root. The second color 
         is assigned to the second internal node encountered along this path, and so on.
         There must be at least as many colors as the number of divergence nodes.
 
@@ -478,12 +481,11 @@ class Configuration:
         """
         if self.expert_config is not None:
             try:
-                peak_stats = self.expert_config.get("EXPERT PARAMETERS", "peak_stats").lower()
+                peak_stats = self.expert_config.get("EXPERT PARAMETERS", "distribution_peak_estimate").lower()
                 if peak_stats != "mode" and peak_stats != "median":
-                    logging.warning(f'Unrecognized field in expert configuration file [peak_stats = {peak_stats}]. Please choose between "mode" and "median". Default choice will be applied [mode]')
+                    logging.warning(f'Unrecognized field in expert configuration file [distribution_peak_estimate = {peak_stats}]. Please choose between "mode" and "median". Default choice will be applied [mode]')
                     peak_stats = "mode"
             except Exception:
-                logging.warning(f'Missing field in expert configuration file [peak_stats]. Please choose between "mode" and "median". Default choice will be applied [mode]')
                 peak_stats = "mode"     
         else:
             peak_stats = "mode"
@@ -499,9 +501,9 @@ class Configuration:
         """
         if self.expert_config is not None:
             try:
-                correction_arrows = self.expert_config.get("EXPERT PARAMETERS", "plot_correction_arrows").lower()
+                correction_arrows = self.expert_config.get("EXPERT PARAMETERS", "plot_adjustment_arrows").lower()
                 if correction_arrows not in ["yes", "no"]:
-                    logging.warning(f'Unrecognized field in expert configuration file [correction_arrows = {correction_arrows}]. Please choose between "yes" and "no". Default choice will be applied [no]')
+                    logging.warning(f'Unrecognized field in expert configuration file [plot_adjustment_arrows = {correction_arrows}]. Please choose between "yes" and "no". Default choice will be applied [no]')
                     correction_arrows = False
                 else:
                     if correction_arrows == "yes":
@@ -509,7 +511,7 @@ class Configuration:
                     elif correction_arrows == "no":
                         correction_arrows = False
             except Exception:
-                logging.warning(f'Missing field in expert configuration file [correction_arrows]. Please choose between "yes" and "no". Default choice will be applied [no]')
+                logging.warning(f'Missing field in expert configuration file [plot_adjustment_arrows]. Please choose between "yes" and "no". Default choice will be applied [no]')
                 correction_arrows = False
         else:
             correction_arrows = False
@@ -690,27 +692,27 @@ class Configuration:
         Ks coordinate where the paralog distribution starts showing only a flat right tail
         without any WGM trace. Species with low substitution rates are likely to have 
         visible signals only up around 3 Ks, thus this parameter makes sure that the mixture model
-        is performed only on the relative range 0-to-3 Ks. Species with fast rates are instead
+        is performed only on the relative range 0-to-3 Ks. Species with high rates are instead
         likely to have some signal up to a higher Ks, such as 5 Ks. It is not advised to
         set this parameter at more than 5 Ks since high Ks are not reliable.
         [Default: 5].
 
         :param max_ks_para: maximum paralog Ks accepted in the analysis
-        :return max_ks_for_mixture_model: number of times that the expectation-maximization
+        :return max_ks_EM: number of times that the expectation-maximization
         algorithm is initialized
         """
         if self.expert_config is not None:
             try:
-                max_ks_EM = self.expert_config.get("EXPERT PARAMETERS", "max_ks_for_mixture_model")
+                max_ks_EM = self.expert_config.get("EXPERT PARAMETERS", "max_mixture_model_ks")
                 try:
                     max_ks_EM = literal_eval(max_ks_EM)
                 except Exception:
                     pass
                 if (not isinstance(max_ks_EM, int) and not isinstance(max_ks_EM, float)) or max_ks_EM <= 0:
-                    logging.warning(f'Unrecognized field in expert configuration file [max_ks_for_mixture_model = {max_ks_EM}]. Please enter a positive integer or float. Default choice will be applied [5]')
+                    logging.warning(f'Unrecognized field in expert configuration file [max_mixture_model_ks = {max_ks_EM}]. Please enter a positive integer or float. Default choice will be applied [5]')
                     max_ks_EM = 5
             except Exception:
-                logging.warning(f'Missing field in expert configuration file [max_ks_for_mixture_model]. Please enter a positive integer or float. Default choice will be applied [5]')
+                logging.warning(f'Missing field in expert configuration file [max_mixture_model_ks]. Please enter a positive integer or float. Default choice will be applied [5]')
                 max_ks_EM = 5
         else:
             max_ks_EM = 5

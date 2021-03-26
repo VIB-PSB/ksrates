@@ -2,7 +2,7 @@ click
 numpy
 scipy
 seaborn
-matplotlib
+matplotlib>=3.3.3
 configparser
 ete3
 pandas

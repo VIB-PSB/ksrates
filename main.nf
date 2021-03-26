@@ -22,8 +22,8 @@ configfile = file(params.config)
 
 log.info ""
 log.info """\
-         K S  R A T E  C O R R E C T I O N  -  N F   P I P E L I N E
-         -----------------------------------------------------------
+         K S R A T E S   -   N E X T F L O W   P I P E L I N E
+         -----------------------------------------------------
          
          Configuration file:                    $params.config
          Logs folder:                           logs_${workflow.sessionId.toString().substring(0,8)}
@@ -77,7 +77,7 @@ process checkConfig {
     if [ ! -f ${config} ]; then
         echo "Configuration file [${config}] not found: it will be now generated"
         echo "Please fill in with the required parameters:"
-        echo "species, newick_tree, latin_names, fasta_filenames and if applicable gff_filenames, gff_feature and gff_attribute"
+        echo "species, newick_tree, latin_names, fasta_filenames and if applicable gff_filename, gff_feature and gff_attribute"
         echo "Then rerun the Nextflow pipeline."
         ksrates generate-config ${config} >> \$processDir/generate_config.txt
         trigger_pipeline=false
@@ -108,9 +108,9 @@ if (LOG) {
 
 /* 
  * Process that extracts from the input tree the ortholog trios and
- * the ortholog species pairs used for the rate-correction.
+ * the ortholog species pairs used for the rate-adjustment.
  */
-process setupCorrection {
+process setupAdjustment {
 
     executor 'local'
     maxForks 1
@@ -120,7 +120,7 @@ process setupCorrection {
         val trigger_pipeline from trigger_setupCorrection_channel
 
     output:
-        stdout outsetupCorrection
+        stdout outsetupAdjustment
         env species into species_channel
         env logs_folder into logs_folder_channel
         file "ortholog_pairs_*.tsv" into check_ortholog_pairs_channel
@@ -131,7 +131,7 @@ process setupCorrection {
 
     script:
     if (LOG) {
-        log.info "Process setupCorrection (${task.index}) has " +\
+        log.info "Process setupAdjustment (${task.index}) has " +\
                  "${task.cpus} ${ task.cpus == 1 ? 'CPU' : 'CPUs' } available."
     }
     """
@@ -140,38 +140,38 @@ process setupCorrection {
     processDir=\$PWD
     cd $PWD
 
-    species=`grep "^[[:space:]]*species[[:space:]]*=" ${config} | cut -d "=" -f 2 | xargs`
+    species=`grep "^[[:space:]]*focal_species[[:space:]]*=" ${config} | cut -d "=" -f 2 | xargs`
 
     # Generating folders for output files, especially to have the log_folder since the very beginning
-    if [ ! -d correction_analysis ]; then
-        mkdir correction_analysis
+    if [ ! -d rate_adjustment ]; then
+        mkdir rate_adjustment
     fi
-    if [ ! -d correction_analysis/\$species ]; then
-        mkdir correction_analysis/\$species
+    if [ ! -d rate_adjustment/\$species ]; then
+        mkdir rate_adjustment/\$species
     fi    
     workID=`echo ${workflow.sessionId} | cut -c1-8`
-    if [ ! -d correction_analysis/\$species/logs_\$workID ]; then
-        mkdir correction_analysis/\$species/logs_\$workID
+    if [ ! -d rate_adjustment/\$species/logs_\$workID ]; then
+        mkdir rate_adjustment/\$species/logs_\$workID
     fi
-    logs_folder="correction_analysis/\$species/logs_\$workID"
+    logs_folder="rate_adjustment/\$species/logs_\$workID"
 
 
     echo "[\$species] Extracting ortholog pairs from Newick tree"
-    echo "NF internal work directory for [setupCorrection] process:\n\$processDir\n" > \${logs_folder}/setup_correction.log
+    echo "NF internal work directory for [setupAdjustment] process:\n\$processDir\n" > \${logs_folder}/setup_adjustment.log
 
-    ksrates init ${config} --nextflow >> \${logs_folder}/setup_correction.log 2>&1
-    cat correction_analysis/\$species/ortholog_pairs_\${species}.tsv > \${processDir}/ortholog_pairs_\${species}.tsv
+    ksrates init ${config} --nextflow >> \${logs_folder}/setup_adjustment.log 2>&1
+    cat rate_adjustment/\$species/ortholog_pairs_\${species}.tsv > \${processDir}/ortholog_pairs_\${species}.tsv
 
     # If all the ortholog data are present in the databases, already trigger plotOrthologs to plot the ortholog distributions
-    if [ -z "`tail -n +2 correction_analysis/\$species/ortholog_pairs_\${species}.tsv`" ]; then    # if file size NOT greater than 0, so if the file is empty and there aren't unknown pairs
+    if [ -z "`tail -n +2 rate_adjustment/\$species/ortholog_pairs_\${species}.tsv`" ]; then    # if file size NOT greater than 0, so if the file is empty and there aren't unknown pairs
         trigger_plot_orthologs=true
     else
-        echo "Ortholog data in DB and / or TSV files not present for one or more species pair required for correction"
+        echo "Ortholog data in DB and / or TSV files not present for one or more species pair required for rate-adjustment"
         echo "Ortholog Ks analysis is scheduled"
-        echo "The species pair list can be found in [correction_analysis/\$species/ortholog_pairs_\${species}.tsv]"
+        echo "The species pair list can be found in [rate_adjustment/\$species/ortholog_pairs_\${species}.tsv]"
     fi
 
-    echo "[\$species] log can be found in: \${logs_folder}/setup_correction.log"
+    echo "[\$species] log can be found in: \${logs_folder}/setup_adjustment.log"
     
     cd \$processDir
     """
@@ -179,15 +179,15 @@ process setupCorrection {
 
 /*
  * Log output to stdout/console.
- * (output will be logged only after process setupCorrection terminates)
+ * (output will be logged only after process setupAdjustment terminates)
  */
 if (LOG) {
-    outsetupCorrection
+    outsetupAdjustment
         .splitText() {
             if ( it.endsWith("\n") ) {
-                "[setupCorrection] " + it.replace('\n', '')
+                "[setupAdjustment] " + it.replace('\n', '')
             } else {
-                "[setupCorrection] $it"
+                "[setupAdjustment] $it"
             }
         }
         .subscribe { log.info it }
@@ -197,7 +197,7 @@ if (LOG) {
 
 /*
  * Process that checks if the .ks.tsv file containing the paralog Ks values
- * for the species of interest is already present. If not, triggers 
+ * for the focal species is already present. If not, triggers 
  * wgdParalogs for their estimate.
  */ 
 process setParalogAnalysis {
@@ -273,7 +273,7 @@ process setParalogAnalysis {
         echo "[$species] Paralog TSV file(s) already present; skipping paralog wgd pipeline"
         echo "[$species] Paralog TSV file(s) already present; skipping paralog wgd pipeline\n" >> $logs_folder/wgd_paralogs.log
         
-        # Trigger doRateCorrection process to plot (at least) the paralog distribution in the mixed plot
+        # Trigger doRateAdjustment process to plot (at least) the paralog distribution in the mixed plot
         trigger_doRateCorrection_from_para=true
     fi
 
@@ -448,7 +448,7 @@ if (LOG) {
 
 /*
  * Process that estimates the paranome and/or anchor pair Ks values
- * for the species of interest.
+ * for the focal species.
  */
 process wgdParalogs {
 
@@ -601,7 +601,7 @@ if (LOG) {
 
 /*
  * Process that generates figures collecting all the ortholog distributions 
- * used for the correction and that highlights their peaks.
+ * used for the adjustment and that highlights their peaks.
  */
 process plotOrthologDistrib {
 
@@ -619,7 +619,7 @@ process plotOrthologDistrib {
     when:
         trigger == "true" || !trigger.contains("false")
         /*
-         * String "false" or string "true" comes from setupCorrection; to be an accepted trigger must be string "true"
+         * String "false" or string "true" comes from setupAdjustment; to be an accepted trigger must be string "true"
          * [true, many true] comes from trigger_plotOrtholog_from_estimatePeak_together_with_wgdOrthologs_channel.merge(trigger_plotOrtholog_from_wgdOrtholog_together_with_estimatePeak_channel.collect()
          *    it is always a trigger because it always doesn't contain the string "false"
          * ["false"/"true", many true] from trigger_plotOrthologs_together_with_wgdOrtholog_channel.merge(trigger_plotOrtholog_from_wgdOrtholog_channel.collect())
@@ -627,7 +627,7 @@ process plotOrthologDistrib {
          * ["false"/"true", many true] from trigger_plotOrthologs_together_with_estimatePeak_channel.merge(trigger_plotOrtholog_from_estimatePeak_channel)
          *    to be a trigger must be ["true", many true], so it must not contain string "false"
          *
-         * An accepted trigger comes from setupCorrection if all ortholog data are already present and ready to be plotted; from estimatePeak together with wgdOrthologs 
+         * An accepted trigger comes from setupAdjustment if all ortholog data are already present and ready to be plotted; from estimatePeak together with wgdOrthologs 
          * when they have both finished with all the peaks; from setOrthologs and wgdOrthologs after this latter has done with all ortholog distributions;
          * from setOrtholog and estimatePeak when all missing peaks are computed.
          */
@@ -673,10 +673,10 @@ if (LOG) {
 
 
 /*
- * Process that performs the rate-correction and generates the
+ * Process that performs the rate-adjustment and generates the
  * mixed distribution plots.
  */
-process doRateCorrection {
+process doRateAdjustment {
 
     executor 'local'
     maxForks 1
@@ -688,7 +688,7 @@ process doRateCorrection {
         file config from configfile
 
     output:
-        stdout outRateCorrectionAnalysis
+        stdout outRateAdjustmentAnalysis
         val true into trigger_peakCalling_from_doRateCorrection_channel
         val true into trigger_drawTree_from_doRateCorrection_channel
 
@@ -705,12 +705,12 @@ process doRateCorrection {
 
     script:
     if (LOG) {
-        log.info "Process doRateCorrection (${task.index}) will use species $species and has " +\
+        log.info "Process doRateAdjustment (${task.index}) will use species $species and has " +\
                  "${task.cpus} ${ task.cpus == 1 ? 'CPU' : 'CPUs' } available."
     }
     """
     echo "[$species] `date`"
-    echo "[$species] Starting rate correction analysis"
+    echo "[$species] Starting rate-adjustment analysis"
 
     paranome=`grep "^[[:space:]]*paranome[[:space:]]*=" ${config} | cut -d "=" -f 2 | xargs | tr '[:upper:]' '[:lower:]'`
     colinearity=`grep "^[[:space:]]*colinearity[[:space:]]*=" ${config} | cut -d "=" -f 2 | xargs | tr '[:upper:]' '[:lower:]'`
@@ -725,13 +725,13 @@ process doRateCorrection {
     fi
 
     if [ \${missing_paranome} = "true" ] && [ \${missing_anchorpairs} = "true" ]; then
-        echo "[$species] Whole-paranome and anchor pair data do not yet exist -> skipping rate correction analysis"
+        echo "[$species] Whole-paranome and anchor pair data do not yet exist -> skipping rate-adjustment"
     fi
     if [ \${missing_paranome} = "true" ] && [ \${missing_anchorpairs} = "false" ]; then
-        echo "[$species] Whole-paranome data [${species}.ks.tsv] does not yet exist -> skipping rate correction analysis"
+        echo "[$species] Whole-paranome data [${species}.ks.tsv] does not yet exist -> skipping rate-adjustment"
     fi
     if [ \${missing_paranome} = "false" ] && [ \${missing_anchorpairs} = "true" ]; then
-        echo "[$species] Anchor pair data [${species}.ks_anchors.tsv] does not yet exist -> skipping rate correction analysis"
+        echo "[$species] Anchor pair data [${species}.ks_anchors.tsv] does not yet exist -> skipping rate-adjustment"
     fi
     if [ \${missing_paranome} = "true" ] || [ \${missing_anchorpairs} = "true" ]; then
         echo "[$species] Done"
@@ -742,36 +742,36 @@ process doRateCorrection {
     processDir=\$PWD
     cd $PWD
     
-    echo "NF internal work directory for [doRateCorrection (${task.index})] process:\n\$processDir\n" >> $logs_folder/rate_correction.log
+    echo "NF internal work directory for [doRateAdjustment (${task.index})] process:\n\$processDir\n" >> $logs_folder/rate_adjustment.log
 
-    echo "[$species] Performing correction"
-    ksrates orthologs-adjustment ${config} >> $logs_folder/rate_correction.log 2>&1
-    echo "\n" >> $logs_folder/rate_correction.log
+    echo "[$species] Performing rate-adjustment"
+    ksrates orthologs-adjustment ${config} >> $logs_folder/rate_adjustment.log 2>&1
+    echo "\n" >> $logs_folder/rate_adjustment.log
 
     echo "[$species] Plotting mixed distributions"
-    ksrates plot-paralogs ${config} >> $logs_folder/rate_correction.log 2>&1
-    echo "\n" >> $logs_folder/rate_correction.log
+    ksrates plot-paralogs ${config} >> $logs_folder/rate_adjustment.log 2>&1
+    echo "\n" >> $logs_folder/rate_adjustment.log
 
-    echo " \n-----------------------------------------------------------\n" >> $logs_folder/rate_correction.log
+    echo " \n-----------------------------------------------------------\n" >> $logs_folder/rate_adjustment.log
 
     RET_CODE=\$?
     echo "[$species] Done [\${RET_CODE}]"
-    echo "[$species] log can be found in: $logs_folder/rate_correction.log"
+    echo "[$species] log can be found in: $logs_folder/rate_adjustment.log"
     echo "[$species] `date`"
     """
 }
 
 /*
  * Log output to stdout/console.
- * (output will be logged only after process doRateCorrection terminates)
+ * (output will be logged only after process doRateAdjustment terminates)
  */
 if (LOG) {
-    outRateCorrectionAnalysis
+    outRateAdjustmentAnalysis
         .splitText() { 
             if ( it.endsWith("\n") ) {
-                "[doRateCorrection] " + it.replace('\n', '') 
+                "[doRateAdjustment] " + it.replace('\n', '') 
             } else {
-                "[doRateCorrection] $it" 
+                "[doRateAdjustment] $it" 
             }
         }
         .subscribe { log.info it }
@@ -796,8 +796,8 @@ process paralogsAnalyses {
 
     script:
     /*
-     * It is performed only once as last process after all the doRateCorrection's,
-     * when the correction table is certainly complete.
+     * It is performed only once as last process after all the doRateAdjustment's,
+     * when the adjustment table is certainly complete.
      */
     """
     echo "[$species] `date`"
@@ -841,7 +841,7 @@ if (LOG) {
 
 /*
  * Process that plots the input tree with branch length equal to 
- * the relative rates.
+ * the Ks distances.
  */
 process drawTree {
 
@@ -859,22 +859,22 @@ process drawTree {
 
     script:
     /*
-     * It is performed only once as last process after all the doRateCorrection's,
-     * when the correction table is certainly complete.
+     * It is performed only once as last process after all the doRateAdjustment's,
+     * when the adjustment table is certainly complete.
      */
     """
     echo "[$species] `date`"
-    echo "[$species] Plotting tree with branch length proportional to relative rates"
+    echo "[$species] Plotting tree with branch length equal to Ks distances"
 
     processDir=\$PWD
     cd $PWD
-    echo "NF internal work directory for [drawTree (${task.index})] process:\n\$processDir\n" >> $logs_folder/rate_correction.log
+    echo "NF internal work directory for [drawTree (${task.index})] process:\n\$processDir\n" >> $logs_folder/rate_adjustment.log
 
-    ksrates plot-tree ${config} --nextflow >> $logs_folder/rate_correction.log 2>&1
+    ksrates plot-tree ${config} --nextflow >> $logs_folder/rate_adjustment.log 2>&1
 
     RET_CODE=\$?
     echo "[$species] Done [\${RET_CODE}]"
-    echo "[$species] log can be found in: $logs_folder/rate_correction.log"
+    echo "[$species] log can be found in: $logs_folder/rate_adjustment.log"
     echo "[$species] `date`"
     """
 }

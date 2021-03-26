@@ -636,7 +636,7 @@ def ks_analysis_one_vs_one(
     :param n_threads: number of CPU cores to use
     :return: data frame
     """
-    # Filter families with one vs one orthologs for the species of interest. ---
+    # Filter families with one vs one orthologs for the species pair. ---
     orthologs = process_gene_families(orthologs, ignore_prefix=False)
     protein = get_sequences(orthologs, protein_sequences)
 

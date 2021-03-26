@@ -12,6 +12,7 @@ import ksrates.fc_extract_ks_list as fc_extract_ks_list
 import ksrates.fc_lognormal_mixture as fcLMM
 from ksrates.fc_plotting import COLOR_ANCHOR_HISTOGRAM
 from ksrates.fc_cluster_anchors import subfolder
+from ksrates.fc_rrt_correction import _ADJUSTMENT_TABLE
 
 def lognormal_mixture(config_file, paralog_tsv_file, anchors_ks_tsv_file, correction_table_file):
     # INPUT
@@ -26,7 +27,6 @@ def lognormal_mixture(config_file, paralog_tsv_file, anchors_ks_tsv_file, correc
     latinSpecies = latin_names[species]
     species_escape_whitespace = latinSpecies.replace(' ', '\ ')
     max_ks_para = config.get_max_ks_para()
-    latin_names = config.get_latin_names()
     bin_width_para = config.get_bin_width_para()
     bin_list = fcPlot.get_bins(max_ks_para, bin_width_para)
     x_max_lim = config.get_x_max_lim()
@@ -53,7 +53,7 @@ def lognormal_mixture(config_file, paralog_tsv_file, anchors_ks_tsv_file, correc
     logging.info("")
 
     # Creating folder for secondary output files
-    output_dir = os.path.join("correction_analysis", species, subfolder)
+    output_dir = os.path.join("rate_adjustment", species, subfolder)
     if not os.path.isdir(output_dir):
         logging.info(f"Creating directory [{output_dir}]")
         logging.info("")
@@ -61,10 +61,10 @@ def lognormal_mixture(config_file, paralog_tsv_file, anchors_ks_tsv_file, correc
 
     # Get correction results TSV file
     # If correction_table is (still) missing, it will be equal to empty string (""), but the script will not exit
-    default_path_correction_table_file = os.path.join("correction_analysis", f"{species}", f"correction_table_{species}.tsv")
+    default_path_correction_table_file = os.path.join("rate_adjustment", f"{species}", f"{_ADJUSTMENT_TABLE.format(species)}")
     correction_table_file = fcCheck.get_argument_path(correction_table_file, default_path_correction_table_file, "Correction table file")
     if correction_table_file == "":
-        logging.warning("Correction data are not available yet, only Ks distribution will be plotted.")
+        logging.warning("Rate-adjustment data are not available yet, only Ks distribution will be plotted.")
         correction_table = None
         correction_table_available = False
     else:
@@ -96,11 +96,11 @@ def lognormal_mixture(config_file, paralog_tsv_file, anchors_ks_tsv_file, correc
     parameter_table = []
 
     if paranome_analysis:
-        with open (os.path.join("correction_analysis", f"{species}", subfolder, f"lmm_{species}_parameters_paranome.txt"), "w+") as outfile:
+        with open (os.path.join("rate_adjustment", f"{species}", subfolder, f"lmm_{species}_parameters_paranome.txt"), "w+") as outfile:
             logging.info("Performing lognormal mixture model on whole-paranome Ks distribution")
-            paranome_list, weight_list = fc_extract_ks_list.ks_list_from_tsv(paralog_tsv_file, max_ks_para, "paralogs")
+            paranome_list, paranome_weights = fc_extract_ks_list.ks_list_from_tsv(paralog_tsv_file, max_ks_para, "paralogs")
             hist_paranome = fcPlot.plot_histogram("Whole-paranome (weighted)", axis_para, paranome_list, bin_list, 
-                                        bin_width_para, max_ks_para, kde_bandwidth_modifier, weight_list, plot_kde=False)
+                                        bin_width_para, max_ks_para, kde_bandwidth_modifier, paranome_weights, plot_kde=False)
             # Setting the plot height based on tallest histogram bin
             if y_lim is None:
                 fcPlot.set_mixed_plot_height(axis_para, y_lim, hist_paranome)
@@ -118,14 +118,14 @@ def lognormal_mixture(config_file, paralog_tsv_file, anchors_ks_tsv_file, correc
         parameter_table = []
 
     if colinearity_analysis:
-        with open (os.path.join("correction_analysis", f"{species}", subfolder, f"lmm_{species}_parameters_colinearity.txt"), "w+") as outfile:
+        with open (os.path.join("rate_adjustment", f"{species}", subfolder, f"lmm_{species}_parameters_anchors.txt"), "w+") as outfile:
             logging.info("Performing lognormal mixture model on anchor pair Ks distribution")
-            anchors_list = fc_extract_ks_list.ks_list_from_tsv(anchors_ks_tsv_file, max_ks_para, "anchor pairs")
+            anchors_list, anchors_weights = fc_extract_ks_list.ks_list_from_tsv(anchors_ks_tsv_file, max_ks_para, "anchor pairs")
             if len(anchors_list) == 0:
                 logging.warning(f"No anchor pairs found! Maybe check your (gene) IDs between "
                                 f"the [*species*.ks_anchors.tsv] file and the [*species*.ks.tsv] files.")
             hist_anchors = fcPlot.plot_histogram("Anchor pairs", axis_colin, anchors_list, bin_list, bin_width_para,
-                                        max_ks_para, kde_bandwidth_modifier, color=COLOR_ANCHOR_HISTOGRAM, plot_kde=False)
+                                        max_ks_para, kde_bandwidth_modifier, anchors_weights, color=COLOR_ANCHOR_HISTOGRAM, plot_kde=False)
             # Setting the plot height based on tallest histogram bin
             if y_lim is None:
                 fcPlot.set_mixed_plot_height(axis_colin, y_lim, hist_anchors)
@@ -133,10 +133,10 @@ def lognormal_mixture(config_file, paralog_tsv_file, anchors_ks_tsv_file, correc
             best_model_anchors = fcLMM.lmm(
                     fig_colin, x_max_lim, "anchor pairs", anchors_ks_tsv_file, species, axis_colin, (0, max_ks_EM),
                     (1, max_num_comp), arange(-10, max_ks_EM + bin_width_para, bin_width_para), bin_width_para, max_EM_iterations, num_EM_initializations,
-                    output_dir, outfile, parameter_table, "colinearity", peak_stats, correction_table_available, plot_correction_arrows)
+                    output_dir, outfile, parameter_table, "anchors", peak_stats, correction_table_available, plot_correction_arrows)
 
             # Generating tabular text file with all model parameters 
-            fcLMM.make_parameter_table_file(parameter_table, species, "colinearity")
+            fcLMM.make_parameter_table_file(parameter_table, species, "anchors")
 
     for axis in [axis_para, axis_colin]:
         # PLOTTING THE ORTHOLOG DIVERGENCE LINES
@@ -144,12 +144,14 @@ def lognormal_mixture(config_file, paralog_tsv_file, anchors_ks_tsv_file, correc
             dummy_fig, dummy_axis = plt.subplots()
             fcPlot.plot_divergences(correction_table, peak_stats, consensus_peak_for_multiple_outgroups, dummy_axis, axis, color_list, plot_correction_arrows)
 
-    if paranome_analysis:
-        fcLMM.save_lmm(fig_para, axis_para, species, best_model_paranome, "paranome")
-    if colinearity_analysis:
-        fcLMM.save_lmm(fig_colin, axis_colin, species, best_model_anchors, "colinearity")
-
     logging.info("")
-    logging.info(f"Saved PDF figure(s) of lognormal mixture model [mixed_{species}_lmm.tsv]")
+
+    if paranome_analysis:
+        fcLMM.save_lmm(fig_para, axis_para, species, best_model_paranome, "paranome", correction_table_available)
+        logging.info(f"Saved PDF figure of lognormal mixture model [mixed_{species}_lmm_paranome.pdf]")
+    if colinearity_analysis:
+        fcLMM.save_lmm(fig_colin, axis_colin, species, best_model_anchors, "anchors", correction_table_available)
+        logging.info(f"Saved PDF figure of lognormal mixture model [mixed_{species}_lmm_anchors.pdf]")
+
     logging.info("")
     logging.info("All done")

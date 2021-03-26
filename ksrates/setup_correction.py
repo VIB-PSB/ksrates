@@ -19,13 +19,10 @@ def setup_correction(config_file, nextflow_flag):
     # Check configfile
     species_of_interest = config.get_species()
     original_tree = config.get_newick_tree()
-    tree = fcTree.reorder_tree_leaves(original_tree, species_of_interest)  # species of interest is the top leaf
-    fasta_dict = config.get_fasta_dict()
-    gff_dict = config.get_gff_dict(warn_empty_dict=False)
+    tree = fcTree.reorder_tree_leaves(original_tree, species_of_interest)  # focal species is the top leaf
     latin_names = config.get_latin_names()
-    if latin_names == {}:
-        logging.error("Exiting")
-        sys.exit(1)
+    colinearity = config.get_colinearity()
+
     db_path = config.get_ortho_db()
     ks_list_db_path = config.get_ks_db()
     max_num_outspecies = config.get_max_num_outspecies()
@@ -37,57 +34,74 @@ def setup_correction(config_file, nextflow_flag):
     # Checking if the IDs in FASTA (and GFF) files are likely to raise an error when using the PAML package.
     # For example, paml 4.4 gives "Node" Keyerror if the len(IDs) > 50, and/or there are special characters,
     # and/or there are two spaces in a row.
-    logging.info(f"Checking if sequence IDs in input files are compatible with wgd pipeline...")
-    for species in fasta_dict.keys():
+    logging.info(f"Checking if sequence data files exist and if sequence IDs are compatible with wgd pipeline...")
+    trigger_exit = False # will trigger exit if FASTA or GFF files are missing or empty
+
+    if colinearity: # If a GFF is required, check existence and content
+        gff = config.get_gff(species_of_interest)
+        if fcCheck.check_file_nonexistent_or_empty(gff, "GFF file"):  # if missing/empty
+            trigger_exit = True
+
+    fasta_dict = config.get_fasta_dict()
+    all_species = []
+    for leaf in tree.get_leaves():
+        all_species.append(leaf.name)
+    for species in all_species:
+        # Check existence and content of FASTA file
         fasta = config.get_fasta_name(fasta_dict, species)
-        fcCheck.check_inputfile(fasta, "FASTA file")
-        if species in gff_dict:  # warn about the ID for both fasta and gff files
-            gff = config.get_gff_name(gff_dict, species)
-            fcCheck.check_inputfile(gff, "GFF file")
+        if fcCheck.check_file_nonexistent_or_empty(fasta, "FASTA file"):  # if missing/empty
+            trigger_exit = True
+            continue
+        # Check the IDs in FASTA file
+        if species == species_of_interest and colinearity:  # Warn about both FASTA and GFF files
             fcCheck.check_IDs(fasta, latin_names[species], gff)
-        else:  # warn only for fasta file
+        else:  # Warn only about FASTA file
             fcCheck.check_IDs(fasta, latin_names[species])
+            
+    if trigger_exit:
+        logging.error("Please add the missing information to the configuration file and rerun the analysis. Exiting.")
+        sys.exit(1)
     logging.info("Completed")
 
     # Creating folders for correction output files
-    if not os.path.exists('correction_analysis'):
-        os.mkdir('correction_analysis')
-    if not os.path.exists(os.path.join("correction_analysis", f"{species_of_interest}")):
-        os.mkdir(os.path.join("correction_analysis", f"{species_of_interest}"))
-        logging.info(f"Creating output folder [correction_analysis/{species_of_interest}]")
+    if not os.path.exists('rate_adjustment'):
+        os.mkdir('rate_adjustment')
+    if not os.path.exists(os.path.join("rate_adjustment", f"{species_of_interest}")):
+        os.mkdir(os.path.join("rate_adjustment", f"{species_of_interest}"))
+        logging.info(f"Creating output folder [rate_adjustment/{species_of_interest}]")
 
     # -----------------------------------------------------------------------------
 
     # 1) FINDING SISTER AND OUTGROUP SPECIES FOR EACH NODE OF INTEREST
 
     logging.info("")
-    logging.info(f"Extracting ortholog trios for rate-correction [ortholog_trios_{species_of_interest}.tsv]")
+    logging.info(f"Extracting ortholog trios for rate-adjustment [ortholog_trios_{species_of_interest}.tsv]")
 
     if isinstance(max_num_outspecies, int):
-        logging.info(f"- Each divergent species pair will be corrected with at maximum {max_num_outspecies} "
+        logging.info(f"- Each divergent species pair will be rate-adjusted with at maximum {max_num_outspecies} "
                      f"trios by using the closest outspecies")
         logging.info(f"  (as required in configuration file field 'maximum_number_outspecies')")
     else:
-        logging.info(f"- Each divergent species pair will be corrected by using all the possible outspecies "
+        logging.info(f"- Each divergent species pair will be rate-adjusted by using all the possible outspecies "
                      f"found in the tree.")
 
-    # get tree node object of the species of interest
+    # get tree node object of the focal species
     species_of_interest_node = fcTree.get_species_node(species_of_interest, tree)
-    # get the list of ancestors (as tree node objects) in the lineage that lead to the species of interest
+    # get the list of ancestors (as tree node objects) in the lineage that lead to the focal species
     sp_history = fcTree.get_species_history(species_of_interest_node)
-    # Checking if the species of interest has at least one outgroup in the provided tree
+    # Checking if the focal species has at least one outgroup in the provided tree
     if len(sp_history)-2 == 0:
         logging.error("")
         logging.error(f"Species [{species_of_interest}] has no outgroup in the provided Newick tree "
-                      f"and the rate-correction can't be performed.")
-        logging.error(f"Please add at least one outgroup species or change the species of interest.")
+                      f"and the rate-adjustment can't be performed.")
+        logging.error(f"Please add at least one outgroup species or change the focal species.")
         sys.exit(1)
 
     trios_array = []  # list of trios
-    outfile_drawing_path = os.path.join("correction_analysis", f"{species_of_interest}",
+    outfile_drawing_path = os.path.join("rate_adjustment", f"{species_of_interest}",
                                         f"tree_{species_of_interest}.txt")
     with open(outfile_drawing_path, "w+") as outfile_drawing:
-        outfile_drawing.write(f"Species of interest: {species_of_interest}\n\n")
+        outfile_drawing.write(f"Focal species: {species_of_interest}\n\n")
 
         # Obtaining the numeric labels for internal nodes relevant in the species analysis
         fcTree.labeling_internal_nodes(species_of_interest_node)
@@ -106,7 +120,7 @@ def setup_correction(config_file, nextflow_flag):
             outspecies = fcTree.get_outspecies_of_a_node(currentnode, max_num_outspecies)
             outfile_drawing.write(f"Outgroup species:    {', '.join(outspecies)}\n\n")
 
-            # APPENDING TRIOS (a trio is composed of species of interest, sister species and outgroup species)
+            # APPENDING TRIOS (a trio is composed of focal species, sister species and outgroup species)
             for s in sisters:
                 for o in outspecies:
                     trios_array.append([node+1, species_of_interest, s, o])
@@ -120,7 +134,7 @@ def setup_correction(config_file, nextflow_flag):
 
     # Generate trios DataFrame from trios array
     trios_df = DataFrame.from_records(trios_array, columns=["Node", "Species", "Sister_Species", "Out_Species"])
-    outfile_trios_path = os.path.join("correction_analysis", f"{species_of_interest}",
+    outfile_trios_path = os.path.join("rate_adjustment", f"{species_of_interest}",
                                          f"ortholog_trios_{species_of_interest}.tsv")
     with open(outfile_trios_path, "w+") as outfile:
         outfile.write(trios_df.to_csv(sep="\t", index=False))
@@ -222,7 +236,7 @@ def setup_correction(config_file, nextflow_flag):
     logging.info("")
 
     species_pairs_unknown_df = DataFrame.from_records(species_pairs_unknown, columns=["Species1", "Species2"])
-    outfile_pairs_path = os.path.join("correction_analysis", f"{species_of_interest}",
+    outfile_pairs_path = os.path.join("rate_adjustment", f"{species_of_interest}",
                                       f"ortholog_pairs_{species_of_interest}.tsv")
     with open(outfile_pairs_path, "w+") as outfile_pairs:
         outfile_pairs.write(species_pairs_unknown_df.to_csv(sep="\t", index=False))
@@ -230,7 +244,7 @@ def setup_correction(config_file, nextflow_flag):
     # -----------------------------------------------------------------------------
 
     # 3) PLOTTING THE ORIGINAL UN-CORRECTED TREE in PDF FORMAT
-    logging.info(f"Plotting input phylogenetic tree [tree_{species_of_interest}.pdf]")
+    logging.info(f"Plotting input phylogenetic tree [{fcTree._TREE.format(species_of_interest)}]")
     logging.info("")
     fcTree.plot_uncorrected_phylogeny(tree, species_of_interest, latin_names, sp_history)
 

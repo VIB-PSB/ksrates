@@ -11,8 +11,8 @@ def generate_configfile(configfile_name):
     Config = configparser.ConfigParser(allow_no_value=True)
 
     Config.add_section("SPECIES")
-    Config.set("SPECIES", "species", "")
-    Config.set("SPECIES", "# informal name of the species that will be used to perform the rate-correction\n")
+    Config.set("SPECIES", "focal_species", "")
+    Config.set("SPECIES", "# informal name of the species that will be used to perform the rate-adjustment\n")
 
     Config.set("SPECIES", "newick_tree", "();")
     Config.set("SPECIES", "# input phylogenetic tree in Newick format; use the informal names of the species\n")
@@ -21,11 +21,11 @@ def generate_configfile(configfile_name):
     Config.set("SPECIES", "# informal names associated to their scientific names through a colon and separated by comma\n")
 
     Config.set("SPECIES", "fasta_filenames", "")
-    Config.set("SPECIES", "gff_filenames", "")
+    Config.set("SPECIES", "gff_filename", "")
     Config.set("SPECIES", "# informal names associated to their FASTA or GFF filenames/paths through a colon and separated by commas\n")
 
-    Config.set("SPECIES", "Peak_database_path", "ortholog_peak_db.tsv")
-    Config.set("SPECIES", "Ks_list_database_path", "ortholog_ks_list_db.tsv")
+    Config.set("SPECIES", "peak_database_path", "ortholog_peak_db.tsv")
+    Config.set("SPECIES", "ks_list_database_path", "ortholog_ks_list_db.tsv")
     Config.set("SPECIES", "# filenames/paths of the ortholog data databases\n")
 
     Config.add_section("ANALYSIS SETTING")
@@ -57,7 +57,7 @@ def generate_configfile(configfile_name):
     Config.set("PARAMETERS", "y_axis_limit_paralogs_plot", "None")
     Config.set("PARAMETERS", "# highest value of the y axis in the mixed distribution plot  (default: None)\n")
 
-    Config.set("PARAMETERS", "num_iterations", "500")
+    Config.set("PARAMETERS", "num_bootstrap_iterations", "200")
     Config.set("PARAMETERS", "# number of bootstrap iterations for ortholog peak estimate\n")
 
     Config.set("PARAMETERS", "divergence_colors", "Red, MediumBlue, DarkGoldenrod, ForestGreen, HotPink, DarkCyan, SaddleBrown, Black")
@@ -79,6 +79,6 @@ def generate_configfile(configfile_name):
     logging.basicConfig(format='%(levelname)s\t%(message)s', level="INFO", stream=sys.stdout)
     logging.info(f"Configuration file [{configfile_name}] not found: it will be now generated")
     logging.info(f"Please fill in the required input parameters:")
-    logging.info(f"species, newick_tree, latin_names, fasta_filenames and if applicable gff_filenames, gff_feature and gff_attribute")
+    logging.info(f"species, newick_tree, latin_names, fasta_filenames and if applicable gff_filename, gff_feature and gff_attribute")
     Config.write(cfgfile)
     cfgfile.close()
