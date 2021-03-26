@@ -91,7 +91,7 @@ def inspect_bic(bic, outfile):
     outfile.write("\n")
 
 
-def log_components(X, model_id, m, outfile, parameter_table):
+def log_components(X, model_id, m, outfile, parameter_table, max_iter=300):
     """
     Modified from wgd.
 
@@ -103,13 +103,18 @@ def log_components(X, model_id, m, outfile, parameter_table):
     """
     outfile.write(f"Model {model_id}\n")
     outfile.write(f"Number of components: {len(m.means_)}\n")
-    outfile.write(f"The EM algorithm has reached convergence after {m.n_iter_} iterations\n\n")
+    if m.n_iter_ == max_iter:
+        convergence = "NA"
+        outfile.write(f"The EM algorithm didn't reach convergence after {max_iter} iterations\n")
+    else:
+        convergence = m.n_iter_
+        outfile.write(f"The EM algorithm has reached convergence after {m.n_iter_} iterations\n\n")
 
     outfile.write("FITTED PARAMETERS:\n")
     for j in range(len(m.means_)):
         outfile.write(f"  NORM {j+1}: {round(m.means_[j][0], 2)} +- {round(sqrt(m.covariances_[j][0][0]), 2)}\n")
         
-        parameter_table.append([model_id, round(m.bic(X), 3), round(m.lower_bound_, 3), m.n_iter_, 
+        parameter_table.append([model_id, round(m.bic(X), 3), round(m.lower_bound_, 3), convergence, 
                                 round(m.means_[j][0], 2), round(m.covariances_[j][0][0], 2), round(m.weights_[j], 2)])
 
     rounded_weights = []
@@ -141,7 +146,7 @@ def fit_gmm(X, n1, n2, outfile, parameter_table, max_iter=300, n_init=1, **kwarg
     for i in range(len(N)):
         models[i] = mixture.GaussianMixture(
                 n_components=N[i], covariance_type='full', max_iter=max_iter,
-                n_init=n_init, **kwargs
+                n_init=n_init, tol=1e-6, **kwargs
         ).fit(X)
         log_components(X, i+1, models[i], outfile, parameter_table)
 
