@@ -54,7 +54,7 @@ When using the *ksrates* Nextflow pipeline, the only other dependency that must 
 
 *   Optionally make Nextflow accessible by your ``$PATH`` variable, for example::
 
-        mv nextflow /usr/local/bin 
+        sudo mv nextflow /usr/local/bin 
 
 
 Docker
@@ -82,7 +82,7 @@ When using the *ksrates* Nextflow pipeline, the only other dependency that must 
 
 *   Optionally make Nextflow accessible by your ``$PATH`` variable, for example::
 
-        mv nextflow /usr/local/bin 
+        sudo mv nextflow /usr/local/bin 
 
 
 Local installation
@@ -113,7 +113,7 @@ Without the use of a container the installation of *ksrates* and its dependencie
 
     Optionally make Nextflow accessible by your ``$PATH`` variable, for example::
 
-        mv nextflow /usr/local/bin
+        sudo mv nextflow /usr/local/bin
     
 4.  Install PAML from source (version 4.9j) to avoid compatibility issues::
 
@@ -121,13 +121,13 @@ Without the use of a container the installation of *ksrates* and its dependencie
         tar -xzf paml4.9j.tgz
         cd paml4.9j/src && make -f Makefile
 
-    Then make ``codeml`` available by the ``$PATH`` variable:
+    Then make the executable ``codeml`` available by the ``$PATH`` variable (the downloaded PAML directory can be deleted):
     
-        *   Either move the executable to a directory already present in ``$PATH``, e.g. ``usr/local/bin``::
+        *   Either move ``codeml`` to a directory already present in ``$PATH``, e.g. ``usr/local/bin``::
 
-                mv codeml usr/local/bin
+                sudo mv codeml usr/local/bin
         
-        *   Or move it to another directory (e.g. ~/bin) and add such directory to ``$PATH`` by copying this line in the initialization file for the shell (e.g. ``.bashrc``)::
+        *   Or move ``codeml`` to another directory (here assumed to be ``~/bin``) and add such directory to ``$PATH`` by copying the following line in the in the shell initialization file (e.g. ``.bashrc``)::
 
                 export PATH=$PATH:~/bin
     
