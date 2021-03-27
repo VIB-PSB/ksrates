@@ -32,9 +32,9 @@ The table below summarizes relevant differences between Singularity and Docker c
 
 Singularity (suggested)
 -----------------------
-The machine where *ksrates* will be executed (either local computer or remote compute cluster) needs to have Singularity installed. More information can be found in the Singularity 3.7 installation `page <https://sylabs.io/guides/3.7/admin-guide/installation.html#installing-singularity>`__ or in the documentation `history <https://sylabs.io/docs/>`__ for up-to-date and version-specific instructions.
-
-The Singularity container will be downloaded from ``vibpsb/ksrates`` repository on Docker Hub when launching the Nextflow pipeline. Successive runs will use the local copy.
+The machine where *ksrates* will be executed (either local computer or remote compute cluster) needs to have Singularity installed. More information can be found in the Singularity 3.7 installation `page <https://sylabs.io/guides/3.7/admin-guide/installation.html#installing-singularity>`__.
+For Linux installation we suggest to follow the *Install from Source* `section <https://sylabs.io/guides/3.7/admin-guide/installation.html#before-you-begin>`__ (*Install Dependencies*, *Install Go*, *Download Singularity from a release* and *Compile Singularity*).
+For up-to-date and version-specific instructions, please refer to the documentation `history <https://sylabs.io/docs/>`__.
 
 When using the *ksrates* Nextflow pipeline, the only other dependency that must be installed is Nextflow (for more information see its official installation `page <https://www.nextflow.io/docs/latest/getstarted.html#requirements>`__).
 
@@ -48,7 +48,7 @@ When using the *ksrates* Nextflow pipeline, the only other dependency that must 
         
                 wget -qO- https://get.nextflow.io | bash
 
-        *   Through ``bioconda`` (for more info on how to setup ``bioconda`` see this `page <https://bioconda.github.io/user/install.html>`__)::
+        *   Through ``bioconda`` (more info `here <https://bioconda.github.io/user/install.html>`__)::
 
                 conda install nextflow
 
@@ -56,14 +56,13 @@ When using the *ksrates* Nextflow pipeline, the only other dependency that must 
 
         sudo mv nextflow /usr/local/bin 
 
+When launching the Nextflow pipeline with Singularity, the container will be downloaded from ``vibpsb/ksrates`` repository on Docker Hub and the local copy will be used for successive runs.
 
 Docker
 ------
 
 The machine where *ksrates* will be executed (either local computer or remote compute cluster) needs to have Docker installed. More information can be found on the Docker installation `page <https://docs.docker.com/get-docker/>`__.
 
-The Docker container will be downloaded from ``vibpsb/ksrates`` repository on Docker Hub when launching the Nextflow pipeline. Successive runs will use the local copy.
-
 When using the *ksrates* Nextflow pipeline, the only other dependency that must be installed is Nextflow (for more information see its official installation `page <https://www.nextflow.io/docs/latest/getstarted.html#requirements>`__).
 
 *   First install Java 8 or later. ``default-djk`` works as well::
@@ -76,13 +75,15 @@ When using the *ksrates* Nextflow pipeline, the only other dependency that must 
         
                 wget -qO- https://get.nextflow.io | bash
 
-        *   Through ``bioconda`` (for more info on how to setup ``bioconda`` see this `page <https://bioconda.github.io/user/install.html>`__)::
+        *   Through ``bioconda`` (more info `here <https://bioconda.github.io/user/install.html>`__)::
 
                 conda install nextflow
 
 *   Optionally make Nextflow accessible by your ``$PATH`` variable, for example::
 
         sudo mv nextflow /usr/local/bin 
+
+When launching the Nextflow pipeline with Docker, the container will be downloaded from ``vibpsb/ksrates`` repository on Docker Hub and the local copy will be used for successive runs.
 
 
 Local installation
