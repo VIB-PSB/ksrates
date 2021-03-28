@@ -6,10 +6,10 @@ import seaborn as sns
 import ksrates.fc_plotting as fcPlot
 from ksrates.fc_exp_log_mixture import deconvolute_data
 from numpy import exp, sqrt, linspace, arange, log, argmin, mean, around, array
-from wgd.modeling import mixture
+from wgd_ksrates.modeling import mixture
 import scipy.stats as ss
-from wgd.modeling import plot_aic_bic
-from wgd.modeling import plot_mixture, plot_probs
+from wgd_ksrates.modeling import plot_aic_bic
+from wgd_ksrates.modeling import plot_mixture, plot_probs
 import ksrates.fc_exp_log_mixture as fcEM
 from matplotlib.patches import Patch
 from ksrates.fc_cluster_anchors import subfolder

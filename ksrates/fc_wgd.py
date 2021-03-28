@@ -5,10 +5,10 @@ import shutil
 import subprocess
 import pandas as pd
 from numpy import zeros
-from wgd.utils import read_fasta
-from wgd.blast_mcl import run_mcl_ava, ava_blast_to_abc, get_one_v_one_orthologs_rbh
-from wgd.ks_distribution import ks_analysis_paranome, ks_analysis_one_vs_one
-from wgd.colinearity import gff_parser
+from wgd_ksrates.utils import read_fasta
+from wgd_ksrates.blast_mcl import run_mcl_ava, ava_blast_to_abc, get_one_v_one_orthologs_rbh
+from wgd_ksrates.ks_distribution import ks_analysis_paranome, ks_analysis_one_vs_one
+from wgd_ksrates.colinearity import gff_parser
 from ksrates.utils import merge_dicts, concat_files, can_i_run_software, translate_cds, write_fasta
 
 _OUTPUT_BLAST_FILE_PATTERN = '{}.blast.tsv'
