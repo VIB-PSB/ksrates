@@ -383,6 +383,7 @@ def ks_orthologs(species1, species2, cds_fasta1, cds_fasta2, base_dir='.', eval_
         if isinstance(results_df, type(None)) or results_df.empty:
             logging.warning('No ortholog Ks data computed, will write empty ortholog Ks file!')
         with open(os.path.join(output_dir, output_ks_file), 'w+') as o:
+            results_df = results_df.rename(columns={"Paralog1":"Ortholog1", "Paralog2":"Ortholog2"})
             o.write(results_df.round(5).to_csv(sep='\t'))
          # change back to current directory as tmp dir got deleted and subsequent os.getcwd() may fail
         os.chdir(cw_dir)
