@@ -18,12 +18,17 @@ From: vibpsb/i-adhore
 	ksrates_cli.py install/ksrates_cli.py
 
 %post
-	# install python, git, etc.
+
+	# Install PAML from source
 
 	apt-get install -y wget && wget http://abacus.gene.ucl.ac.uk/software/paml4.9j.tgz && \
 	tar -xzf paml4.9j.tgz && cd paml4.9j/src && make -f Makefile && mv codeml /bin && cd /
 
+	# Install Python3, wgd dependencies...
+
 	apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -yq install python3-pip python3-tk git curl \
 	default-jdk build-essential mcl ncbi-blast+ muscle mafft prank fasttree phyml
+
+	# Install ksrates and requirements.txt
 
 	python3 -m pip install /install
