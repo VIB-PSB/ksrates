@@ -116,7 +116,7 @@ Without the use of a container the installation of *ksrates* and its dependencie
 
         sudo mv nextflow /usr/local/bin
     
-4.  Install PAML from source (version 4.9j) to avoid compatibility issues::
+4.  Install PAML 4.9j from source (for more infromation see PAML installation `page <http://abacus.gene.ucl.ac.uk/software/#phylogenetic-analysis-by-maximum-likelihood-paml>`__) to avoid compatibility issues::
 
         wget http://abacus.gene.ucl.ac.uk/software/paml4.9j.tgz
         tar -xzf paml4.9j.tgz
