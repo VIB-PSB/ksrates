@@ -13,7 +13,7 @@ From: vibpsb/i-adhore
 	requirements.txt install/requirements.txt
 	setup.py install/setup.py
 	ksrates install/ksrates
-	wgd install/wgd
+	wgd_ksrates install/wgd_ksrates
 	README.md install/README.md
 	ksrates_cli.py install/ksrates_cli.py
 

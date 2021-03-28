@@ -19,7 +19,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -yq install python3
 ADD /requirements.txt /install/requirements.txt
 ADD /setup.py /install/setup.py
 ADD /ksrates /install/ksrates
-ADD /wgd /install/wgd
+ADD /wgd_ksrates /install/wgd_ksrates
 ADD /README.md /install/README.md
 ADD /ksrates_cli.py /install/ksrates_cli.py
 
