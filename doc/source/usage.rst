@@ -34,7 +34,7 @@ The *ksrates* pipeline can be automatically run through Nextflow with a few prep
 
 3.  Launch *ksrates* through the following command line::
 
-        nextflow run VIB-PSB/ksrates --config ./config_elaeis.txt [-c ./custom_nextflow.config]
+        nextflow run VIB-PSB/ksrates --config ./config_elaeis.txt -c ./custom_nextflow.config
 
     The ``--config`` option takes the *ksrates configuration file*, while ``-c`` takes the optional *Nextflow configuration file*. If the Nextflow-reserved ``nextflow.config`` name is used, this latter file is automatically recognized without explicitly calling it in the command line.
     
