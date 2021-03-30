@@ -21,14 +21,14 @@ The execution of non-default methods according to the scheme in the table below 
 .. include:: <isopub.txt>
 .. table:: Default methods are marked by |check|, while optional methods are marked by (|check|).
 
-    =======================================  ================  =============  =========================
-    Method                                   Colinearity-only  Paranome-only  Collinearity and paranome
-    =======================================  ================  =============  =========================
-    Anchor *K*:sub:`S` clustering            |check|                          |check|
-    Exponential-lognormal mixture model                        |check|        (|check|)
-    Lognormal mixture model on anchor pairs  (|check|)                        (|check|)
-    Lognormal mixture model on paranome                        (|check|)      (|check|)
-    =======================================  ================  =============  =========================
+    =======================================  =================  =============  =========================
+    Method                                   Collinearity-only  Paranome-only  Collinearity and paranome
+    =======================================  =================  =============  =========================
+    Anchor *K*:sub:`S` clustering            |check|                           |check|
+    Exponential-lognormal mixture model                         |check|        (|check|)
+    Lognormal mixture model on anchor pairs  (|check|)                         (|check|)
+    Lognormal mixture model on paranome                         (|check|)      (|check|)
+    =======================================  =================  =============  =========================
 
 
 .. _`anchor_ks_clustering`:
