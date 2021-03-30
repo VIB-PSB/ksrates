@@ -41,6 +41,4 @@ jobs:
         
       - name: Visualize output files
         if: ${{ always() }}
-        run: | 
-          ls -l test/rate_adjustment/elaeis
-          cat test/rate_adjustment/elaeis/logs*/paralogs_analyses.log 
+        run: ls -l test/rate_adjustment/elaeis
