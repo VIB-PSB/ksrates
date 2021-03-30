@@ -292,7 +292,7 @@ def find_peak_init_parameters(spl_x, spl_y, species, species_escape_whitespace, 
   prominences = peak_prominences(spl_y, peaks)[0]
 
   fig_refl_RL, axes_refl = plt.subplots(nrows=len(peaks)+1, ncols=2, figsize=(14, 7*(len(peaks)+1)), sharey=True)
-  fig_refl_RL.suptitle("Peak detection in log-transformed $K_\mathregular{S}$ paranome of " + f"${species_escape_whitespace}$")
+  fig_refl_RL.suptitle("Peak detection in log-transformed $K_\mathregular{S}$ paranome of " + f"${species_escape_whitespace}$", y = 0.92)
   for w in range(len(peaks)+1):
     axes_refl[w][0].set_ylabel("Density of retained duplicates")
   for w in [0,1]:
@@ -375,9 +375,9 @@ def find_peak_init_parameters(spl_x, spl_y, species, species_escape_whitespace, 
 
   significant_peaks_R2 = reflect_prominences_R2  >= peak_threshold # boolean list stating which prominences are significant
 
-  axes_refl[0,0].set_title('Reflection L <-- R')
+  axes_refl[0,0].set_title('Reflection L <-- R', fontsize=17)
   axes_refl[0,0].legend()
-  axes_refl[0,1].set_title('Reflection L --> R')
+  axes_refl[0,1].set_title('Reflection L --> R', fontsize=17)
   axes_refl[0,1].legend()
   original_y_lim = axes_refl[0][0].get_ylim()[1]
   for w in range(len(axes_refl)):
