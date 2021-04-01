@@ -29,6 +29,6 @@ From: vibpsb/i-adhore
 	apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -yq install python3-pip python3-tk git curl \
 	default-jdk build-essential mcl ncbi-blast+ muscle mafft prank fasttree phyml
 
-	# Install ksrates and requirements.txt
+	# Install ksrates and requirements from requirements.txt
 
 	python3 -m pip install /install

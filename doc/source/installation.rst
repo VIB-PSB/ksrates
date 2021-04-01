@@ -112,7 +112,7 @@ Without the use of a container the installation of *ksrates* and its dependencie
 				sudo apt-get -yq install default-jdk build-essential
 				conda install muscle blast mafft prank fasttree mcl phyml nextflow
 
-    Optionally make Nextflow accessible by your ``$PATH`` variable, for example::
+    Optionally make Nextflow accessible through your ``$PATH`` variable, for example::
 
         sudo mv nextflow /usr/local/bin
     
@@ -122,13 +122,13 @@ Without the use of a container the installation of *ksrates* and its dependencie
         tar -xzf paml4.9j.tgz
         cd paml4.9j/src && make -f Makefile
 
-    Then make the executable ``codeml`` available by the ``$PATH`` variable (the downloaded PAML directory can be deleted):
+    Then make the executable ``codeml`` available through the ``$PATH`` variable (the downloaded PAML directory can be deleted):
     
         *   Either move ``codeml`` to a directory already present in ``$PATH``, e.g. ``usr/local/bin``::
 
                 sudo mv codeml usr/local/bin
         
-        *   Or move ``codeml`` to another directory (here assumed to be ``~/bin``) and add such directory to ``$PATH`` by copying the following line in the in the shell initialization file (e.g. ``.bashrc``)::
+        *   Or move ``codeml`` to another directory (here assumed to be ``~/bin``) and add this directory to ``$PATH``, for the Bash shell by copying the following line to the shell initialization file (e.g. ``.bashrc``)::
 
                 export PATH=$PATH:~/bin
     

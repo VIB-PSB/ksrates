@@ -23,6 +23,5 @@ ADD /wgd_ksrates /install/wgd_ksrates
 ADD /README.md /install/README.md
 ADD /ksrates_cli.py /install/ksrates_cli.py
 
-# Install ksrates and requirements.txt
-
+# Install ksrates and requirements from requirements.txt
 RUN python3 -m pip install /install
