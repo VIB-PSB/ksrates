@@ -34,7 +34,7 @@ Singularity (suggested)
 -----------------------
 The machine where *ksrates* will be executed (either local computer or remote compute cluster) needs to have Singularity installed. More information can be found in the Singularity 3.7 installation `page <https://sylabs.io/guides/3.7/admin-guide/installation.html#installing-singularity>`__.
 For Linux installation we suggest to follow the *Install from Source* `section <https://sylabs.io/guides/3.7/admin-guide/installation.html#before-you-begin>`__ (*Install Dependencies*, *Install Go*, *Download Singularity from a release* and *Compile Singularity*).
-For up-to-date and version-specific instructions, please refer to the documentation `history <https://sylabs.io/docs/>`__.
+For up-to-date and version-specific instructions, please refer to this `page <https://sylabs.io/docs/>`__.
 
 When using the *ksrates* Nextflow pipeline, the only other dependency that must be installed is Nextflow (for more information see its official installation `page <https://www.nextflow.io/docs/latest/getstarted.html#requirements>`__).
 
