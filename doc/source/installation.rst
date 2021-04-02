@@ -6,7 +6,7 @@ Installation
 Container availability
 ======================
 
-Singularity runs natively only on Linux; on Windows it requires either WSL2 (see Note below) or a virtual machine (VM); on macOS it is available as a beta version or it requires a VM.
+Singularity runs natively only on Linux; on Windows it requires either WSL2 (suggested; see Note below) or a virtual machine (VM); on macOS it is available as a beta version or it requires a VM.
 Singularity has the advantage over Docker of always producing output files with non-root permissions.
 
 .. note::
@@ -89,7 +89,10 @@ When launching the Nextflow pipeline with Docker, the container will be download
 Local installation
 ==================
 
-Without the use of a container the installation of *ksrates* and its dependencies has to be carried out manually.
+Without the use of a container the installation of *ksrates* and its dependencies has to be carried out manually. The following commands guide through the installation on a Linux machine; Windows users can carry out the installation with the same commands by using either WSL2 (suggested; see Note below) or a virtual machine (VM) with Linux installed.
+
+.. note::
+   WSL2 (Windows Subsystem for Linux 2) is a native Windows 10 feature that allows to run a GNU/Linux terminal without the use of a VM. It can be installed following the official `documentation <https://docs.microsoft.com/en-us/windows/wsl/install-win10#requirements>`__.
 
 1.  Clone the *ksrates* repository from `GitHub <https://github.com/VIB-PSB/ksrates>`__::
 
