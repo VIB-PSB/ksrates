@@ -57,16 +57,59 @@ def plot_orthologs_distr(config_file, trios_file):
 
     # -----------------------------------------------------------------------------
 
-    # GENERATING 6-PANEL FIGURE with ortholog distributions FOR EACH TRIO
+    # GENERATING PDF FIGURE with ortholog distributions FOR EACH TRIO
     outgroups_per_divergent_pair_dict = {}
+    missing_pairs_ks_list, missing_pairs_peaks = [], []
+
     for __, row in trios.iterrows():
         species, sister, out = row['Species'], row['Sister_Species'], row['Out_Species']
+
+        # Check if species pairs are missing in the peak databases
+        current_pairs = ["_".join(sorted([latin_names[species], latin_names[sister]], key=str.casefold)), 
+                 "_".join(sorted([latin_names[species], latin_names[out]], key=str.casefold)),
+                 "_".join(sorted([latin_names[sister], latin_names[out]], key=str.casefold))]
+        for pair in current_pairs:
+            # Check if missing in the Ks list database
+            if pair not in list(ks_list_db.index):
+                if pair not in missing_pairs_ks_list:
+                    missing_pairs_ks_list.append(pair)
+            # Check if missing in the Ks peak database
+            if not no_peak_db:  # Check only if the Ks peak DB is available
+                if pair not in list(db.index):
+                    if pair not in missing_pairs_peaks:
+                        missing_pairs_peaks.append(pair)
+        # Generate dictionary of divergent pairs linked with their outgroups
         divergent_pair_key = f"{species}_{sister}"
         if divergent_pair_key not in outgroups_per_divergent_pair_dict.keys():
             outgroups_per_divergent_pair_dict[divergent_pair_key] = [out]
         else:
             outgroups_per_divergent_pair_dict[divergent_pair_key].append(out)
 
+    # Exit if species are missing from any of the two ortholog databases
+    if len(missing_pairs_ks_list) != 0 or len(missing_pairs_peaks) != 0:
+        logging.warning("One or more species pairs are missing from the ortholog databases:")
+        logging.warning("")
+
+        if len(missing_pairs_peaks) != 0:
+            logging.warning("From the ortholog Ks peak database:")
+            for pair in sorted(missing_pairs_peaks):
+                logging.warning(f"- {pair}")
+            logging.warning("")
+
+        if len(missing_pairs_ks_list) != 0:
+            logging.warning("From the ortholog Ks list database:")
+            for pair in sorted(missing_pairs_ks_list):
+                logging.warning(f"- {pair}")
+        logging.warning("")
+        logging.warning("Please compute first their ortholog Ks data and add them to the databases,")
+        logging.warning("then rerun this step.")
+        logging.warning("Skipping plotting ortholog Ks distributions in a PDF figure")
+            
+        logging.info("")
+        logging.info("All done")
+        sys.exit(0)
+
+    # PLOTTING THE DISTRIBUTIONS
     for divergent_pair in outgroups_per_divergent_pair_dict.keys():
         with PdfPages(os.path.join("rate_adjustment", f"{species_of_interest}", f"orthologs_{divergent_pair}.pdf")) as pdf:
             species = divergent_pair.split("_")[0]
