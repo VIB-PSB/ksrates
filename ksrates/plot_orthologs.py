@@ -87,26 +87,23 @@ def plot_orthologs_distr(config_file, trios_file):
 
     # Exit if species are missing from any of the two ortholog databases
     if len(missing_pairs_ks_list) != 0 or len(missing_pairs_peaks) != 0:
-        logging.warning("One or more species pairs are missing from the ortholog databases:")
-        logging.warning("")
+        logging.error("One or more species pairs are missing from the ortholog databases")
+        logging.error("")
 
         if len(missing_pairs_peaks) != 0:
-            logging.warning("From the ortholog Ks peak database:")
+            logging.error("Species missing from the ortholog Ks peak database:")
             for pair in sorted(missing_pairs_peaks):
-                logging.warning(f"- {pair}")
-            logging.warning("")
+                logging.error(f"- {pair}")
+            logging.error("")
 
         if len(missing_pairs_ks_list) != 0:
-            logging.warning("From the ortholog Ks list database:")
+            logging.error("Species missing from the ortholog Ks list database:")
             for pair in sorted(missing_pairs_ks_list):
-                logging.warning(f"- {pair}")
-        logging.warning("")
-        logging.warning("Please compute first their ortholog Ks data and add them to the databases,")
-        logging.warning("then rerun this step.")
-        logging.warning("Skipping plotting ortholog Ks distributions in a PDF figure")
-            
-        logging.info("")
-        logging.info("All done")
+                logging.error(f"- {pair}")
+        logging.error("")
+        logging.error("Please compute their ortholog Ks data and/or add them to the databases,")
+        logging.error("then rerun this step")
+        logging.error("Skipping plotting ortholog Ks distributions in a PDF figure")
         sys.exit(0)
 
     # PLOTTING THE DISTRIBUTIONS
