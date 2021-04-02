@@ -42,15 +42,9 @@ When using the *ksrates* Nextflow pipeline, the only other dependency that must 
 
         sudo apt-get install default-jdk
 
-*   Then install Nextflow in one of the following ways:
+*   Then install Nextflow::
 
-        *   Through ``wget``::
-        
-                wget -qO- https://get.nextflow.io | bash
-
-        *   Through ``bioconda`` (more info `here <https://bioconda.github.io/user/install.html>`__)::
-
-                conda install nextflow
+        wget -qO- https://get.nextflow.io | bash
 
 *   Optionally make Nextflow accessible by your ``$PATH`` variable, for example::
 
@@ -69,15 +63,9 @@ When using the *ksrates* Nextflow pipeline, the only other dependency that must 
 
         sudo apt-get install default-jdk
 
-*   Then install Nextflow in one of the following ways:
+*   Then install Nextflow::
 
-        *   Through ``wget``::
-        
-                wget -qO- https://get.nextflow.io | bash
-
-        *   Through ``bioconda`` (more info `here <https://bioconda.github.io/user/install.html>`__)::
-
-                conda install nextflow
+        wget -qO- https://get.nextflow.io | bash
 
 *   Optionally make Nextflow accessible by your ``$PATH`` variable, for example::
 
@@ -103,17 +91,10 @@ Without the use of a container the installation of *ksrates* and its dependencie
     	cd ksrates
     	pip3 install .
 
-3.  Most of non-Python dependencies can be installed in two possible ways.
+3.  Most of non-Python dependencies can be installed witht the following commands::
 
-		*   Through ``apt-get`` and ``wget``::
-
-			   sudo apt-get -yq install default-jdk build-essential ncbi-blast+ muscle mafft prank fasttree mcl phyml
-			   wget -qO- https://get.nextflow.io | bash
-
-		*   Through ``apt-get`` and ``bioconda`` (more info on how to setup ``bioconda`` `here <https://bioconda.github.io/user/install.html>`__)::
-				
-				sudo apt-get -yq install default-jdk build-essential
-				conda install muscle blast mafft prank fasttree mcl phyml nextflow
+        sudo apt-get -yq install default-jdk build-essential ncbi-blast+ muscle mafft prank fasttree mcl phyml
+	wget -qO- https://get.nextflow.io | bash
 
     Optionally make Nextflow accessible through your ``$PATH`` variable, for example::
 
