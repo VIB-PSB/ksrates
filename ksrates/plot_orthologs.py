@@ -139,8 +139,8 @@ def plot_orthologs_distr(config_file, trios_file):
                 sister_out = "_".join(sorted([latinSister, latinOut], key=str.casefold))
 
                 # Plotting Ks lists and their KDE lines
-                fcPlot.plot_orthologs_histogram_kdes(ks_list_species_sister, bin_list_ortho, bin_width_ortho,
-                                                    axes[0, 0], axes[1, 0], x_lim, bootstrap_kde_species_sister)
+                fcPlot.plot_orthologs_histogram_kdes(ks_list_species_sister, bin_list_ortho, axes[0],
+                                                                bootstrap_kde_species_sister)
 
                 ks_list = literal_eval(ks_list_db.at[species_out, 'Ks_Values'])
                 # run again the bootstrap, only 20 times (very quick) to get the KDE lines
@@ -148,8 +148,7 @@ def plot_orthologs_distr(config_file, trios_file):
                 logging.info(f"  Calculating KDEs for focal species and outspecies [{latinSpecies} - {latinOut}]")
                 bootstrap_kde = fcPeak.bootstrap_KDE(ks_list, 20, x_lim, bin_width_ortho)
                 # Plotting Ks lists and their KDE lines
-                fcPlot.plot_orthologs_histogram_kdes(ks_list, bin_list_ortho, bin_width_ortho, axes[0, 1], axes[1, 1],
-                                                    x_lim, bootstrap_kde)
+                fcPlot.plot_orthologs_histogram_kdes(ks_list, bin_list_ortho, axes[1], bootstrap_kde)
 
                 ks_list = literal_eval(ks_list_db.at[sister_out, 'Ks_Values'])
                 # run again the bootstrap, only 20 times (very quick) to get the KDE lines
@@ -157,18 +156,18 @@ def plot_orthologs_distr(config_file, trios_file):
                 logging.info(f"  Calculating KDEs for sister species and outspecies [{latinSister} - {latinOut}]")
                 bootstrap_kde = fcPeak.bootstrap_KDE(ks_list, 20, x_lim, bin_width_ortho)
                 # Plotting Ks lists and their KDE lines
-                fcPlot.plot_orthologs_histogram_kdes(ks_list, bin_list_ortho, bin_width_ortho, axes[0, 2], axes[1, 2],
-                                                    x_lim, bootstrap_kde)
+                fcPlot.plot_orthologs_histogram_kdes(ks_list, bin_list_ortho, axes[2], bootstrap_kde)
 
+                y_upper_lim = axes[0].get_ylim()[1] 
                 if not no_peak_db: # if the peak database is available
-                    # Plotting estimated mode and median of the orthologs distributions as vertical lines
-                    fcPlot.plot_orthologs_peak_lines(db, species_sister, axes[0, 0])
-                    fcPlot.plot_orthologs_peak_lines(db, species_out, axes[0, 1])
-                    fcPlot.plot_orthologs_peak_lines(db, sister_out, axes[0, 2])
+                    # Plotting estimated mode of the orthologs distributions as vertical lines
+                    fcPlot.plot_orthologs_peak_lines(db, species_sister, axes[0], y_upper_lim)
+                    fcPlot.plot_orthologs_peak_lines(db, species_out, axes[1], y_upper_lim)
+                    fcPlot.plot_orthologs_peak_lines(db, sister_out, axes[2], y_upper_lim)
 
                 object_list = []
                 for ax in axes:
-                    lgd = ax[0].get_legend()
+                    lgd = ax.get_legend()
                     object_list.append(lgd)
                 sup = fig._suptitle
                 object_list.append(sup)

@@ -536,69 +536,48 @@ def generate_orthologs_figure(species, sister_species, outgroup_species, x_lim):
     sister_escape_whitespaces = sister_species.replace(' ', '\ ')
     outspecies_escape_whitespaces = outgroup_species.replace(' ', '\ ')
 
-    fig, axes = plt.subplots(2, 3, sharex=True, sharey="row", figsize=(20.0, 14.0))
+    fig, axes = plt.subplots(1, 3, sharex=True, sharey="row", figsize=(25, 7.5))
     fig.suptitle(f"Ortholog distributions\n\n(${species_escape_whitespaces}$, ${sister_escape_whitespaces}$, "
-                 f"outgroup = ${outspecies_escape_whitespaces}$)", fontsize=19, y=0.99)
-    axes[0, 0].set_xlim(0, x_lim)
-    axes[0, 0].set_title(f"${species_escape_whitespaces}$ — ${sister_escape_whitespaces}$", fontsize="large")
-    axes[0, 0].set_ylabel("Number of retained orthologs")
+                 f"outgroup = ${outspecies_escape_whitespaces}$)", fontsize=19, y=1.15)
+    axes[0].set_xlim(0, x_lim)
+    axes[0].set_title(f"${species_escape_whitespaces}$ — ${sister_escape_whitespaces}$", fontsize=16)
+    axes[0].set_ylabel("Number of retained orthologs")
 
-    axes[0, 1].set_xlim(0, x_lim)
-    axes[0, 1].tick_params("y", reset=True)
-    axes[0, 1].set_title(f"${species_escape_whitespaces}$ — ${outspecies_escape_whitespaces}$", fontsize="large")
+    axes[1].set_xlim(0, x_lim)
+    axes[1].tick_params("y", reset=True)
+    axes[1].set_title(f"${species_escape_whitespaces}$ — ${outspecies_escape_whitespaces}$", fontsize=16)
 
-    axes[0, 2].set_xlim(0, x_lim)
-    axes[0, 2].tick_params("y", reset=True)
-    axes[0, 2].set_title(f"${sister_escape_whitespaces}$ — ${outspecies_escape_whitespaces}$", fontsize="large")
+    axes[2].set_xlim(0, x_lim)
+    axes[2].tick_params("y", reset=True)
+    axes[2].set_title(f"${sister_escape_whitespaces}$ — ${outspecies_escape_whitespaces}$", fontsize=16)
 
-    axes[1, 0].set_xlabel("$K_\mathregular{S}$")
-    axes[1, 0].set_ylabel("Number of retained orthologs")
-    axes[1, 0].tick_params("y", reset=True)
-    axes[1, 1].set_xlabel("$K_\mathregular{S}$")
-    axes[1, 1].tick_params("y", reset=True)
-    axes[1, 2].set_xlabel("$K_\mathregular{S}$")
-    axes[1, 2].tick_params("y", reset=True)
+    axes[0].set_xlabel("$K_\mathregular{S}$")
+    axes[0].set_ylabel("Number of retained orthologs")
+    axes[0].tick_params("y", reset=True)
+    axes[1].set_xlabel("$K_\mathregular{S}$")
+    axes[1].tick_params("y", reset=True)
+    axes[2].set_xlabel("$K_\mathregular{S}$")
+    axes[2].tick_params("y", reset=True)
     return fig, axes
 
 
-def plot_orthologs_histogram_kdes(ks_list, bin_list_ortho, bin_width_ortho, ax_boot, ax_kde, x_max_lim_ortho,
-                                  bootstrap_kde):
+def plot_orthologs_histogram_kdes(ks_list, bin_list_ortho, ax_boot, bootstrap_kde):
     """
     Plots in the 6-panel figure the histograms of ortholog Ks distributions and their related KDE lines.
     
     :param ks_list: list of ortholog Ks values to be plotted
     :param bin_list_ortho: list of intervals used to delimit histogram bins (e.g. [0, 0.1, 0.2, 0.3 ... 9.8, 9.9, 10])
-    :param bin_width_ortho: bin width in orthologs Ks histograms
-    :param ax_boot: coordinate to select the desired plot in the upper row of the figure (e.g. axes[0, 0])
-    :param ax_kde: coordinate to select the desired plot in the lower row of the figure (e.g. axes[1, 0])
-    :param x_max_lim_ortho: upper limit of the Ks range in the ortholog distribution plots (default: 5)
+    :param ax_boot: axis coordinate to select the desired plot in the figure
     :param bootstrap_kde: list of data points of the first 20 KDE lines
+    :return: height of highest bin in histogram
     """
-    # plotting into first row panels
-    ax_boot.hist(ks_list, bins=bin_list_ortho, alpha=0.5)
+    hist = ax_boot.hist(ks_list, bins=bin_list_ortho, alpha=0.5)
     for kde_data in bootstrap_kde:  # kde_data = [kde_x,kde_y]
         ax_boot.plot(kde_data[0], kde_data[1])
-
-    # plotting into second row panels
-    kde, kde_x, kde_y = fcPeak.compute_kde(ks_list, x_max_lim_ortho, bin_width_ortho)
-
-    # extracting the bandwidths
-    used_bw = kde.factor
-    scotts_rule_bw = kde.scotts_factor()
-    silverman_rule_bw = kde.silverman_factor()
-
-    ax_kde.hist(ks_list, bins=bin_list_ortho, alpha=0.5)
-    # KDE computed with the automatic Scott bw
-    ax_kde.plot(kde_x, kde_y, label=f"Scott's factor: {round(scotts_rule_bw, 3)}")
-
-    kde_avg, kde_x_avg, kde_y_avg = fcPeak.compute_kde(ks_list, x_max_lim_ortho, bin_width_ortho,
-                                                       bandwidth_scaling="bootstrap_average")
-    # KDE computed with the average bw
-    ax_kde.plot(kde_x_avg, kde_y_avg, label=f"Avg bootstrap factor: {round(scotts_rule_bw * 0.7, 3)}")
-    ax_kde.legend(fontsize=11)
+    return max(hist[0])
 
 
-def plot_orthologs_peak_lines(ortholog_db, tag, ax_num):
+def plot_orthologs_peak_lines(ortholog_db, tag, ax_num, y_upper_lim):
     """
     Plots on an ortholog Ks distribution two vertical lines in correspondence of the mode and median
     estimated through bootstrap, plus two background rectangles to visualize their standard deviation.
@@ -606,16 +585,21 @@ def plot_orthologs_peak_lines(ortholog_db, tag, ax_num):
     :param ortholog_db: database of ortholog Ks distribution peaks
     :param tag: string used to search the species pair in the database
                 (format example: "Arabidopsis thaliana_Brassica rapa")
-    :param ax_num: coordinate of the current plot in the 6-panel figure (e.g. axes[0, 0] for the upper-left)
+    :param ax_num: axis coordinate of the current plot in the figure
+    :param y_upper_lim: original upper y-axis limit before resizing
     """
     peak = ortholog_db.at[tag, 'Ortholog_Mode']
     sd_peak = ortholog_db.at[tag, 'Ortholog_Mode_SD']
     median_value = ortholog_db.at[tag, 'Ortholog_Median']
     sd_median = ortholog_db.at[tag, 'Ortholog_Median_SD']
+
+    ax_num.set_ylim(0, y_upper_lim * 1.1) # resize to not overlap with legend
+
     # Using rectangle with dashed line:
     plot_divergence_line(ax_num, peak, sd_peak, "k", f"Mean mode: {round(peak, 2)} ± {round(sd_peak, 2)}",
-                         plot_correction_arrows=False, zorder_ID=-1, height=1)
-    plot_divergence_line(ax_num, median_value, sd_median, "navy",
-                         f"Mean median: {round(median_value,2)} ± {round(sd_median,2)}", plot_correction_arrows=False,
-                         zorder_ID=-2, height=1)
-    ax_num.legend(fontsize=11)
+                         plot_correction_arrows=False, zorder_ID=-1, height=0.9)
+    # Median not plotted; if reintroduced, must adapt the y-axis resizing due to thicker legend
+    # plot_divergence_line(ax_num, median_value, sd_median, "navy",
+    #                      f"Mean median: {round(median_value,2)} ± {round(sd_median,2)}",
+    #                      plot_correction_arrows=False, zorder_ID=-2, height=0.9)
+    ax_num.legend(fontsize=16)

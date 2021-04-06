@@ -6,7 +6,7 @@ Installation
 Container availability
 ======================
 
-Singularity runs natively only on Linux; on Windows it requires either WSL2 (see Note below) or a virtual machine (VM); on macOS it is available as a beta version or it requires a VM.
+Singularity runs natively only on Linux; on Windows it requires either WSL2 (suggested; see Note below) or a virtual machine (VM); on macOS it is available as a beta version or it requires a VM.
 Singularity has the advantage over Docker of always producing output files with non-root permissions.
 
 .. note::
@@ -32,9 +32,9 @@ The table below summarizes relevant differences between Singularity and Docker c
 
 Singularity (suggested)
 -----------------------
-The machine where *ksrates* will be executed (either local computer or remote compute cluster) needs to have Singularity installed. More information can be found in the Singularity 3.7 installation `page <https://sylabs.io/guides/3.7/admin-guide/installation.html#installing-singularity>`__ or in the documentation `history <https://sylabs.io/docs/>`__ for up-to-date and version-specific instructions.
-
-The Singularity container will be downloaded from ``vibpsb/ksrates`` repository on Docker Hub when launching the Nextflow pipeline. Successive runs will use the local copy.
+The machine where *ksrates* will be executed (either local computer or remote compute cluster) needs to have Singularity installed. More information can be found in the Singularity 3.7 installation `page <https://sylabs.io/guides/3.7/admin-guide/installation.html#installing-singularity>`__.
+For Linux installation we suggest to follow the *Install from Source* `section <https://sylabs.io/guides/3.7/admin-guide/installation.html#before-you-begin>`__ (*Install Dependencies*, *Install Go*, *Download Singularity from a release* and *Compile Singularity*).
+For up-to-date and version-specific instructions, please refer to this `page <https://sylabs.io/docs/>`__.
 
 When using the *ksrates* Nextflow pipeline, the only other dependency that must be installed is Nextflow (for more information see its official installation `page <https://www.nextflow.io/docs/latest/getstarted.html#requirements>`__).
 
@@ -42,53 +42,45 @@ When using the *ksrates* Nextflow pipeline, the only other dependency that must 
 
         sudo apt-get install default-jdk
 
-*   Then install Nextflow in one of the following ways:
+*   Then install Nextflow::
 
-        *   Through ``wget``::
-        
-                wget -qO- https://get.nextflow.io | bash
-
-        *   Through ``bioconda`` (for more info on how to setup ``bioconda`` see this `page <https://bioconda.github.io/user/install.html>`__)::
-
-                conda install nextflow
+        wget -qO- https://get.nextflow.io | bash
 
 *   Optionally make Nextflow accessible by your ``$PATH`` variable, for example::
 
-        mv nextflow /usr/local/bin 
+        sudo mv nextflow /usr/local/bin 
 
+When launching the Nextflow pipeline with Singularity, the container will be downloaded from ``vibpsb/ksrates`` repository on Docker Hub and the local copy will be used for successive runs.
 
 Docker
 ------
 
 The machine where *ksrates* will be executed (either local computer or remote compute cluster) needs to have Docker installed. More information can be found on the Docker installation `page <https://docs.docker.com/get-docker/>`__.
 
-The Docker container will be downloaded from ``vibpsb/ksrates`` repository on Docker Hub when launching the Nextflow pipeline. Successive runs will use the local copy.
-
 When using the *ksrates* Nextflow pipeline, the only other dependency that must be installed is Nextflow (for more information see its official installation `page <https://www.nextflow.io/docs/latest/getstarted.html#requirements>`__).
 
 *   First install Java 8 or later. ``default-djk`` works as well::
 
         sudo apt-get install default-jdk
 
-*   Then install Nextflow in one of the following ways:
+*   Then install Nextflow::
 
-        *   Through ``wget``::
-        
-                wget -qO- https://get.nextflow.io | bash
-
-        *   Through ``bioconda`` (for more info on how to setup ``bioconda`` see this `page <https://bioconda.github.io/user/install.html>`__)::
-
-                conda install nextflow
+        wget -qO- https://get.nextflow.io | bash
 
 *   Optionally make Nextflow accessible by your ``$PATH`` variable, for example::
 
-        mv nextflow /usr/local/bin 
+        sudo mv nextflow /usr/local/bin 
+
+When launching the Nextflow pipeline with Docker, the container will be downloaded from ``vibpsb/ksrates`` repository on Docker Hub and the local copy will be used for successive runs.
 
 
 Local installation
 ==================
 
-Without the use of a container the installation of *ksrates* and its dependencies has to be carried out manually.
+Without the use of a container the installation of *ksrates* and its dependencies has to be carried out manually. The following commands guide through the installation on a Linux machine; Windows users can carry out the installation with the same commands by using either WSL2 (suggested; see Note below) or a virtual machine (VM) with Linux installed.
+
+.. note::
+   WSL2 (Windows Subsystem for Linux 2) is a native Windows 10 feature that allows to run a GNU/Linux terminal without the use of a VM. It can be installed following the official `documentation <https://docs.microsoft.com/en-us/windows/wsl/install-win10#requirements>`__.
 
 1.  Clone the *ksrates* repository from `GitHub <https://github.com/VIB-PSB/ksrates>`__::
 
@@ -99,23 +91,34 @@ Without the use of a container the installation of *ksrates* and its dependencie
     	cd ksrates
     	pip3 install .
 
-3.  Non-Python dependencies can be installed in two possible ways.
+3.  Most of non-Python dependencies can be installed witht the following commands::
 
-		*   Through ``apt-get`` and ``wget``::
+        sudo apt-get -yq install default-jdk build-essential ncbi-blast+ muscle mafft prank fasttree mcl phyml
+	wget -qO- https://get.nextflow.io | bash
 
-				sudo apt-get -yq install default-jdk build-essential ncbi-blast+ muscle mafft prank fasttree mcl phyml paml
-				wget -qO- https://get.nextflow.io | bash
+    Optionally make Nextflow accessible through your ``$PATH`` variable, for example::
 
-		*   Through ``apt-get`` and ``bioconda`` (more info on how to setup ``bioconda`` `here <https://bioconda.github.io/user/install.html>`__)::
-				
-				sudo apt-get -yq install default-jdk build-essential
-				conda install muscle blast mafft prank fasttree mcl phyml paml nextflow
+        sudo mv nextflow /usr/local/bin
+    
+4.  Install PAML 4.9j from source (for more infromation see PAML installation `page <http://abacus.gene.ucl.ac.uk/software/#phylogenetic-analysis-by-maximum-likelihood-paml>`__) to avoid compatibility issues::
 
-   Optionally make Nextflow accessible by your ``$PATH`` variable, for example::
+        wget http://abacus.gene.ucl.ac.uk/software/paml4.9j.tgz
+        tar -xzf paml4.9j.tgz
+        cd paml4.9j/src && make -f Makefile
 
-        mv nextflow /usr/local/bin 
+    Then make the executable ``codeml`` available through the ``$PATH`` variable (the downloaded PAML directory can be deleted):
+    
+        *   Either move ``codeml`` to a directory already present in ``$PATH``, e.g. ``usr/local/bin``::
 
-4. Install I-ADHoRe 3.0 from its GitHub `page <https://github.com/VIB-PSB/i-ADHoRe>`__ (required only for collinearity analysis of genome data).
+                sudo mv codeml usr/local/bin
+        
+        *   Or move ``codeml`` to another directory (here assumed to be ``~/bin``) and add this directory to ``$PATH``, for the Bash shell by copying the following line to the shell initialization file (e.g. ``.bashrc``)::
+
+                export PATH=$PATH:~/bin
+    
+    Please refer to PAML `website <http://abacus.gene.ucl.ac.uk/software/paml.html#download>`__ for more information about its installation.
+
+5. Install I-ADHoRe 3.0 from its GitHub `page <https://github.com/VIB-PSB/i-ADHoRe>`__ (required only for collinearity analysis of genome data).
 
 
 Testing your installation

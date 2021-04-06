@@ -5,10 +5,10 @@ import shutil
 import subprocess
 import pandas as pd
 from numpy import zeros
-from wgd.utils import read_fasta
-from wgd.blast_mcl import run_mcl_ava, ava_blast_to_abc, get_one_v_one_orthologs_rbh
-from wgd.ks_distribution import ks_analysis_paranome, ks_analysis_one_vs_one
-from wgd.colinearity import gff_parser
+from wgd_ksrates.utils import read_fasta
+from wgd_ksrates.blast_mcl import run_mcl_ava, ava_blast_to_abc, get_one_v_one_orthologs_rbh
+from wgd_ksrates.ks_distribution import ks_analysis_paranome, ks_analysis_one_vs_one
+from wgd_ksrates.colinearity import gff_parser
 from ksrates.utils import merge_dicts, concat_files, can_i_run_software, translate_cds, write_fasta
 
 _OUTPUT_BLAST_FILE_PATTERN = '{}.blast.tsv'
@@ -383,6 +383,7 @@ def ks_orthologs(species1, species2, cds_fasta1, cds_fasta2, base_dir='.', eval_
         if isinstance(results_df, type(None)) or results_df.empty:
             logging.warning('No ortholog Ks data computed, will write empty ortholog Ks file!')
         with open(os.path.join(output_dir, output_ks_file), 'w+') as o:
+            results_df = results_df.rename(columns={"Paralog1":"Ortholog1", "Paralog2":"Ortholog2"})
             o.write(results_df.round(5).to_csv(sep='\t'))
          # change back to current directory as tmp dir got deleted and subsequent os.getcwd() may fail
         os.chdir(cw_dir)
