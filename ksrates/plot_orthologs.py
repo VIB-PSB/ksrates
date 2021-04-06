@@ -100,10 +100,11 @@ def plot_orthologs_distr(config_file, trios_file):
             logging.error("Species missing from the ortholog Ks list database:")
             for pair in sorted(missing_pairs_ks_list):
                 logging.error(f"- {pair}")
-        logging.error("")
+            logging.error("")
+
         logging.error("Please compute their ortholog Ks data and/or add them to the databases,")
         logging.error("then rerun this step")
-        logging.error("Skipping plotting ortholog Ks distributions in a PDF figure")
+        logging.error("Skipping plotting ortholog Ks distributions in PDF figure")
         sys.exit(0)
 
     # PLOTTING THE DISTRIBUTIONS
