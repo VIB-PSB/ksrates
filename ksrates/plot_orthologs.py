@@ -86,18 +86,18 @@ def plot_orthologs_distr(config_file, trios_file):
             species_out = "_".join(sorted([latinSpecies, latinOut], key=str.casefold))
             sister_out = "_".join(sorted([latinSister, latinOut], key=str.casefold))
 
-            available = True
+            available_data = True
             for pair in [species_sister, species_out, sister_out]:
                 if pair not in list(ks_list_db.index):
-                    available = False
+                    available_data = False
                     if pair not in missing_pairs_ks_list:
                         missing_pairs_ks_list.append(pair)
                 if pair not in list(db.index):
-                    available = False
+                    available_data = False
                     if pair not in missing_pairs_peaks:
                         missing_pairs_peaks.append(pair)
 
-            if available:
+            if available_data:
                 available_trios.append(out)
             else:
                 unavailable_trios.append(out)
