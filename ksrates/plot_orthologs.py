@@ -73,125 +73,122 @@ def plot_orthologs_distr(config_file, trios_file):
 
     # PLOTTING THE DISTRIBUTIONS
     for divergent_pair in outgroups_per_divergent_pair_dict.keys():
-        with PdfPages(os.path.join("rate_adjustment", f"{species_of_interest}", f"orthologs_{divergent_pair}.pdf")) as pdf:
-            species = divergent_pair.split("_")[0]
-            latinSpecies = latin_names[species]
-            sister = divergent_pair.split("_")[1]
-            latinSister = latin_names[sister]
 
+        species, sister = divergent_pair.split("_")[0], divergent_pair.split("_")[1]
+        latinSpecies, latinSister = latin_names[species], latin_names[sister]
+        # Tags (sorted names, e.g. A.filiculoides_S.cucullata)
+        species_sister = "_".join(sorted([latinSpecies, latinSister], key=str.casefold))
+
+        out_list = outgroups_per_divergent_pair_dict[divergent_pair]
+        available_trios, unavailable_trios = [], []
+        for out in out_list:  # Check if all data are available for this trio
+            latinOut = latin_names[out]
+            species_out = "_".join(sorted([latinSpecies, latinOut], key=str.casefold))
+            sister_out = "_".join(sorted([latinSister, latinOut], key=str.casefold))
+
+            available = True
+            for pair in [species_sister, species_out, sister_out]:
+                if pair not in list(ks_list_db.index):
+                    available = False
+                    if pair not in missing_pairs_ks_list:
+                        missing_pairs_ks_list.append(pair)
+                if pair not in list(db.index):
+                    available = False
+                    if pair not in missing_pairs_peaks:
+                        missing_pairs_peaks.append(pair)
+
+            if available:
+                available_trios.append(out)
+            else:
+                unavailable_trios.append(out)
+
+        if len(available_trios) == 0:
+            logging.info("")
+            logging.info(f"Plotting ortholog Ks distributions for species pair [{latinSpecies} - {latinSister}]")
+            logging.warning(f"- Skipping all outspecies: not enough ortholog data available (PDF figure not generated)")
+            continue
+
+        with PdfPages(os.path.join("rate_adjustment", f"{species_of_interest}", f"orthologs_{divergent_pair}.pdf")) as pdf:
             logging.info("")
             logging.info(f"Plotting ortholog Ks distributions for species pair [{latinSpecies} - {latinSister}]")
 
-            # tags, e.g. A.filiculoides_S.cucullata
-            species_sister = "_".join(sorted([latinSpecies, latinSister], key=str.casefold))
+            # SPECIES - SISTER
+            ks_list_species_sister = literal_eval(ks_list_db.at[species_sister, 'Ks_Values'])
+            # Getting 20 KDE curves through bootstrap
+            bootstrap_kde_species_sister = fcPeak.bootstrap_KDE(ks_list_species_sister, 20, x_lim, bin_width_ortho)
 
-            if species_sister in list(ks_list_db.index):
-                ks_list_species_sister = literal_eval(ks_list_db.at[species_sister, 'Ks_Values'])
-                # Getting 20 KDE curves through bootstrap
-                logging.info(f"  Plotting data for the two sister species [{latinSpecies} - {latinSister}]")
-                bootstrap_kde_species_sister = fcPeak.bootstrap_KDE(ks_list_species_sister, 20, x_lim,
-                                                                            bin_width_ortho)
-            else:  # If pair not in Ks list database
-                if species_sister not in missing_pairs_ks_list:
-                    missing_pairs_ks_list.append(species_sister)
+            for out in unavailable_trios:
+                latinOut = latin_names[out]
+                logging.warning(f"- Skipping outspecies [{latinOut}]: not enough ortholog data available")
 
-            out_list = outgroups_per_divergent_pair_dict[divergent_pair]
-            for out in out_list:
+            for out in available_trios:
                 latinOut = latin_names[out]
                 logging.info(f"- Using outspecies [{latinOut}]:")
-
                 fig, axes = fcPlot.generate_orthologs_figure(latinSpecies, latinSister, latinOut, x_lim)
 
                 # tags, e.g. A.filiculoides_S.cucullata
                 species_out = "_".join(sorted([latinSpecies, latinOut], key=str.casefold))
                 sister_out = "_".join(sorted([latinSister, latinOut], key=str.casefold))
 
+                # SPECIES - SISTER
                 # Plotting Ks lists and their KDE lines
-                if species_sister in list(ks_list_db.index):
-                    fcPlot.plot_orthologs_histogram_kdes(ks_list_species_sister, bin_list_ortho, axes[0],
-                                                                bootstrap_kde_species_sister)
+                logging.info(f"  Plotting data for the two sister species [{latinSpecies} - {latinSister}]")
+                fcPlot.plot_orthologs_histogram_kdes(ks_list_species_sister, bin_list_ortho, axes[0],
+                                                            bootstrap_kde_species_sister)
 
-                if species_out in list(ks_list_db.index):
-                    ks_list = literal_eval(ks_list_db.at[species_out, 'Ks_Values'])
-                    # Getting 20 KDE curves through bootstrap
-                    logging.info(f"  Plotting data for focal species and outspecies [{latinSpecies} - {latinOut}]")
-                    bootstrap_kde = fcPeak.bootstrap_KDE(ks_list, 20, x_lim, bin_width_ortho)
-                    # Plotting Ks lists and their KDE lines
-                    fcPlot.plot_orthologs_histogram_kdes(ks_list, bin_list_ortho, axes[1], bootstrap_kde)
-                else:  # If pair not in Ks list database
-                    if species_out not in missing_pairs_ks_list:
-                        missing_pairs_ks_list.append(species_out)                    
+                # SPECIES - OUTGROUP
+                ks_list = literal_eval(ks_list_db.at[species_out, 'Ks_Values'])
+                # Getting 20 KDE curves through bootstrap
+                logging.info(f"  Plotting data for focal species and outspecies [{latinSpecies} - {latinOut}]")
+                bootstrap_kde = fcPeak.bootstrap_KDE(ks_list, 20, x_lim, bin_width_ortho)
+                # Plotting Ks lists and their KDE lines
+                fcPlot.plot_orthologs_histogram_kdes(ks_list, bin_list_ortho, axes[1], bootstrap_kde)
 
-                if sister_out in list(ks_list_db.index):
-                    ks_list = literal_eval(ks_list_db.at[sister_out, 'Ks_Values'])
-                    # Getting 20 KDE curves through bootstrap
-                    logging.info(f"  Plotting data for sister species and outspecies [{latinSister} - {latinOut}]")
-                    bootstrap_kde = fcPeak.bootstrap_KDE(ks_list, 20, x_lim, bin_width_ortho)
-                    # Plotting Ks lists and their KDE lines
-                    fcPlot.plot_orthologs_histogram_kdes(ks_list, bin_list_ortho, axes[2], bootstrap_kde)
-                else:  # If pair not in Ks list database
-                    if sister_out not in missing_pairs_ks_list:
-                        missing_pairs_ks_list.append(sister_out)   
+                # SISTER - OUTGROUP
+                ks_list = literal_eval(ks_list_db.at[sister_out, 'Ks_Values'])
+                # Getting 20 KDE curves through bootstrap
+                logging.info(f"  Plotting data for sister species and outspecies [{latinSister} - {latinOut}]")
+                bootstrap_kde = fcPeak.bootstrap_KDE(ks_list, 20, x_lim, bin_width_ortho)
+                # Plotting Ks lists and their KDE lines
+                fcPlot.plot_orthologs_histogram_kdes(ks_list, bin_list_ortho, axes[2], bootstrap_kde)
 
                 # Plotting estimated mode of the orthologs distributions as vertical lines
                 y_upper_lim = axes[0].get_ylim()[1] 
                 if not no_peak_db: # if the peak database is available
-                    
-                    if species_sister in list(db.index):
-                        fcPlot.plot_orthologs_peak_lines(db, species_sister, axes[0], y_upper_lim)
-                    else:
-                        if species_sister not in missing_pairs_peaks:
-                            missing_pairs_peaks.append(species_sister)
+                    fcPlot.plot_orthologs_peak_lines(db, species_sister, axes[0], y_upper_lim)
+                    fcPlot.plot_orthologs_peak_lines(db, species_out, axes[1], y_upper_lim)
+                    fcPlot.plot_orthologs_peak_lines(db, sister_out, axes[2], y_upper_lim)
 
-                    if species_out in list(db.index):
-                        fcPlot.plot_orthologs_peak_lines(db, species_out, axes[1], y_upper_lim)
-                    else:
-                        if species_out not in missing_pairs_peaks:
-                            missing_pairs_peaks.append(species_out)
-
-                    if sister_out in list(db.index):
-                        fcPlot.plot_orthologs_peak_lines(db, sister_out, axes[2], y_upper_lim)
-                    else:
-                        if sister_out not in missing_pairs_peaks:
-                            missing_pairs_peaks.append(sister_out)
-
-                object_list = []
-                for ax in axes:
-                    lgd = ax.get_legend()
-                    object_list.append(lgd)
-                sup = fig._suptitle
-                object_list.append(sup)
-
-                pdf.savefig(fig, transparent=True, bbox_extra_artists=(sup,), bbox_inches='tight')
+                pdf.savefig(fig, transparent=True, bbox_extra_artists=(fig._suptitle,), bbox_inches='tight')
                 plt.close()
         logging.info(f"- Saving PDF figure [orthologs_{divergent_pair}.pdf]")
 
     # Report if species are missing from any of the two ortholog databases
     if len(missing_pairs_ks_list) != 0 or len(missing_pairs_peaks) != 0:
         logging.warning("")
-        logging.warning("One or more species pairs are missing from the ortholog databases,")
-        logging.warning("their plot will be incomplete.")
+        logging.warning("The species pairs listed below are not (yet) available in the ortholog databases")
+        logging.warning("The trios involving such species pairs have not been plotted")
         logging.warning("")
 
         missing_in_both_dbs = list((set(missing_pairs_peaks) & set(missing_pairs_ks_list)))
         if len(missing_in_both_dbs) != 0:
-            logging.warning("Species missing from both Ks peak and Ks list ortholog databases:")
+            logging.warning("Species pairs not yet available in both Ks peak and Ks list ortholog databases:")
             for pair in sorted(missing_in_both_dbs):
-                logging.warning(f"- {pair}")
+                logging.warning(f"  {pair.split('_')[0]} - {pair.split('_')[1]}")
             logging.warning("")
 
         missing_pairs_peaks = list(set(missing_pairs_peaks) - set(missing_in_both_dbs))
         if len(missing_pairs_peaks) != 0:
-            logging.warning("Species missing from the ortholog Ks peak database:")
+            logging.warning("Species pairs not yet available in the ortholog Ks peak database:")
             for pair in sorted(missing_pairs_peaks):
-                logging.warning(f"- {pair}")
+                logging.warning(f"  {pair.split('_')[0]} - {pair.split('_')[1]}")
             logging.warning("")
 
         missing_pairs_ks_list = list(set(missing_pairs_ks_list) - set(missing_in_both_dbs))
         if len(missing_pairs_ks_list) != 0:
-            logging.warning("Species missing from the ortholog Ks list database:")
+            logging.warning("Species pairs not yet available in the ortholog Ks list database:")
             for pair in sorted(missing_pairs_ks_list):
-                logging.warning(f"- {pair}")
+                logging.warning(f"  {pair.split('_')[0]} - {pair.split('_')[1]}")
             logging.warning("")
 
         logging.warning("Please compute their ortholog Ks data and/or add the ortholog data to the databases,")
