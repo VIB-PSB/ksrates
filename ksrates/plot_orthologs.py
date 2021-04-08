@@ -92,10 +92,11 @@ def plot_orthologs_distr(config_file, trios_file):
                     available_data = False
                     if pair not in missing_pairs_ks_list:
                         missing_pairs_ks_list.append(pair)
-                if pair not in list(db.index):
-                    available_data = False
-                    if pair not in missing_pairs_peaks:
-                        missing_pairs_peaks.append(pair)
+                if not no_peak_db:  # If ortholog Ks peak database is available
+                    if pair not in list(db.index):
+                        available_data = False
+                        if pair not in missing_pairs_peaks:
+                            missing_pairs_peaks.append(pair)
 
             if available_data:
                 available_trios.append(out)
@@ -154,7 +155,7 @@ def plot_orthologs_distr(config_file, trios_file):
 
                 # Plotting estimated mode of the orthologs distributions as vertical lines
                 y_upper_lim = axes[0].get_ylim()[1] 
-                if not no_peak_db: # if the peak database is available
+                if not no_peak_db:  # If ortholog Ks peak database is available
                     fcPlot.plot_orthologs_peak_lines(db, species_sister, axes[0], y_upper_lim)
                     fcPlot.plot_orthologs_peak_lines(db, species_out, axes[1], y_upper_lim)
                     fcPlot.plot_orthologs_peak_lines(db, sister_out, axes[2], y_upper_lim)
