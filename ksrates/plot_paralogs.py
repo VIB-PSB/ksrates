@@ -92,14 +92,18 @@ def plot_paralogs_distr(config_file, correction_table_file, paralog_tsv_file, an
         logging.info(f"Plotting paranome and anchor pairs Ks distributions for species [{species}]")
 
     # PLOTTING THE BACKGROUND PARALOG AND/OR ANCHOR DISTRIBUTION
-    fig_uncorr, ax_uncorr = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, "un-corrected", correction_table_available, plot_correction_arrows)
-    fig_corr, ax_corr = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, "corrected", correction_table_available, plot_correction_arrows)
+    fig_uncorr, ax_uncorr = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
+                                    "un-corrected", correction_table_available, plot_correction_arrows,
+                                    paranome_data=paranome_analysis, colinearity_data=colinearity_analysis)
+    fig_corr, ax_corr = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
+                                    "corrected", correction_table_available, plot_correction_arrows,
+                                    paranome_data=paranome_analysis, colinearity_data=colinearity_analysis)
 
     if paranome_analysis:
         paranome_list, paranome_weights = fc_extract_ks_list.ks_list_from_tsv(paralog_tsv_file, max_ks_para, "paralogs")
-        hist_paranome = fcPlot.plot_histogram("Whole-paranome (weighted)", ax_uncorr, paranome_list, bin_list, bin_width_para,
+        hist_paranome = fcPlot.plot_histogram("Whole-paranome", ax_uncorr, paranome_list, bin_list, bin_width_para,
                             max_ks_para, kde_bandwidth_modifier, weight_list=paranome_weights)
-        fcPlot.plot_histogram("Whole-paranome (weighted)", ax_corr, paranome_list, bin_list, bin_width_para,
+        fcPlot.plot_histogram("Whole-paranome", ax_corr, paranome_list, bin_list, bin_width_para,
                             max_ks_para, kde_bandwidth_modifier, weight_list=paranome_weights)
 
     if colinearity_analysis:

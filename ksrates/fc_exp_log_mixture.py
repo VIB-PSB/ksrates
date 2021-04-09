@@ -32,8 +32,12 @@ def generate_peak_model_figure(species_escape_whitespace, x_max_lim):
   """
   fig_peaks, [[ax_peaks_ks, ax_peaks_logks], [ax_peaks2_ks, ax_peaks2_logks]] = plt.subplots(nrows=2, ncols=2, figsize=(20, 16), sharey="row")
   sup_peaks = fig_peaks.suptitle(f"Exponential-Lognormal mixture model on ${species_escape_whitespace}$ " +"$K_\mathregular{S}$ " + f"paranome\n\nInitialized from data")
+  
   ax_peaks2_ks.set_xlabel("$K_\mathregular{S}$")
   ax_peaks2_logks.set_xlabel("ln $K_\mathregular{S}$")
+  ax_peaks_ks.set_ylabel("Density of weighted retained paralogs")
+  ax_peaks2_ks.set_ylabel("Density of weighted retained paralogs")
+
   for ax_pair in [[ax_peaks_ks, ax_peaks_logks], [ax_peaks2_ks, ax_peaks2_logks]]:
     ax_pair[0].set_xlim(0, x_max_lim)
     ax_pair[1].set_xlim(-5, 2)
@@ -55,8 +59,12 @@ def generate_random_model_figure(species_escape_whitespace, min_num_comp, max_nu
   sup_random = fig_random.suptitle(f"Exponential-Lognormal mixture model on ${species_escape_whitespace}$ " + "$K_\mathregular{S}$ " + f"paranome\n\nRandom initialization")
   if len(axes_random.shape) == 1: # there is only one row, because the max_num_comp is 3
     axes_random = [axes_random]   # convert into a list of list just to mimic a multi-row matrix
+  
   axes_random[-1][0].set_xlabel("$K_\mathregular{S}$")
   axes_random[-1][1].set_xlabel("ln $K_\mathregular{S}$")
+  for axes_pair in axes_random:
+    axes_pair[0].set_ylabel("Density of weighted retained paralogs")
+
   for ax_pair in list(axes_random):
     ax_pair[0].set_xlim(0, x_max_lim)
     ax_pair[1].set_xlim(-5, 2)
@@ -75,8 +83,8 @@ def generate_best_model_figure(latin_species, x_max_lim, y_max_lim, correction_t
   :param plot_correction_arrows: boolean stating whether there will be plotted correction arrows or not
   :return figure, axes and figure title
   """
-  fig_best_model, ax_best_ks = fcPlot.generate_mixed_plot_figure(latin_species, x_max_lim, y_max_lim, "corrected", correction_table_available, plot_correction_arrows)
-  ax_best_ks.set_ylabel("Number of retained duplicates")
+  fig_best_model, ax_best_ks = fcPlot.generate_mixed_plot_figure(latin_species, x_max_lim, y_max_lim, "corrected",
+                     correction_table_available, plot_correction_arrows, paranome_data=True, colinearity_data=False)
   return fig_best_model, ax_best_ks
 
 
@@ -218,7 +226,7 @@ def get_spline(ks_data_log, ks_weights_log, species, species_escape_whitespace, 
 
   for ax_spl in axes_kde_spl:
     ax_spl.set_xlabel("ln $K_\mathregular{S}$")
-  axes_kde_spl[0].set_ylabel("Density of retained duplicates")
+  axes_kde_spl[0].set_ylabel(f"Density of weighted retained paralogs")
 
   # Get KDE
   max_ks = ks_data_log.max()
@@ -250,7 +258,7 @@ def get_spline(ks_data_log, ks_weights_log, species, species_escape_whitespace, 
   for ax_kde_spl in axes_kde_spl:
     ax_kde_spl.hist(ks_list_reflected, weights=weight_list_reflected, bins=arange(-5, 5, 0.1), color="r", alpha=0.2, density=True)
     ax_kde_spl.axvline(x=max_ks, color="0.5", linestyle="--", lw=1.1, label=f"Reflection boundary")
-    ax_kde_spl.legend(loc="upper left")
+    ax_kde_spl.legend(loc="upper left", fontsize=14)  # Fontsize here should stay 14
 
   axes_kde_spl[0].set_ylim(0, axes_kde_spl[0].get_ylim()[1] * 1.15) # resize to not overlap with legend
   kde_spl.savefig(os.path.join("rate_adjustment", f"{species}", output, f"elmm_{species}_kde_spline.pdf"), bbox_inches="tight")
@@ -291,10 +299,10 @@ def find_peak_init_parameters(spl_x, spl_y, species, species_escape_whitespace, 
   peaks, __ = find_peaks(spl_y)
   prominences = peak_prominences(spl_y, peaks)[0]
 
-  fig_refl_RL, axes_refl = plt.subplots(nrows=len(peaks)+1, ncols=2, figsize=(14, 7*(len(peaks)+1)), sharey=True)
-  fig_refl_RL.suptitle("Peak detection in log-transformed $K_\mathregular{S}$ paranome of " + f"${species_escape_whitespace}$", y = 0.92)
+  fig_refl_RL, axes_refl = plt.subplots(nrows=len(peaks)+1, ncols=2, figsize=(15, 7.5 *(len(peaks)+1)), sharey=True)
+  fig_refl_RL.suptitle("Peak detection in log-transformed $K_\mathregular{S}$ paranome of " + f"${species_escape_whitespace}$")
   for w in range(len(peaks)+1):
-    axes_refl[w][0].set_ylabel("Density of retained duplicates")
+    axes_refl[w][0].set_ylabel(f"Density of weighted retained paralogs")
   for w in [0,1]:
     axes_refl[len(peaks)+1-1][w].set_xlabel("ln $K_\mathregular{S}$")
   # Plotting peaks and prominences found by Scipy
@@ -338,7 +346,7 @@ def find_peak_init_parameters(spl_x, spl_y, species, species_escape_whitespace, 
     if peak_prominences_after_reflect >= peak_threshold:
       # Plot the width after reflection for significant prominences
       axes_refl[i+1,0].hlines(y=height[0], xmin=spl_x[peak_index], xmax=spl_x[peak_index]+(peak_width_after_reflect/2)/100, linestyles="-", color="darkred", lw=1, label=round((peak_width_after_reflect / 2 / 100), 2))
-    axes_refl[i+1,0].legend(frameon=False)
+    axes_refl[i+1,0].legend(frameon=False, fontsize=14)  # Fontsize here should stay 14
 
   significant_peaks_R1 = reflect_prominences_R1  >= peak_threshold # boolean list stating which prominences are significant
 
@@ -371,14 +379,14 @@ def find_peak_init_parameters(spl_x, spl_y, species, species_escape_whitespace, 
     if peak_prominences_after_reflect >= peak_threshold:
       # Plot the width after reflection for significant prominences
       axes_refl[i+1,1].hlines(y=height[0], xmin=spl_x[peak_index], xmax=spl_x[peak_index]+(peak_width_after_reflect/2)/100, linestyles="-", color="darkred", lw=1, label=round((peak_width_after_reflect / 2 / 100), 2))
-    axes_refl[i+1,1].legend(frameon=False)
+    axes_refl[i+1,1].legend(frameon=False, fontsize=14)  # Fontsize here should stay 14
 
   significant_peaks_R2 = reflect_prominences_R2  >= peak_threshold # boolean list stating which prominences are significant
 
-  axes_refl[0,0].set_title('Reflection L <-- R', fontsize=17)
-  axes_refl[0,0].legend()
-  axes_refl[0,1].set_title('Reflection L --> R', fontsize=17)
-  axes_refl[0,1].legend()
+  axes_refl[0,0].set_title('Reflection L <-- R')
+  axes_refl[0,0].legend(fontsize=14)  # Fontsize here should stay 14
+  axes_refl[0,1].set_title('Reflection L --> R')
+  axes_refl[0,1].legend(fontsize=14)  # Fontsize here should stay 14
   original_y_lim = axes_refl[0][0].get_ylim()[1]
   for w in range(len(axes_refl)):
     for z in [0,1]:
@@ -859,10 +867,10 @@ def plot_fitted_comp(ax_ks, ax_logks, means, stdevs, lambd, weights, max_x_axis_
   total_pdf = total_pdf * scaling
 
   ax_ks.plot(x_points_strictly_positive, total_pdf, "k-", lw=1.5, label=f'Exp-lognormal mixture model')
-  ax_ks.legend(loc="upper right")
+  ax_ks.legend(loc="upper right", fontsize=14)  # Fontsize here should stay 14
   if plot_logtranformed:
     ax_logks.plot(x_points, total_pdf_log, "k-", lw=1.5, label=f'Total PDF')
-    ax_logks.legend(loc="upper left")
+    ax_logks.legend(loc="upper left", fontsize=14)  # Fontsize here should stay 14
 
 
 def plot_histograms_mixture(ax_ks, ax_logks, ks_data, ks_weights, ks_data_log, ks_weights_log, bin_list, bin_width, y_lim, best_model=False):
@@ -882,7 +890,7 @@ def plot_histograms_mixture(ax_ks, ax_logks, ks_data, ks_weights, ks_data_log, k
   :param bin_width: width of the histogram bins
   :param best_model: boolean to flag if the result to be plotted is coming from the best model or not
   """
-  fcPlot.plot_histogram("Whole-paranome (weighted)", ax_ks, ks_data, bin_list, None,
+  fcPlot.plot_histogram("Whole-paranome", ax_ks, ks_data, bin_list, None,
                       None, None, weight_list=ks_weights, plot_kde=False, density=True)
   ax_logks.hist(ks_data_log, weights=ks_weights_log, bins=arange(-10, 10 + bin_width, bin_width), histtype='stepfilled', density=True, color="r", alpha=0.3, label=f"Log-transformed paranome")
 
@@ -1042,7 +1050,7 @@ def plot_best_model(fig_best_model, ax_best_model, species, ks_data, ks_weights,
   :param deconvoluted_data: artificial dataset that produces the same histogram shape, used to avoid having weights in EM
   :param max_ks_EM: upper limit of the Ks range considered for the mixture modeling fitting
   """
-  hist_paranome = fcPlot.plot_histogram("Whole-paranome (weighted)", ax_best_model, ks_data, bin_list, None, None, None, ks_weights, plot_kde=False, density=False)
+  hist_paranome = fcPlot.plot_histogram("Whole-paranome", ax_best_model, ks_data, bin_list, None, None, None, ks_weights, plot_kde=False, density=False)
 
   # Set the height of the distribution according to heighest histogram bin
   if y_lim is None:
@@ -1080,7 +1088,7 @@ def plot_best_model(fig_best_model, ax_best_model, species, ks_data, ks_weights,
 
   # # TEMPORARY FOR A FIGURE PLOT WITH DENSITY FOR COMPARISON AFTER SCALING
   # fig, ax = generate_best_model_figure("elaeis", "Elaeis guineensis", 3, None, True, True)
-  # fcPlot.plot_histogram("Whole-paranome (weighted)", ax, ks_data, bin_list, None, None, None, ks_weights, plot_kde=False, density=True)
+  # fcPlot.plot_histogram("Whole-paranome", ax, ks_data, bin_list, None, None, None, ks_weights, plot_kde=False, density=True)
   # if correction_table_available:
   #   fcPlot.plot_divergences(correction_table, consensus_peak_for_multiple_outgroups, dummy_axis, ax, color_list, plot_correction_arrows)
   # plot_fitted_comp(ax, None, final_means, final_stdevs, final_lambd, final_weights, peak_stats, scaling=1, plot_peak_markers=True, plot_logtranformed=False)

@@ -52,7 +52,8 @@ _MIXED_ADJUSTED_PLOT_FILENAME = "mixed_{}_adjusted.pdf"
 _MIXED_UNADJUSTED_PLOT_FILENAME = "mixed_{}_unadjusted.pdf"
 
 
-def generate_mixed_plot_figure(species, x_max_lim, y_max_lim, corrected_or_not, correction_table_available, plot_correction_arrows):
+def generate_mixed_plot_figure(species, x_max_lim, y_max_lim, corrected_or_not, correction_table_available, 
+                               plot_correction_arrows, paranome_data=True, colinearity_data=True):
     """
     Initializes a figure with a single empty plot for the mixed distribution.
 
@@ -89,7 +90,10 @@ def generate_mixed_plot_figure(species, x_max_lim, y_max_lim, corrected_or_not, 
 
     seaborn.despine(offset=10)
     ax.set_xlabel("$K_\mathregular{S}$")
-    ax.set_ylabel("Number of retained duplicates")
+    if paranome_data:  # If paranome (with or without anchors) is going to be plotted
+        ax.set_ylabel("Number of retained duplicates (weighted)")
+    elif colinearity_data:  # If only anchor pairs are going to plotted
+        ax.set_ylabel("Number of retained anchor pairs (weighted)")
 
     ax.set_xlim(0, x_max_lim)
     if isinstance(y_max_lim, float):
