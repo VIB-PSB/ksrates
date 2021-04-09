@@ -1,4 +1,5 @@
-axes.labelsize : 20
+axes.titlesize : 16
+axes.labelsize : 19
 axes.linewidth : 1.2
 axes.labelpad : 14
 xtick.labelsize : 16
@@ -10,7 +11,7 @@ ytick.major.size : 8
 ytick.major.width : 1.2
 ytick.major.pad : 8
 legend.frameon : False
-legend.fontsize : 14
+legend.fontsize : 16
 figure.subplot.bottom : 0.15
 figure.subplot.left : 0.09
 figure.titlesize : 20
