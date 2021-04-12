@@ -258,7 +258,7 @@ def get_spline(ks_data_log, ks_weights_log, species, species_escape_whitespace, 
   for ax_kde_spl in axes_kde_spl:
     ax_kde_spl.hist(ks_list_reflected, weights=weight_list_reflected, bins=arange(-5, 5, 0.1), color="r", alpha=0.2, density=True)
     ax_kde_spl.axvline(x=max_ks, color="0.5", linestyle="--", lw=1.1, label=f"Reflection boundary")
-    ax_kde_spl.legend(loc="upper left", fontsize=14)  # Fontsize here should stay 14
+    ax_kde_spl.legend(loc="upper left")
 
   axes_kde_spl[0].set_ylim(0, axes_kde_spl[0].get_ylim()[1] * 1.15) # resize to not overlap with legend
   kde_spl.savefig(os.path.join("rate_adjustment", f"{species}", output, f"elmm_{species}_kde_spline.pdf"), bbox_inches="tight")
@@ -346,7 +346,7 @@ def find_peak_init_parameters(spl_x, spl_y, species, species_escape_whitespace, 
     if peak_prominences_after_reflect >= peak_threshold:
       # Plot the width after reflection for significant prominences
       axes_refl[i+1,0].hlines(y=height[0], xmin=spl_x[peak_index], xmax=spl_x[peak_index]+(peak_width_after_reflect/2)/100, linestyles="-", color="darkred", lw=1, label=round((peak_width_after_reflect / 2 / 100), 2))
-    axes_refl[i+1,0].legend(frameon=False, fontsize=14)  # Fontsize here should stay 14
+    axes_refl[i+1,0].legend(frameon=False)
 
   significant_peaks_R1 = reflect_prominences_R1  >= peak_threshold # boolean list stating which prominences are significant
 
@@ -379,14 +379,14 @@ def find_peak_init_parameters(spl_x, spl_y, species, species_escape_whitespace, 
     if peak_prominences_after_reflect >= peak_threshold:
       # Plot the width after reflection for significant prominences
       axes_refl[i+1,1].hlines(y=height[0], xmin=spl_x[peak_index], xmax=spl_x[peak_index]+(peak_width_after_reflect/2)/100, linestyles="-", color="darkred", lw=1, label=round((peak_width_after_reflect / 2 / 100), 2))
-    axes_refl[i+1,1].legend(frameon=False, fontsize=14)  # Fontsize here should stay 14
+    axes_refl[i+1,1].legend(frameon=False)
 
   significant_peaks_R2 = reflect_prominences_R2  >= peak_threshold # boolean list stating which prominences are significant
 
   axes_refl[0,0].set_title('Reflection L <-- R')
-  axes_refl[0,0].legend(fontsize=14)  # Fontsize here should stay 14
+  axes_refl[0,0].legend()
   axes_refl[0,1].set_title('Reflection L --> R')
-  axes_refl[0,1].legend(fontsize=14)  # Fontsize here should stay 14
+  axes_refl[0,1].legend()
   original_y_lim = axes_refl[0][0].get_ylim()[1]
   for w in range(len(axes_refl)):
     for z in [0,1]:
@@ -867,10 +867,10 @@ def plot_fitted_comp(ax_ks, ax_logks, means, stdevs, lambd, weights, max_x_axis_
   total_pdf = total_pdf * scaling
 
   ax_ks.plot(x_points_strictly_positive, total_pdf, "k-", lw=1.5, label=f'Exp-lognormal mixture model')
-  ax_ks.legend(loc="upper right", fontsize=14)  # Fontsize here should stay 14
+  ax_ks.legend(loc="upper right")
   if plot_logtranformed:
     ax_logks.plot(x_points, total_pdf_log, "k-", lw=1.5, label=f'Total PDF')
-    ax_logks.legend(loc="upper left", fontsize=14)  # Fontsize here should stay 14
+    ax_logks.legend(loc="upper left")
 
 
 def plot_histograms_mixture(ax_ks, ax_logks, ks_data, ks_weights, ks_data_log, ks_weights_log, bin_list, bin_width, y_lim, best_model=False):

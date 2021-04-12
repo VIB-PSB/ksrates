@@ -11,7 +11,7 @@ ytick.major.size : 8
 ytick.major.width : 1.2
 ytick.major.pad : 8
 legend.frameon : False
-legend.fontsize : 16
+legend.fontsize : 14
 figure.subplot.bottom : 0.15
 figure.subplot.left : 0.09
 figure.titlesize : 20
