@@ -90,8 +90,10 @@ def lognormal_mixture(config_file, paralog_tsv_file, anchors_ks_tsv_file, correc
         logging.error("Exiting")
         sys.exit(1)
 
-    fig_para, axis_para = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, "corrected", correction_table_available, plot_correction_arrows)
-    fig_colin, axis_colin = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, "corrected", correction_table_available, plot_correction_arrows)
+    fig_para, axis_para = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, "corrected",
+                    correction_table_available, plot_correction_arrows, paranome_data=True, colinearity_data=False)
+    fig_colin, axis_colin = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, "corrected",
+                    correction_table_available, plot_correction_arrows, paranome_data=False, colinearity_data=True)
 
     parameter_table = []
 
@@ -99,7 +101,7 @@ def lognormal_mixture(config_file, paralog_tsv_file, anchors_ks_tsv_file, correc
         with open (os.path.join("rate_adjustment", f"{species}", subfolder, f"lmm_{species}_parameters_paranome.txt"), "w+") as outfile:
             logging.info("Performing lognormal mixture model on whole-paranome Ks distribution")
             paranome_list, paranome_weights = fc_extract_ks_list.ks_list_from_tsv(paralog_tsv_file, max_ks_para, "paralogs")
-            hist_paranome = fcPlot.plot_histogram("Whole-paranome (weighted)", axis_para, paranome_list, bin_list, 
+            hist_paranome = fcPlot.plot_histogram("Whole-paranome", axis_para, paranome_list, bin_list, 
                                         bin_width_para, max_ks_para, kde_bandwidth_modifier, paranome_weights, plot_kde=False)
             # Setting the plot height based on tallest histogram bin
             if y_lim is None:

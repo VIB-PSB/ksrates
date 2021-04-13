@@ -52,7 +52,8 @@ _MIXED_ADJUSTED_PLOT_FILENAME = "mixed_{}_adjusted.pdf"
 _MIXED_UNADJUSTED_PLOT_FILENAME = "mixed_{}_unadjusted.pdf"
 
 
-def generate_mixed_plot_figure(species, x_max_lim, y_max_lim, corrected_or_not, correction_table_available, plot_correction_arrows):
+def generate_mixed_plot_figure(species, x_max_lim, y_max_lim, corrected_or_not, correction_table_available, 
+                               plot_correction_arrows, paranome_data=True, colinearity_data=True):
     """
     Initializes a figure with a single empty plot for the mixed distribution.
 
@@ -89,7 +90,10 @@ def generate_mixed_plot_figure(species, x_max_lim, y_max_lim, corrected_or_not, 
 
     seaborn.despine(offset=10)
     ax.set_xlabel("$K_\mathregular{S}$")
-    ax.set_ylabel("Number of retained duplicates")
+    if paranome_data:  # If paranome (with or without anchors) is going to be plotted
+        ax.set_ylabel("Number of retained duplicates (weighted)")
+    elif colinearity_data:  # If only anchor pairs are going to plotted
+        ax.set_ylabel("Number of retained anchor pairs (weighted)")
 
     ax.set_xlim(0, x_max_lim)
     if isinstance(y_max_lim, float):
@@ -538,18 +542,18 @@ def generate_orthologs_figure(species, sister_species, outgroup_species, x_lim):
 
     fig, axes = plt.subplots(1, 3, sharex=True, sharey="row", figsize=(25, 7.5))
     fig.suptitle(f"Ortholog distributions\n\n(${species_escape_whitespaces}$, ${sister_escape_whitespaces}$, "
-                 f"outgroup = ${outspecies_escape_whitespaces}$)", fontsize=19, y=1.15)
+                 f"outgroup = ${outspecies_escape_whitespaces}$)", y=1.15)
     axes[0].set_xlim(0, x_lim)
-    axes[0].set_title(f"${species_escape_whitespaces}$ — ${sister_escape_whitespaces}$", fontsize=16)
+    axes[0].set_title(f"${species_escape_whitespaces}$ — ${sister_escape_whitespaces}$")
     axes[0].set_ylabel("Number of retained orthologs")
 
     axes[1].set_xlim(0, x_lim)
     axes[1].tick_params("y", reset=True)
-    axes[1].set_title(f"${species_escape_whitespaces}$ — ${outspecies_escape_whitespaces}$", fontsize=16)
+    axes[1].set_title(f"${species_escape_whitespaces}$ — ${outspecies_escape_whitespaces}$")
 
     axes[2].set_xlim(0, x_lim)
     axes[2].tick_params("y", reset=True)
-    axes[2].set_title(f"${sister_escape_whitespaces}$ — ${outspecies_escape_whitespaces}$", fontsize=16)
+    axes[2].set_title(f"${sister_escape_whitespaces}$ — ${outspecies_escape_whitespaces}$")
 
     axes[0].set_xlabel("$K_\mathregular{S}$")
     axes[0].set_ylabel("Number of retained orthologs")
@@ -602,4 +606,4 @@ def plot_orthologs_peak_lines(ortholog_db, tag, ax_num, y_upper_lim):
     # plot_divergence_line(ax_num, median_value, sd_median, "navy",
     #                      f"Mean median: {round(median_value,2)} ± {round(sd_median,2)}",
     #                      plot_correction_arrows=False, zorder_ID=-2, height=0.9)
-    ax_num.legend(fontsize=16)
+    ax_num.legend()

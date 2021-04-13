@@ -1,4 +1,5 @@
-axes.labelsize : 20
+axes.titlesize : 16
+axes.labelsize : 19
 axes.linewidth : 1.2
 axes.labelpad : 14
 xtick.labelsize : 16

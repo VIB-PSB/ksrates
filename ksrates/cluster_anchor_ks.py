@@ -288,8 +288,12 @@ def cluster_anchor_ks(config_file, correction_table_file, path_anchorpoints_txt,
 
 
     # Generate the plot for the mixed distribution with clusters of Ks
-    fig_corr_first, ax_corr_first = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_max_lim, "corrected", correction_table_available, plot_correction_arrows)
-    fig_uncorr_first, ax_uncorr_first = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_max_lim, "un-corrected", correction_table_available, plot_correction_arrows)
+    fig_corr_first, ax_corr_first = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim,
+                                    y_max_lim, "corrected", correction_table_available, plot_correction_arrows,
+                                    paranome_data=False, colinearity_data=True)
+    fig_uncorr_first, ax_uncorr_first = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim,
+                                    y_max_lim, "un-corrected", correction_table_available, plot_correction_arrows,
+                                    paranome_data=False, colinearity_data=True)
 
     # Plot the original complete anchor distribution in the background
     fcPlot.plot_histogram_for_anchor_clustering(ax_corr_first, anchor_ks_list, anchors_weights, bin_list, y_max_lim)
@@ -357,8 +361,12 @@ def cluster_anchor_ks(config_file, correction_table_file, path_anchorpoints_txt,
         filtered_cluster_of_ks, __, __, filtered_cluster_color_list = fcCluster.get_clusters_of_ks(gmm_clustered_medians2, clean_medians_list, clean_segment_medians_list, chosen_nonred_segment_pair_ks_list, "second")
 
         # Generate the plot for the mixed distribution with clusters of Ks
-        fig_corr_second, ax_corr_second = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_max_lim, "corrected", correction_table_available, plot_correction_arrows)
-        fig_uncorr_second, ax_uncorr_second = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_max_lim, "un-corrected", correction_table_available, plot_correction_arrows)
+        fig_corr_second, ax_corr_second = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim,
+                                     y_max_lim, "corrected", correction_table_available, plot_correction_arrows,
+                                     paranome_data=False, colinearity_data=True)
+        fig_uncorr_second, ax_uncorr_second = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim,
+                                     y_max_lim, "un-corrected", correction_table_available, plot_correction_arrows,
+                                     paranome_data=False, colinearity_data=True)
         
         # Plot the original complete anchor distribution in the background
         fcPlot.plot_histogram_for_anchor_clustering(ax_corr_second, anchor_ks_list, anchors_weights, bin_list, y_max_lim)
