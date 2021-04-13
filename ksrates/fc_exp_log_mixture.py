@@ -390,7 +390,7 @@ def find_peak_init_parameters(spl_x, spl_y, species, species_escape_whitespace, 
   original_y_lim = axes_refl[0][0].get_ylim()[1]
   for w in range(len(axes_refl)):
     for z in [0,1]:
-      axes_refl[w][z].set_ylim(0, original_y_lim * 1.2) # resize to not overlap with legend
+      axes_refl[w][z].set_ylim(top=(original_y_lim * 1.2)) # resize to not overlap with legend
   fig_refl_RL.savefig(os.path.join("rate_adjustment", f"{species}", output, f"elmm_{species}_peaks.pdf"), bbox_inches="tight")
   plt.close(fig_refl_RL)
 
