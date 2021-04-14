@@ -59,7 +59,7 @@ def correct(config_file, trios_file):
 
     for __, row in trios.iterrows():
         node = row['Node']
-        species, sister, out = row['Species'], row['Sister_Species'], row['Out_Species']
+        species, sister, out = row['Focal_Species'], row['Sister_Species'], row['Out_Species']
         latinSpecies, latinSister, latinOut = latin_names[species], latin_names[sister], latin_names[out]
         logging.info(f" - Adjusting the peak for [{latinSpecies}] and [{latinSister}] with outspecies [{latinOut}]")
 
