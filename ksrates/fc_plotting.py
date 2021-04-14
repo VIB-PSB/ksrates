@@ -589,10 +589,8 @@ def plot_orthologs_peak_lines(ortholog_db, tag, ax_num, y_upper_lim):
     :param ax_num: axis coordinate of the current plot in the figure
     :param y_upper_lim: original upper y-axis limit before resizing
     """
-    peak = ortholog_db.at[tag, 'Ortholog_Mode']
-    sd_peak = ortholog_db.at[tag, 'Ortholog_Mode_SD']
-    median_value = ortholog_db.at[tag, 'Ortholog_Median']
-    sd_median = ortholog_db.at[tag, 'Ortholog_Median_SD']
+    peak = ortholog_db.at[tag, 'Mode']
+    sd_peak = ortholog_db.at[tag, 'Mode_SD']
 
     ax_num.set_ylim(0, y_upper_lim * 1.1) # resize to not overlap with legend
 

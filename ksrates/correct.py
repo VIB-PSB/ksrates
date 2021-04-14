@@ -71,10 +71,10 @@ def correct(config_file, trios_file):
             rate_species, rate_species_sd, rate_sister, rate_sister_sd = fcCorrect.decompose_ortholog_ks(db, species_sister, species_out, sister_out, peak_stats)
             correct_peak, correct_sd = fcCorrect.compute_corrected_ks_species_sister(rate_species, rate_species_sd)
             # OC_segment is a measure of better/worse outgroup choices for the decomposition into branch-specific Ks contributions; see documentation.
-            OC_segment = db.loc[species_out]['Ortholog_Mode'] - rate_species
+            OC_segment = db.loc[species_out]['Mode'] - rate_species
 
-            orig_mode = db.loc[species_sister]['Ortholog_Mode']
-            orig_mode_sd = db.loc[species_sister]['Ortholog_Mode_SD']
+            orig_mode = db.loc[species_sister]['Mode']
+            orig_mode_sd = db.loc[species_sister]['Mode_SD']
 
             all_trios_correction_array.append([node, latinSpecies, latinSister, latinOut,
                                               round(correct_peak, 6), round(correct_sd, 6),
@@ -150,10 +150,8 @@ def correct(config_file, trios_file):
 
             species_sister = "_".join(sorted([latin_names[species_of_interest], sister], key=str.casefold))
 
-            orig_mode = db.loc[species_sister]['Ortholog_Mode']
-            orig_mode_sd = db.loc[species_sister]['Ortholog_Mode_SD']
-            orig_median = db.loc[species_sister]['Ortholog_Median']
-            orig_median_sd = db.loc[species_sister]['Ortholog_Median_SD']
+            orig_mode = db.loc[species_sister]['Mode']
+            orig_mode_sd = db.loc[species_sister]['Mode_SD']
 
             all_pairs_array.append([node, latin_names[species_of_interest], sister, round(peak_mean, 6), round(sd_err_prop, 6), round(rate_species_mean, 6), round(rate_sister_mean, 6),
                                     round(peak_best_oc_float, 6), round(sd_best_oc_float, 6), round(rate_species_best_out_float, 6), round(rate_sister_best_out_float, 6),

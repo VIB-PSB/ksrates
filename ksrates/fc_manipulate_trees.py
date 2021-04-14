@@ -471,7 +471,7 @@ def get_rates_from_ortholog_peak_db(rate_dict, sister_node, latin_names, ortholo
                     # If not, warn the user that it has to be computed separately to have all branch length
                     # equal to branch-specific Ks contributions
                     try:
-                        __ = ortholog_db.at[latinSister1_latinSister2, 'Ortholog_Mode']
+                        __ = ortholog_db.at[latinSister1_latinSister2, 'Mode']
                     except Exception:
                         missing_ortholog_data_from_database = True
 
@@ -483,8 +483,8 @@ def get_rates_from_ortholog_peak_db(rate_dict, sister_node, latin_names, ortholo
                         latinSister2_latinOut = "_".join(sorted([latinSister2, latin_names[outspecies]]))
 
                         try:
-                            __ = ortholog_db.at[latinSister1_latinOut, 'Ortholog_Mode']
-                            __ = ortholog_db.at[latinSister2_latinOut, 'Ortholog_Mode']
+                            __ = ortholog_db.at[latinSister1_latinOut, 'Mode']
+                            __ = ortholog_db.at[latinSister2_latinOut, 'Mode']
                             list_of_successful_outspecies.append(outspecies)
                         except Exception:
                             pass

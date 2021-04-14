@@ -29,19 +29,14 @@ def decompose_ortholog_ks(ortholog_db, idx_species_sister, idx_species_outgroup,
     :return: rel_rate_sister, the branch-specific Ks contribution of the sister species
     :return: rel_rate_sister_sd, the standard deviation associated to rel_rate_sister
     """
-    if peak_stats == "mode": # choosing the MODE as peak Ks for the WGD event
-        peak, sd = 'Ortholog_Mode', 'Ortholog_Mode_SD'
-    elif peak_stats == "median": # choosing the MEDIAN as peak Ks for the WGD event
-        peak, sd = 'Ortholog_Median', 'Ortholog_Median_SD'        
+    peak_sp_sis = ortholog_db.at[idx_species_sister, 'Mode']
+    sd_sp_sis = ortholog_db.at[idx_species_sister, 'Mode_SD']
 
-    peak_sp_sis = ortholog_db.at[idx_species_sister, peak]
-    sd_sp_sis = ortholog_db.at[idx_species_sister, sd]
+    peak_sp_out = ortholog_db.at[idx_species_outgroup, 'Mode']
+    sd_sp_out = ortholog_db.at[idx_species_outgroup, 'Mode_SD']
 
-    peak_sp_out = ortholog_db.at[idx_species_outgroup, peak]
-    sd_sp_out = ortholog_db.at[idx_species_outgroup, sd]
-
-    peak_sis_out = ortholog_db.at[idx_sister_outgroup, peak]
-    sd_sis_out = ortholog_db.at[idx_sister_outgroup, sd]
+    peak_sis_out = ortholog_db.at[idx_sister_outgroup, 'Mode']
+    sd_sis_out = ortholog_db.at[idx_sister_outgroup, 'Mode_SD']
 
     # RRT formulas
     rel_rate_species = (peak_sp_out + peak_sp_sis - peak_sis_out) / 2.0 # also called k_AO
