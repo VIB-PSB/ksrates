@@ -73,7 +73,13 @@ def correct(config_file, trios_file):
             # OC_segment is a measure of better/worse outgroup choices for the decomposition into branch-specific Ks contributions; see documentation.
             OC_segment = db.loc[species_out]['Ortholog_Mode'] - rate_species
 
-            all_trios_correction_array.append([node, latinSpecies, latinSister, latinOut, round(OC_segment, 6), round(correct_peak, 6), round(correct_sd, 6), round(rate_species, 6), round(rate_sister, 6)])
+            orig_mode = db.loc[species_sister]['Ortholog_Mode']
+            orig_mode_sd = db.loc[species_sister]['Ortholog_Mode_SD']
+
+            all_trios_correction_array.append([node, latinSpecies, latinSister, latinOut,
+                                              round(correct_peak, 6), round(correct_sd, 6),
+                                              round(orig_mode, 6), round(orig_mode_sd, 6),
+                                              round(rate_species, 6), round(rate_sister, 6), round(OC_segment, 6)])
 
             if node not in sisters_per_node:
                 sisters_per_node[node] = []
@@ -87,8 +93,9 @@ def correct(config_file, trios_file):
             if sister_out not in db.index: logging.warning(f" - [{sister_out}] not in ortholog peak database.")
 
     # Generating file with correction data for each trio.
-    all_trios_correction_df = DataFrame.from_records(all_trios_correction_array, columns=["Node", "Species", "Sister_Species",
-                                                        "Out_Species", "Ks_OC", "Mode", "SD", "Ks_Species", "Ks_Sister"])
+    all_trios_correction_df = DataFrame.from_records(all_trios_correction_array, columns=["Node", "Focal_Species",
+                              "Sister_Species", "Out_Species", "Adjusted_Mode", "Adjusted_Mode_SD", "Original_Mode",
+                              "Original_Mode_SD", "Ks_Focal", "Ks_Sister", "Ks_Out"])
     with open(os.path.join("rate_adjustment", f"{species_of_interest}", f"{fcCorrect._ADJUSTMENT_TABLE_ALL.format(species_of_interest)}"),
             "w+") as outfile:
         outfile.write(all_trios_correction_df.to_csv(sep="\t", index=False))
@@ -111,9 +118,9 @@ def correct(config_file, trios_file):
         for sister in sisters_per_node[node]:
             # FIRST STRATEGY: taking the MEAN among corrected peaks from all outgroups
             # TODO: take the median too?
-            peak_list = node_df.loc[node_df['Sister_Species'] == sister, ['Mode']]
-            sd_list = node_df.loc[node_df['Sister_Species'] == sister, ['SD']]
-            sd_list = sd_list["SD"].values.tolist()
+            peak_list = node_df.loc[node_df['Sister_Species'] == sister, ['Adjusted_Mode']]
+            sd_list = node_df.loc[node_df['Sister_Species'] == sister, ['Adjusted_Mode_SD']]
+            sd_list = sd_list["Adjusted_Mode_SD"].values.tolist()
 
             peak_mean = float(peak_list.mean())
             # Computing st.dev of the mean peak by following error propagation rules (sum of squares, square root; division)
@@ -122,23 +129,23 @@ def correct(config_file, trios_file):
                 sd_err_prop += pow(sd, 2)
             sd_err_prop = sqrt(sd_err_prop) / len(sd_list)
             # Getting the mean rate_species and the mean rate_sister out of the corrections (when multiple trios/outgroups are used)
-            rate_species_list = node_df.loc[node_df['Sister_Species'] == sister, ['Ks_Species']]
+            rate_species_list = node_df.loc[node_df['Sister_Species'] == sister, ['Ks_Focal']]
             rate_species_mean = float(rate_species_list.mean())
             rate_sister_list = node_df.loc[node_df['Sister_Species'] == sister, ['Ks_Sister']]
             rate_sister_mean = float(rate_sister_list.mean())        
 
             # SECOND STRATEGY: taking only the corrected peak from the "BEST" outgroup (lowest OC value)
             # TODO: use DataFrame.at?
-            oc_list = node_df.loc[node_df['Sister_Species'] == sister, ['Ks_OC']]
+            oc_list = node_df.loc[node_df['Sister_Species'] == sister, ['Ks_Out']]
             oc_best_value = float(oc_list.min())
-            peak_best_oc = node_df.loc[node_df['Ks_OC'] == oc_best_value, ['Mode']]
+            peak_best_oc = node_df.loc[node_df['Ks_Out'] == oc_best_value, ['Adjusted_Mode']]
             peak_best_oc_float = float(peak_best_oc.mean()) # trick to make it a float number
-            sd_best_oc = node_df.loc[node_df['Ks_OC'] == oc_best_value, ['SD']]
+            sd_best_oc = node_df.loc[node_df['Ks_Out'] == oc_best_value, ['Adjusted_Mode_SD']]
             sd_best_oc_float = float(sd_best_oc.mean())  # trick to make it a float number
             # Getting the rate_species and Ks_Sister associated to the correction with the best outgroup 
-            rate_species_best_out = node_df.loc[node_df['Ks_OC'] == oc_best_value, ['Ks_Species']]
+            rate_species_best_out = node_df.loc[node_df['Ks_Out'] == oc_best_value, ['Ks_Focal']]
             rate_species_best_out_float = float(rate_species_best_out.mean()) # trick to make it a float number
-            rate_sister_best_out = node_df.loc[node_df['Ks_OC'] == oc_best_value, ['Ks_Sister']]
+            rate_sister_best_out = node_df.loc[node_df['Ks_Out'] == oc_best_value, ['Ks_Sister']]
             rate_sister_best_out_float = float(rate_sister_best_out.mean()) # trick to make it a float number
 
             species_sister = "_".join(sorted([latin_names[species_of_interest], sister], key=str.casefold))
@@ -150,15 +157,15 @@ def correct(config_file, trios_file):
 
             all_pairs_array.append([node, latin_names[species_of_interest], sister, round(peak_mean, 6), round(sd_err_prop, 6), round(rate_species_mean, 6), round(rate_sister_mean, 6),
                                     round(peak_best_oc_float, 6), round(sd_best_oc_float, 6), round(rate_species_best_out_float, 6), round(rate_sister_best_out_float, 6),
-                                    round(orig_mode, 6), round(orig_mode_sd, 6), round(orig_median, 6), round(orig_median_sd, 6)])
+                                    round(orig_mode, 6), round(orig_mode_sd, 6)])
 
 
     # Generating file with correction data for each divergent pair,
     # namely after obtaining a consensus value for the results coming from using different outspecies on the same divergent pair.
-    all_pairs_df = DataFrame.from_records(all_pairs_array, columns=["Node", "Species", "Sister_Species",
-                                                        "Peak_MeanOut", "Peak_MeanOut_SD", "Rate_Species_MeanOut", "Rate_Sister_MeanOut",
-                                                        "Peak_BestOut", "Peak_BestOut_SD", "Rate_Species_BestOut", "Rate_Sister_BestOut", 
-                                                        "Original_Mode", "Original_Mode_SD", "Original_Median", "Original_Median_SD"])
+    all_pairs_df = DataFrame.from_records(all_pairs_array, columns=["Node", "Focal_Species", "Sister_Species",
+                                                        "Adjusted_Mode_Mean", "Adjusted_Mode_Mean_SD", "Ks_Species_Mean", "Ks_Sister_Mean",
+                                                        "Adjusted_Mode_Best", "Adjusted_Mode_Best_SD", "Ks_Species_Best", "Ks_Sister_Best", 
+                                                        "Original_Mode", "Original_Mode_SD"])
     with open(os.path.join("rate_adjustment", f"{species_of_interest}", f"{fcCorrect._ADJUSTMENT_TABLE.format(species_of_interest)}"),
             "w+") as outfile:
         outfile.write(all_pairs_df.to_csv(sep="\t", index=False))

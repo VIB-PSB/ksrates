@@ -275,16 +275,12 @@ def plot_divergences(correction_table, peak_stats, consensus_peak_for_multiple_o
         else:
             n_lines_per_node = len(lines_per_node)
 
-        species, sister = row['Species'], row['Sister_Species']
+        species, sister = row['Focal_Species'], row['Sister_Species']
 
-        if peak_stats == "mode": # choosing the MODE as peak Ks for the WGD event
-            peak, sd = 'Original_Mode', 'Original_Mode_SD'
-        elif peak_stats == "median": # choosing the MEDIAN as peak Ks for the WGD event
-            peak, sd = 'Original_Median', 'Original_Median_SD'
-        original_peak, original_peak_sd = row[peak], row[sd]
+        original_peak, original_peak_sd = row['Original_Mode'], row['Original_Mode_SD']
         
-        peak_mean_out, sd_mean_out = row['Peak_MeanOut'], row['Peak_MeanOut_SD']
-        peak_best_out, sd_best_out = row['Peak_BestOut'], row['Peak_BestOut_SD']
+        peak_mean_out, sd_mean_out = row['Adjusted_Mode_Mean'], row['Adjusted_Mode_Mean_SD']
+        peak_best_out, sd_best_out = row['Adjusted_Mode_Best'], row['Adjusted_Mode_Best_SD']
         if consensus_peak_for_multiple_outgroups == "mean among outgroups":
             corrected_peak, corrected_peak_sd = peak_mean_out, sd_mean_out
         elif consensus_peak_for_multiple_outgroups == "best outgroup": 
