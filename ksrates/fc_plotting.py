@@ -183,11 +183,12 @@ def plot_histogram(legend_label, axis, ks_list, bin_list, bin_width, max_ks, bw_
 
         kde_x = np.linspace(0 - reflection_threshold, max_ks + reflection_threshold, num=512)
         kde_y = kde(kde_x)
-        if weight_list is None:
-            axis.plot(kde_x, kde_y * len(ks_list_reflected) * bin_width, color=COLOR_ANCHOR_KDE, linewidth=1.3)
-        else:
-            axis.plot(kde_x, kde_y * len(ks_list_reflected) * bin_width * np.mean(weight_list_reflected),
-                      color=COLOR_PARANOME_KDE, linewidth=1.3)
+        if legend_label == "Whole-paranome":
+            color_hist = COLOR_PARANOME_KDE
+        elif legend_label == "Anchor pairs":
+            color_hist = COLOR_ANCHOR_KDE
+        axis.plot(kde_x, kde_y * len(ks_list_reflected) * bin_width * np.mean(weight_list_reflected), 
+                      color=color_hist, linewidth=1.3)
     return hist
 
 
