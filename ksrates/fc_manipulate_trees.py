@@ -355,10 +355,10 @@ def get_branch_length_and_errorbox(species, ancestor_node, correction_table, con
     # The parameter comes from the config file and it is given as argument to this function ("consensus_strategy_for_multi_outgroups")
     if consensus_strategy_for_multi_outgroups == "mean among outgroups":
         # Then consider the columns in the correction_table that are generated using the average method
-        column_header_peak, column_header_SD, column_header_rate_species, column_header_rate_sister = "Adjusted_Mode_Mean", "Adjusted_Mode_Mean_SD", "Ks_Species_Mean", "Ks_Sister_Mean"
+        column_header_peak, column_header_SD, column_header_rate_species, column_header_rate_sister = "Adjusted_Mode_Mean", "Adjusted_Mode_Mean_SD", "Ks_Focal_Mean", "Ks_Sister_Mean"
     elif consensus_strategy_for_multi_outgroups == "best outgroup":
         # Then consider the columns in the correction_table that are generated using the best outgroup method
-        column_header_peak, column_header_SD, column_header_rate_species, column_header_rate_sister = "Adjusted_Mode_Best", "Adjusted_Mode_Best_SD", "Ks_Species_Best", "Ks_Sister_Best"
+        column_header_peak, column_header_SD, column_header_rate_species, column_header_rate_sister = "Adjusted_Mode_Best", "Adjusted_Mode_Best_SD", "Ks_Focal_Best", "Ks_Sister_Best"
 
     # All the sister species from the current node provide equivalent data, because they all measure the same divergence (node)
     for sister in ancestor_node_leaves:

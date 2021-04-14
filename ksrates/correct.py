@@ -161,8 +161,8 @@ def correct(config_file, trios_file):
     # Generating file with correction data for each divergent pair,
     # namely after obtaining a consensus value for the results coming from using different outspecies on the same divergent pair.
     all_pairs_df = DataFrame.from_records(all_pairs_array, columns=["Node", "Focal_Species", "Sister_Species",
-                                                        "Adjusted_Mode_Mean", "Adjusted_Mode_Mean_SD", "Ks_Species_Mean", "Ks_Sister_Mean",
-                                                        "Adjusted_Mode_Best", "Adjusted_Mode_Best_SD", "Ks_Species_Best", "Ks_Sister_Best", 
+                                                        "Adjusted_Mode_Mean", "Adjusted_Mode_Mean_SD", "Ks_Focal_Mean", "Ks_Sister_Mean",
+                                                        "Adjusted_Mode_Best", "Adjusted_Mode_Best_SD", "Ks_Focal_Best", "Ks_Sister_Best", 
                                                         "Original_Mode", "Original_Mode_SD"])
     with open(os.path.join("rate_adjustment", f"{species_of_interest}", f"{fcCorrect._ADJUSTMENT_TABLE.format(species_of_interest)}"),
             "w+") as outfile:
