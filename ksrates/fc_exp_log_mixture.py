@@ -1,8 +1,10 @@
 from numpy import log, exp, array, arange, random, linspace, histogram, append, hstack, concatenate, flip, argmax, round, repeat, mean, float64
 import matplotlib.pyplot as plt
-from pandas import DataFrame, read_csv
+from matplotlib.legend_handler import HandlerTuple
+from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 from matplotlib.colors import to_rgba
+from pandas import DataFrame, read_csv
 from scipy.stats import norm, lognorm, expon, gaussian_kde
 from scipy.signal import find_peaks, peak_prominences, peak_widths
 from scipy.interpolate import UnivariateSpline
@@ -826,7 +828,7 @@ def plot_fitted_comp(ax_ks, ax_logks, means, stdevs, lambd, weights, max_x_axis_
   total_pdf_log = 0
   total_pdf = weights[0] * expon.pdf(x_points_strictly_positive, scale=1/lambd)
 
-  if not plot_peak_markers:
+  if not plot_peak_markers:  # Applies for the multi-panel figures with ELMM models
     color = "g"
     linestyle = "-"
     alpha = 0.8
@@ -867,10 +869,46 @@ def plot_fitted_comp(ax_ks, ax_logks, means, stdevs, lambd, weights, max_x_axis_
   total_pdf = total_pdf * scaling
 
   ax_ks.plot(x_points_strictly_positive, total_pdf, "k-", lw=1.5, label=f'Exp-lognormal mixture model')
-  ax_ks.legend(loc="upper right")
+
+  # Only in multi-panel figures for all ELMM models, generate legend with handles as tuples,
+  # for fitted components (solid line) and initialized components (dotted)  
+  if not plot_peak_markers:  # Applies for the multi-panel figures with ELMM models
+    handles_tuple_list = make_tuple_handles(ax_ks)
+    ax_ks.legend(handles_tuple_list, ax_ks.get_legend_handles_labels()[1],
+                 handler_map={tuple: HandlerTuple(ndivide=None)}, handlelength=3, loc="upper right")
+  
   if plot_logtranformed:
     ax_logks.plot(x_points, total_pdf_log, "k-", lw=1.5, label=f'Total PDF')
-    ax_logks.legend(loc="upper left")
+    
+    # Only in multi-panel figures for all ELMM models, generate legend with handles as tuples,
+    # for fitted components (solid line) and initialized components (dotted)
+    if not plot_peak_markers:  # True for the multi-panel figures with ELMM models
+      handles_tuple_list = make_tuple_handles(ax_logks)
+      ax_logks.legend(handles_tuple_list, ax_logks.get_legend_handles_labels()[1],
+                     handler_map={tuple: HandlerTuple(ndivide=None)}, handlelength=3, loc="upper left")
+
+
+def make_tuple_handles(axis):
+  """
+  Generates a list of handles for the legend of the multi-panel figures of ELMM models,
+  where some handles are a tuple of two handles: on the left a solid line (fitted
+  component) and on the right a dotted line (initialized component). This is needed
+  because the models show both the initialized and the fitted component curve.
+  For the two non-paired handles (the total probability ELMM curve and the histogram),
+  the code generates a "ghost" patch on their right so that they align to the left.
+
+  :param axis: the axis object for which the legend will be updated with the new handles
+  :return handles_tuple_list: list of handles paired in tuples
+  """
+  handles_tuple_list = []
+  handles, labels = axis.get_legend_handles_labels()
+  for handle in handles[:-2]:
+    handles_tuple_list.append((Line2D([0], [0], color=handle._color, ls='-', lw=handle._linewidth),
+                               Line2D([0], [0], color=handle._color, ls=':', lw=handle._linewidth)))
+
+  handles_tuple_list.extend([(handles[-2], Patch(fill=False, edgecolor='none', visible=False)),
+                             (handles[-1], Patch(fill=False, edgecolor='none', visible=False))])
+  return handles_tuple_list
 
 
 def plot_histograms_mixture(ax_ks, ax_logks, ks_data, ks_weights, ks_data_log, ks_weights_log, bin_list, bin_width, y_lim, best_model=False):
