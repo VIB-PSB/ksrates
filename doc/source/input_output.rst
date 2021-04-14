@@ -32,7 +32,26 @@ Output files and directory organization
 
     Files:
 
-        * Rate-adjustment results in tab-separated format: raw results for each trio (``adjustment_table_species_all.tsv``) and final results for each divergent pair after finding a consensus value in case of multiple outgroups (``adjustment_table_species.tsv``).
+        *   Raw rate-adjustment results for each trio in tabular format (``adjustment_table_species_all.tsv``).
+
+            Each row shows the result for a species pair (column 2 ``Focal_Species`` and 3 ``Sister_Species``) diverging at a certain node (column 1 ``Node``) and adjusted with the outgroup in column 3 ``Out_Species``. The rate-adjusted mode with associated standard deviation are given in column 4 ``Adjusted_Mode`` and 5 ``Adjusted_Mode_SD``; for comparison it is provided the unadjusted mode with associated standard deviation (column 6 ``Original_Mode`` and 7 ``Original_Mode_SD``). The species-specific branch contributions (or Ks distances) for the divergent species pair are listed in column 8 ``Ks_Focal`` and 9 ``Ks_Sister``; the OC segment is listed in column 10 ``Ks_Out``.
+
+            .. figure:: _images/adj_table_all.png
+                :align: center
+                :width: 800
+
+                Rate-adjustment results on a divergent pair using four outgroups.
+
+        *   Final rate-adjustment results for each divergent species pair after finding a consensus value in case of multiple outgroups, also in tabular format (``adjustment_table_species.tsv``).
+        
+            Each row shows the result for a species pair (column 2 ``Focal_Species`` and 3 ``Sister_Species``) diverging at a certain node (column 1 ``Node``). Columns 3-6 report the consensus obtained by averaging the raw results (rate-adjusted mode with standard deviation in column 4 ``Adjusted_Mode_Mean`` and 5 ``Adjusted_Mode_SD_Mean``; Ks distances for the focal species in column 6 ``Ks_Focal_Mean`` and 7 ``Ks_Sister_Mean``). Columns 8-11 report the consensus obtained when considering only the best outgroup (rate-adjusted mode with standard deviation in column 4 ``Adjusted_Mode_Best`` and 5 ``Adjusted_Mode_SD_Best``; Ks distances for the focal species in column 6 ``Ks_Focal_Best`` and 7 ``Ks_Sister_Best``). For comparison it is provided the unadjusted mode with associated standard deviation (column 12 ``Original_Mode`` and 13 ``Original_Mode_SD``).
+
+            .. figure:: _images/adj_table_consensus.png
+                :align: center
+                :width: 800
+
+                The consensus result for the divergent pair obtained from the four raw rate-adjustments.
+        
         * Original input phylogenetic tree in ASCII format and list of sister species and outgroup species per node (``tree_species.txt``).
         * List of trios used for substitution rate-adjustment (``ortholog_trios_species.tsv``).
         * List of species pairs for which ortholog *K*:sub:`S` distributions are estimated using *wgd* (``ortholog_pairs_species.txt``).
@@ -75,13 +94,13 @@ Output files and directory organization
 
     * ``species.blast.tsv`` lists the paralog BLAST homology hits in tabular output format (``-outfmt 6``) 
     * ``species.mcl.tsv`` lists the paralog gene families, one family per line from the largest to the smallest family with the gene IDs of individual family members separated by tabs.
-    * ``species.ks.tsv`` and  ``species.ks_anchors.tsv`` are tabular format files listing the *K*:sub:`S` estimate (column 9 ``Ks``) for every paralog and anchor pair found, respectively. Other noteworthy data per pair includes the alignment coverage, identity and length (columns 2 to 5: ``AlignmentCoverage``, ``AlignmentIdentity``, ``AlignmentLength`` and ``AlignmentLengthStripped``), the gene family (column 7 ``Family``), the node in the gene family's tree (column 10 ``Node``), and the weight associated with the pair's *K*:sub:`S` estimate (column 15 ``WeightOutliersExcluded``). For more details, see the *wgd* `documentation <https://wgd.readthedocs.io/en/latest/methods.html?highlight=some%20information>`__.
+    *   ``species.ks.tsv`` and  ``species.ks_anchors.tsv`` are tabular format files listing the *K*:sub:`S` estimate (column 9 ``Ks``) for every paralog and anchor pair found, respectively. Other noteworthy data per pair includes the alignment coverage, identity and length (columns 2 to 5: ``AlignmentCoverage``, ``AlignmentIdentity``, ``AlignmentLength`` and ``AlignmentLengthStripped``), the gene family (column 7 ``Family``), the node in the gene family's tree (column 10 ``Node``), and the weight associated with the pair's *K*:sub:`S` estimate (column 15 ``WeightOutliersExcluded``). For more details, see the *wgd* `documentation <https://wgd.readthedocs.io/en/latest/methods.html?highlight=some%20information>`__.
 
-    .. figure:: _images/ks_tsv.png
-        :align: center
-        :width: 800
+        .. figure:: _images/ks_tsv.png
+            :align: center
+            :width: 800
 
-        This file section shows the structure of the ``.ks.tsv`` format.
+            File section showing the structure of the ``.ks.tsv`` format.
 
     * ``species_i-adhore``: this directory contains the i-ADHoRe output files necessary for the anchor *K*:sub:`S` clustering (see :ref:`anchor_ks_clustering`).
 
