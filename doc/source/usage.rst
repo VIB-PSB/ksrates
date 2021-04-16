@@ -13,12 +13,9 @@ Run example case as a Nextflow pipeline (recommended)
 
 The *ksrates* pipeline can be automatically run through Nextflow with a few preparation steps.
 
-1.  Access in a terminal the directory that will host the rate-adjustment results (assumed here to be ``example``). ::
+1.  Access in a terminal the directory that will host the rate-adjustment results (assumed here to be ``example``) and unzip the sequence data files in there:: ::
 
         cd ksrates/example
-    
-    Unzip the sequence data files::
-
         gunzip elaeis.fasta.gz oryza.fasta.gz asparagus.fasta.gz elaeis.gff3.gz
 
 2.  Prepare the configuration files.
@@ -54,15 +51,27 @@ The syntax to run a command depends on how the package is installed:
 
         ksrates [OPTIONS] COMMAND [ARGS]
 
-*   Singularity container::
+*   Singularity container:
 
-        singularity exec docker://vibpsb/ksrates ksrates [OPTIONS] COMMAND [ARGS]
+        Open an interactive container where to launch commands with the syntax indicated in the local installation above::
+
+            singularity shell docker://vibpsb/ksrates
+
+        Or launch a single command through the container::
+
+            singularity exec docker://vibpsb/ksrates ksrates [OPTIONS] COMMAND [ARGS]
 
     Singularity downloads the container image from Docker Hub in ``$HOME/.singularity/cache`` and from then on makes use of the local copy.
 
-*   Docker container::
+*   Docker container:
 
-        docker run --rm -v $PWD:/temp -w /temp vibpsb/ksrates ksrates [OPTIONS] COMMAND [ARGS]
+        Open an interactive container where to launch commands with the syntax indicated in the local installation above::
+
+            docker run -it --rm -v $PWD:/temp -w /temp vibpsb/ksrates
+
+        Or launch a single command through the container::
+
+            docker run --rm -v $PWD:/temp -w /temp vibpsb/ksrates ksrates [OPTIONS] COMMAND [ARGS]
 
     The ``--rm`` option is given to remove the container after the command is executed to save disk space (note that the container *image* will not be removed). The ``-v`` option mounts the current working directory in the container, while ``-w`` lets the command be run within this directory. 
 
@@ -85,9 +94,10 @@ An overview of the commands is available by accessing the package help menu (``k
 
 The order of execution of the single commands to run the whole workflow is the following. We assume here a local installation without the use of a *ksrates* container.
 
-1.  Open in a terminal the directory that will host the rate-adjustment results (assumed here to be ``example``)::
+1.  Access in a terminal the directory that will host the rate-adjustment results (assumed here to be ``example``) and unzip the sequence data files in there:: ::
 
         cd ksrates/example
+        gunzip elaeis.fasta.gz oryza.fasta.gz asparagus.fasta.gz elaeis.gff3.gz
 
 2.  The ``example`` directory already contains a pre-filled configuration file (``config_elaeis.txt``).
 
@@ -104,15 +114,15 @@ The order of execution of the single commands to run the whole workflow is the f
 
 4.  Launch the *wgd* paralog *K*:sub:`S` analysis to estimate the whole-paranome *K*:sub:`S` values (``paralogs_distributions/wgd_elaies/elaeis.ks.tsv``) and optionally the anchor pair *K*:sub:`S` values (``paralogs_distributions/wgd_elaies/elaeis.ks_anchors.tsv``)::
 
-        ksrates paralogs-ks config_elaeis.txt [--n-threads 4]
+        ksrates paralogs-ks config_elaeis.txt --n-threads 4
 
     Using multiple threads to parallelize the analysis will reduce the compute time. The ``--n-threads`` option configures the number of threads to use (set this according to your available resources, i.e. CPUs/cores; we recommend a value around 10 and thus the use of a compute cluster).
 
 5.  Launch the *wgd* ortholog *K*:sub:`S` analysis to estimate the ortholog *K*:sub:`S` values *for each required species pair*. These are listed in ``rate_adjustment/elaeis/ortholog_pairs_elaeis.txt``::
 
-        ksrates orthologs-ks config_elaeis.txt elaeis asparagus [--n-threads 4]
-        ksrates orthologs-ks config_elaeis.txt elaeis oryza [--n-threads 4]
-        ksrates orthologs-ks config_elaeis.txt oryza asparagus [--n-threads 4]
+        ksrates orthologs-ks config_elaeis.txt elaeis asparagus --n-threads 4
+        ksrates orthologs-ks config_elaeis.txt elaeis oryza --n-threads 4
+        ksrates orthologs-ks config_elaeis.txt oryza asparagus --n-threads 4
 
     Using multiple threads to parallelize the analysis will reduce the compute time. The ``--n-threads`` option configures the number of threads to use (set this according to your available resources, i.e. CPUs/cores; we recommend a value around 10 and thus the use of a compute cluster).
 
