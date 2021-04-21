@@ -120,6 +120,9 @@ Without the use of a container the installation of *ksrates* and its dependencie
 Testing your installation
 =========================
 
+.. note::
+    WSL2 users can enter the Windows file system (e.g. ``Documents``) from the terminal through ``cd mnt/c/Users/your_username``.
+
 1.  Clone the *ksrates* repository from `GitHub <https://github.com/VIB-PSB/ksrates>`__ to get the use case dataset::
 
         git clone https://github.com/VIB-PSB/ksrates
