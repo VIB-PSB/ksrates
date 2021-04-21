@@ -3,6 +3,9 @@ Usage
 
 This section illustrates how to run *ksrates* on the use case dataset proposed in the :ref:`explained_example`, where the rate-adjustment is relative to the focal species oil palm (*Elaeis guineensis*). The use case dataset is stored in the GitHub repository under the ``example`` directory. The pipeline steps can be run either through Nextflow (recommended) or manually. In either case it is advised to use a computing cluster. 
 
+.. note::
+    WSL2 users can enter the Windows file system (e.g. ``Documents``) from the terminal through ``cd mnt/c/Users/your_username``.
+
 Clone the GitHub repository to get the use case dataset::
 
     git clone https://github.com/VIB-PSB/ksrates
@@ -60,6 +63,9 @@ The syntax to run a command depends on how the package is installed:
         Or launch a single command through the container::
 
             singularity exec docker://vibpsb/ksrates ksrates [OPTIONS] COMMAND [ARGS]
+
+        .. note::
+            WSL2 users need option ``-B /mnt/c/Users/your_username`` to mount the Windows home directory in the container.
 
     Singularity downloads the container image from Docker Hub in ``$HOME/.singularity/cache`` and from then on makes use of the local copy.
 
