@@ -70,7 +70,7 @@ def generate_configfile(configfile_name):
     Config.set("PARAMETERS", "bin_width_ortho", "0.1")
     Config.set("PARAMETERS", "# bin width in ortholog Ks histograms (default: 0.1, ten bins per unit)\n")
 
-    Config.set("PARAMETERS", "max_ks_para", "5")
+    Config.set("PARAMETERS", "max_ks_paralogs", "5")
     Config.set("PARAMETERS", "# maximum paralog Ks value accepted from Ks data table (default: 5)\n")
 
     Config.set("PARAMETERS", "max_ks_ortho", "10")

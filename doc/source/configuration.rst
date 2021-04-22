@@ -50,7 +50,7 @@ The analysis configuration file is composed of a first section defining the spec
     x_axis_max_limit_orthologs_plots = 5
     bin_width_ortho = 0.1
 
-    max_ks_para = 5
+    max_ks_paralogs = 5
     max_ks_ortho = 10
 
 The [SPECIES] section includes:
@@ -92,7 +92,7 @@ The [PARAMETERS] section includes:
     
 * *K*:sub:`S` value thresholds
 
-    * **max_ks_para**: maximum value accepted for paralog *K*:sub:`S` from data table. [Default: 5]
+    * **max_ks_paralogs**: maximum value accepted for paralog *K*:sub:`S` from data table. [Default: 5]
     * **max_ks_ortho**: maximum value accepted for ortholog *K*:sub:`S` from data table. [Default: 10]
 
 

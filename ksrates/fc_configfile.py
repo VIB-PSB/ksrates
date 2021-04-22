@@ -370,7 +370,7 @@ class Configuration:
 
         :return max_ks_para: integer
         """
-        max_ks_para = float(self.config.get("PARAMETERS", "max_ks_para"))
+        max_ks_para = float(self.config.get("PARAMETERS", "max_ks_paralogs"))
         return max_ks_para
 
     def get_num_iteration(self):

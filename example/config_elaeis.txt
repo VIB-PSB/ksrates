@@ -58,7 +58,7 @@ x_axis_max_limit_orthologs_plots = 5
 bin_width_ortho = 0.1
 # bin width in ortholog ks histograms (default: 0.1, ten bins per unit)
 
-max_ks_para = 5
+max_ks_paralogs = 5
 # maximum paralog ks value accepted from ks data table (default: 5)
 
 max_ks_ortho = 10
