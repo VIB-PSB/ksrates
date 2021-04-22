@@ -230,7 +230,7 @@ process setParalogAnalysis {
     colinearity_status="not_required"
 
     paranome=`grep "^[[:space:]]*paranome[[:space:]]*=" ${config} | cut -d "=" -f 2 | xargs | tr '[:upper:]' '[:lower:]'`
-    colinearity=`grep "^[[:space:]]*colinearity[[:space:]]*=" ${config} | cut -d "=" -f 2 | xargs | tr '[:upper:]' '[:lower:]'`
+    colinearity=`grep "^[[:space:]]*collinearity[[:space:]]*=" ${config} | cut -d "=" -f 2 | xargs | tr '[:upper:]' '[:lower:]'`
 
     processDir=\$PWD
     cd $PWD
@@ -713,7 +713,7 @@ process doRateAdjustment {
     echo "[$species] Starting rate-adjustment analysis"
 
     paranome=`grep "^[[:space:]]*paranome[[:space:]]*=" ${config} | cut -d "=" -f 2 | xargs | tr '[:upper:]' '[:lower:]'`
-    colinearity=`grep "^[[:space:]]*colinearity[[:space:]]*=" ${config} | cut -d "=" -f 2 | xargs | tr '[:upper:]' '[:lower:]'`
+    colinearity=`grep "^[[:space:]]*collinearity[[:space:]]*=" ${config} | cut -d "=" -f 2 | xargs | tr '[:upper:]' '[:lower:]'`
 
     missing_paranome=false
     if [ \${paranome} = "yes" ] && [ ! -s $PWD/paralog_distributions/wgd_${species}/${species}.ks.tsv ]; then

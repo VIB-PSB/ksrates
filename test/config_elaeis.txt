@@ -19,7 +19,7 @@ ks_list_database_path = ortholog_ks_list_db.tsv
 
 [ANALYSIS SETTING]
 paranome = yes
-colinearity = yes
+collinearity = yes
 # analysis type for paralog data; allowed values: 'yes' or 'no'
 
 gff_feature = mrna

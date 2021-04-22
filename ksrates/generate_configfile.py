@@ -31,7 +31,7 @@ def generate_configfile(configfile_name):
     Config.add_section("ANALYSIS SETTING")
 
     Config.set("ANALYSIS SETTING", "paranome", "yes")
-    Config.set("ANALYSIS SETTING", "colinearity", "no")
+    Config.set("ANALYSIS SETTING", "collinearity", "no")
     Config.set("ANALYSIS SETTING", "# analysis type for paralog data; allowed values: 'yes' and 'no'\n")
 
     Config.set("ANALYSIS SETTING", "gff_feature", "")

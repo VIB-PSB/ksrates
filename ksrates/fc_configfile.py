@@ -325,14 +325,14 @@ class Configuration:
 
         :return boolean: flags whether the colinearity analysis is required
         """
-        colinearity = self.config.get("ANALYSIS SETTING", "colinearity").lower()
+        colinearity = self.config.get("ANALYSIS SETTING", "collinearity").lower()
 
         if colinearity == "yes":
             return True
         elif colinearity == "no":
             return False
         else:
-            logging.error('Unrecognized "colinearity" parameter in configuration file; please choose between "yes" and "no"')
+            logging.error('Unrecognized "collinearity" parameter in configuration file; please choose between "yes" and "no"')
             sys.exit(1)
 
     def get_consensus_peak_for_multiple_outgroups(self):
