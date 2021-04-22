@@ -61,5 +61,5 @@ bin_width_ortho = 0.1
 max_ks_paralogs = 5
 # maximum paralog ks value accepted from ks data table (default: 5)
 
-max_ks_ortho = 10
+max_ks_orthologs = 10
 # maximum ortholog ks value accepted from ks data table (default: 10)

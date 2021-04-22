@@ -51,7 +51,7 @@ The analysis configuration file is composed of a first section defining the spec
     bin_width_ortho = 0.1
 
     max_ks_paralogs = 5
-    max_ks_ortho = 10
+    max_ks_orthologs = 10
 
 The [SPECIES] section includes:
 
@@ -93,7 +93,7 @@ The [PARAMETERS] section includes:
 * *K*:sub:`S` value thresholds
 
     * **max_ks_paralogs**: maximum value accepted for paralog *K*:sub:`S` from data table. [Default: 5]
-    * **max_ks_ortho**: maximum value accepted for ortholog *K*:sub:`S` from data table. [Default: 10]
+    * **max_ks_orthologs**: maximum value accepted for ortholog *K*:sub:`S` from data table. [Default: 10]
 
 
 Guidelines to set the maximum number of outgroups per rate-adjustment

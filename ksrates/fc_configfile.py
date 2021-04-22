@@ -361,7 +361,7 @@ class Configuration:
 
         :return max_ks_ortho: integer
         """
-        max_ks_ortho = float(self.config.get("PARAMETERS", "max_ks_ortho"))
+        max_ks_ortho = float(self.config.get("PARAMETERS", "max_ks_orthologs"))
         return max_ks_ortho
 
     def get_max_ks_para(self):

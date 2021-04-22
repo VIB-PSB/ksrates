@@ -73,7 +73,7 @@ def generate_configfile(configfile_name):
     Config.set("PARAMETERS", "max_ks_paralogs", "5")
     Config.set("PARAMETERS", "# maximum paralog Ks value accepted from Ks data table (default: 5)\n")
 
-    Config.set("PARAMETERS", "max_ks_ortho", "10")
+    Config.set("PARAMETERS", "max_ks_orthologs", "10")
     Config.set("PARAMETERS", "# maximum ortholog Ks value accepted from Ks data table (default: 10)")
 
     logging.basicConfig(format='%(levelname)s\t%(message)s', level="INFO", stream=sys.stdout)
