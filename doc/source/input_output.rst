@@ -32,25 +32,25 @@ Output files and directory organization
 
     Files:
 
-        *   Raw rate-adjustment results for each trio in tabular format (``adjustment_table_species_all.tsv``).
+        *   Raw rate-adjustment results for each trio (``adjustment_table_species_all.tsv``). Tabular format.
 
-            Each row shows the result for a species pair (column 2 ``Focal_Species`` and 3 ``Sister_Species``) diverging at a certain node (column 1 ``Node``) and adjusted with the outgroup in column 3 ``Out_Species``. The rate-adjusted mode with associated standard deviation are given in column 4 ``Adjusted_Mode`` and 5 ``Adjusted_Mode_SD``; for comparison it is provided the unadjusted mode with associated standard deviation (column 6 ``Original_Mode`` and 7 ``Original_Mode_SD``). The species-specific branch contributions (or Ks distances) for the divergent species pair are listed in column 8 ``Ks_Focal`` and 9 ``Ks_Sister``; the OC segment is listed in column 10 ``Ks_Out``.
+            Each row shows the result for a species pair (column 2 ``Focal_Species`` and 3 ``Sister_Species``) diverging at a certain node (column 1 ``Node``) and adjusted with the outgroup in column 3 ``Out_Species``. The rate-adjusted mode with associated standard deviation are given in column 4 ``Adjusted_Mode`` and 5 ``Adjusted_Mode_SD``; for comparison it is provided the unadjusted mode with associated standard deviation (column 6 ``Original_Mode`` and 7 ``Original_Mode_SD``). The branch-specific *K*:sub:`S` contributions for the divergent species pair are listed in column 8 ``Ks_Focal`` and 9 ``Ks_Sister``; the *K*:sub:`S` contribution of the outgroup is listed in column 10 ``Ks_Out``.
 
             .. figure:: _images/adj_table_all.png
                 :align: center
                 :width: 800
 
-                Rate-adjustment results on a divergent pair using four outgroups.
+                Raw rate-adjustment results on a divergent pair using four outgroups.
 
-        *   Final rate-adjustment results for each divergent species pair after finding a consensus value in case of multiple outgroups, also in tabular format (``adjustment_table_species.tsv``).
+        *   Final rate-adjustment results for each divergent species pair after finding a consensus value in case of multiple outgroups (``adjustment_table_species.tsv``). Tabular format.
         
-            Each row shows the result for a species pair (column 2 ``Focal_Species`` and 3 ``Sister_Species``) diverging at a certain node (column 1 ``Node``). Columns 3-6 report the consensus obtained by averaging the raw results (rate-adjusted mode with standard deviation in column 4 ``Adjusted_Mode_Mean`` and 5 ``Adjusted_Mode_SD_Mean``; Ks distances for the focal species in column 6 ``Ks_Focal_Mean`` and 7 ``Ks_Sister_Mean``). Columns 8-11 report the consensus obtained when considering only the best outgroup (rate-adjusted mode with standard deviation in column 4 ``Adjusted_Mode_Best`` and 5 ``Adjusted_Mode_SD_Best``; Ks distances for the focal species in column 6 ``Ks_Focal_Best`` and 7 ``Ks_Sister_Best``). For comparison it is provided the unadjusted mode with associated standard deviation (column 12 ``Original_Mode`` and 13 ``Original_Mode_SD``).
+            Each row shows the result for a species pair (column 2 ``Focal_Species`` and 3 ``Sister_Species``) diverging at a certain node (column 1 ``Node``). Columns 4-7 report the consensus obtained by taking the *mean* over raw results: rate-adjusted mode with standard deviation in column 4 ``Adjusted_Mode_Mean`` and 5 ``Adjusted_Mode_SD_Mean``, branch-specific *K*:sub:`S` contributions for the divergent species pair in column 6 ``Ks_Focal_Mean`` and 7 ``Ks_Sister_Mean``. Columns 8-11 report the consensus obtained when considering only the *best outgroup*: rate-adjusted mode with standard deviation in column 8 ``Adjusted_Mode_Best`` and 9 ``Adjusted_Mode_SD_Best``, *K*:sub:`S` contributions for the divergent species pair in column 10 ``Ks_Focal_Best`` and 11 ``Ks_Sister_Best``. For comparison it is provided the unadjusted mode with associated standard deviation (column 12 ``Original_Mode`` and 13 ``Original_Mode_SD``).
 
             .. figure:: _images/adj_table_consensus.png
                 :align: center
                 :width: 800
 
-                The consensus result for the divergent pair obtained from the four raw rate-adjustments.
+                Consensus result for the divergent pair obtained from the four raw rate-adjustments.
         
         * Original input phylogenetic tree in ASCII format and list of sister species and outgroup species per node (``tree_species.txt``).
         * List of trios used for substitution rate-adjustment (``ortholog_trios_species.tsv``).
