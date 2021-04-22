@@ -301,7 +301,7 @@ class Configuration:
 
         :return max_outspecies: integer
         """
-        max_outspecies = self.config.get("ANALYSIS SETTING", "max_number_outspecies")
+        max_outspecies = self.config.get("ANALYSIS SETTING", "max_number_outgroups")
         return max_outspecies
 
     def get_paranome(self):

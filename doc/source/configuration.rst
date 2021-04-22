@@ -35,7 +35,7 @@ The analysis configuration file is composed of a first section defining the spec
     gff_feature = mrna
     gff_attribute = id
 
-    max_number_outspecies = 4
+    max_number_outgroups = 4
     consensus_peak_for_multiple_outgroups = mean among outgroups
 
 
@@ -69,7 +69,7 @@ The [ANALYSIS SETTING] section includes:
 * **colinearity**: whether to build/plot the anchor pair *K*:sub:`S` distribution of the focal species (options: "yes" and "no"). A GFF file for the focal species is required, see parameter `gff_filename` above. [Default: "no"]
 * **gff_feature**: parsing keyword from the third column of the GFF file (e.g. gene, mrna...). Case insensitive.
 * **gff_attribute**: parsing keyword from the ninth column of the GFF file (e.g. id, name...). Case insensitive. 
-* **max_number_outspecies**: maximum number of trios/outspecies allowed to adjust a divergent pair; if None, all possible outspecies obtained from the phylogenetic tree will be used to form trios and adjust the pair. For more details see below. [Default: 4]
+* **max_number_outgroups**: maximum number of trios/outspecies allowed to adjust a divergent pair; if None, all possible outspecies obtained from the phylogenetic tree will be used to form trios and adjust the pair. For more details see below. [Default: 4]
 * **consensus_peak_for_multiple_outgroups**: when a divergent pair is adjusted by two or more outgroups, it is possible to get a consensus value considering either the mean among all the rate-adjustments for that pair ("mean among outgroups") or only one rate-adjustment, mostly likely coming from a close and slowly evolving species ("best outgroup"). [Default: "mean among outgroups"]
 
 The [PARAMETERS] section includes:
@@ -99,7 +99,7 @@ The [PARAMETERS] section includes:
 Guidelines to set the maximum number of outgroups per rate-adjustment
 ---------------------------------------------------------------------
 
-``max_num_outspecies`` is a parameter used to limit the amount of outgroup species used to adjust a species pair; without that, all possible outgroups would be taken. Having multiple rate-adjustments on the same divergence can provide stronger support for the rate-adjusted plot and is therefore advised to adjust with at least 3 or 4 outgroups to have more reliable results.
+``max_number_outgroups`` is a parameter used to limit the amount of outgroup species used to adjust a species pair; without that, all possible outgroups would be taken. Having multiple rate-adjustments on the same divergence can provide stronger support for the rate-adjusted plot and is therefore advised to adjust with at least 3 or 4 outgroups to have more reliable results.
 
 However, the more the outgroups, the more the number of ortholog distributions that will have to be computed by the `wgd` ortholog pipeline, which is a quite computationally demanding step. Setting a maximum amount of outgroups lowers the number of rate-adjustments and can therefore save time and resources. It is a good option in case the tree has a complex structure that would collect an unnecessary large number of outgroups or in case the user wants to have a quicker, although somewhat less reliable, result. Note that another option to lower the number of ortholog distributions is to start with a simpler tree structure.
 

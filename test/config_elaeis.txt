@@ -28,7 +28,7 @@ gff_feature = mrna
 gff_attribute = id
 # keyword to parse gene id from the gff file (column 9); can be 'id', 'name'...
 
-max_number_outspecies = 4
+max_number_outgroups = 4
 # maximum number of outspecies/trios selected to correct each divergent species pair (default: 4)
 
 consensus_peak_for_multiple_outgroups = mean among outgroups
