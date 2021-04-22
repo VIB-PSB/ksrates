@@ -17,6 +17,10 @@ Output files and directory organization
 .. note::
     In the following listings of directory and file names, ``species`` is used as a placeholder for the actual (informal) name of the focal species (e.g. ``elaeis``) as specified in the *ksrates* configuration file.
 
+
+Main output
+-----------
+
 * ``rate_adjustment/species``: this directory collects the output files of the substitution rate-adjustment relative to the focal species.
 
     Figures:
@@ -78,6 +82,9 @@ Output files and directory organization
         * TSV and TXT files collecting component parameters (``lmm_species_parameters_colinearity.tsv``, ``lmm_species_parameters_colinearity.txt``, ``lmm_species_parameters_paranome.tsv`` and ``lmm_species_parameters_paranome.txt``) (see :ref:`lmm` for more details on the file format).
 
 
+Nextflow log files
+------------------
+
 * ``rate_adjustment/species/log_XXXXXXXX``: when launching *ksrates* as a Nextflow pipeline, each execution generates a log directory named with a unique 8-character ID stated at the beginning of a Nextflow run. Details about how the processes of the workflow are proceeding and about encountered warnings or errors are stored in log files collected in this directory:
 
     * ``setup_adjustment.log`` shows the progress in checking input files and setting up species trios and pairs for rate-adjustment. 
@@ -89,6 +96,9 @@ Output files and directory organization
     * ``rate_adjustment.log`` shows the progress in performing the actual rate-adjustment step.
     * ``paralogs_analyses.log`` shows the progress in analyzing the paralog distribution to detect potential WGD signatures through anchor *K*:sub:`S` clustering, exponential-lognormal mixture modeling and/or lognormal-only mixture modeling. 
 
+
+*K*:sub:`S` estimate output (*wgd*)
+-----------------------------------
 
 * ``paralog_distributions/wgd_species``: this directory contains the files generated during the *wgd* paralog *K*:sub:`S` estimation run for the focal species:
 
@@ -115,6 +125,9 @@ Output files and directory organization
     * ``species1_species2.orthologs.tsv`` lists the one-to-one ortholog (i.e. the reciprocal best BLAST hits) between the two species, one ortholog pair per line.
     * ``species1_species2.ks.tsv`` lists the *K*:sub:`S` estimate (column 9 ``Ks``) for every one-to-one ortholog pair found. The tabular file format is identical to the paralog ``.ks.tsv`` file described above. However, the gene family, tree node and weight columns can be ignored since each ortholog "family" is composed of only two members.
 
+
+Other output
+------------
 
 * Generated directly in the directory from where *ksrates* is launched:
 
