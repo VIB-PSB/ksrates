@@ -42,7 +42,7 @@ The analysis configuration file is composed of a first section defining the spec
     [PARAMETERS]
     x_axis_max_limit_paralogs_plot = 5
     bin_width_para = 0.1
-    y_axis_limit_paralogs_plot = None
+    y_axis_max_limit_paralogs_plot = None
 
     num_bootstrap_iterations = 200
     divergence_colors =  Red, MediumBlue, Goldenrod, Crimson, ForestGreen, Gray, SaddleBrown, Black
@@ -78,7 +78,7 @@ The [PARAMETERS] section includes:
 
     * **x_axis_max_limit_paralogs_plot**: highest value of the x axis in the mixed distribution plot. [Default: 5]
     * **bin_width_para**: bin width in paralog *K*:sub:`S` distribution histogram. By default there are ten bins per unit. [Default: 0.1]
-    * **y_axis_limit_paralogs_plot**: customized highest value of the y axis in the mixed plot. [Default: None]
+    * **y_axis_max_limit_paralogs_plot**: customized highest value of the y axis in the mixed plot. [Default: None]
     
 * For ortholog divergence *K*:sub:`S`
 

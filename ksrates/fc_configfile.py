@@ -424,7 +424,7 @@ class Configuration:
 
         :return: the upper limit as a floating number or as None string
         """
-        y_lim = self.config.get("PARAMETERS", "y_axis_limit_paralogs_plot")  # by default it's "None"
+        y_lim = self.config.get("PARAMETERS", "y_axis_max_limit_paralogs_plot")  # by default it's "None"
         try:
             y_lim = float(y_lim) # returning the y_lim as a float
         except Exception:

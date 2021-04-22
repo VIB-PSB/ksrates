@@ -42,7 +42,7 @@ x_axis_max_limit_paralogs_plot = 5
 bin_width_para = 0.1
 # bin width in paralog ks histograms (default: 0.1, ten bins per unit)
 
-y_axis_limit_paralogs_plot = None
+y_axis_max_limit_paralogs_plot = None
 # highest value of the y axis in the mixed distribution plot  (default: none)
 
 num_bootstrap_iterations = 200

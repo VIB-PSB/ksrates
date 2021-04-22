@@ -54,7 +54,7 @@ def generate_configfile(configfile_name):
     Config.set("PARAMETERS", "bin_width_para", "0.1")
     Config.set("PARAMETERS", "# bin width in paralog Ks histograms (default: 0.1, ten bins per unit)\n")
 
-    Config.set("PARAMETERS", "y_axis_limit_paralogs_plot", "None")
+    Config.set("PARAMETERS", "y_axis_max_limit_paralogs_plot", "None")
     Config.set("PARAMETERS", "# highest value of the y axis in the mixed distribution plot  (default: None)\n")
 
     Config.set("PARAMETERS", "num_bootstrap_iterations", "200")
