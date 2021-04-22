@@ -36,7 +36,7 @@ The analysis configuration file is composed of a first section defining the spec
     gff_attribute = id
 
     max_number_outgroups = 4
-    consensus_peak_for_multiple_outgroups = mean among outgroups
+    consensus_mode_for_multiple_outgroups = mean among outgroups
 
 
     [PARAMETERS]
@@ -70,7 +70,7 @@ The [ANALYSIS SETTING] section includes:
 * **gff_feature**: parsing keyword from the third column of the GFF file (e.g. gene, mrna...). Case insensitive.
 * **gff_attribute**: parsing keyword from the ninth column of the GFF file (e.g. id, name...). Case insensitive. 
 * **max_number_outgroups**: maximum number of trios/outspecies allowed to adjust a divergent pair; if None, all possible outspecies obtained from the phylogenetic tree will be used to form trios and adjust the pair. For more details see below. [Default: 4]
-* **consensus_peak_for_multiple_outgroups**: when a divergent pair is adjusted by two or more outgroups, it is possible to get a consensus value considering either the mean among all the rate-adjustments for that pair ("mean among outgroups") or only one rate-adjustment, mostly likely coming from a close and slowly evolving species ("best outgroup"). [Default: "mean among outgroups"]
+* **consensus_mode_for_multiple_outgroups**: when a divergent pair is adjusted by two or more outgroups, it is possible to get a consensus value considering either the mean among all the rate-adjustments for that pair ("mean among outgroups") or only one rate-adjustment, mostly likely coming from a close and slowly evolving species ("best outgroup"). [Default: "mean among outgroups"]
 
 The [PARAMETERS] section includes:
 
@@ -109,7 +109,7 @@ In case ``mean among outgroup`` is set for the consensus rate-adjustment value, 
 Guidelines to set the consensus method for multiple rate-adjustments
 --------------------------------------------------------------------
 
-A consensus value for the rate-adjustment is needed when multiple rate-adjustments are performed for a species pair. The pipeline computes two consensus strategies, but then generates the divergence lines in the mixed plot according to the method specified in the configuration file under ``consensus_peak_for_multiple_outgroups``.
+A consensus value for the rate-adjustment is needed when multiple rate-adjustments are performed for a species pair. The pipeline computes two consensus strategies, but then generates the divergence lines in the mixed plot according to the method specified in the configuration file under ``consensus_mode_for_multiple_outgroups``.
 
 * ``mean among outgroups``: with this option, the final rate-adjustment of a species pair is the mean of the rate-adjustments obtained from all the used outgroups. It is the default method because it avoids to rely on a single voice that could be biased (e.g. bad quality data).
 * ``best outgroup``: with this option, only the rate-adjustment obtained from the best outgroup is considered for the final rate-adjustment of a species pair. The best outgroup is the one with the smallest OC segment, which is also computed through *K*:sub:`S` value decomposition as during relative rate testing. The OC segment is a combined measure of how close is the outgroup and how low is its rate; the smaller the OC segment, the better can the outgroup detect the branch-specific *K*:sub:`S` contributions of the two ingroups. The OC is stored in ``adjustment_table_species.tsv``. If one outgroup shows a remarkably smaller OC than the others, then it can be worth it to re-run the pipeline (or just the plotting of the mixed distribution) by setting in the configuration file the ``best outgroup`` method. However, it's first better to check the quality of the rate-adjustment result coming from it, especially if the outgroup species has transcriptome data: its ortholog distributions in ``orthologs_species1_species2.pdf`` should have clear peaks in order to give a reliable rate-adjustment.

@@ -343,12 +343,12 @@ class Configuration:
 
         :return consensus_peak_for_multiple_outgroups: a valid string for the consensus method
         """
-        consensus_peak_for_multiple_outgroups = self.config.get("ANALYSIS SETTING", "consensus_peak_for_multiple_outgroups")
+        consensus_peak_for_multiple_outgroups = self.config.get("ANALYSIS SETTING", "consensus_mode_for_multiple_outgroups")
 
         if consensus_peak_for_multiple_outgroups == "mean among outgroups" or consensus_peak_for_multiple_outgroups == "best outgroup":
             return consensus_peak_for_multiple_outgroups
         else:
-            logging.warning("Unrecognized choice in 'consensus_peak_for_multiple_outgroups' filed in configuration file.")
+            logging.warning("Unrecognized choice in 'consensus_mode_for_multiple_outgroups' filed in configuration file.")
             logging.warning("  Please choose between 'mean among outgroups' and 'best outgroup'")
             logging.warning("  The default option will be executed ('mean among outgroups').")
             consensus_peak_for_multiple_outgroups = "mean among outgroups"

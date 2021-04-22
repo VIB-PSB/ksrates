@@ -31,7 +31,7 @@ gff_attribute = id
 max_number_outgroups = 4
 # maximum number of outspecies/trios selected to correct each divergent species pair (default: 4)
 
-consensus_peak_for_multiple_outgroups = mean among outgroups
+consensus_mode_for_multiple_outgroups = mean among outgroups
 # allowed values: 'mean among outgroups' or 'best outgroup' (default: 'mean among outgroups')
 
 
