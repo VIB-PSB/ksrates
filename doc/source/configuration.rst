@@ -30,28 +30,28 @@ The analysis configuration file is composed of a first section defining the spec
 
     [ANALYSIS SETTING]
     paranome = yes
-    colinearity = yes
+    collinearity = yes
 
     gff_feature = mrna
     gff_attribute = id
 
-    max_number_outspecies = 4
-    consensus_peak_for_multiple_outgroups = mean among outgroups
+    max_number_outgroups = 4
+    consensus_mode_for_multiple_outgroups = mean among outgroups
 
 
     [PARAMETERS]
     x_axis_max_limit_paralogs_plot = 5
-    bin_width_para = 0.1
-    y_axis_limit_paralogs_plot = None
+    bin_width_paralogs = 0.1
+    y_axis_max_limit_paralogs_plot = None
 
     num_bootstrap_iterations = 200
     divergence_colors =  Red, MediumBlue, Goldenrod, Crimson, ForestGreen, Gray, SaddleBrown, Black
 
     x_axis_max_limit_orthologs_plots = 5
-    bin_width_ortho = 0.1
+    bin_width_orthologs = 0.1
 
-    max_ks_para = 5
-    max_ks_ortho = 10
+    max_ks_paralogs = 5
+    max_ks_orthologs = 10
 
 The [SPECIES] section includes:
 
@@ -66,19 +66,19 @@ The [SPECIES] section includes:
 The [ANALYSIS SETTING] section includes:
 
 * **paranome**: whether to build/plot the whole-paranome *K*:sub:`S` distribution of the focal species (options: "yes" and "no"). [Default: "yes"]
-* **colinearity**: whether to build/plot the anchor pair *K*:sub:`S` distribution of the focal species (options: "yes" and "no"). A GFF file for the focal species is required, see parameter `gff_filename` above. [Default: "no"]
+* **collinearity**: whether to build/plot the anchor pair *K*:sub:`S` distribution of the focal species (options: "yes" and "no"). A GFF file for the focal species is required, see parameter `gff_filename` above. [Default: "no"]
 * **gff_feature**: parsing keyword from the third column of the GFF file (e.g. gene, mrna...). Case insensitive.
 * **gff_attribute**: parsing keyword from the ninth column of the GFF file (e.g. id, name...). Case insensitive. 
-* **max_number_outspecies**: maximum number of trios/outspecies allowed to adjust a divergent pair; if None, all possible outspecies obtained from the phylogenetic tree will be used to form trios and adjust the pair. For more details see below. [Default: 4]
-* **consensus_peak_for_multiple_outgroups**: when a divergent pair is adjusted by two or more outgroups, it is possible to get a consensus value considering either the mean among all the rate-adjustments for that pair ("mean among outgroups") or only one rate-adjustment, mostly likely coming from a close and slowly evolving species ("best outgroup"). [Default: "mean among outgroups"]
+* **max_number_outgroups**: maximum number of trios/outspecies allowed to adjust a divergent pair; if None, all possible outspecies obtained from the phylogenetic tree will be used to form trios and adjust the pair. For more details see below. [Default: 4]
+* **consensus_mode_for_multiple_outgroups**: when a divergent pair is adjusted by two or more outgroups, it is possible to get a consensus value considering either the mean among all the rate-adjustments for that pair ("mean among outgroups") or only one rate-adjustment, mostly likely coming from a close and slowly evolving species ("best outgroup"). [Default: "mean among outgroups"]
 
 The [PARAMETERS] section includes:
 
 * For the mixed *K*:sub:`S` distributions plot
 
     * **x_axis_max_limit_paralogs_plot**: highest value of the x axis in the mixed distribution plot. [Default: 5]
-    * **bin_width_para**: bin width in paralog *K*:sub:`S` distribution histogram. By default there are ten bins per unit. [Default: 0.1]
-    * **y_axis_limit_paralogs_plot**: customized highest value of the y axis in the mixed plot. [Default: None]
+    * **bin_width_paralogs**: bin width in paralog *K*:sub:`S` distribution histogram. By default there are ten bins per unit. [Default: 0.1]
+    * **y_axis_max_limit_paralogs_plot**: customized highest value of the y axis in the mixed plot. [Default: None]
     
 * For ortholog divergence *K*:sub:`S`
 
@@ -88,18 +88,18 @@ The [PARAMETERS] section includes:
 * For the ortholog *K*:sub:`S` distribution plots
 
     * **x_axis_max_limit_orthologs_plots**: highest value of the x axis in the ortholog distribution plots. [Default: 5]
-    * **bin_width_ortho**: bin width in ortholog *K*:sub:`S` distribution histogram. By default there are ten bins per unit. [Default: 0.1]
+    * **bin_width_orthologs**: bin width in ortholog *K*:sub:`S` distribution histogram. By default there are ten bins per unit. [Default: 0.1]
     
 * *K*:sub:`S` value thresholds
 
-    * **max_ks_para**: maximum value accepted for paralog *K*:sub:`S` from data table. [Default: 5]
-    * **max_ks_ortho**: maximum value accepted for ortholog *K*:sub:`S` from data table. [Default: 10]
+    * **max_ks_paralogs**: maximum value accepted for paralog *K*:sub:`S` from data table. [Default: 5]
+    * **max_ks_orthologs**: maximum value accepted for ortholog *K*:sub:`S` from data table. [Default: 10]
 
 
 Guidelines to set the maximum number of outgroups per rate-adjustment
 ---------------------------------------------------------------------
 
-``max_num_outspecies`` is a parameter used to limit the amount of outgroup species used to adjust a species pair; without that, all possible outgroups would be taken. Having multiple rate-adjustments on the same divergence can provide stronger support for the rate-adjusted plot and is therefore advised to adjust with at least 3 or 4 outgroups to have more reliable results.
+``max_number_outgroups`` is a parameter used to limit the amount of outgroup species used to adjust a species pair; without that, all possible outgroups would be taken. Having multiple rate-adjustments on the same divergence can provide stronger support for the rate-adjusted plot and is therefore advised to adjust with at least 3 or 4 outgroups to have more reliable results.
 
 However, the more the outgroups, the more the number of ortholog distributions that will have to be computed by the `wgd` ortholog pipeline, which is a quite computationally demanding step. Setting a maximum amount of outgroups lowers the number of rate-adjustments and can therefore save time and resources. It is a good option in case the tree has a complex structure that would collect an unnecessary large number of outgroups or in case the user wants to have a quicker, although somewhat less reliable, result. Note that another option to lower the number of ortholog distributions is to start with a simpler tree structure.
 
@@ -109,7 +109,7 @@ In case ``mean among outgroup`` is set for the consensus rate-adjustment value, 
 Guidelines to set the consensus method for multiple rate-adjustments
 --------------------------------------------------------------------
 
-A consensus value for the rate-adjustment is needed when multiple rate-adjustments are performed for a species pair. The pipeline computes two consensus strategies, but then generates the divergence lines in the mixed plot according to the method specified in the configuration file under ``consensus_peak_for_multiple_outgroups``.
+A consensus value for the rate-adjustment is needed when multiple rate-adjustments are performed for a species pair. The pipeline computes two consensus strategies, but then generates the divergence lines in the mixed plot according to the method specified in the configuration file under ``consensus_mode_for_multiple_outgroups``.
 
 * ``mean among outgroups``: with this option, the final rate-adjustment of a species pair is the mean of the rate-adjustments obtained from all the used outgroups. It is the default method because it avoids to rely on a single voice that could be biased (e.g. bad quality data).
 * ``best outgroup``: with this option, only the rate-adjustment obtained from the best outgroup is considered for the final rate-adjustment of a species pair. The best outgroup is the one with the smallest OC segment, which is also computed through *K*:sub:`S` value decomposition as during relative rate testing. The OC segment is a combined measure of how close is the outgroup and how low is its rate; the smaller the OC segment, the better can the outgroup detect the branch-specific *K*:sub:`S` contributions of the two ingroups. The OC is stored in ``adjustment_table_species.tsv``. If one outgroup shows a remarkably smaller OC than the others, then it can be worth it to re-run the pipeline (or just the plotting of the mixed distribution) by setting in the configuration file the ``best outgroup`` method. However, it's first better to check the quality of the rate-adjustment result coming from it, especially if the outgroup species has transcriptome data: its ortholog distributions in ``orthologs_species1_species2.pdf`` should have clear peaks in order to give a reliable rate-adjustment.

@@ -19,7 +19,7 @@ ks_list_database_path = ortholog_ks_list_db.tsv
 
 [ANALYSIS SETTING]
 paranome = yes
-colinearity = yes
+collinearity = yes
 # analysis type for paralog data; allowed values: 'yes' or 'no'
 
 gff_feature = mrna
@@ -28,10 +28,10 @@ gff_feature = mrna
 gff_attribute = id
 # keyword to parse gene id from the gff file (column 9); can be 'id', 'name'...
 
-max_number_outspecies = 4
+max_number_outgroups = 4
 # maximum number of outspecies/trios selected to correct each divergent species pair (default: 4)
 
-consensus_peak_for_multiple_outgroups = mean among outgroups
+consensus_mode_for_multiple_outgroups = mean among outgroups
 # allowed values: 'mean among outgroups' or 'best outgroup' (default: 'mean among outgroups')
 
 
@@ -39,10 +39,10 @@ consensus_peak_for_multiple_outgroups = mean among outgroups
 x_axis_max_limit_paralogs_plot = 5
 # highest value of the x axis in the mixed distribution plot (default: 5)
 
-bin_width_para = 0.1
+bin_width_paralogs = 0.1
 # bin width in paralog ks histograms (default: 0.1, ten bins per unit)
 
-y_axis_limit_paralogs_plot = None
+y_axis_max_limit_paralogs_plot = None
 # highest value of the y axis in the mixed distribution plot  (default: none)
 
 num_bootstrap_iterations = 10
@@ -55,11 +55,11 @@ divergence_colors =  Red, MediumBlue, Goldenrod, Crimson, ForestGreen, Gray, Sad
 x_axis_max_limit_orthologs_plots = 5
 # highest value of the x axis in the ortholog distribution plots (default: 5)
 
-bin_width_ortho = 0.1
+bin_width_orthologs = 0.1
 # bin width in ortholog ks histograms (default: 0.1, ten bins per unit)
 
-max_ks_para = 5
+max_ks_paralogs = 5
 # maximum paralog ks value accepted from ks data table (default: 5)
 
-max_ks_ortho = 10
+max_ks_orthologs = 10
 # maximum ortholog ks value accepted from ks data table (default: 10)

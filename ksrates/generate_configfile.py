@@ -31,7 +31,7 @@ def generate_configfile(configfile_name):
     Config.add_section("ANALYSIS SETTING")
 
     Config.set("ANALYSIS SETTING", "paranome", "yes")
-    Config.set("ANALYSIS SETTING", "colinearity", "no")
+    Config.set("ANALYSIS SETTING", "collinearity", "no")
     Config.set("ANALYSIS SETTING", "# analysis type for paralog data; allowed values: 'yes' and 'no'\n")
 
     Config.set("ANALYSIS SETTING", "gff_feature", "")
@@ -40,10 +40,10 @@ def generate_configfile(configfile_name):
     Config.set("ANALYSIS SETTING", "gff_attribute", "")
     Config.set("ANALYSIS SETTING", "# keyword to parse gene ID from the GFF file (column 9); can be 'ID', 'Name'...\n")
 
-    Config.set("ANALYSIS SETTING", "max_number_outspecies", "4")
+    Config.set("ANALYSIS SETTING", "max_number_outgroups", "4")
     Config.set("ANALYSIS SETTING", "# maximum number of outspecies/trios selected to correct each divergent species pair (default: 4)\n")
 
-    Config.set("ANALYSIS SETTING", "consensus_peak_for_multiple_outgroups", "mean among outgroups")
+    Config.set("ANALYSIS SETTING", "consensus_mode_for_multiple_outgroups", "mean among outgroups")
     Config.set("ANALYSIS SETTING", "# allowed values: 'mean among outgroups' or 'best outgroup' (default: 'mean among outgroups')\n")
 
     Config.add_section("PARAMETERS")
@@ -51,10 +51,10 @@ def generate_configfile(configfile_name):
     Config.set("PARAMETERS", "x_axis_max_limit_paralogs_plot", "5")
     Config.set("PARAMETERS", "# highest value of the x axis in the mixed distribution plot (default: 5)\n")
 
-    Config.set("PARAMETERS", "bin_width_para", "0.1")
+    Config.set("PARAMETERS", "bin_width_paralogs", "0.1")
     Config.set("PARAMETERS", "# bin width in paralog Ks histograms (default: 0.1, ten bins per unit)\n")
 
-    Config.set("PARAMETERS", "y_axis_limit_paralogs_plot", "None")
+    Config.set("PARAMETERS", "y_axis_max_limit_paralogs_plot", "None")
     Config.set("PARAMETERS", "# highest value of the y axis in the mixed distribution plot  (default: None)\n")
 
     Config.set("PARAMETERS", "num_bootstrap_iterations", "200")
@@ -67,13 +67,13 @@ def generate_configfile(configfile_name):
     Config.set("PARAMETERS", "x_axis_max_limit_orthologs_plots", "5")
     Config.set("PARAMETERS", "# highest value of the x axis in the ortholog distribution plots (default: 5)\n")
 
-    Config.set("PARAMETERS", "bin_width_ortho", "0.1")
+    Config.set("PARAMETERS", "bin_width_orthologs", "0.1")
     Config.set("PARAMETERS", "# bin width in ortholog Ks histograms (default: 0.1, ten bins per unit)\n")
 
-    Config.set("PARAMETERS", "max_ks_para", "5")
+    Config.set("PARAMETERS", "max_ks_paralogs", "5")
     Config.set("PARAMETERS", "# maximum paralog Ks value accepted from Ks data table (default: 5)\n")
 
-    Config.set("PARAMETERS", "max_ks_ortho", "10")
+    Config.set("PARAMETERS", "max_ks_orthologs", "10")
     Config.set("PARAMETERS", "# maximum ortholog Ks value accepted from Ks data table (default: 10)")
 
     logging.basicConfig(format='%(levelname)s\t%(message)s', level="INFO", stream=sys.stdout)

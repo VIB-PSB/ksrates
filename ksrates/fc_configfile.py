@@ -301,7 +301,7 @@ class Configuration:
 
         :return max_outspecies: integer
         """
-        max_outspecies = self.config.get("ANALYSIS SETTING", "max_number_outspecies")
+        max_outspecies = self.config.get("ANALYSIS SETTING", "max_number_outgroups")
         return max_outspecies
 
     def get_paranome(self):
@@ -325,14 +325,14 @@ class Configuration:
 
         :return boolean: flags whether the colinearity analysis is required
         """
-        colinearity = self.config.get("ANALYSIS SETTING", "colinearity").lower()
+        colinearity = self.config.get("ANALYSIS SETTING", "collinearity").lower()
 
         if colinearity == "yes":
             return True
         elif colinearity == "no":
             return False
         else:
-            logging.error('Unrecognized "colinearity" parameter in configuration file; please choose between "yes" and "no"')
+            logging.error('Unrecognized "collinearity" parameter in configuration file; please choose between "yes" and "no"')
             sys.exit(1)
 
     def get_consensus_peak_for_multiple_outgroups(self):
@@ -343,12 +343,12 @@ class Configuration:
 
         :return consensus_peak_for_multiple_outgroups: a valid string for the consensus method
         """
-        consensus_peak_for_multiple_outgroups = self.config.get("ANALYSIS SETTING", "consensus_peak_for_multiple_outgroups")
+        consensus_peak_for_multiple_outgroups = self.config.get("ANALYSIS SETTING", "consensus_mode_for_multiple_outgroups")
 
         if consensus_peak_for_multiple_outgroups == "mean among outgroups" or consensus_peak_for_multiple_outgroups == "best outgroup":
             return consensus_peak_for_multiple_outgroups
         else:
-            logging.warning("Unrecognized choice in 'consensus_peak_for_multiple_outgroups' filed in configuration file.")
+            logging.warning("Unrecognized choice in 'consensus_mode_for_multiple_outgroups' filed in configuration file.")
             logging.warning("  Please choose between 'mean among outgroups' and 'best outgroup'")
             logging.warning("  The default option will be executed ('mean among outgroups').")
             consensus_peak_for_multiple_outgroups = "mean among outgroups"
@@ -361,7 +361,7 @@ class Configuration:
 
         :return max_ks_ortho: integer
         """
-        max_ks_ortho = float(self.config.get("PARAMETERS", "max_ks_ortho"))
+        max_ks_ortho = float(self.config.get("PARAMETERS", "max_ks_orthologs"))
         return max_ks_ortho
 
     def get_max_ks_para(self):
@@ -370,7 +370,7 @@ class Configuration:
 
         :return max_ks_para: integer
         """
-        max_ks_para = float(self.config.get("PARAMETERS", "max_ks_para"))
+        max_ks_para = float(self.config.get("PARAMETERS", "max_ks_paralogs"))
         return max_ks_para
 
     def get_num_iteration(self):
@@ -388,7 +388,7 @@ class Configuration:
 
         :return bin_width_para: number (float or integer) for bin width in paralog Ks histogram
         """
-        bin_width_para = float(self.config.get("PARAMETERS", "bin_width_para"))
+        bin_width_para = float(self.config.get("PARAMETERS", "bin_width_paralogs"))
         return bin_width_para
 
     def get_bin_width_ortho(self):
@@ -397,7 +397,7 @@ class Configuration:
 
         :return bin_width_ortho: number (float or integer) for bin width in ortholog Ks histogram
         """
-        bin_width_ortho = float(self.config.get("PARAMETERS", "bin_width_ortho"))
+        bin_width_ortho = float(self.config.get("PARAMETERS", "bin_width_orthologs"))
         return bin_width_ortho
 
     def get_x_lim_ortho(self):
@@ -424,7 +424,7 @@ class Configuration:
 
         :return: the upper limit as a floating number or as None string
         """
-        y_lim = self.config.get("PARAMETERS", "y_axis_limit_paralogs_plot")  # by default it's "None"
+        y_lim = self.config.get("PARAMETERS", "y_axis_max_limit_paralogs_plot")  # by default it's "None"
         try:
             y_lim = float(y_lim) # returning the y_lim as a float
         except Exception:
