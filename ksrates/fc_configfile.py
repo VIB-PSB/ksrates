@@ -397,7 +397,7 @@ class Configuration:
 
         :return bin_width_ortho: number (float or integer) for bin width in ortholog Ks histogram
         """
-        bin_width_ortho = float(self.config.get("PARAMETERS", "bin_width_ortho"))
+        bin_width_ortho = float(self.config.get("PARAMETERS", "bin_width_orthologs"))
         return bin_width_ortho
 
     def get_x_lim_ortho(self):

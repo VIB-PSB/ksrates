@@ -48,7 +48,7 @@ The analysis configuration file is composed of a first section defining the spec
     divergence_colors =  Red, MediumBlue, Goldenrod, Crimson, ForestGreen, Gray, SaddleBrown, Black
 
     x_axis_max_limit_orthologs_plots = 5
-    bin_width_ortho = 0.1
+    bin_width_orthologs = 0.1
 
     max_ks_paralogs = 5
     max_ks_orthologs = 10
@@ -88,7 +88,7 @@ The [PARAMETERS] section includes:
 * For the ortholog *K*:sub:`S` distribution plots
 
     * **x_axis_max_limit_orthologs_plots**: highest value of the x axis in the ortholog distribution plots. [Default: 5]
-    * **bin_width_ortho**: bin width in ortholog *K*:sub:`S` distribution histogram. By default there are ten bins per unit. [Default: 0.1]
+    * **bin_width_orthologs**: bin width in ortholog *K*:sub:`S` distribution histogram. By default there are ten bins per unit. [Default: 0.1]
     
 * *K*:sub:`S` value thresholds
 

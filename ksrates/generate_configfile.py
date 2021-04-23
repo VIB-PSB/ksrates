@@ -67,7 +67,7 @@ def generate_configfile(configfile_name):
     Config.set("PARAMETERS", "x_axis_max_limit_orthologs_plots", "5")
     Config.set("PARAMETERS", "# highest value of the x axis in the ortholog distribution plots (default: 5)\n")
 
-    Config.set("PARAMETERS", "bin_width_ortho", "0.1")
+    Config.set("PARAMETERS", "bin_width_orthologs", "0.1")
     Config.set("PARAMETERS", "# bin width in ortholog Ks histograms (default: 0.1, ten bins per unit)\n")
 
     Config.set("PARAMETERS", "max_ks_paralogs", "5")

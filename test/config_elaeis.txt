@@ -55,7 +55,7 @@ divergence_colors =  Red, MediumBlue, Goldenrod, Crimson, ForestGreen, Gray, Sad
 x_axis_max_limit_orthologs_plots = 5
 # highest value of the x axis in the ortholog distribution plots (default: 5)
 
-bin_width_ortho = 0.1
+bin_width_orthologs = 0.1
 # bin width in ortholog ks histograms (default: 0.1, ten bins per unit)
 
 max_ks_paralogs = 5
