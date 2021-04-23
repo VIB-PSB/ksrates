@@ -82,25 +82,17 @@ Without the use of a container the installation of *ksrates* and its dependencie
 .. note::
    WSL2 (Windows Subsystem for Linux 2) is a native Windows 10 feature that allows to run a GNU/Linux terminal without the use of a VM. It can be installed following the official `documentation <https://docs.microsoft.com/en-us/windows/wsl/install-win10#requirements>`__.
 
-1.  Clone the *ksrates* repository from `GitHub <https://github.com/VIB-PSB/ksrates>`__::
 
-    	git clone https://github.com/VIB-PSB/ksrates
+1.  Most of non-Python dependencies can be installed with the following commands::
 
-2.  Install the tool and its Python dependencies using ``pip3``::
-
-    	cd ksrates
-    	pip3 install .
-
-3.  Most of non-Python dependencies can be installed witht the following commands::
-
-        sudo apt-get -yq install default-jdk build-essential ncbi-blast+ muscle mafft prank fasttree mcl phyml
+        sudo apt-get update && sudo apt-get -yq install python3-pip default-jdk build-essential ncbi-blast+ muscle mafft prank fasttree mcl phyml
 	wget -qO- https://get.nextflow.io | bash
 
     Optionally make Nextflow accessible through your ``$PATH`` variable, for example::
 
         sudo mv nextflow /usr/local/bin
     
-4.  Install PAML 4.9j from source (for more infromation see PAML installation `page <http://abacus.gene.ucl.ac.uk/software/#phylogenetic-analysis-by-maximum-likelihood-paml>`__) to avoid compatibility issues::
+2.  Install PAML 4.9j from source (for more infromation see PAML installation `page <http://abacus.gene.ucl.ac.uk/software/#phylogenetic-analysis-by-maximum-likelihood-paml>`__) to avoid compatibility issues::
 
         wget http://abacus.gene.ucl.ac.uk/software/paml4.9j.tgz
         tar -xzf paml4.9j.tgz
@@ -115,14 +107,21 @@ Without the use of a container the installation of *ksrates* and its dependencie
         *   Or move ``codeml`` to another directory (here assumed to be ``~/bin``) and add this directory to ``$PATH``, for the Bash shell by copying the following line to the shell initialization file (e.g. ``.bashrc``)::
 
                 export PATH=$PATH:~/bin
-    
-    Please refer to PAML `website <http://abacus.gene.ucl.ac.uk/software/paml.html#download>`__ for more information about its installation.
 
-5. Install I-ADHoRe 3.0 from its GitHub `page <https://github.com/VIB-PSB/i-ADHoRe>`__ (required only for collinearity analysis of genome data).
+3. Install I-ADHoRe 3.0 from its GitHub `page <https://github.com/VIB-PSB/i-ADHoRe>`__ (required only for collinearity analysis of genome data).
+
+4.  Clone the *ksrates* repository from `GitHub <https://github.com/VIB-PSB/ksrates>`__ and install the package and its Python dependencies::
+
+        git clone https://github.com/VIB-PSB/ksrates
+    	cd ksrates
+    	pip3 install .
 
 
 Testing your installation
 =========================
+
+.. note::
+    WSL2 users can enter the Windows file system from the terminal through e.g. ``cd mnt/c/Users/your_username``.
 
 1.  Clone the *ksrates* repository from `GitHub <https://github.com/VIB-PSB/ksrates>`__ to get the use case dataset::
 
