@@ -62,7 +62,7 @@ def plot_orthologs_distr(config_file, trios_file):
     missing_pairs_ks_list, missing_pairs_peaks = [], []
 
     for __, row in trios.iterrows():
-        species, sister, out = row['Species'], row['Sister_Species'], row['Out_Species']
+        species, sister, out = row['Focal_Species'], row['Sister_Species'], row['Out_Species']
         # Generate dictionary of divergent pairs linked with their outgroups
         divergent_pair_key = f"{species}_{sister}"
         if divergent_pair_key not in outgroups_per_divergent_pair_dict.keys():

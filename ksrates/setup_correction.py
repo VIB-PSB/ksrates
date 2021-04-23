@@ -133,7 +133,7 @@ def setup_correction(config_file, nextflow_flag):
     logging.info("")
 
     # Generate trios DataFrame from trios array
-    trios_df = DataFrame.from_records(trios_array, columns=["Node", "Species", "Sister_Species", "Out_Species"])
+    trios_df = DataFrame.from_records(trios_array, columns=["Node", "Focal_Species", "Sister_Species", "Out_Species"])
     outfile_trios_path = os.path.join("rate_adjustment", f"{species_of_interest}",
                                          f"ortholog_trios_{species_of_interest}.tsv")
     with open(outfile_trios_path, "w+") as outfile:

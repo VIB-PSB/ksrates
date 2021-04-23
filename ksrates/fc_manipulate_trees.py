@@ -355,10 +355,10 @@ def get_branch_length_and_errorbox(species, ancestor_node, correction_table, con
     # The parameter comes from the config file and it is given as argument to this function ("consensus_strategy_for_multi_outgroups")
     if consensus_strategy_for_multi_outgroups == "mean among outgroups":
         # Then consider the columns in the correction_table that are generated using the average method
-        column_header_peak, column_header_SD, column_header_rate_species, column_header_rate_sister = "Peak_MeanOut", "Peak_MeanOut_SD", "Rate_Species_MeanOut", "Rate_Sister_MeanOut"
+        column_header_peak, column_header_SD, column_header_rate_species, column_header_rate_sister = "Adjusted_Mode_Mean", "Adjusted_Mode_Mean_SD", "Ks_Focal_Mean", "Ks_Sister_Mean"
     elif consensus_strategy_for_multi_outgroups == "best outgroup":
         # Then consider the columns in the correction_table that are generated using the best outgroup method
-        column_header_peak, column_header_SD, column_header_rate_species, column_header_rate_sister = "Peak_BestOut", "Peak_BestOut_SD", "Rate_Species_BestOut", "Rate_Sister_BestOut"
+        column_header_peak, column_header_SD, column_header_rate_species, column_header_rate_sister = "Adjusted_Mode_Best", "Adjusted_Mode_Best_SD", "Ks_Focal_Best", "Ks_Sister_Best"
 
     # All the sister species from the current node provide equivalent data, because they all measure the same divergence (node)
     for sister in ancestor_node_leaves:
@@ -422,7 +422,7 @@ def get_rates_from_current_analysis(rate_dict, correction_table, species, specie
         leaves = node.get_leaves()
         for leaf in leaves:
             if leaf.name != species and leaf.name not in already_used_leaves:
-                rate_sister = correction_table.loc[correction_table['Sister_Species'] == latin_names[leaf.name], ["Rate_Sister_MeanOut"]]
+                rate_sister = correction_table.loc[correction_table['Sister_Species'] == latin_names[leaf.name], ["Ks_Sister_Mean"]]
                 rate_sister_float = rate_sister.iat[0,0] # to convert from DataFrame type to Float type
                 rate_dict[node][leaf.name] = rate_sister_float
                 already_used_leaves.append(leaf.name)
@@ -471,7 +471,7 @@ def get_rates_from_ortholog_peak_db(rate_dict, sister_node, latin_names, ortholo
                     # If not, warn the user that it has to be computed separately to have all branch length
                     # equal to branch-specific Ks contributions
                     try:
-                        __ = ortholog_db.at[latinSister1_latinSister2, 'Ortholog_Mode']
+                        __ = ortholog_db.at[latinSister1_latinSister2, 'Mode']
                     except Exception:
                         missing_ortholog_data_from_database = True
 
@@ -483,8 +483,8 @@ def get_rates_from_ortholog_peak_db(rate_dict, sister_node, latin_names, ortholo
                         latinSister2_latinOut = "_".join(sorted([latinSister2, latin_names[outspecies]]))
 
                         try:
-                            __ = ortholog_db.at[latinSister1_latinOut, 'Ortholog_Mode']
-                            __ = ortholog_db.at[latinSister2_latinOut, 'Ortholog_Mode']
+                            __ = ortholog_db.at[latinSister1_latinOut, 'Mode']
+                            __ = ortholog_db.at[latinSister2_latinOut, 'Mode']
                             list_of_successful_outspecies.append(outspecies)
                         except Exception:
                             pass

@@ -152,7 +152,7 @@ def estimate_peak(species1, species2, latinSp1, latinSp2, max_ks_ortho, n_iter, 
             logging.info(f"- Computing distribution peak through bootstrap ({n_iter} iterations)")
             mean_peak, std_peak, mean_median, std_median = bootstrap_peak(ks_list, n_iter, x_lim_ortho,
                                                                                 bin_width_ortho)
-            db_new_row = DataFrame([[latinSp1, latinSp2, mean_peak, std_peak, mean_median, std_median]],
+            db_new_row = DataFrame([[latinSp1, latinSp2, mean_peak, std_peak]],
                                     index=[f"{latinSp1}_{latinSp2}"])
             with open(db_path, "a+") as outfile_db:
                 logging.info("- Adding peak to ortholog peak database")

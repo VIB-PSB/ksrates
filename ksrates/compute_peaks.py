@@ -46,7 +46,7 @@ def compute_peaks(config_file, ortholog_pairs_file):
 
         db = DataFrame()
         with open(db_path, "w+") as outfile:
-            outfile.write('\tSpecies1\tSpecies2\tOrtholog_Mode\tOrtholog_Mode_SD\tOrtholog_Median\tOrtholog_Median_SD\n')
+            outfile.write('\tSpecies1\tSpecies2\tMode\tMode_SD\n')
 
     try:
         with open(ks_list_db_path, "r") as f:
