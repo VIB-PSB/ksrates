@@ -388,7 +388,7 @@ class Configuration:
 
         :return bin_width_para: number (float or integer) for bin width in paralog Ks histogram
         """
-        bin_width_para = float(self.config.get("PARAMETERS", "bin_width_para"))
+        bin_width_para = float(self.config.get("PARAMETERS", "bin_width_paralogs"))
         return bin_width_para
 
     def get_bin_width_ortho(self):

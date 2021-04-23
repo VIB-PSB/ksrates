@@ -39,7 +39,7 @@ consensus_mode_for_multiple_outgroups = mean among outgroups
 x_axis_max_limit_paralogs_plot = 5
 # highest value of the x axis in the mixed distribution plot (default: 5)
 
-bin_width_para = 0.1
+bin_width_paralogs = 0.1
 # bin width in paralog ks histograms (default: 0.1, ten bins per unit)
 
 y_axis_max_limit_paralogs_plot = None
