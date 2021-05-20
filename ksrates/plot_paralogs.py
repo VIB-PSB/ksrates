@@ -44,15 +44,14 @@ def plot_paralogs_distr(config_file, correction_table_file, paralog_tsv_file, an
         sys.exit(1)
 
     # Creating folders for output files
-    if not os.path.exists('rate_adjustment'):
-        os.mkdir('rate_adjustment')
-    if not os.path.exists(os.path.join("rate_adjustment", f"{species}")):
-        os.mkdir(os.path.join("rate_adjustment", f"{species}"))
-        logging.info(f"Creating output folder [rate_adjustment/{species}]")
+    output_folder = os.path.join("rate_adjustment", f"{species}")
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+        logging.info(f"Generating output folder [{output_folder}]")
 
     # Get correction results TSV file
     # If correction_table is (still) missing, it will be equal to empty string (""), but the script will not exit
-    default_path_correction_table_file = os.path.join("rate_adjustment", f"{species}", f"{_ADJUSTMENT_TABLE.format(species)}")
+    default_path_correction_table_file = os.path.join(output_folder, f"{_ADJUSTMENT_TABLE.format(species)}")
     correction_table_file = fcCheck.get_argument_path(correction_table_file, default_path_correction_table_file, "Correction table file")
     if correction_table_file == "": # it means that the correction_table is not present or available yet
         logging.warning("Rate-adjustment data are not available yet, only paralog distribution will be plotted.")
