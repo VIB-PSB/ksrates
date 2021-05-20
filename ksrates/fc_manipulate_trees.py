@@ -109,15 +109,15 @@ class _ClearableTextFace(TextFace):
 
 def counts_expected_line_number_in_correction_table(species, tree, latin_names):
     """
-    Returns the expected number of lines of the complete correction table:
+    Returns the expected number of lines of the complete rate-adjustment table:
     there is one line per species in the tree, excluding the species of
     interest itself and the species of the deepest outgroup branching from the root
-    and that cannot be corrected.
+    and that cannot be adjusted.
 
     :param species: node of the focal species
     :param tree: input tree object
     :param latin_names: a dictionary-like data structure that associates each informal species name to its latin name
-    :return expected_species_in_correction_table: list of expected species in the correction table
+    :return expected_species_in_correction_table: list of expected species in the adjustment table
     """
     species_node = get_species_node(species, tree)
     species_history = get_species_history(species_node)
@@ -135,7 +135,7 @@ def counts_expected_line_number_in_correction_table(species, tree, latin_names):
 
 def find_missing_pairs_for_tree_rates(tree, species, species_history, latin_names):
     """
-    Finds all species pairs in the tree that are not strictly needed for the correction of
+    Finds all species pairs in the tree that are not strictly needed for the adjustment of
     divergence lines, but that are instead needed to be able to compute the branch length 
     for all the branches present in the tree (with the exception of the base-most species).
     
@@ -304,7 +304,7 @@ def get_sister_species_of_a_node(currentnode):
 def get_outspecies_of_a_node(currentnode, max_num_outspecies):
     """
     :param currentnode: the current node
-    :param max_num_outspecies: the maximum number (N) of outspecies allowed for the correction (only the N closest will be considered)
+    :param max_num_outspecies: the maximum number (N) of outspecies allowed for the adjustment (only the N closest will be considered)
     :return: a list containing the names of the N outgroup(s) of the current node.
     """
     outspecies = []     # list of all outspecies of the current parent node
@@ -329,19 +329,19 @@ def get_branch_length_and_errorbox(species, ancestor_node, correction_table, con
     rate_sister_dict).
 
     Given an ancestor node belonging to the species history, it takes into account all the sister species that diverged at that node.
-    For each sister, takes the corrected divergence Ks value; then it makes an average corrected Ks value to have a single representative Ks value for the node.
+    For each sister, takes the adjusted divergence Ks value; then it makes an average adjusted Ks value to have a single representative Ks value for the node.
     For each sister, takes the error margins for the divergence (SD); then it considers the lowest and the highest error margins as the margins for the divergence. 
     The functions takes into account the user choice on how to deal with multiple outgroup.
     Returns the (mean) Ks value for the current divergence node in the tree, and the left and right margin values for delimiting an error box around it.
     
     :param species: the current focal species
     :param ancestor_node: one of the internal nodes belonging to the path that goes from the tree root to the focal species
-    :param correction_table: correction results in DataFrame format (contains both possible types of consensus strategy for how to deal with multiple outgroups)
+    :param correction_table: adjustment results in DataFrame format (contains both possible types of consensus strategy for how to deal with multiple outgroups)
     :param consensus_strategy_for_multi_outgroups: user choice about which consensus strategy to use when dealing with multiple outgroups
     :param latin_names: a dictionary-like data structure that associates each informal species name to its latin name
     :param rate_species_dict: empty dictionary that will associate the focal species with its branch-specific Ks contribution at each divergence
     :param rate_sister_dict: empty dictionary that will associate each sister species with its own branch-specific Ks contribution
-    :return: average_peak_of_divergence_event, corrected Ks value of the current divergence (it is a mean value in case of multiple species diverged at that node with the focal species)  
+    :return: average_peak_of_divergence_event, adjusted Ks value of the current divergence (it is a mean value in case of multiple species diverged at that node with the focal species)  
     :return: margin_error_box, dictionary containing the smallest left error margin and the highest right error margin for the divergence when considering all the species diverging from that node
     :return: error_text, same as margin_error_box but in string format (left and right margins within brackets)
     """ 
@@ -363,7 +363,7 @@ def get_branch_length_and_errorbox(species, ancestor_node, correction_table, con
     # All the sister species from the current node provide equivalent data, because they all measure the same divergence (node)
     for sister in ancestor_node_leaves:
         latinSister = latin_names[sister]
-        # Getting the corrected peak (with SD) for the divergence with the current sister species
+        # Getting the adjusted peak (with SD) for the divergence with the current sister species
         corrected_peak = correction_table.loc[correction_table['Sister_Species'] == latinSister, [column_header_peak]]
         corrected_peak_float = corrected_peak.iat[0,0] # to convert from DataFrame type to Float type
         corrected_peak_sd = correction_table.loc[correction_table['Sister_Species'] == latinSister, [column_header_SD]]
@@ -609,7 +609,7 @@ def plotting_tree(species, latin_names, original_tree, correction_table, consens
     :param species: the current focal species
     :param latin_names: a dictionary-like data structure that associates each informal species name to its latin name
     :param original_tree: Newick tree format of the phylogenetic tree among the involved species
-    :param correction_table: correction results in DataFrame format (contains both possible types of consensus strategy for how to deal with multiple outgroups)
+    :param correction_table: adjustment results in DataFrame format (contains both possible types of consensus strategy for how to deal with multiple outgroups)
     :param consensus_strategy_for_multi_outgroups: user choice about which consensus strategy to use when dealing with multiple outgroups
     :para ortholog_db: ortholog peak database used to get ortholog data for the relative rate test; if not available, will be ignored
     :param peak_stats: flag to specify whether the ortholog distribution peak is the mode or the median

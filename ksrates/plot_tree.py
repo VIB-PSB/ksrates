@@ -23,7 +23,7 @@ def plot_tree_rates(config_file, correction_table_file, nextflow_flag):
 
     # Get correction results TSV file
     default_path_correction_table_file = os.path.join("rate_adjustment", f"{species}", f"{_ADJUSTMENT_TABLE.format(species)}")
-    correction_table_file = fcCheck.get_argument_path(correction_table_file, default_path_correction_table_file, "Correction table file")
+    correction_table_file = fcCheck.get_argument_path(correction_table_file, default_path_correction_table_file, "Rate-adjustment table file")
     if correction_table_file == "": # it means that the correction_table is not present or available yet
         logging.warning(f"Rate-adjustment data not available yet: PDF figure of phylogenetic tree not generated.")
         logging.info(f"Exiting")
