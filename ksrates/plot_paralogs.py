@@ -43,6 +43,13 @@ def plot_paralogs_distr(config_file, correction_table_file, paralog_tsv_file, an
         logging.error("Exiting")
         sys.exit(1)
 
+    # Creating folders for output files
+    if not os.path.exists('rate_adjustment'):
+        os.mkdir('rate_adjustment')
+    if not os.path.exists(os.path.join("rate_adjustment", f"{species}")):
+        os.mkdir(os.path.join("rate_adjustment", f"{species}"))
+        logging.info(f"Creating output folder [rate_adjustment/{species}]")
+
     # Get correction results TSV file
     # If correction_table is (still) missing, it will be equal to empty string (""), but the script will not exit
     default_path_correction_table_file = os.path.join("rate_adjustment", f"{species}", f"{_ADJUSTMENT_TABLE.format(species)}")
