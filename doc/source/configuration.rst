@@ -125,6 +125,7 @@ The Nextflow configuration file is used to configure various settings for the *k
     singularity {
         enabled = true
         cacheDir = ''
+        autoMounts = true
     }
     docker {
         enabled = false
@@ -150,6 +151,7 @@ The Nextflow configuration file is used to configure various settings for the *k
 
     * **enable** enables or disables the use of the respective container
     * **cacheDir** the directory where remote the Singularity image from Docker Hub is stored. When using a computing cluster it must be a shared folder accessible to all computing nodes.
+    * **autoMounts** automatically mounts host paths in the executed container
 
 * The **executor.name** setting defines the system type or HPC scheduler to be used (e.g. ``sge``, ``local``)
 * The **process** scope defines the configuration for the processes of the *ksrates* pipeline:
