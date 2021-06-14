@@ -126,6 +126,7 @@ The Nextflow configuration file is used to configure various settings for the *k
         enabled = true
         cacheDir = ''
         autoMounts = true
+        envWhitelist = '' 
     }
     docker {
         enabled = false
@@ -152,6 +153,7 @@ The Nextflow configuration file is used to configure various settings for the *k
     * **enable** enables or disables the use of the respective container
     * **cacheDir** the directory where remote the Singularity image from Docker Hub is stored. When using a computing cluster it must be a shared folder accessible to all computing nodes.
     * **autoMounts** automatically mounts host paths in the executed container
+    * **envWhitelist** accepts a comma separated list of environment variable names to be included in the container environment. Include 'NSLOTS' if working on a SGE cluster
 
 * The **executor.name** setting defines the system type or HPC scheduler to be used (e.g. ``sge``, ``local``)
 * The **process** scope defines the configuration for the processes of the *ksrates* pipeline:
