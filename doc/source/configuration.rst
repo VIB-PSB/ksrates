@@ -152,7 +152,7 @@ The Nextflow configuration file is used to configure various settings for the *k
 
     * **enable** enables or disables the use of the respective container
     * **cacheDir** the directory where remote the Singularity image from Docker Hub is stored. When using a computing cluster it must be a shared folder accessible to all computing nodes.
-    * **autoMounts** automatically mounts host paths in the executed container
+    * **autoMounts** automatically mounts host paths in the executed container and allows the user to run the pipeline from any directory in a cluster [Default: false]. It requires the `*user bind control* <https://sylabs.io/guides/3.7/admin-guide/configfiles.html?highlight=user%20bind%20control#bind-mount-management`>__ feature activated in Singularity installation [Default: "YES"]
     * **envWhitelist** accepts a comma separated list of environment variable names to be included in the container environment. If working on a SGE cluster, please include the ``NSLOTS`` variable (defining the number of cores/processes/slots), since it is used in the Nextflow pipeline.
 
 * The **executor.name** setting defines the system type or HPC scheduler to be used (e.g. ``sge``, ``local``)
