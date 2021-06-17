@@ -3,7 +3,7 @@ import logging
 from sys import argv
 
 @click.group(context_settings={'help_option_names': ['-h', '--help']})
-@click.version_option("0.1", prog_name="ksrates", help="Print version number.")
+@click.version_option("1.0", prog_name="ksrates", help="Print version number.")
 def cli():
     """
     Welcome to ksrates!
