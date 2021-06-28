@@ -79,7 +79,7 @@ process checkConfig {
         echo "Please fill in with the required parameters:"
         echo "species, newick_tree, latin_names, fasta_filenames and if applicable gff_filename, gff_feature and gff_attribute"
         echo "Then rerun the Nextflow pipeline."
-        ksrates generate-config ${config} >> \$processDir/generate_config.txt
+        python3 ~/ksrates/ksrates_cli.py generate-config ${config} >> \$processDir/generate_config.txt
         trigger_pipeline=false
     else
         trigger_pipeline=true
@@ -159,7 +159,7 @@ process setupAdjustment {
     echo "[\$species] Extracting ortholog pairs from Newick tree"
     echo "NF internal work directory for [setupAdjustment] process:\n\$processDir\n" > \${logs_folder}/setup_adjustment.log
 
-    ksrates init ${config} --nextflow >> \${logs_folder}/setup_adjustment.log 2>&1
+    python3 ~/ksrates/ksrates_cli.py init ${config} --nextflow >> \${logs_folder}/setup_adjustment.log 2>&1
     cat rate_adjustment/\$species/ortholog_pairs_\${species}.tsv > \${processDir}/ortholog_pairs_\${species}.tsv
 
     # If all the ortholog data are present in the databases, already trigger plotOrthologs to plot the ortholog distributions
@@ -424,7 +424,7 @@ process estimatePeak {
     echo "NF internal work directory for [estimatePeak (${task.index})] process:\n\$processDir\n" >> $logs_folder/estimate_peak.log
     echo "Updating ortholog peak database" >> $logs_folder/estimate_peak.log
 
-    ksrates orthologs-analysis ${config} --ortholog-pairs=\$processDir/$species_pairs_for_peak >> $logs_folder/estimate_peak.log 2>&1
+    python3 ~/ksrates/ksrates_cli.py orthologs-analysis ${config} --ortholog-pairs=\$processDir/$species_pairs_for_peak >> $logs_folder/estimate_peak.log 2>&1
     """
 }
 
@@ -491,7 +491,7 @@ process wgdParalogs {
         echo "[$species] Found \\\$NSLOTS = \$NSLOTS -> using \${nThreads} threads"
     fi
 
-    ksrates paralogs-ks ${config} --n-threads=\$nThreads >> $logs_folder/wgd_paralogs.log 2>&1
+    python3 ~/ksrates/ksrates_cli.py paralogs-ks ${config} --n-threads=\$nThreads >> $logs_folder/wgd_paralogs.log 2>&1
 
     RET_CODE=\$?
     echo "[$species] Done [\${RET_CODE}]"
@@ -564,13 +564,13 @@ process wgdOrthologs {
         echo "[$species1 – $species2] Found \\\$NSLOTS = \$NSLOTS -> using \${nThreads} threads"
     fi
 
-    ksrates orthologs-ks ${config} $species1 $species2 --n-threads=\$nThreads >> $logs_folder/wgd_orthologs_${species1}_${species2}.log 2>&1
+    python3 ~/ksrates/ksrates_cli.py orthologs-ks ${config} $species1 $species2 --n-threads=\$nThreads >> $logs_folder/wgd_orthologs_${species1}_${species2}.log 2>&1
     RET_CODE=\$?
     echo "[$species1 – $species2] wgd done [\${RET_CODE}]"
     
     echo "[$species1 – $species2] Computing ortholog peak and error"
     echo "Species1\tSpecies2\n$species1\t$species2" > \${processDir}/tmp_${species1}_${species2}.txt
-    ksrates orthologs-analysis ${config} --ortholog-pairs=\${processDir}/tmp_${species1}_${species2}.txt >> $logs_folder/wgd_orthologs_${species1}_${species2}.log 2>&1
+    python3 ~/ksrates/ksrates_cli.py orthologs-analysis ${config} --ortholog-pairs=\${processDir}/tmp_${species1}_${species2}.txt >> $logs_folder/wgd_orthologs_${species1}_${species2}.log 2>&1
 
     RET_CODE=\$?
     echo "[$species1 – $species2] Compute peak done [\${RET_CODE}]"
@@ -645,7 +645,7 @@ process plotOrthologDistrib {
     cd $PWD
     echo "NF internal work directory for [plotOrthologDistrib] process:\n\$processDir\n" > $logs_folder/plot_ortholog_distributions.log
 
-    ksrates plot-orthologs ${config} >> $logs_folder/plot_ortholog_distributions.log 2>&1
+    python3 ~/ksrates/ksrates_cli.py plot-orthologs ${config} >> $logs_folder/plot_ortholog_distributions.log 2>&1
 
     RET_CODE=\$?
     echo "[$species] Done [\${RET_CODE}]"
@@ -745,11 +745,11 @@ process doRateAdjustment {
     echo "NF internal work directory for [doRateAdjustment (${task.index})] process:\n\$processDir\n" >> $logs_folder/rate_adjustment.log
 
     echo "[$species] Performing rate-adjustment"
-    ksrates orthologs-adjustment ${config} >> $logs_folder/rate_adjustment.log 2>&1
+    python3 ~/ksrates/ksrates_cli.py orthologs-adjustment ${config} >> $logs_folder/rate_adjustment.log 2>&1
     echo "\n" >> $logs_folder/rate_adjustment.log
 
     echo "[$species] Plotting mixed distributions"
-    ksrates plot-paralogs ${config} >> $logs_folder/rate_adjustment.log 2>&1
+    python3 ~/ksrates/ksrates_cli.py plot-paralogs ${config} >> $logs_folder/rate_adjustment.log 2>&1
     echo "\n" >> $logs_folder/rate_adjustment.log
 
     echo " \n-----------------------------------------------------------\n" >> $logs_folder/rate_adjustment.log
@@ -811,7 +811,7 @@ process paralogsAnalyses {
     # Else, perform peak calling only on paranome with mixture model(s)
     # Additional methods can be required through the expert configuration file
 
-    ksrates paralogs-analyses ${config} >> $logs_folder/paralogs_analyses.log 2>&1
+    python3 ~/ksrates/ksrates_cli.py paralogs-analyses ${config} >> $logs_folder/paralogs_analyses.log 2>&1
     echo "\n" >> $logs_folder/paralogs_analyses.log
 
     RET_CODE=\$?
@@ -870,7 +870,7 @@ process drawTree {
     cd $PWD
     echo "NF internal work directory for [drawTree (${task.index})] process:\n\$processDir\n" >> $logs_folder/rate_adjustment.log
 
-    ksrates plot-tree ${config} --nextflow >> $logs_folder/rate_adjustment.log 2>&1
+    python3 ~/ksrates/ksrates_cli.py plot-tree ${config} --nextflow >> $logs_folder/rate_adjustment.log 2>&1
 
     RET_CODE=\$?
     echo "[$species] Done [\${RET_CODE}]"
@@ -954,19 +954,20 @@ workflow.onError {
         
         // Defining variables (the stopped process, the species name and the log filename)
         process = "${workflow.errorReport.split()[4].split("'")[1]}"
-        species_name = file("$configfile").readLines()[1].split()[2]
+        species_name = file("${configfile}").readLines()[1].split()[2]
         log_file = "rate_adjustment/${species_name}/logs_${workflow.sessionId.toString().substring(0,8)}/${logs_names[process]}"
+        statement_process = "The pipeline stopped at process '${process}' with the the following error message:"
 
         // Separator to highlight the following error report
         log.error "\n"
-        log.error "${'=' * (72 + process.length())}"
+        log.error "${'=' * statement_process.length()}"
 
         // Stating which process was stopped
-        log.error "The pipeline stopped at process '${process}' with the the following error message:"
+        log.error "${statement_process}"
         log.error "\n"
 
         // Logging error message lines (either from the Python script or from the Nextflow pipeline file)
-        myFile = file("$log_file")
+        myFile = file("${log_file}")
         allLines  = myFile.readLines()
         for( line : allLines ) {
             if ( line =~ /ERROR/ ) {
@@ -977,10 +978,10 @@ workflow.onError {
 
         // Pointing to the complete output of the stopped process 
         log.error "For the complete process output please check the following log file:"
-        log.error "$log_file"
+        log.error "${log_file}"
 
         // Separator to highlight the end of the error report
-        log.error "${'=' * (72 + process.length())}"
+        log.error "${'=' * statement_process.length()}"
 
     }
 }
