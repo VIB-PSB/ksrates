@@ -238,8 +238,8 @@ process setParalogAnalysis {
     echo "NF internal work directory for [setParalogAnalysis (${task.index})] process:\n\$processDir\n" > $logs_folder/wgd_paralogs.log
 
     if [ \${paranome} = "no" ] && [ \${colinearity} = "no" ]; then
-        echo "[$species] WARNING: Neither whole-paranome analysis nor colinearity analysis is required by configuration file. Exiting."
-        echo "[$species] WARNING: Neither whole-paranome analysis nor colinearity analysis is required by configuration file. Exiting." >> $logs_folder/wgd_paralogs.log
+        echo "[$species] ERROR: Neither whole-paranome analysis nor colinearity analysis has been required in configuration file. Exiting."
+        echo "[$species] ERROR: Neither whole-paranome analysis nor colinearity analysis has been required in configuration file. Exiting." >> $logs_folder/wgd_paralogs.log
         exit 1
     fi
 
@@ -935,7 +935,52 @@ workflow.onComplete {
 }
 
 workflow.onError {
+
     if (LOG) {
-        log.error "Oops... workflow execution stopped with message: $workflow.errorMessage"
+
+        // Dictionary mapping each process with the associated log file
+        logs_names = [
+        "checkConfig" : null,
+        "setupAdjustment" : "setup_adjustment.log",
+        "setParalogAnalysis" : "wgd_paralogs.log",
+        "setOrthologAnalysis": "set_orthologs.log",
+        "estimatePeak": "estimate_peak.log", 
+        "wgdParalogs": "wgd_paralogs.log", 
+        "wgdOrthologs": "wgd_orthologs_species1_species2.log",
+        "plotOrthologDistrib": "plot_ortholog_distributions.log", 
+        "doRateAdjustment": "rate_adjustment.log",
+        "paralogsAnalyses": "paralogs_analyses.log",
+        "drawTree": "rate_adjustment.log" ]
+        
+        // Defining variables (the stopped process, the species name and the log filename)
+        process = "${workflow.errorReport.split()[4].split("'")[1]}"
+        species_name = file("$configfile").readLines()[1].split()[2]
+        log_file = "rate_adjustment/${species_name}/logs_${workflow.sessionId.toString().substring(0,8)}/${logs_names[process]}"
+
+        // Separator to highlight the following error report
+        log.error "\n"
+        log.error "${'=' * (72 + process.length())}"
+
+        // Stating which process was stopped
+        log.error "The pipeline stopped at process '${process}' with the the following error message:"
+        log.error "\n"
+
+        // Logging error message lines (either from the Python script or from the Nextflow pipeline file)
+        myFile = file("$log_file")
+        allLines  = myFile.readLines()
+        for( line : allLines ) {
+            if ( line =~ /ERROR/ ) {
+                log.error line
+            }
+        }
+        log.error "\n"
+
+        // Pointing to the complete output of the stopped process 
+        log.error "For the complete process output please check the following log file:"
+        log.error "$log_file"
+
+        // Separator to highlight the end of the error report
+        log.error "${'=' * (72 + process.length())}"
+
     }
 }
