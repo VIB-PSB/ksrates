@@ -126,6 +126,10 @@ Nextflow log files
     * ``species1_species2.ks.tsv`` lists the *K*:sub:`S` estimate (column 9 ``Ks``) for every one-to-one ortholog pair found. The tabular file format is identical to the paralog ``.ks.tsv`` file described above. However, the gene family, tree node and weight columns can be ignored since each ortholog "family" is composed of only two members.
 
 
+
+
+.. _`other_output`:
+
 Other output
 ------------
 
