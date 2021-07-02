@@ -151,7 +151,7 @@ The Nextflow configuration file is used to configure various settings for the *k
 
     * **enable** enables or disables the use of the respective container
     * **cacheDir** (only for Singularity) the directory where remote the Singularity image from Docker Hub is stored. When using a computing cluster it must be a shared folder accessible to all computing nodes.
-    * **autoMounts** (only for Singularity) automatically mounts host paths in the executed container and allows the user to run the pipeline from any directory in a cluster [Default: true]. It requires the `*user bind control* <https://sylabs.io/guides/3.7/admin-guide/configfiles.html?highlight=user%20bind%20control#bind-mount-management`>__ feature in Singularity installation, which is active by default.
+    * **autoMounts** (only for Singularity) automatically mounts host paths in the executed container and allows the user to run the pipeline from any directory in a cluster [Default: true]. It requires the `user bind control <https://sylabs.io/guides/3.7/admin-guide/configfiles.html?highlight=user%20bind%20control#bind-mount-management>`__ feature in Singularity installation, which is active by default.
 
 * The **executor.name** setting defines the system type or HPC scheduler to be used (e.g. ``sge``, ``slurm``, ``local``)
 * The **process** scope defines the configuration for the processes of the *ksrates* pipeline:
