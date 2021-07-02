@@ -129,6 +129,7 @@ The Nextflow configuration file is used to configure various settings for the *k
     }
     docker {
         enabled = false
+        envWhitelist = '' 
     }
 
     executor.name = ''
