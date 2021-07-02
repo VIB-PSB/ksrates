@@ -481,17 +481,10 @@ process wgdParalogs {
     cd $PWD
     echo "NF internal work directory for [wgdParalogs] process:\n\$processDir\n" >> $logs_folder/wgd_paralogs.log
 
-    if [ -z \${NSLOTS+x} ]; then
-        nThreads=$params.nThreadsParalogs
-        echo "Using \${nThreads} threads" >> $logs_folder/wgd_paralogs.log
-        echo "[$species] Using \${nThreads} threads"
-    else
-        nThreads=\${NSLOTS}
-        echo "Found \\\$NSLOTS = \$NSLOTS\n" >> $logs_folder/wgd_paralogs.log
-        echo "[$species] Found \\\$NSLOTS = \$NSLOTS -> using \${nThreads} threads"
-    fi
+    echo "[$species] Using ${task.cpus} thread(s)"
+    echo "Using ${task.cpus} thread(s)\n">> $logs_folder/wgd_paralogs.log
 
-    ksrates paralogs-ks ${config} --n-threads=\$nThreads >> $logs_folder/wgd_paralogs.log 2>&1
+    ksrates paralogs-ks ${config} --n-threads=${task.cpus} >> $logs_folder/wgd_paralogs.log 2>&1
 
     RET_CODE=\$?
     echo "[$species] Done [\${RET_CODE}]"
@@ -554,17 +547,10 @@ process wgdOrthologs {
     cd $PWD
     echo "NF internal work directory for [wgdOrthologs (${task.index})] process:\n\$processDir\n" > $logs_folder/wgd_orthologs_${species1}_${species2}.log
 
-    if [ -z \${NSLOTS+x} ]; then
-        nThreads=$params.nThreadsOrthologs
-        echo "Using \${nThreads} threads" >> $logs_folder/wgd_orthologs_${species1}_${species2}.log
-        echo "[$species1 – $species2] Using \${nThreads} threads"
-    else
-        nThreads=\${NSLOTS}
-        echo "Found \\\$NSLOTS = \$NSLOTS\n" >> $logs_folder/wgd_orthologs_${species1}_${species2}.log
-        echo "[$species1 – $species2] Found \\\$NSLOTS = \$NSLOTS -> using \${nThreads} threads"
-    fi
+    echo "[$species1 – $species2] Using ${task.cpus} thread(s)"
+    echo "Using ${task.cpus} thread(s)\n">> $logs_folder/wgd_orthologs_${species1}_${species2}.log
 
-    ksrates orthologs-ks ${config} $species1 $species2 --n-threads=\$nThreads >> $logs_folder/wgd_orthologs_${species1}_${species2}.log 2>&1
+    ksrates orthologs-ks ${config} $species1 $species2 --n-threads=${task.cpus} >> $logs_folder/wgd_orthologs_${species1}_${species2}.log 2>&1
     RET_CODE=\$?
     echo "[$species1 – $species2] wgd done [\${RET_CODE}]"
     
