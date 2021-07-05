@@ -956,32 +956,78 @@ workflow.onError {
         process = "${workflow.errorReport.split()[4].split("'")[1]}"
         species_name = file("${configfile}").readLines()[1].split()[2]
         log_file = "rate_adjustment/${species_name}/logs_${workflow.sessionId.toString().substring(0,8)}/${logs_names[process]}"
-        statement_process = "The pipeline stopped at process '${process}' with the the following error message:"
+        
+        // Print a compact error box after the usual long Nextflow errorReport
 
-        // Separator to highlight the following error report
-        log.error "\n"
-        log.error "${'=' * statement_process.length()}"
-
-        // Stating which process was stopped
-        log.error "${statement_process}"
-        log.error "\n"
-
-        // Logging error message lines (either from the Python script or from the Nextflow pipeline file)
         myFile = file("${log_file}")
-        allLines  = myFile.readLines()
-        for( line : allLines ) {
-            if ( line =~ /ERROR/ ) {
-                log.error line
+        // If the stopped process has already generated a log file, search error source therein
+        if( myFile.exists() == true ) {
+            statement_error = "The pipeline stopped at process '${process}' with the following error message:"
+            // Separator to highlight the following error report
+            log.error "\n"
+            log.error "${'=' * statement_error.length()}"
+            // Write error box headline (including which process stopped the pipeline)
+            log.error "${statement_error}"
+            log.error "\n"
+
+            allLines  = myFile.readLines()
+            error_lines = allLines.findAll { it =~ /ERROR/ }
+            // If the process log file contains "ERROR" lines, print them
+            if( error_lines.size() != 0 ) {
+                for( line : error_lines ) {
+                    log.error line
+                }
+                log.error "\n"
+
+                // Pointing to the complete output of the stopped process 
+                log.error "For the complete process output please check the following log file:"
+                log.error "${log_file}"
             }
+
+            // Else if the process log file has no "ERROR" lines, look for an external cause
+            else {
+                // Write the "Caused by:" line from errorReport
+                error_cause = "${workflow.errorReport.split("\n")[3]}"
+                log.error "${error_cause}"
+                // Write errorMessage, if any
+                if( workflow.errorMessage != null ) {
+                    log.error "${workflow.errorMessage}"
+                }
+                log.error "\n"
+
+                // Point to the complete Nextflow errorReport 
+                log.error "For more details see the complete error report above or ./nextflow.log."
+                log.error "\n"
+            }
+            // Separator to highlight the end of the error box
+            log.error "${'=' * statement_error.length()}"
         }
-        log.error "\n"
 
-        // Pointing to the complete output of the stopped process 
-        log.error "For the complete process output please check the following log file:"
-        log.error "${log_file}"
+        // Else if the error occurred before the process log file was generated, look for an external cause
+        else {
+            statement_error = "The pipeline workflow execution stopped with the following error message:"
+            // Separator to highlight the error box
+            log.error "\n"
+            log.error "${'=' * statement_error.length()}"
 
-        // Separator to highlight the end of the error report
-        log.error "${'=' * statement_process.length()}"
+            // Write error box headline
+            log.error "${statement_error}"
+            log.error "\n"
 
+            // Write the "Caused by:" line from errorReport
+            error_cause = "${workflow.errorReport.split("\n")[3]}"
+            log.error "${error_cause}"
+            // Write errorMessage, if any
+            if( workflow.errorMessage != null ) {
+                log.error "${workflow.errorMessage}"
+            }
+            log.error "\n"
+
+            // Point to the complete Nextflow erroReport
+            log.error "For more details see the complete error report above or ./nextflow.log."
+
+            // Separator to highlight the end of the error report
+            log.error "${'=' * statement_error.length()}"
+        }
     }
 }
