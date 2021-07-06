@@ -909,16 +909,42 @@ workflow.onComplete {
         log.info ""
         log.info("Logs folder: logs_${workflow.sessionId.toString().substring(0,8)}")
         log.info "Cleaning up any temporary files left behind..."
-        file("$workflow.projectDir/paralog_distributions/ks_tmp*", type: "any")
-            .each {
-                result = it.deleteDir();
-                log.info result ? "$it" : "Can't delete: $it"
-            }
-        file("$workflow.projectDir/ortholog_distributions/ks_tmp*", type: "any")
-            .each {
-                result = it.deleteDir();
-                log.info result ? "$it" : "Can't delete: $it"
-            }
+
+        species_name = file("${configfile}").readLines()[1].split()[2]
+        paralog_dir_path = "${workflow.launchDir}/paralog_distributions/wgd_${species_name}*"
+        ortholog_dir_path = "${workflow.launchDir}/ortholog_distributions/wgd_*"
+
+        // Cleaning both paralog and ortholog directories
+        for ( dir_path : [ paralog_dir_path, ortholog_dir_path ] ) {
+            file(dir_path, type: "dir")
+                .each { wgd_dir ->
+                    // Remove BLAST temporary folder, if any
+                    file("${wgd_dir}/*.blast_tmp", type: "dir")
+                        .each { tmp ->
+                            if ( tmp.exists() == true ) {
+                                result = tmp.deleteDir();
+                                log.info result ? "Deleted: $tmp" : "Can't delete: $tmp"
+                                // Remove associated incomplete BLAST TSV file
+                                file("${wgd_dir}/*.blast.tsv", type: "file")
+                                    .each { tsv ->
+                                        if ( tsv.exists() == true ) {
+                                            result = tsv.delete()
+                                            log.info result ? "Deleted: $tsv" : "Can't delete: $tsv"
+                                        }
+                                    }
+                            }
+                        }
+                    // Remove Ks temporary folder
+                    file("${wgd_dir}/*.ks_tmp", type: "dir")
+                        .each { tmp ->
+                            if ( tmp.exists() == true ) {
+                                result = tmp.deleteDir();
+                                log.info result ? "Deleted: $tmp" : "Can't delete: $tmp"
+                            }
+                        }
+                }
+        }
+
         log.info "Done."
         log.info ""
         log.info "Pipeline completed at: $workflow.complete taking $workflow.duration"
