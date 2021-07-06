@@ -48,7 +48,7 @@ Main output
 
         *   Final rate-adjustment results for each divergent species pair after finding a consensus value in case of multiple outgroups (``adjustment_table_species.tsv``). Tabular format.
         
-            Each row shows the result for a species pair (column 2 ``Focal_Species`` and 3 ``Sister_Species``) diverging at a certain node (column 1 ``Node``). Columns 4--7 report the consensus obtained by taking the *mean* of multiple outgroups (if available): rate-adjusted mode with standard deviation in column 4 ``Adjusted_Mode_Mean`` and 5 ``Adjusted_Mode_SD_Mean``, branch-specific *K*:sub:`S` contributions for the divergent species pair in column 6 ``Ks_Focal_Mean`` and 7 ``Ks_Sister_Mean``. Columns 8-11 report the consensus obtained when considering only the *best outgroup*: rate-adjusted mode with standard deviation in column 8 ``Adjusted_Mode_Best`` and 9 ``Adjusted_Mode_SD_Best``, *K*:sub:`S` contributions for the divergent species pair in column 10 ``Ks_Focal_Best`` and 11 ``Ks_Sister_Best``. For comparison the unadjusted original mode with associated standard deviation is provided in column 12 ``Original_Mode`` and 13 ``Original_Mode_SD``.
+            Each row shows the result for a species pair (column 2 ``Focal_Species`` and 3 ``Sister_Species``) diverging at a certain node (column 1 ``Node``). Columns 4--7 report the consensus obtained by taking the *mean* of multiple outgroups (if available): rate-adjusted mode with standard deviation in column 4 ``Adjusted_Mode_Mean`` and 5 ``Adjusted_Mode_SD_Mean``, branch-specific *K*:sub:`S` contributions for the divergent species pair in column 6 ``Ks_Focal_Mean`` and 7 ``Ks_Sister_Mean``. Columns 8--11 report the consensus obtained when considering only the *best outgroup*: rate-adjusted mode with standard deviation in column 8 ``Adjusted_Mode_Best`` and 9 ``Adjusted_Mode_SD_Best``, *K*:sub:`S` contributions for the divergent species pair in column 10 ``Ks_Focal_Best`` and 11 ``Ks_Sister_Best``. For comparison the unadjusted original mode with associated standard deviation is provided in column 12 ``Original_Mode`` and 13 ``Original_Mode_SD``.
 
             .. figure:: _images/adj_table_consensus.png
                 :align: center
@@ -104,7 +104,7 @@ Nextflow log files
 
     * ``species.blast.tsv`` lists the paralog BLAST homology hits in tabular output format (``-outfmt 6``) 
     * ``species.mcl.tsv`` lists the paralog gene families, one family per line from the largest to the smallest family with the gene IDs of individual family members separated by tabs.
-    *   ``species.ks.tsv`` and  ``species.ks_anchors.tsv`` are tabular format files listing the *K*:sub:`S` estimate (column 9 ``Ks``) for every paralog and anchor pair found, respectively. Other noteworthy data per pair includes the alignment coverage, identity and length (columns 2 to 5: ``AlignmentCoverage``, ``AlignmentIdentity``, ``AlignmentLength`` and ``AlignmentLengthStripped``), the gene family (column 7 ``Family``), the node in the gene family's tree (column 10 ``Node``), and the weight associated with the pair's *K*:sub:`S` estimate (column 15 ``WeightOutliersExcluded``). For more details, see the *wgd* `documentation <https://wgd.readthedocs.io/en/latest/methods.html?highlight=some%20information>`__.
+    *   ``species.ks.tsv`` and  ``species.ks_anchors.tsv`` are tabular format files listing the *K*:sub:`S` estimate (column 9 ``Ks``) for every paralog and anchor pair found, respectively. Other noteworthy data per pair includes the alignment coverage, identity and length (columns 2--5: ``AlignmentCoverage``, ``AlignmentIdentity``, ``AlignmentLength`` and ``AlignmentLengthStripped``), the gene family (column 7 ``Family``), the node in the gene family's tree (column 10 ``Node``), and the weight associated with the pair's *K*:sub:`S` estimate (column 15 ``WeightOutliersExcluded``). For more details, see the *wgd* `documentation <https://wgd.readthedocs.io/en/latest/methods.html?highlight=some%20information>`__.
 
         .. figure:: _images/ks_tsv.png
             :align: center
@@ -126,13 +126,31 @@ Nextflow log files
     * ``species1_species2.ks.tsv`` lists the *K*:sub:`S` estimate (column 9 ``Ks``) for every one-to-one ortholog pair found. The tabular file format is identical to the paralog ``.ks.tsv`` file described above. However, the gene family, tree node and weight columns can be ignored since each ortholog "family" is composed of only two members.
 
 
+
+
+.. _`other_output`:
+
 Other output
 ------------
 
 * Generated directly in the directory from where *ksrates* is launched:
 
-    * ``ortholog_peak_db.tsv`` is a tabular data file storing the *K*:sub:`S` mode estimate from the ortholog *K*:sub:`S` distribution of species pairs. The name and location can be customised in the *ksrates* configuration file.
-    * ``ortholog_ks_list_db.tsv`` is a tabular data file storing the ortholog *K*:sub:`S` value lists of species pairs.  The name and location can be customised in the *ksrates* configuration file.
+    * ``ortholog_peak_db.tsv`` is a tabular data file storing the *K*:sub:`S` mode estimate (column 4 ``Mode``) and associated standard deviation (column 5 ``Mode_SD``) of the ortholog *K*:sub:`S` distribution of species pairs (columns 1--3). File name and location can be customised in the :ref:`pipeline_config_section`.
+
+      .. figure:: _images/ortholog_peak_db.png
+            :align: center
+            :width: 800
+
+            Structure of ortholog *K*:sub:`S` mode database.
+
+    * ``ortholog_ks_list_db.tsv`` is a tabular data file storing the ortholog *K*:sub:`S` value lists (column 4 ``Ks_Values``) of species pairs (columns 1--3).  File name and location can be customised in the :ref:`pipeline_config_section`.
+
+      .. figure:: _images/ortholog_ks_list_db.png
+            :align: center
+            :width: 800
+
+            Structure of ortholog *K*:sub:`S` list database.
+
     * ``wgd_runs_species.txt`` contains a list of *ksrates* commands to launch the *wgd* paralog and ortholog analysis when using the manual pipeline (see :ref:`manual_pipeline`). Note that this file is not generated if using the *ksrates* Nextflow pipeline.
     * ``work``: when using the *ksrates* Nextflow pipeline this directory is automatically generated by Nextflow to handle process organization and communication between processes (for more details, see the Nextflow documentation, e.g. `here <https://www.nextflow.io/docs/latest/getstarted.html#your-first-script>`__).
 
