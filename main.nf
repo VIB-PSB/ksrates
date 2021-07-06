@@ -954,49 +954,57 @@ workflow.onError {
         "paralogsAnalyses": "paralogs_analyses.log",
         "drawTree": "rate_adjustment.log" ]
         
-        // Defining variables (the stopped process, the species name and the log filename)
-        process = "${workflow.errorReport.split()[4].split("'")[1]}"
-        species_name = file("${configfile}").readLines()[1].split()[2]
-        log_filename = "rate_adjustment/${species_name}/logs_${workflow.sessionId.toString().substring(0,8)}/${logs_names[process]}"
-        
-        headline_error_box = "The pipeline stopped at process '${process}' with the following error message:"
-        // Separator to highlight the beginning of the error box
-        log.error "\n"
-        log.error "${'=' * headline_error_box.length()}"
-        // Write error box headline
-        log.error "${headline_error_box}"
-        log.error "\n"
-
-        // If process log file exists and contains ERROR lines, print them
-        log_file = file("${log_filename}")
-        
-        if( log_file.exists() == true && log_file.readLines().findAll{ it =~ /ERROR/ }.size() != 0 ) {
-            for( line : log_file.readLines().findAll { it =~ /ERROR/ } ) {
-                    log.error line
-            }
-            log.error "\n"
-
-            // Pointing to the complete output of the stopped process log file
-            log.error "For the complete process output please check the following log file:"
-            log.error "${log_filename}"
+        // If user interrupts with ctrl+C
+        if( workflow.errorReport == "SIGINT" || workflow.errorMessage == "SIGINT" ) {
+            log.error "Pipeline interrupted by user (${workflow.errorMessage} signal)"
         }
-
-        // Else if the process log file doesn't exist or contains no "ERROR" lines, look for an external cause
+        // If pipeline interrupted by an error
         else {
-            // Write the "Caused by:" line from errorReport
-            error_cause = "${workflow.errorReport.split("\n")[3]}"
-            log.error "${error_cause}"
-            // Write errorMessage, if any
-            if( workflow.errorMessage != null ) {
-                log.error "${workflow.errorMessage}"
-            }
+
+            // Defining variables (the stopped process, the species name and the log filename)
+            process = "${workflow.errorReport.split()[4].split("'")[1]}"
+            species_name = file("${configfile}").readLines()[1].split()[2]
+            log_filename = "rate_adjustment/${species_name}/logs_${workflow.sessionId.toString().substring(0,8)}/${logs_names[process]}"
+            
+            headline_error_box = "The pipeline stopped at process '${process}' with the following error message:"
+            // Separator to highlight the beginning of the error box
+            log.error "\n"
+            log.error "${'=' * headline_error_box.length()}"
+            // Write error box headline
+            log.error "${headline_error_box}"
             log.error "\n"
 
-            // Point to the complete Nextflow errorReport
-            log.error "For more details see the complete error report above or ./nextflow.log."
-        }
+            // If process log file exists and contains ERROR lines, print them
+            log_file = file("${log_filename}")
+            
+            if( log_file.exists() == true && log_file.readLines().findAll{ it =~ /ERROR/ }.size() != 0 ) {
+                for( line : log_file.readLines().findAll { it =~ /ERROR/ } ) {
+                        log.error line
+                }
+                log.error "\n"
 
-        // Separator to highlight the end of the error box
-        log.error "${'=' * headline_error_box.length()}"
+                // Pointing to the complete output of the stopped process log file
+                log.error "For the complete process output please check the following log file:"
+                log.error "${log_filename}"
+            }
+
+            // Else if the process log file doesn't exist or contains no "ERROR" lines, look for an external cause
+            else {
+                // Write the "Caused by:" line from errorReport
+                error_cause = "${workflow.errorReport.split("\n")[3]}"
+                log.error "${error_cause}"
+                // Write errorMessage, if any
+                if( workflow.errorMessage != null ) {
+                    log.error "${workflow.errorMessage}"
+                }
+                log.error "\n"
+
+                // Point to the complete Nextflow errorReport
+                log.error "For more details see the complete error report above or ./nextflow.log."
+            }
+
+            // Separator to highlight the end of the error box
+            log.error "${'=' * headline_error_box.length()}"
+        }
     }
 }
