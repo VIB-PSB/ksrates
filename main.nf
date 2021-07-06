@@ -934,38 +934,45 @@ workflow.onComplete {
     }
 }
 
-
+// Print a error box summing up the error message
 workflow.onError {
 
     if (LOG) {
-        // Print a error box summing up the error message
-
-        // Dictionary mapping each process with the associated log file
-        logs_names = [
-        "checkConfig" : null,
-        "setupAdjustment" : "setup_adjustment.log",
-        "setParalogAnalysis" : "wgd_paralogs.log",
-        "setOrthologAnalysis": "set_orthologs.log",
-        "estimatePeak": "estimate_peak.log", 
-        "wgdParalogs": "wgd_paralogs.log", 
-        "wgdOrthologs": "wgd_orthologs_species1_species2.log",
-        "plotOrthologDistrib": "plot_ortholog_distributions.log", 
-        "doRateAdjustment": "rate_adjustment.log",
-        "paralogsAnalyses": "paralogs_analyses.log",
-        "drawTree": "rate_adjustment.log" ]
-        
+       
         // If user interrupts with ctrl+C
         if( workflow.errorReport == "SIGINT" || workflow.errorMessage == "SIGINT" ) {
             log.error "Pipeline interrupted by user (${workflow.errorMessage} signal)"
         }
+
         // If pipeline interrupted by an error
         else {
 
             // Defining variables (the stopped process, the species name and the log filename)
             process = "${workflow.errorReport.split()[4].split("'")[1]}"
             species_name = file("${configfile}").readLines()[1].split()[2]
+
+            // For process wgdOrthologs, parse the two species names from errorMessage
+            if ( process == "wgdOrthologs" ) {
+                species1 = workflow.errorMessage.split("\n")[1].split("\\[")[1].split("\\]")[0].split("–")[0].replaceAll("\\s","")
+                species2 = workflow.errorMessage.split("\n")[1].split("\\[")[1].split("\\]")[0].split("–")[1].replaceAll("\\s","")
+            }
+
+            // Dictionary mapping each process with the associated log file
+            logs_names = [
+            "checkConfig" : null,
+            "setupAdjustment" : "setup_adjustment.log",
+            "setParalogAnalysis" : "wgd_paralogs.log",
+            "setOrthologAnalysis": "set_orthologs.log",
+            "estimatePeak": "estimate_peak.log", 
+            "wgdParalogs": "wgd_paralogs.log", 
+            "wgdOrthologs": "wgd_orthologs_${species1}_${species2}.log",
+            "plotOrthologDistrib": "plot_ortholog_distributions.log", 
+            "doRateAdjustment": "rate_adjustment.log",
+            "paralogsAnalyses": "paralogs_analyses.log",
+            "drawTree": "rate_adjustment.log" ]
+
             log_filename = "rate_adjustment/${species_name}/logs_${workflow.sessionId.toString().substring(0,8)}/${logs_names[process]}"
-            
+
             headline_error_box = "The pipeline stopped at process '${process}' with the following error message:"
             // Separator to highlight the beginning of the error box
             log.error "\n"
