@@ -954,7 +954,6 @@ workflow.onError {
             // For process wgdOrthologs, the log filename depends on the two species names,
             // which are obtained by parsing the errorMessage, if any available
             if ( process == "wgdOrthologs" && workflow.errorMessage != null) {
-                log.error "${workflow.errorMessage}"
                 species1 = workflow.errorMessage.split("\n")[1].split("\\[")[1].split("\\]")[0].split("–")[0].replaceAll("\\s","")
                 species2 = workflow.errorMessage.split("\n")[1].split("\\[")[1].split("\\]")[0].split("–")[1].replaceAll("\\s","")
             }
@@ -997,7 +996,7 @@ workflow.onError {
                 // If the process log file exists but there are no "ERROR" lines
                 // (probably it's an unexpected error), don't print any error line
                 else {
-                    headline_error_box = "The pipeline has encountered an error during process '${process}'."
+                    headline_error_box = "The pipeline encountered an error during process '${process}'."
                     // Separator to highlight the beginning of the error box
                     log.error "\n"
                     log.error "${'=' * headline_error_box.length()}"
