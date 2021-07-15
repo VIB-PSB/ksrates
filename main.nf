@@ -934,8 +934,16 @@ workflow.onComplete {
                                     }
                             }
                         }
-                    // Remove Ks temporary folder
+                    // Remove Ks temporary folder, if any
                     file("${wgd_dir}/*.ks_tmp", type: "dir")
+                        .each { tmp ->
+                            if ( tmp.exists() == true ) {
+                                result = tmp.deleteDir();
+                                log.info result ? "Deleted: $tmp" : "Can't delete: $tmp"
+                            }
+                        }
+                    // Remove i-ADHoRe temporary folder, if any (applicable only to paralog_distributions)
+                     file("${wgd_dir}/*.ks_anchors_tmp", type: "dir")
                         .each { tmp ->
                             if ( tmp.exists() == true ) {
                                 result = tmp.deleteDir();
