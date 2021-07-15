@@ -18,7 +18,7 @@ params.nThreadsParalogs = 1
 params.nThreadsOrthologs = 1
 
 // Parameter to automatically delete or not leftover folders at the end of the pipeline
-params.delete_leftover_folders = true
+params.preserve = false
 
 // giving the configuration file through the "input" process section
 configfile = file(params.config)
@@ -912,7 +912,7 @@ workflow.onComplete {
         log.info ""
         log.info("Logs folder: logs_${workflow.sessionId.toString().substring(0,8)}")
 
-        if ( params.delete_leftover_folders == true ) {
+        if ( params.preserve == false ) {
             log.info "Cleaning up any temporary files left behind..."
 
             species_name = file("${configfile}").readLines()[1].split()[2]
