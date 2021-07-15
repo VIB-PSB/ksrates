@@ -919,7 +919,7 @@ workflow.onComplete {
             paralog_dir_path = "${workflow.launchDir}/paralog_distributions/wgd_${species_name}*"
             ortholog_dir_path = "${workflow.launchDir}/ortholog_distributions/wgd_*"
 
-            // Cleaning both paralog and ortholog directories
+            // Clean both paralog and ortholog directories
             for ( dir_path : [ paralog_dir_path, ortholog_dir_path ] ) {
                 file(dir_path, type: "dir")
                     .each { wgd_dir ->
@@ -928,35 +928,44 @@ workflow.onComplete {
                             .each { tmp ->
                                 if ( tmp.exists() == true ) {
                                     result = tmp.deleteDir();
-                                    log.info result ? "Deleted: $tmp" : "Can't delete: $tmp"
+                                    log.info result ? "Deleted: ${tmp}" : "Can't delete: ${tmp}"
                                     // Remove associated incomplete BLAST TSV file
                                     file("${wgd_dir}/*.blast.tsv", type: "file")
                                         .each { tsv ->
                                             if ( tsv.exists() == true ) {
                                                 result = tsv.delete()
-                                                log.info result ? "Deleted: $tsv" : "Can't delete: $tsv"
+                                                log.info result ? "Deleted: ${tsv}" : "Can't delete: ${tsv}"
                                             }
                                         }
                                 }
                             }
-                        // Remove Ks temporary folder, if any
+                        // Remove Ks temporary directory, if any
                         file("${wgd_dir}/*.ks_tmp", type: "dir")
                             .each { tmp ->
                                 if ( tmp.exists() == true ) {
                                     result = tmp.deleteDir();
-                                    log.info result ? "Deleted: $tmp" : "Can't delete: $tmp"
+                                    log.info result ? "Deleted: ${tmp}" : "Can't delete: ${tmp}"
                                 }
                             }
-                        // Remove i-ADHoRe temporary folder, if any (applicable only to paralog_distributions)
+                        // Remove i-ADHoRe temporary directory, if any (applicable only to paralog_distributions)
                         file("${wgd_dir}/*.ks_anchors_tmp", type: "dir")
                             .each { tmp ->
                                 if ( tmp.exists() == true ) {
                                     result = tmp.deleteDir();
-                                    log.info result ? "Deleted: $tmp" : "Can't delete: $tmp"
+                                    log.info result ? "Deleted: ${tmp}" : "Can't delete: ${tmp}"
                                 }
                             }
                     }
             }
+
+            // Remove "core" files generated when the submitted job doesn't have enough memory
+            file("${workflow.launchDir}/core.*")
+                .each { core ->
+                    if ( core.exists() == true ) {
+                        result = core.delete();
+                        log.info result ? "Deleted: ${core}" : "Can't delete: ${core}"
+                    }
+                }
 
             log.info "Done."
             log.info ""
