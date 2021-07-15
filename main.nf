@@ -914,8 +914,7 @@ workflow.onComplete {
 
         if ( params.preserve == false ) {
             log.info "Cleaning up any temporary files left behind..."
-
-            species_name = file("${configfile}").readLines()[1].split()[2]
+            species_name = file("${configfile}").readLines().find{ it =~ /focal_species/ }.split()[2].strip()
             paralog_dir_path = "${workflow.launchDir}/paralog_distributions/wgd_${species_name}*"
             ortholog_dir_path = "${workflow.launchDir}/ortholog_distributions/wgd_*"
 
