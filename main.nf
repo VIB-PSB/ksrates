@@ -959,7 +959,7 @@ workflow.onComplete {
             }
 
             // Remove "core" files generated when the submitted job doesn't have enough memory
-            file("${workflow.launchDir}/core.*")
+            file("${workflow.launchDir}/core.[0-9]*")
                 .each { core ->
                     if ( core.exists() == true ) {
                         result = core.delete();
