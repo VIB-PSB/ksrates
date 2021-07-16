@@ -147,7 +147,6 @@ The Nextflow configuration file is used to configure various settings for the *k
 
     env {
     	SOME_ENV_VARIABLE = ''
-    	ANOTHER_ENV_VARIABLE = ''
     }
 
 * The **singularity** and **docker** scopes configure container type usage and execution:
