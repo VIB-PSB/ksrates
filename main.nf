@@ -955,6 +955,11 @@ workflow.onComplete {
                                     log.info result ? "Deleted: ${tmp}" : "Can't delete: ${tmp}"
                                 }
                             }
+                        // Remove paralog and ortholog sub-directories if they ended up being empty
+                        if ( (wgd_dir.list() as List).empty == true ) {
+                            result = wgd_dir.deleteDir();
+                            log.info result ? "Deleted: ${wgd_dir}" : "Can't delete: ${wgd_dir}"
+                        }
                     }
             }
 
