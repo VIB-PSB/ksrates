@@ -129,7 +129,6 @@ The Nextflow configuration file is used to configure various settings for the *k
     }
     docker {
         enabled = false
-        envWhitelist = '' 
     }
 
     executor.name = ''
@@ -139,7 +138,10 @@ The Nextflow configuration file is used to configure various settings for the *k
 
         withName: 'processName' {
             cpus = ''
+            penv = ''
             memory = ''
+            clusterOptions = ''
+            beforeScript = ''
         }
     }
 
@@ -170,10 +172,10 @@ The Nextflow configuration file is used to configure various settings for the *k
     
       Cluster settings can be tailored on your own machine type through the use of Nextflow directives (for a complete list see the `Nextflow documentation <https://www.nextflow.io/docs/latest/process.html#process-directives>`__), such as:
     
-        * **cpus** sets the number of CPUs/cores/slots/threads, e.g. ``'8'`` [Default if not set: 1]
-        * **memory** sets how much memory the process is allowed to use, e.g. ``'16GB'``
+        * **cpus** sets the number of CPUs/cores/slots/threads, e.g. ``8`` [Default if not set: 1]
     	* **penv** defines the parallel environment to be used when submitting a parallel task to the SGE resource manager
-        * **clusterOption** any native configuration option accepted by your cluster submit command, e.g. options that are specific to your cluster and not supported out of the box by Nextflow
+        * **memory** sets how much memory the process is allowed to use, e.g. ``16GB``. Note that, in case of multiple CPUs, this is the overall amount of memory dedicated to the CPUs, not the amount of memory *per* CPU.
+        * **clusterOptions** any native configuration option accepted by your cluster submit command, such as options specific to your cluster and not supported out of the box by Nextflow (e.g. defining the amount of memory per CPU instead of using the ``memory`` directive).
         * **beforeScript** allows you to execute a custom (Bash) snippet before the main process script is run. This may be useful to initialise the underlying compute cluster environment or for other custom initialisation, for example it can be used to load required dependencies if one of the *ksrates* containers is not used, provided that the cluster has those dependencies installed. In that case, the required external dependencies (see also the `wgd Documentation <https://wgd.readthedocs.io/en/latest/index.html#external-software>`__) for the *ksrates* Nextflow processes are:
 
             * ``wgdParalogs``: Python dependencies listed in requirements.txt, plus BLAST, MUSCLE, MCL, PAML, FastTree and i-ADHoRe (if collinearity analysis is configured).
