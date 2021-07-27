@@ -155,7 +155,7 @@ The Nextflow configuration file is used to configure various settings for the *k
     * **cacheDir** (only for Singularity) the directory where remote the Singularity image from Docker Hub is stored. When using a computing cluster it must be a shared folder accessible to all computing nodes.
     * **autoMounts** (only for Singularity) automatically mounts host paths in the executed container and allows the user to run the pipeline from any directory in a cluster [Default: true]. It requires the `user bind control <https://sylabs.io/guides/3.7/admin-guide/configfiles.html?highlight=user%20bind%20control#bind-mount-management>`__ feature in Singularity installation, which is active by default.
 
-* The **executor.name** setting defines the system type or HPC scheduler to be used (e.g. ``sge``, ``slurm``, ``local``)
+* The **executor.name** setting defines the system type or HPC scheduler to be used (e.g. ``sge``, ``slurm``, ``local``; for more detail see the `Nextflow documentation <https://www.nextflow.io/docs/latest/executor.html>`__).
 * The **process** scope defines the configuration for the processes of the *ksrates* pipeline:
 
     * **container** defines the Singularity or Docker *ksrates* container image to be used (from Docker Hub or from a local copy if already downloaded):
@@ -169,12 +169,12 @@ The Nextflow configuration file is used to configure various settings for the *k
     
       There are 11 processes in the pipeline, 6 of which (``checkConfig``, ``setupCorrection``, ``setParalogAnalysis``, ``setOrthologAnalysis``,  ``doRateCorrection`` and ``drawTree``) are by default run locally because they execute minimal calculations. The remaining 5 processes (``estimatePeak``, ``plotOrthologDistrib``, ``paralogsAnalyses``, ``wgdParalogs`` and ``wgdOrthologs``) are instead run by default on a cluster, if available, and can be configured under this section of the Nextflow configuration file. ``wgdParalogs`` and ``wgdOrthologs`` are the most computationally demanding and it is advised to assign them a higher computational power than the other processes. If available, we suggest to configure about 10 CPUs/cores/slots/threads and about 20GB memory (or, on average, about 2GB per configured CPU) for each of these two processes.
     
-      Cluster settings can be tailored on your own machine type through the use of Nextflow directives (for a complete list see the `Nextflow documentation <https://www.nextflow.io/docs/latest/process.html#process-directives>`__), such as:
+      Settings can be tailored to your configured executor (see above) through the use of Nextflow process directives (for a complete list and detailed descriptions see the `Nextflow documentation <https://www.nextflow.io/docs/latest/process.html#process-directives>`__), such as:
     
         * **cpus** sets the number of CPUs/cores/slots/threads, e.g. ``8`` [Default if not set: 1]
-    	* **penv** defines the parallel environment to be used when submitting a parallel task to the SGE resource manager
+    	* **penv** when using an SGE executor defines the parallel environment to be used when submitting a parallel task.
         * **memory** sets how much memory the process is allowed to use, e.g. ``16GB``. Note that, in case of multiple CPUs, this is the overall amount of memory dedicated to the CPUs, not the amount of memory *per* CPU.
-        * **clusterOptions** any native configuration option accepted by your cluster submit command, such as options specific to your cluster and not supported out of the box by Nextflow (e.g. defining the amount of memory per CPU instead of using the ``memory`` directive).
+        * **clusterOptions** any native configuration option accepted by your cluster submit command, such as options specific to your cluster and not supported out of the box by Nextflow (e.g. if your cluster doesn't accept the ``memory`` directive because it expects defining the amount of memory per CPU).
         * **beforeScript** allows you to execute a custom (Bash) snippet before the main process script is run. This may be useful to initialise the underlying compute cluster environment or for other custom initialisation, for example it can be used to load required dependencies if one of the *ksrates* containers is not used, provided that the cluster has those dependencies installed. In that case, the required external dependencies (see also the `wgd Documentation <https://wgd.readthedocs.io/en/latest/index.html#external-software>`__) for the *ksrates* Nextflow processes are:
 
             * ``wgdParalogs``: Python dependencies listed in requirements.txt, plus BLAST, MUSCLE, MCL, PAML, FastTree and i-ADHoRe (if collinearity analysis is configured).
