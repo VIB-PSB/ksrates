@@ -72,10 +72,10 @@ The Nextflow ``wgd_paralogs.log`` file reports details over the *K*:sub:`S` anal
 .. -----------------------------------------
 
 
-Unrecognized Nextflow built-in directives
------------------------------------------
+How to solve ``failed to reserve page summary memory`` error? 
+-------------------------------------------------------------
 
-Some clusters might not recognize certain Nextflow built-in directives in the Nextflow configuration file. For example, running the pipeline after having set the ``memory`` directive could return the error message ``failed to reserve page summary memory``. In these cases we advise to set the ``clusterOptions`` directive instead of the non-recognized directive, since the former accepts cluster-specific options.
+Some clusters might not be compatible with certain Nextflow built-in directives in the Nextflow configuration file. For example, running the pipeline after having set the ``memory`` directive could return the error message ``failed to reserve page summary memory`` because the cluster expects the memory usage to be expressed per CPU instead of as overall amount. In these cases we advise to set the ``clusterOptions`` directive instead of the built-in directive, since the former accepts cluster-specific options.
 
 
 Configuration
