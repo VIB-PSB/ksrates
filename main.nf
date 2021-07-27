@@ -481,8 +481,8 @@ process wgdParalogs {
     cd $PWD
     echo "NF internal work directory for [wgdParalogs] process:\n\$processDir\n" >> $logs_folder/wgd_paralogs.log
 
-    echo "[$species] Using ${task.cpus} thread(s)"
     echo "Using ${task.cpus} thread(s)\n">> $logs_folder/wgd_paralogs.log
+    echo "[$species] Using ${task.cpus} thread(s)"
 
     ksrates paralogs-ks ${config} --n-threads=${task.cpus} >> $logs_folder/wgd_paralogs.log 2>&1
 
@@ -547,8 +547,8 @@ process wgdOrthologs {
     cd $PWD
     echo "NF internal work directory for [wgdOrthologs (${task.index})] process:\n\$processDir\n" > $logs_folder/wgd_orthologs_${species1}_${species2}.log
 
-    echo "[$species1 – $species2] Using ${task.cpus} thread(s)"
     echo "Using ${task.cpus} thread(s)\n">> $logs_folder/wgd_orthologs_${species1}_${species2}.log
+    echo "[$species1 – $species2] Using ${task.cpus} thread(s)"
 
     ksrates orthologs-ks ${config} $species1 $species2 --n-threads=${task.cpus} >> $logs_folder/wgd_orthologs_${species1}_${species2}.log 2>&1
     RET_CODE=\$?
