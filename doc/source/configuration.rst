@@ -171,7 +171,7 @@ The Nextflow configuration file is used to configure various settings for the *k
     
       Settings can be tailored to your configured executor (see above) through the use of Nextflow process directives (for a complete list and detailed descriptions see the `Nextflow documentation <https://www.nextflow.io/docs/latest/process.html#process-directives>`__), such as:
     
-        * **cpus** sets the number of CPUs/cores/slots/threads, e.g. ``8`` [Default if not set: 1]
+        * **cpus** sets the number of CPUs/cores/slots/threads, e.g. ``8``. It is recommended to set multiple cores for ``wgdParalogs`` and ``wgdOrthologs`` processes [Default if not set: 1]
     	* **penv** when using an SGE executor defines the parallel environment to be used when submitting a parallel task.
         * **memory** sets how much memory the process is allowed to use, e.g. ``16GB``. Note that, in case of multiple CPUs, this is the overall amount of memory dedicated to the CPUs, not the amount of memory *per* CPU.
         * **clusterOptions** any native configuration option accepted by your cluster submit command, such as options specific to your cluster and not supported out of the box by Nextflow (e.g. if your cluster doesn't accept the ``memory`` directive because it expects defining the amount of memory per CPU).
