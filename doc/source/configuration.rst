@@ -131,13 +131,17 @@ The Nextflow configuration file is used to configure various settings for the *k
         enabled = false
     }
 
-    executor.name = ''
+    executor {
+        name = ''
+        queueSize = 
+        cpus = 
+    }
 								
     process {
         container = ''
 
         withName: 'processName' {
-            cpus = ''
+            cpus = 
             penv = ''
             memory = ''
             clusterOptions = ''
@@ -155,7 +159,12 @@ The Nextflow configuration file is used to configure various settings for the *k
     * **cacheDir** (only for Singularity) the directory where remote the Singularity image from Docker Hub is stored. When using a computing cluster it must be a shared folder accessible to all computing nodes.
     * **autoMounts** (only for Singularity) automatically mounts host paths in the executed container and allows the user to run the pipeline from any directory in a cluster [Default: true]. It requires the `user bind control <https://sylabs.io/guides/3.7/admin-guide/configfiles.html?highlight=user%20bind%20control#bind-mount-management>`__ feature in Singularity installation, which is active by default.
 
-* The **executor.name** setting defines the system type or HPC scheduler to be used (e.g. ``sge``, ``slurm``, ``local``; for more detail see the `Nextflow documentation <https://www.nextflow.io/docs/latest/executor.html>`__).
+* The **executor** scope configures the underlying system where processes are executed:
+
+    * **name** specifies the system type or HPC scheduler to be used (e.g. ``sge``, ``slurm``, ``local``; for more detail see the `Nextflow documentation <https://www.nextflow.io/docs/latest/executor.html>`__).
+    * **queueSize** sets the maximum number of tasks (e.g. jobs submitted to the cluster) simultaneously handled by the executor [Default: 100]. Useful in case of CPU usage restriction policies.
+    * **cpus** sets the maximum number of CPUs made available in the underlying system when using a ``local`` executor. Useful to limit the CPUs usage by Docker containers, which by default have no resource constraints.
+
 * The **process** scope defines the configuration for the processes of the *ksrates* pipeline:
 
     * **container** defines the Singularity or Docker *ksrates* container image to be used (from Docker Hub or from a local copy if already downloaded):
