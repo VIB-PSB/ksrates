@@ -6,17 +6,6 @@ LOG = true  // should probably use our own Logger...
  * Pipeline input parameters
  */
 
-// set to true to not parallelize any processes
-params.sequential = false
-
-// threads used by wgd paralog runs
-// (will be overriden by job configuration if run on a cluster)
-params.nThreadsParalogs = 1
-  
-// threads used by wgd ortholog runs
-// (will be overriden by job configuration if run on a cluster)
-params.nThreadsOrthologs = 1
-
 // giving the configuration file through the "input" process section
 configfile = file(params.config)
 
@@ -27,9 +16,6 @@ log.info """\
          
          Configuration file:                    $params.config
          Logs folder:                           logs_${workflow.sessionId.toString().substring(0,8)}
-         Sequential mode:                       $params.sequential
-         Default threads per paralog process:   $params.nThreadsParalogs
-         Default threads per ortholog process:  $params.nThreadsOrthologs
          """
          .stripIndent()
 log.info ""
@@ -452,9 +438,6 @@ if (LOG) {
  */
 process wgdParalogs {
 
-    if (params.sequential)
-        maxForks 1
-
     input:
         val species from species_channel
         val trigger_wgdPara from trigger_wgdPara_channel
@@ -518,9 +501,6 @@ if (LOG) {
  * estimates also the ortholog Ks distribution peak.
  */
 process wgdOrthologs {
-
-    if (params.sequential)
-        maxForks 1
 
     input:
         val species from species_channel
