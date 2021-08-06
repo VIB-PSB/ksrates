@@ -182,7 +182,7 @@ The Nextflow configuration file is used to configure various settings for the *k
     
         * **cpus** sets the number of CPUs/cores/slots/threads, e.g. ``8``. It is recommended to set multiple cores for ``wgdParalogs`` and ``wgdOrthologs`` processes [Default if not set: 1]
     	* **penv** when using an SGE executor defines the parallel environment to be used when submitting a parallel task.
-        * **memory** sets how much memory the process is allowed to use, e.g. ``16GB``. Note that, in case of multiple CPUs, this is the overall amount of memory dedicated to the CPUs, not the amount of memory *per* CPU.
+        * **memory** sets how much memory the process is allowed to use, e.g. ``16GB``.
         * **clusterOptions** any native configuration option accepted by your cluster submit command, such as options specific to your cluster and not supported out of the box by Nextflow (e.g. if your cluster doesn't accept the ``memory`` directive because it expects defining the amount of memory per CPU).
         * **beforeScript** allows you to execute a custom (Bash) snippet before the main process script is run. This may be useful to initialise the underlying compute cluster environment or for other custom initialisation, for example it can be used to load required dependencies if one of the *ksrates* containers is not used, provided that the cluster has those dependencies installed. In that case, the required external dependencies (see also the `wgd Documentation <https://wgd.readthedocs.io/en/latest/index.html#external-software>`__) for the *ksrates* Nextflow processes are:
 
