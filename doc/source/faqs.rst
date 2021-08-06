@@ -72,12 +72,10 @@ The Nextflow ``wgd_paralogs.log`` file reports details over the *K*:sub:`S` anal
 .. -----------------------------------------
 
 
-How to solve ``failed to reserve page summary memory`` error? 
+I am getting a ``failed to reserve page summary memory`` error?
 -------------------------------------------------------------
 
-Some clusters might not be compatible with certain Nextflow built-in directives in the Nextflow configuration file. For example, running the pipeline after having set the ``memory`` directive could return the error message ``failed to reserve page summary memory`` because the cluster expects the memory usage to be expressed per CPU instead of as overall amount. In these cases we advise to set the ``clusterOptions`` directive instead of the built-in directive, since the former accepts cluster-specific options.
-
-
+Some cluster configurations may not be fully compatible with certain built-in Nextflow process directives used in the Nextflow configuration file. For example, on some cluster configurations the *ksrates* pipeline fails with an ``failed to reserve page summary memory`` error when using the built-in ``memory`` directive to define how much memory a process requires. In these cases it is likely that instead the ``clusterOptions`` process directive (see the `Nextflow documentation <https://www.nextflow.io/docs/latest/process.html#clusteroptions>`__) needs to be used to define configuration settings specific to your cluster. We advise to contact your cluster administrator about these.
 Configuration
 =============
 
@@ -85,4 +83,3 @@ How can I change the fit of the KDE line(s) on the paranome and anchor distribut
 -------------------------------------------------------------------------------------
 
 Adjust the ``kde_bandwidth_modifier`` parameter in the expert configuration file (see :ref:`expert_config_section`).
-
