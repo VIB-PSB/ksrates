@@ -940,7 +940,7 @@ workflow.onComplete {
  */
 workflow.onError {
     // If user interrupts with ctrl+C
-    if( workflow.errorReport == "SIGINT" || workflow.errorMessage == "SIGINT" ) {
+    if ( workflow.errorReport == "SIGINT" || workflow.errorMessage == "SIGINT" ) {
         log.error "\n"
         error_message_sigint = "Pipeline interrupted by user (${workflow.errorMessage} signal)"
         log.error "${'=' * error_message_sigint.length()}"
@@ -957,7 +957,7 @@ workflow.onError {
 
         // For process wgdOrthologs, the log filename depends on the two species names,
         // which are obtained by parsing the errorMessage, if any available
-        if ( process == "wgdOrthologs" && workflow.errorMessage != null) {
+        if ( process == "wgdOrthologs" && workflow.errorMessage != null ) {
             species1 = workflow.errorMessage.split("\n")[1].split("\\[")[1].split("\\]")[0].split("–")[0].replaceAll("\\s","")
             species2 = workflow.errorMessage.split("\n")[1].split("\\[")[1].split("\\]")[0].split("–")[1].replaceAll("\\s","")
         }
@@ -992,7 +992,7 @@ workflow.onError {
                 log.error "${headline_error_box}"
                 log.error "\n"
 
-                for( line : log_file.readLines().findAll { it =~ /ERROR/ } ) {
+                for ( line : log_file.readLines().findAll { it =~ /ERROR/ } ) {
                         log.error line
                 }
                 log.error "\n"
@@ -1029,7 +1029,7 @@ workflow.onError {
             error_cause = "${workflow.errorReport.split("\n")[3]}"
             log.error "${error_cause}"
             // Write errorMessage, if any
-            if( workflow.errorMessage != null ) {
+            if ( workflow.errorMessage != null ) {
                 log.error "${workflow.errorMessage}"
             }
             log.error "\n"
