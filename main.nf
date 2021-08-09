@@ -902,10 +902,6 @@ if (LOG) {
 
 /*
  * On completion of workflow clean up any temporary files left behind.
- *
- * TODO: This should probably be expanded to cover other possible
- *       temporary files and also maybe wgd intermediate files
- *       (based on a parameter setting)
  */
 workflow.onComplete {
     if (LOG) {
