@@ -20,7 +20,9 @@ When Nextflow crashes, an error box appears in the terminal and shows which proc
     :align: center
     :width: 800
     
-    Here the error is traced back to ``wgdParalogs`` process and it is due to a wrong setting in the Nextflow configuration file concerning communication with the computer cluster.
+    Here the error is traced back to the ``wgdParalogs`` Nextflow process and it is due to a wrong setting in the Nextflow configuration file concerning communication with the computer cluster.
+    
+    More details about any error that terminated the pipeline can usually be found in log files that are stored in ``rate_adjustment/<focal_species>/log_XXXXXXXX``. The log folder name is unique for each run and is reported on the terminal in the error box and also at the beginning and end of a Nextflow run. The more general Nextflow log file ``.nextflow.log`` in the folder where the pipeline has been launched could also contain additional information.
 
 
 How do I update a previously downloaded *ksrates* pipeline if a new version becomes available?
