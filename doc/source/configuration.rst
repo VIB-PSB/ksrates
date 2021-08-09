@@ -3,8 +3,13 @@
 Configuration files
 *******************
 
-*ksrates* requires at the minimum the *ksrates* configuration file that contains all the settings necessary for a given analysis. Optionally, an additional *ksrates* configuration file with expert and debug settings can be specified. If using the *ksrates* Nextflow pipeline, an optional Nextflow configuration file is usually necessary to configure, for example, compute cluster and container settings.
+*ksrates* requires up to three files:
 
+1. a *ksrates* configuration file with all necessary settings for a given analysis
+
+2. a Nextflow configuration file to configure the executor resources (e.g. computer cluster, local computer) and container settings (applicable only if using the Nextflow pipeline)
+
+3. a *ksrates* configuration file for expert and debug settings (optional)
 
 .. _`pipeline_config_section`:
 
@@ -120,7 +125,7 @@ A consensus value for the rate-adjustment is needed when multiple rate-adjustmen
 Nextflow configuration file
 ===========================
 
-The Nextflow configuration file is used to configure various settings for the *ksrates* Nextflow pipeline, including the settings to use and configure resources on a compute cluster and to use the *ksrates* Singularity or Docker container. We provide a few general template Nextflow configuration files for the *ksrates* Nextflow pipeline in the `doc <https://github.com/VIB-PSB/ksrates/blob/master/doc/source>`_ directory in the GitHub repository. These can be adapted to a user's specific resources and requirements. Below, we briefly explain some of the basic key settings. For a more complete description please refer to the `Nextflow documentation <https://www.nextflow.io/docs/latest/config.html#configuration>`__. ::
+The Nextflow configuration file is used to configure various settings for the *ksrates* Nextflow pipeline, including executor resources (e.g. computing cluster, local computer) and *ksrates* Singularity or Docker container. We provide a few general template Nextflow configuration files for the *ksrates* Nextflow pipeline in the `doc <https://github.com/VIB-PSB/ksrates/blob/master/doc/source>`_ directory in the GitHub repository. These can be adapted to a user's specific resources and requirements. Below, we briefly explain some of the basic key settings. For a more complete description please refer to the `Nextflow documentation <https://www.nextflow.io/docs/latest/config.html#configuration>`__. ::
 
     singularity {
         enabled = true
