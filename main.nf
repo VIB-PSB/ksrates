@@ -941,7 +941,11 @@ workflow.onComplete {
 workflow.onError {
     // If user interrupts with ctrl+C
     if( workflow.errorReport == "SIGINT" || workflow.errorMessage == "SIGINT" ) {
-        log.error "Pipeline interrupted by user (${workflow.errorMessage} signal)"
+        log.error "\n"
+        error_message_sigint = "Pipeline interrupted by user (${workflow.errorMessage} signal)"
+        log.error "${'=' * error_message_sigint.length()}"
+        log.error "${error_message_sigint}"
+        log.error "${'=' * error_message_sigint.length()}"
     }
 
     // Else if pipeline interrupted by an error
