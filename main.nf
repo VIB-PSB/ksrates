@@ -1010,7 +1010,7 @@ workflow.onError {
             }
 
             // In any case, point to the complete output of the stopped process log file
-            log.error "More details can be found in the following log file:"
+            log.error "More details may be found in the following log file:"
             log.error "${log_filename}"
         }
 
@@ -1035,7 +1035,7 @@ workflow.onError {
             log.error "\n"
 
             // Point to the complete Nextflow errorReport
-            log.error "More details can be found in the error report above or in ./.nextflow.log."
+            log.error "More details may be found in the error report above or in ./.nextflow.log."
         }
 
         // Separator to highlight the end of the error box
