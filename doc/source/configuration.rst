@@ -167,7 +167,7 @@ The Nextflow configuration file is used to configure various settings for the *k
 * The **executor** scope configures the underlying system where processes are executed:
 
     * **name** specifies the system type or HPC scheduler to be used (e.g. ``sge``, ``slurm``, ``local``; for more detail see the `Nextflow documentation <https://www.nextflow.io/docs/latest/executor.html>`__).
-    * **queueSize** sets the maximum number of tasks (e.g. jobs submitted to the cluster) simultaneously handled by the executor [Default: 100]. Useful in case of CPU usage restriction policies.
+    * **queueSize** sets the maximum number of tasks (e.g. jobs submitted to the cluster) simultaneously handled by the executor [Default: 100]. Useful in case of CPU usage restriction policies. Set to 1 to configure a sequential workflow.
     * **cpus** sets the maximum number of CPUs made available in the underlying system when using a ``local`` executor. Useful to limit the CPUs usage by Docker containers, which by default have no resource constraints.
 
 * The **process** scope defines the configuration for the processes of the *ksrates* pipeline:
