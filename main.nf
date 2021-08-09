@@ -967,13 +967,13 @@ workflow.onError {
         // Defining variables (the stopped process, the species name and the log filename)
         process = "${workflow.errorReport.split()[4].split("'")[1]}"
         species_name = file("${configfile}").readLines().find{ it =~ /focal_species/ }.split()[2].strip()
-        
+
         // For process wgdOrthologs, the log filename depends on the two species names,
         // which are obtained by parsing the errorMessage, if any available
         if ( process == "wgdOrthologs" && workflow.errorMessage != null ) {
             species1 = workflow.errorMessage.split("\n")[1].split("\\[")[1].split("\\]")[0].split("–")[0].replaceAll("\\s","")
             species2 = workflow.errorMessage.split("\n")[1].split("\\[")[1].split("\\]")[0].split("–")[1].replaceAll("\\s","")
-            logs_names["wgdOrthologs"] = "wgd_orthologs_${species1}_${species2}.log"
+            logs_names["wgdOrthologs"] = "${logs_names["wgdOrthologs"]}${species1}_${species2}.log"
         }
 
         log_filename = "rate_adjustment/${species_name}/logs_${workflow.sessionId.toString().substring(0,8)}/${logs_names[process]}"
