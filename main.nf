@@ -980,7 +980,7 @@ workflow.onError {
                 // (the error was caught by the script), print such lines
                 if ( log_file.readLines().findAll{ it =~ /ERROR/ }.size() != 0 ) {
 
-                    headline_error_box = "The pipeline stopped at process '${process}' with the following error message:"
+                    headline_error_box = "The pipeline terminated during process '${process}' with the following error message:"
                     // Separator to highlight the beginning of the error box
                     log.error "\n"
                     log.error "${'=' * headline_error_box.length()}"
@@ -996,7 +996,7 @@ workflow.onError {
                 // If the process log file exists but there are no "ERROR" lines
                 // (probably it's an unexpected error), don't print any error line
                 else {
-                    headline_error_box = "The pipeline encountered an error during process '${process}'."
+                    headline_error_box = "The pipeline terminated during process '${process}'."
                     // Separator to highlight the beginning of the error box
                     log.error "\n"
                     log.error "${'=' * headline_error_box.length()}"
@@ -1013,7 +1013,7 @@ workflow.onError {
             // Else if the process log file doesn't exist, look for an external cause
             // in errorReport and errorMessage
             else {
-                headline_error_box = "The pipeline stopped at process '${process}' with the following error message:"
+                headline_error_box = "The pipeline terminated during process '${process}' with the following error message:"
                 // Separator to highlight the beginning of the error box
                 log.error "\n"
                 log.error "${'=' * headline_error_box.length()}"
@@ -1031,7 +1031,7 @@ workflow.onError {
                 log.error "\n"
 
                 // Point to the complete Nextflow errorReport
-                log.error "More details can be found in the error report above or in ./nextflow.log."
+                log.error "More details can be found in the error report above or in ./.nextflow.log."
             }
 
             // Separator to highlight the end of the error box

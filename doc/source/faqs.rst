@@ -14,7 +14,7 @@ When Nextflow crashes, an error box appears in the terminal and shows which proc
     :align: center
     :width: 800
 
-    Here the error is traced back to ``setupAdjustment`` process and it is due to a wrong setting in the *ksrates* configuration file concerning the input phylogeny.
+    Here the error is traced back to the ``setupAdjustment`` Nextflow process and it is due to a wrong setting in the *ksrates* configuration file concerning the input phylogeny.
 
 .. figure:: _images/error_box2.png
     :align: center
@@ -91,4 +91,3 @@ How can I change the fit of the KDE line(s) on the paranome and anchor distribut
 -------------------------------------------------------------------------------------
 
 Adjust the ``kde_bandwidth_modifier`` parameter in the expert configuration file (see :ref:`expert_config_section`).
-
