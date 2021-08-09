@@ -55,6 +55,19 @@ try {
     NXF_ANSI_LOG = true
 }
 
+// Dictionary mapping each process with the associated log file
+logs_names = [
+"checkConfig" : null,
+"setupAdjustment" : "setup_adjustment.log",
+"setParalogAnalysis" : "wgd_paralogs.log",
+"setOrthologAnalysis": "set_orthologs.log",
+"estimatePeak": "estimate_peak.log", 
+"wgdParalogs": "wgd_paralogs.log", 
+"wgdOrthologs": "wgd_orthologs_",
+"plotOrthologDistrib": "plot_ortholog_distributions.log", 
+"doRateAdjustment": "rate_adjustment.log",
+"paralogsAnalyses": "paralogs_analyses.log",
+"drawTree": "rate_adjustment.log" ]
 
 
 process checkConfig {
@@ -157,9 +170,9 @@ process setupAdjustment {
 
 
     echo "[\$species] Extracting ortholog pairs from Newick tree"
-    echo "NF internal work directory for [setupAdjustment] process:\n\$processDir\n" > \${logs_folder}/setup_adjustment.log
+    echo "NF internal work directory for [setupAdjustment] process:\n\$processDir\n" > \${logs_folder}/${logs_names["setupAdjustment"]}
 
-    ksrates init ${config} --nextflow >> \${logs_folder}/setup_adjustment.log 2>&1
+    ksrates init ${config} --nextflow >> \${logs_folder}/${logs_names["setupAdjustment"]} 2>&1
     cat rate_adjustment/\$species/ortholog_pairs_\${species}.tsv > \${processDir}/ortholog_pairs_\${species}.tsv
 
     # If all the ortholog data are present in the databases, already trigger plotOrthologs to plot the ortholog distributions
@@ -171,7 +184,7 @@ process setupAdjustment {
         echo "The species pair list can be found in [rate_adjustment/\$species/ortholog_pairs_\${species}.tsv]"
     fi
 
-    echo "[\$species] log can be found in: \${logs_folder}/setup_adjustment.log"
+    echo "[\$species] log can be found in: \${logs_folder}/${logs_names["setupAdjustment"]}"
     
     cd \$processDir
     """
@@ -235,11 +248,11 @@ process setParalogAnalysis {
     processDir=\$PWD
     cd $PWD
 
-    echo "NF internal work directory for [setParalogAnalysis (${task.index})] process:\n\$processDir\n" > $logs_folder/wgd_paralogs.log
+    echo "NF internal work directory for [setParalogAnalysis (${task.index})] process:\n\$processDir\n" > $logs_folder/${logs_names["setParalogAnalysis"]}
 
     if [ \${paranome} = "no" ] && [ \${colinearity} = "no" ]; then
         echo "[$species] ERROR: Neither whole-paranome analysis nor colinearity analysis has been required in configuration file. Exiting."
-        echo "[$species] ERROR: Neither whole-paranome analysis nor colinearity analysis has been required in configuration file. Exiting." >> $logs_folder/wgd_paralogs.log
+        echo "[$species] ERROR: Neither whole-paranome analysis nor colinearity analysis has been required in configuration file. Exiting." >> $logs_folder/${logs_names["setParalogAnalysis"]}
         exit 1
     fi
 
@@ -248,8 +261,8 @@ process setParalogAnalysis {
     if [ \${paranome} = "yes" ]; then
         if [ ! -f paralog_distributions/wgd_${species}/${species}.ks.tsv ]; then
             echo "[$species] Paralog TSV file not found [${species}.ks.tsv]; wgd pipeline will be started"
-            echo "[$species] Paralog TSV file not found [${species}.ks.tsv]" >> $logs_folder/wgd_paralogs.log
-            echo "[$species] Whole-paranome wgd pipeline will be started\n" >> $logs_folder/wgd_paralogs.log
+            echo "[$species] Paralog TSV file not found [${species}.ks.tsv]" >> $logs_folder/${logs_names["setParalogAnalysis"]}
+            echo "[$species] Whole-paranome wgd pipeline will be started\n" >> $logs_folder/${logs_names["setParalogAnalysis"]}
             paranome_status="todo"
         else
             paranome_status="already_done"
@@ -258,8 +271,8 @@ process setParalogAnalysis {
     if [ \${colinearity} = "yes" ]; then
         if [ ! -f paralog_distributions/wgd_${species}/${species}.ks_anchors.tsv ]; then
             echo "[$species] Anchor pairs TSV file not found [${species}.ks_anchors.tsv]; wgd pipeline will be started"
-            echo "[$species] Anchor pairs TSV file not found [${species}.ks_anchors.tsv]" >> $logs_folder/wgd_paralogs.log
-            echo "[$species] Co-linearity wgd pipeline will be started\n" >> $logs_folder/wgd_paralogs.log
+            echo "[$species] Anchor pairs TSV file not found [${species}.ks_anchors.tsv]" >> $logs_folder/${logs_names["setParalogAnalysis"]}
+            echo "[$species] Co-linearity wgd pipeline will be started\n" >> $logs_folder/${logs_names["setParalogAnalysis"]}
             colinearity_status="todo"
         else
             colinearity_status="already_done"
@@ -271,14 +284,14 @@ process setParalogAnalysis {
         trigger_wgdPara=true
     else
         echo "[$species] Paralog TSV file(s) already present; skipping paralog wgd pipeline"
-        echo "[$species] Paralog TSV file(s) already present; skipping paralog wgd pipeline\n" >> $logs_folder/wgd_paralogs.log
+        echo "[$species] Paralog TSV file(s) already present; skipping paralog wgd pipeline\n" >> $logs_folder/${logs_names["setParalogAnalysis"]}
         
         # Trigger doRateAdjustment process to plot (at least) the paralog distribution in the mixed plot
         trigger_doRateCorrection_from_para=true
     fi
 
-    echo "----------------------------------------------------------------\n" >> $logs_folder/wgd_paralogs.log
-    echo "[$species] log can be found in: $logs_folder/wgd_paralogs.log"
+    echo "----------------------------------------------------------------\n" >> $logs_folder/${logs_names["setParalogAnalysis"]}
+    echo "[$species] log can be found in: $logs_folder/${logs_names["setParalogAnalysis"]}"
     cd \$processDir
     """
 }
@@ -331,7 +344,7 @@ process setOrthologAnalysis {
     processDir=\$PWD
     cd $PWD
 
-    echo "NF internal work directory for [setOrthologAnalysis (${task.index})] process:\n\$processDir\n" >> $logs_folder/set_orthologs.log
+    echo "NF internal work directory for [setOrthologAnalysis (${task.index})] process:\n\$processDir\n" >> $logs_folder/${logs_names["setOrthologAnalysis"]}
 
     wgdOrtholog_not_needed=false
     estimatePeak_not_needed=false
@@ -339,25 +352,25 @@ process setOrthologAnalysis {
     # If the file for the species pair is empty, then setOrthologAnalysis skips the ortholog Ks estimate and peak estimate steps. 
     if [ -z "`tail -n +2 \${processDir}/$ortholog_pairs`" ]; then
         echo "No species pairs are listed for wgd ortholog pipeline or ortholog peak estimate."
-        echo "No species pairs are listed for wgd ortholog pipeline or ortholog peak estimate." >> $logs_folder/set_orthologs.log
+        echo "No species pairs are listed for wgd ortholog pipeline or ortholog peak estimate." >> $logs_folder/${logs_names["setOrthologAnalysis"]}
     fi 
 
     while read -r species1 species2 || [ -n "\$species1" ]; do
         if [ ! -f ortholog_distributions/wgd_\${species1}_\${species2}/\${species1}_\${species2}.ks.tsv ]; then
             echo "\$species1\t\$species2" >> \${processDir}/tmp_species_pairs_for_wgdOrtholog.txt
-            echo "[\$species1 – \$species2] Ortholog TSV file not present [\${species1}_\${species2}.ks.tsv]" >> $logs_folder/set_orthologs.log
-            echo "[\$species1 – \$species2] Ortholog wgd pipeline will be started" >> $logs_folder/set_orthologs.log
+            echo "[\$species1 – \$species2] Ortholog TSV file not present [\${species1}_\${species2}.ks.tsv]" >> $logs_folder/${logs_names["setOrthologAnalysis"]}
+            echo "[\$species1 – \$species2] Ortholog wgd pipeline will be started" >> $logs_folder/${logs_names["setOrthologAnalysis"]}
         else
-            echo "[\$species1 – \$species2] Ortholog TSV file already present; skipping ortholog wgd pipeline" >> $logs_folder/set_orthologs.log
-            echo "[\$species1 – \$species2] Update of ortholog database(s) will be started." >> $logs_folder/set_orthologs.log
+            echo "[\$species1 – \$species2] Ortholog TSV file already present; skipping ortholog wgd pipeline" >> $logs_folder/${logs_names["setOrthologAnalysis"]}
+            echo "[\$species1 – \$species2] Update of ortholog database(s) will be started." >> $logs_folder/${logs_names["setOrthologAnalysis"]}
 
             if [ ! -f \${processDir}/tmp_species_pairs_for_estimatePeak.txt ]; then   # if the file does not exist yet, add headers
                 echo "Species1\tSpecies2" >> \${processDir}/tmp_species_pairs_for_estimatePeak.txt
             fi
             echo "\$species1\t\$species2" >> \${processDir}/tmp_species_pairs_for_estimatePeak.txt   # add a species pair
         fi
-        echo " \n----------------------------------------------------------------\n" >> $logs_folder/set_orthologs.log
-        echo "[\$species1 – \$species2] log can be found in: $logs_folder/set_orthologs.log"
+        echo " \n----------------------------------------------------------------\n" >> $logs_folder/${logs_names["setOrthologAnalysis"]}
+        echo "[\$species1 – \$species2] log can be found in: $logs_folder/${logs_names["setOrthologAnalysis"]}"
     done < <(tail -n +2 \${processDir}/$ortholog_pairs) # skipping the headers
 
     if [ ! -s \${processDir}/tmp_species_pairs_for_wgdOrtholog.txt ]; then    # if the file for wgdOrthologs is empty (size not > 0)
@@ -421,10 +434,10 @@ process estimatePeak {
     processDir=\$PWD
     cd $PWD
 
-    echo "NF internal work directory for [estimatePeak (${task.index})] process:\n\$processDir\n" >> $logs_folder/estimate_peak.log
-    echo "Updating ortholog peak database" >> $logs_folder/estimate_peak.log
+    echo "NF internal work directory for [estimatePeak (${task.index})] process:\n\$processDir\n" >> $logs_folder/${logs_names["estimatePeak"]}
+    echo "Updating ortholog peak database" >> $logs_folder/${logs_names["estimatePeak"]}
 
-    ksrates orthologs-analysis ${config} --ortholog-pairs=\$processDir/$species_pairs_for_peak >> $logs_folder/estimate_peak.log 2>&1
+    ksrates orthologs-analysis ${config} --ortholog-pairs=\$processDir/$species_pairs_for_peak >> $logs_folder/${logs_names["estimatePeak"]} 2>&1
     """
 }
 
@@ -479,23 +492,23 @@ process wgdParalogs {
 
     processDir=\$PWD
     cd $PWD
-    echo "NF internal work directory for [wgdParalogs] process:\n\$processDir\n" >> $logs_folder/wgd_paralogs.log
+    echo "NF internal work directory for [wgdParalogs] process:\n\$processDir\n" >> $logs_folder/${logs_names["wgdParalogs"]}
 
     if [ -z \${NSLOTS+x} ]; then
         nThreads=$params.nThreadsParalogs
-        echo "Using \${nThreads} threads" >> $logs_folder/wgd_paralogs.log
+        echo "Using \${nThreads} threads" >> $logs_folder/${logs_names["wgdParalogs"]}
         echo "[$species] Using \${nThreads} threads"
     else
         nThreads=\${NSLOTS}
-        echo "Found \\\$NSLOTS = \$NSLOTS\n" >> $logs_folder/wgd_paralogs.log
+        echo "Found \\\$NSLOTS = \$NSLOTS\n" >> $logs_folder/${logs_names["wgdParalogs"]}
         echo "[$species] Found \\\$NSLOTS = \$NSLOTS -> using \${nThreads} threads"
     fi
 
-    ksrates paralogs-ks ${config} --n-threads=\$nThreads >> $logs_folder/wgd_paralogs.log 2>&1
+    ksrates paralogs-ks ${config} --n-threads=\$nThreads >> $logs_folder/${logs_names["wgdParalogs"]} 2>&1
 
     RET_CODE=\$?
     echo "[$species] Done [\${RET_CODE}]"
-    echo "[$species] wgd log can be found in: $logs_folder/wgd_paralogs.log"
+    echo "[$species] wgd log can be found in: $logs_folder/${logs_names["wgdParalogs"]}"
     echo "[$species] `date`"
 
     cd \$processDir
@@ -552,29 +565,29 @@ process wgdOrthologs {
 
     processDir=\${PWD}
     cd $PWD
-    echo "NF internal work directory for [wgdOrthologs (${task.index})] process:\n\$processDir\n" > $logs_folder/wgd_orthologs_${species1}_${species2}.log
+    echo "NF internal work directory for [wgdOrthologs (${task.index})] process:\n\$processDir\n" > $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log
 
     if [ -z \${NSLOTS+x} ]; then
         nThreads=$params.nThreadsOrthologs
-        echo "Using \${nThreads} threads" >> $logs_folder/wgd_orthologs_${species1}_${species2}.log
+        echo "Using \${nThreads} threads" >> $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log
         echo "[$species1 – $species2] Using \${nThreads} threads"
     else
         nThreads=\${NSLOTS}
-        echo "Found \\\$NSLOTS = \$NSLOTS\n" >> $logs_folder/wgd_orthologs_${species1}_${species2}.log
+        echo "Found \\\$NSLOTS = \$NSLOTS\n" >> $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log
         echo "[$species1 – $species2] Found \\\$NSLOTS = \$NSLOTS -> using \${nThreads} threads"
     fi
 
-    ksrates orthologs-ks ${config} $species1 $species2 --n-threads=\$nThreads >> $logs_folder/wgd_orthologs_${species1}_${species2}.log 2>&1
+    ksrates orthologs-ks ${config} $species1 $species2 --n-threads=\$nThreads >> $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log 2>&1
     RET_CODE=\$?
     echo "[$species1 – $species2] wgd done [\${RET_CODE}]"
     
     echo "[$species1 – $species2] Computing ortholog peak and error"
     echo "Species1\tSpecies2\n$species1\t$species2" > \${processDir}/tmp_${species1}_${species2}.txt
-    ksrates orthologs-analysis ${config} --ortholog-pairs=\${processDir}/tmp_${species1}_${species2}.txt >> $logs_folder/wgd_orthologs_${species1}_${species2}.log 2>&1
+    ksrates orthologs-analysis ${config} --ortholog-pairs=\${processDir}/tmp_${species1}_${species2}.txt >> $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log 2>&1
 
     RET_CODE=\$?
     echo "[$species1 – $species2] Compute peak done [\${RET_CODE}]"
-    echo "[$species1 – $species2] wgd log and compute peak log can be found in: $logs_folder/wgd_orthologs_${species1}_${species2}.log"
+    echo "[$species1 – $species2] wgd log and compute peak log can be found in: $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log"
     echo "[$species1 – $species2] `date`"
 
     cd \$processDir
@@ -643,13 +656,13 @@ process plotOrthologDistrib {
 
     processDir=\$PWD
     cd $PWD
-    echo "NF internal work directory for [plotOrthologDistrib] process:\n\$processDir\n" > $logs_folder/plot_ortholog_distributions.log
+    echo "NF internal work directory for [plotOrthologDistrib] process:\n\$processDir\n" > $logs_folder/${logs_names["plotOrthologDistrib"]}
 
-    ksrates plot-orthologs ${config} >> $logs_folder/plot_ortholog_distributions.log 2>&1
+    ksrates plot-orthologs ${config} >> $logs_folder/${logs_names["plotOrthologDistrib"]} 2>&1
 
     RET_CODE=\$?
     echo "[$species] Done [\${RET_CODE}]"
-    echo "[$species] log can be found in: $logs_folder/plot_ortholog_distributions.log"
+    echo "[$species] log can be found in: $logs_folder/${logs_names["plotOrthologDistrib"]}"
     echo "[$species] `date`"
     """
 }
@@ -742,21 +755,21 @@ process doRateAdjustment {
     processDir=\$PWD
     cd $PWD
     
-    echo "NF internal work directory for [doRateAdjustment (${task.index})] process:\n\$processDir\n" >> $logs_folder/rate_adjustment.log
+    echo "NF internal work directory for [doRateAdjustment (${task.index})] process:\n\$processDir\n" >> $logs_folder/${logs_names["doRateAdjustment"]}
 
     echo "[$species] Performing rate-adjustment"
-    ksrates orthologs-adjustment ${config} >> $logs_folder/rate_adjustment.log 2>&1
-    echo "\n" >> $logs_folder/rate_adjustment.log
+    ksrates orthologs-adjustment ${config} >> $logs_folder/${logs_names["doRateAdjustment"]} 2>&1
+    echo "\n" >> $logs_folder/${logs_names["doRateAdjustment"]}
 
     echo "[$species] Plotting mixed distributions"
-    ksrates plot-paralogs ${config} >> $logs_folder/rate_adjustment.log 2>&1
-    echo "\n" >> $logs_folder/rate_adjustment.log
+    ksrates plot-paralogs ${config} >> $logs_folder/${logs_names["doRateAdjustment"]} 2>&1
+    echo "\n" >> $logs_folder/${logs_names["doRateAdjustment"]}
 
-    echo " \n-----------------------------------------------------------\n" >> $logs_folder/rate_adjustment.log
+    echo " \n-----------------------------------------------------------\n" >> $logs_folder/${logs_names["doRateAdjustment"]}
 
     RET_CODE=\$?
     echo "[$species] Done [\${RET_CODE}]"
-    echo "[$species] log can be found in: $logs_folder/rate_adjustment.log"
+    echo "[$species] log can be found in: $logs_folder/${logs_names["doRateAdjustment"]}"
     echo "[$species] `date`"
     """
 }
@@ -805,18 +818,18 @@ process paralogsAnalyses {
 
     processDir=\$PWD
     cd $PWD
-    echo "NF internal work directory for [paralogsAnalyses (${task.index})] process:\n\$processDir\n" >> $logs_folder/paralogs_analyses.log
+    echo "NF internal work directory for [paralogsAnalyses (${task.index})] process:\n\$processDir\n" >> $logs_folder/${logs_names["paralogsAnalyses"]}
 
     # If colinearity is on, perform peak calling only on anchor distribution with cluster-anchors
     # Else, perform peak calling only on paranome with mixture model(s)
     # Additional methods can be required through the expert configuration file
 
-    ksrates paralogs-analyses ${config} >> $logs_folder/paralogs_analyses.log 2>&1
-    echo "\n" >> $logs_folder/paralogs_analyses.log
+    ksrates paralogs-analyses ${config} >> $logs_folder/${logs_names["paralogsAnalyses"]} 2>&1
+    echo "\n" >> $logs_folder/${logs_names["paralogsAnalyses"]}
 
     RET_CODE=\$?
     echo "[$species] Done [\${RET_CODE}]"
-    echo "[$species] log can be found in: $logs_folder/paralogs_analyses.log"
+    echo "[$species] log can be found in: $logs_folder/${logs_names["paralogsAnalyses"]}"
     echo "[$species] `date`"
     """
 }
@@ -868,13 +881,13 @@ process drawTree {
 
     processDir=\$PWD
     cd $PWD
-    echo "NF internal work directory for [drawTree (${task.index})] process:\n\$processDir\n" >> $logs_folder/rate_adjustment.log
+    echo "NF internal work directory for [drawTree (${task.index})] process:\n\$processDir\n" >> $logs_folder/${logs_names["drawTree"]}
 
-    ksrates plot-tree ${config} --nextflow >> $logs_folder/rate_adjustment.log 2>&1
+    ksrates plot-tree ${config} --nextflow >> $logs_folder/${logs_names["drawTree"]} 2>&1
 
     RET_CODE=\$?
     echo "[$species] Done [\${RET_CODE}]"
-    echo "[$species] log can be found in: $logs_folder/rate_adjustment.log"
+    echo "[$species] log can be found in: $logs_folder/${logs_names["drawTree"]}"
     echo "[$species] `date`"
     """
 }
@@ -954,27 +967,14 @@ workflow.onError {
         // Defining variables (the stopped process, the species name and the log filename)
         process = "${workflow.errorReport.split()[4].split("'")[1]}"
         species_name = file("${configfile}").readLines().find{ it =~ /focal_species/ }.split()[2].strip()
-
+        
         // For process wgdOrthologs, the log filename depends on the two species names,
         // which are obtained by parsing the errorMessage, if any available
         if ( process == "wgdOrthologs" && workflow.errorMessage != null ) {
             species1 = workflow.errorMessage.split("\n")[1].split("\\[")[1].split("\\]")[0].split("–")[0].replaceAll("\\s","")
             species2 = workflow.errorMessage.split("\n")[1].split("\\[")[1].split("\\]")[0].split("–")[1].replaceAll("\\s","")
+            logs_names["wgdOrthologs"] = "wgd_orthologs_${species1}_${species2}.log"
         }
-
-        // Dictionary mapping each process with the associated log file
-        logs_names = [
-        "checkConfig" : null,
-        "setupAdjustment" : "setup_adjustment.log",
-        "setParalogAnalysis" : "wgd_paralogs.log",
-        "setOrthologAnalysis": "set_orthologs.log",
-        "estimatePeak": "estimate_peak.log", 
-        "wgdParalogs": "wgd_paralogs.log", 
-        "wgdOrthologs": "wgd_orthologs_${species1}_${species2}.log",
-        "plotOrthologDistrib": "plot_ortholog_distributions.log", 
-        "doRateAdjustment": "rate_adjustment.log",
-        "paralogsAnalyses": "paralogs_analyses.log",
-        "drawTree": "rate_adjustment.log" ]
 
         log_filename = "rate_adjustment/${species_name}/logs_${workflow.sessionId.toString().substring(0,8)}/${logs_names[process]}"
 
