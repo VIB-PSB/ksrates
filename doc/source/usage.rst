@@ -36,7 +36,7 @@ The *ksrates* pipeline can be automatically run through Nextflow with a few prep
 
         nextflow run VIB-PSB/ksrates --config ./config_elaeis.txt -c ./custom_nextflow.config
 
-    The ``--config`` option takes the *ksrates configuration file*, while ``-c`` takes the *Nextflow configuration file*. If the Nextflow-reserved ``nextflow.config`` name is used, this latter file is automatically recognized without explicitly calling it in the command line.
+    The ``--config`` option takes the *ksrates configuration file*, while ``-c`` takes the *Nextflow configuration file*. If the Nextflow-reserved ``nextflow.config``file name is used for the latter, the file is automatically recognized without having explicitly configure it with the ``-c`` option.
     
     The first time the command is launched it downloads the *ksrates* Nextflow pipeline from the ``VIB-PSB/ksrates`` GitHub repository; from then on it uses the local copy stored in the ``.nextflow`` directory. If running a container, the image is pulled from Docker Hub and stored locally for successive usage.  
 
