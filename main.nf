@@ -965,7 +965,7 @@ workflow.onError {
         error_box = ""
 
         // Defining variables (the stopped process, the species name and the log filename)
-        process = "${workflow.errorReport.split()[4].split("'")[1]}"
+        process = "${workflow.errorReport}".split("\n").find{ it =~ /Error executing process/ }.split(">")[1].split("'")[1]
         species_name = file("${configfile}").readLines().find{ it =~ /focal_species/ }.split()[2].strip()
 
         // For process wgdOrthologs, the log filename depends on the two species names,
