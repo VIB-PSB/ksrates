@@ -954,15 +954,15 @@ workflow.onComplete {
 workflow.onError {
     // If user interrupts with ctrl+C
     if ( workflow.errorReport == "SIGINT" || workflow.errorMessage == "SIGINT" ) {
-        log.error "\n"
-        error_message_sigint = "Pipeline interrupted by user (${workflow.errorMessage} signal)"
-        log.error "${'=' * error_message_sigint.length()}"
-        log.error "${error_message_sigint}"
-        log.error "${'=' * error_message_sigint.length()}"
+        error_box_sigint = "Pipeline interrupted by user (${workflow.errorMessage} signal)"
+        log.error "${'=' * error_box_sigint.length()}\n" + \
+                  "${error_box_sigint}\n" + \
+                  "${'=' * error_box_sigint.length()}"
     }
 
     // Else if pipeline interrupted by an error
     else {
+        error_box = ""
 
         // Defining variables (the stopped process, the species name and the log filename)
         process = "${workflow.errorReport.split()[4].split("'")[1]}"
@@ -980,65 +980,56 @@ workflow.onError {
 
         log_file = file("${log_filename}")
         if ( log_file.exists() == true ) {
-            // If the process log file exists and there are "ERROR" lines
-            // (the error was caught by the script), print such lines
+            // If the process log file exists and there are "ERROR" lines,
+            // print such lines (the error was caught by the script)
             if ( log_file.readLines().findAll{ it =~ /ERROR/ }.size() != 0 ) {
 
-                headline_error_box = "The pipeline terminated during process '${process}' with the following error message:"
-                // Separator to highlight the beginning of the error box
-                log.error "\n"
-                log.error "${'=' * headline_error_box.length()}"
-                // Write error box headline
-                log.error "${headline_error_box}"
-                log.error "\n"
+                headline = "The pipeline terminated during process '${process}' with the following error message:"
+                // Separator to highlight the beginning of the error box plus headline
+                error_box += "${'=' * headline.length()}\n" + \
+                             "${headline}\n\n"
 
                 for ( line : log_file.readLines().findAll { it =~ /ERROR/ } ) {
-                        log.error line
+                        error_box += "${line}\n"
                 }
-                log.error "\n"
             }
-            // If the process log file exists but there are no "ERROR" lines
-            // (probably it's an unexpected error), don't print any error line
+            // If the process log file exists but there are no "ERROR" lines,
+            // don't print any error line (it's an unexpected error)
             else {
-                headline_error_box = "The pipeline terminated during process '${process}'."
-                // Separator to highlight the beginning of the error box
-                log.error "\n"
-                log.error "${'=' * headline_error_box.length()}"
-                // Write error box headline
-                log.error "${headline_error_box}"
-                log.error "\n"
+                headline = "The pipeline terminated during process '${process}'."
+                // Separator to highlight the beginning of the error box plus headline
+                error_box += "${'=' * headline.length()}\n" + \
+                             "${headline}\n"
             }
 
             // In any case, point to the complete output of the stopped process log file
-            log.error "More details may be found in the following log file:"
-            log.error "${log_filename}"
+            error_box += "\nMore details may be found in the following log file:\n" + \
+                         "${log_filename}\n"
         }
 
         // Else if the process log file doesn't exist, look for an external cause
         // in errorReport and errorMessage
         else {
-            headline_error_box = "The pipeline terminated during process '${process}' with the following error message:"
-            // Separator to highlight the beginning of the error box
-            log.error "\n"
-            log.error "${'=' * headline_error_box.length()}"
-            // Write error box headline
-            log.error "${headline_error_box}"
-            log.error "\n"
+            headline = "The pipeline terminated during process '${process}' with the following error message:"
+            // Separator to highlight the beginning of the error box plus headline
+            error_box += "${'=' * headline.length()}\n" + \
+                         "${headline}\n\n"
 
             // Write the "Caused by:" line from errorReport
-            error_cause = "${workflow.errorReport.split("\n")[3]}"
-            log.error "${error_cause}"
+            error_cause = "${workflow.errorReport.split("\n")[3]}".trim()
+            error_box += "${error_cause}\n"
             // Write errorMessage, if any
             if ( workflow.errorMessage != null ) {
-                log.error "${workflow.errorMessage}"
+                error_box += "${workflow.errorMessage}\n"
             }
-            log.error "\n"
 
             // Point to the complete Nextflow errorReport
-            log.error "More details may be found in the error report above or in ./.nextflow.log."
+            error_box += "\nMore details may be found in the error report above or in ./.nextflow.log.\n"
         }
 
         // Separator to highlight the end of the error box
-        log.error "${'=' * headline_error_box.length()}"
+        error_box += "${'=' * headline.length()}"
+
+        log.error "${error_box}"
     }
 }
