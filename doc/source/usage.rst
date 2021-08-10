@@ -23,7 +23,7 @@ The *ksrates* pipeline can be automatically run through Nextflow with a few prep
 
 2.  Prepare the configuration files.
 
-    The directory already contains a pre-filled *ksrates configuration file* (``config_elaeis.txt``) and a *Nextflow configuration file* template (``custom_nextflow.config``) to be filled in as described in the :ref:`nextflow_config_section` section.
+    The directory already contains a pre-filled *ksrates configuration file* (``config_elaeis.txt``) and a *Nextflow configuration file* template (``nextflow.config``) to be filled in as described in the :ref:`nextflow_config_section` section.
 
     .. note ::
         When running *ksrates* on a new dataset, the configuration files still have to be generated.
@@ -34,11 +34,11 @@ The *ksrates* pipeline can be automatically run through Nextflow with a few prep
 
 3.  Launch *ksrates* through the following command line::
 
-        nextflow run VIB-PSB/ksrates --config ./config_elaeis.txt -c ./custom_nextflow.config
+        nextflow run VIB-PSB/ksrates --config ./config_elaeis.txt
 
-    The ``--config`` option takes the *ksrates configuration file*, while ``-c`` takes the *Nextflow configuration file*. If the Nextflow-reserved ``nextflow.config``file name is used for the latter, the file is automatically recognized without having explicitly configure it with the ``-c`` option.
+    The *ksrates configuration file* is provided through the ``--config`` option. The *Nextflow configuration file* is automatically recognized when it's named with the Nextflow-reserved ``nextflow.config`` filename and it's located in the launching directory; alternatively, the user can provide a costum filename or path through the ``-c`` option.
     
-    The first time the command is launched it downloads the *ksrates* Nextflow pipeline from the ``VIB-PSB/ksrates`` GitHub repository; from then on it uses the local copy stored in the ``.nextflow`` directory. If running a container, the image is pulled from Docker Hub and stored locally for successive usage.  
+    The first time the command is launched it downloads the *ksrates* Nextflow pipeline from the ``VIB-PSB/ksrates`` GitHub repository; from then on it uses the local copy stored in the ``.nextflow`` directory. If running a container, the image is pulled from Docker Hub and stored locally for successive usage.
 
 
 .. _`manual_pipeline`:
