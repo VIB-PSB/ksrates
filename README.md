@@ -79,36 +79,25 @@ We briefly illustrate here how to run the *ksrates* Nextflow pipeline on the `te
            cp ksrates/test ~
            cd ~/test
 
-2. Launch the *ksrates* Nextflow pipeline.
-    (If this is the first time you launch the pipeline, Nextflow will first download *ksrates* and the *ksrates* Singularity or Docker container.)
+2. Prepare the configuration files.
 
-    * Running locally on a laptop/desktop:
+      The dataset directory already contains the two required files:
 
-        When using Singularity (recommended):<!-- ***TODO:*** check command -->
+      * A pre-filled *ksrates* pipeline configuration file for the oil palm use case (`config_elaeis.txt`).
 
-          nextflow run VIB-PSB/ksrates --config config_elaeis.txt -with-singularity docker://vibpsb/ksrates:latest
+      * A template for the Nextflow configuration file to configure executor resources and *ksrates* container settings (`nextflow.config`). Since the ``test`` dataset runs in a few minutes, the template is pre-filled to make use of a local executor and of the Singularity container. Please adapt it according to the availbale resources; see the [full documentation](https://ksrates.readthedocs.io/) and the [Nextflow documentation](https://www.nextflow.io/docs/latest/config.html) for more detail on Nextflow configuration, e.g. for different HPC schedulers. Other general template Nextflow configuration files can be found in the [doc](doc/source) directory in the repository.
 
-        Or when using Docker:<!-- ***TODO:*** check command -->
+3. Launch the *ksrates* Nextflow pipeline.
 
-          nextflow run VIB-PSB/ksrates --config config_elaeis.txt -with-docker vibpsb/ksrates:latest
-		  
-        The required `--config` parameter specifies the (path to the) pipeline configuration file for the *ksrates* analyses to be run. If the specified file does not exist (at the given path) a new template configuration file will be generated and the pipeline exits. Edit and fill in the generated configuration file (see the [full documentation](https://ksrates.readthedocs.io/) for more detail) and then rerun the same command above to relaunch the pipeline. 
-	
-        The dataset directory already contains a pre-filled *ksrates* pipeline configuration file for the oil palm example use case, `config_elaeis.txt`, therefore the above Nextflow command should directly launch the pipeline.
+   > **Note:** If this is the first time you launch the pipeline, Nextflow will first download *ksrates* and the *ksrates* container.
+   
+       nextflow run VIB-PSB/ksrates --config config_elaeis.txt
+	   
+   The `--config` parameter specifies the (path to the) *ksrates* pipeline configuration file.
+   
+   As long as the Nextflow configuration file is named with the Nextflow-reserved `nextflow.config` filename, it is automatically detected; alternatively, the user can specify a custom filename or path through the ``-c`` option.
 
-    * Running on a compute cluster:
-	
-          nextflow run VIB-PSB/ksrates --config config_elaeis.txt -c custom_nextflow.config
-	
-        The `--config` parameter is the same as above.
-		
-        The `-c` parameter specifies a Nextflow configuration file. This file contains settings to configure the compute cluster to be used and the pipelines resources on it such as number of CPUs and amount of memory. It also now configures whether to use the *ksrates* Singularity or Docker container. 
-        The dataset directory already contains a template Nextflow configuration file called `custom_nextflow.config` that can be adapted to your resources. Other general template Nextflow configuration files can be found in the [doc](doc/source) directory in the repository.
-
-        If the Nextflow configuration file is simply named `nextflow.config`, the configuration file will be automatically recognized and used without having to specify it using the `-c` parameter.
-
-        Please see the [full documentation](https://ksrates.readthedocs.io/) and the [Nextflow documentation](https://www.nextflow.io/docs/latest/config.html) for more detail on Nextflow configuration, e.g. for different HPC schedulers.
-
+   > **Note:** To generate a new *ksrates* configuration file for a new analysis, provide the ``--config`` option with a non-existing filename/path; by not finding any file, the pipeline will generate the missing template and then exit. Edit and fill in the generated configuration file (see the [full documentation](https://ksrates.readthedocs.io/) for more detail) and then rerun the same command above to relaunch the pipeline.
 
 ### Command-line interface
 
