@@ -6,6 +6,9 @@ LOG = true  // should probably use our own Logger...
  * Pipeline input parameters
  */
 
+// Parameter to automatically delete or not leftover folders at the end of the pipeline
+params.preserve = false
+
 // giving the configuration file through the "input" process section
 configfile = file(params.config)
 
@@ -865,28 +868,75 @@ if (LOG) {
 
 /*
  * On completion of workflow clean up any temporary files left behind.
- *
- * TODO: This should probably be expanded to cover other possible
- *       temporary files and also maybe wgd intermediate files
- *       (based on a parameter setting)
  */
 workflow.onComplete {
     if (LOG) {
         log.info ""
         log.info("Logs folder: logs_${workflow.sessionId.toString().substring(0,8)}")
-        log.info "Cleaning up any temporary files left behind..."
-        file("$workflow.projectDir/paralog_distributions/ks_tmp*", type: "any")
-            .each {
-                result = it.deleteDir();
-                log.info result ? "$it" : "Can't delete: $it"
+
+        if ( params.preserve == false ) {
+            log.info "Cleaning up any temporary files left behind..."
+            species_name = file("${configfile}").readLines().find{ it =~ /focal_species/ }.split()[2].strip()
+            paralog_dir_path = "${workflow.launchDir}/paralog_distributions/wgd_${species_name}*"
+            ortholog_dir_path = "${workflow.launchDir}/ortholog_distributions/wgd_*"
+
+            // Clean both paralog and ortholog directories
+            for ( dir_path : [ paralog_dir_path, ortholog_dir_path ] ) {
+                file(dir_path, type: "dir")
+                    .each { wgd_dir ->
+                        // Remove BLAST temporary folder, if any
+                        file("${wgd_dir}/*.blast_tmp", type: "dir")
+                            .each { tmp ->
+                                if ( tmp.exists() == true ) {
+                                    result = tmp.deleteDir();
+                                    log.info result ? "Deleted: ${tmp}" : "Can't delete: ${tmp}"
+                                    // Remove associated incomplete BLAST TSV file
+                                    file("${wgd_dir}/*.blast.tsv", type: "file")
+                                        .each { tsv ->
+                                            if ( tsv.exists() == true ) {
+                                                result = tsv.delete()
+                                                log.info result ? "Deleted: ${tsv}" : "Can't delete: ${tsv}"
+                                            }
+                                        }
+                                }
+                            }
+                        // Remove Ks temporary directory, if any
+                        file("${wgd_dir}/*.ks_tmp", type: "dir")
+                            .each { tmp ->
+                                if ( tmp.exists() == true ) {
+                                    result = tmp.deleteDir();
+                                    log.info result ? "Deleted: ${tmp}" : "Can't delete: ${tmp}"
+                                }
+                            }
+                        // Remove i-ADHoRe temporary directory, if any (applicable only to paralog_distributions)
+                        file("${wgd_dir}/*.ks_anchors_tmp", type: "dir")
+                            .each { tmp ->
+                                if ( tmp.exists() == true ) {
+                                    result = tmp.deleteDir();
+                                    log.info result ? "Deleted: ${tmp}" : "Can't delete: ${tmp}"
+                                }
+                            }
+                        // Remove paralog and ortholog sub-directories if they ended up being empty
+                        if ( (wgd_dir.list() as List).empty == true ) {
+                            result = wgd_dir.deleteDir();
+                            log.info result ? "Deleted: ${wgd_dir}" : "Can't delete: ${wgd_dir}"
+                        }
+                    }
             }
-        file("$workflow.projectDir/ortholog_distributions/ks_tmp*", type: "any")
-            .each {
-                result = it.deleteDir();
-                log.info result ? "$it" : "Can't delete: $it"
-            }
-        log.info "Done."
-        log.info ""
+
+            // Remove "core" files generated when the submitted job doesn't have enough memory
+            file("${workflow.launchDir}/core.[0-9]*")
+                .each { core ->
+                    if ( core.exists() == true ) {
+                        result = core.delete();
+                        log.info result ? "Deleted: ${core}" : "Can't delete: ${core}"
+                    }
+                }
+
+            log.info "Done."
+            log.info ""
+        }
+
         log.info "Pipeline completed at: $workflow.complete taking $workflow.duration"
         log.info "Execution status: ${ workflow.success ? 'OK' : 'failed' }"
         log.info ""

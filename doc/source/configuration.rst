@@ -197,6 +197,9 @@ The Nextflow configuration file is used to configure various settings for the *k
 
 * The **env** scope allows the definition one or more variable that will be exported in the environment where the workflow tasks will be executed.
 
+* The **params** scope accepts the ``preserve`` parameter to keep leftover temporay folders and incomplete files when the pipeline is prematurely interrupted due to an error [Default: false]. Alternatively, ``--preserve`` can be provided directly in the Nextflow launching command line::
+
+    nextflow run VIB-PSB/ksrates --config ./config_elaeis.txt -c ./custom_nextflow.config --preserve
 
 .. _`expert_config_section`:
 

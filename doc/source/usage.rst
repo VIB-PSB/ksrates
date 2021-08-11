@@ -165,3 +165,17 @@ The order of execution of the single commands to run the whole workflow is the f
         ksrates paralogs-analyses config_elaeis.txt
     
     The method(s) used for detecting WGD signatures depends on the paralog analysis settings in the *ksrates* configuration file(s): if ``collinearity`` is turned on, the anchor *K*:sub:`S` clustering is performed (``rate_adjustment/elaeis/mixed_elaeis_anchor_clusters.pdf``), otherwise an exponential-lognormal mixture model is performed (``rate_adjustment/elaeis/mixed_species_elmm.pdf``). Additional methods can be executed upon specification in the *ksrates* expert configuration file (``rate_adjustment/elaeis/mixed_species_lmm_paranome.pdf`` and ``rate_adjustment/elaeis/mixed_species_lmm_colinearity.pdf``) (see :ref:`expert_config_section`).
+
+
+
+Practical considerations
+========================
+
+When dealing with large input phylogenies it is useful to know that *ksrates* can be used iteratively, by starting with a small dataset and subsequently adding additional species to finetune the phylogenetic positioning of any hypothesized WGDs.
+For such iterative analyses the pipeline can reuse data from previous runs, and will only perform additional calculations on the extended dataset where needed.
+
+When *ksrates* is run, the ortholog *K*:sub:`S` values for each species pair in the input phylogenetic tree and the associated ortholog *K*:sub:`S` modes are stored in a local database.
+When the *ksrates* pipeline is subsequently rerun with additional species included in the input phylogeny, *ksrates* will skip the ortholog *K*:sub:`S` calculations for any species pair for which an ortholog *K*:sub:`S` mode has already been stored. The database consists of two tabular files (``ortholog_peak_db.tsv`` and ``ortholog_ks_list_db.tsv``, see :ref:`other_output` for more details) generated/accessed by default in the working directory. A custom path location can be otherwise specified in the :ref:`pipeline_config_section`.
+
+In case a user doesn't want to reuse an existing ortholog *K*:sub:`S` mode of a particular species pair and wants instead to re-estimate it from the same input data but using e.g. a different number of bootstrap iterations or KDE bandwidth, the line concerning the mode has to be manually deleted from the ``ortholog_peak_db.tsv`` database file. The successive *ksrates* pipeline will re-estimate the mode according to the new parameters by starting from the previously computed ortholog *K*:sub:`S` estimates for the species pair concerned, thereby skipping the onerous ortholog *K*:sub:`S` estimation step.
+
