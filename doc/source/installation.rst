@@ -138,7 +138,7 @@ Testing your installation
 
     * Through a Singularity container::
      
-        nextflow run VIB-PSB/ksrates --config ./config_elaeis.txt -with-singularity docker://vibpsb/ksrates:latest
+        nextflow run VIB-PSB/ksrates --config ./config_elaeis.txt -with-singularity vibpsb/ksrates:latest
 
     * Through a Docker container::
         
