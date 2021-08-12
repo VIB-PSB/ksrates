@@ -36,7 +36,7 @@ The *ksrates* pipeline can be automatically run through Nextflow with a few prep
 
         nextflow run VIB-PSB/ksrates --config ./config_elaeis.txt
 
-    The *ksrates configuration file* is provided through the ``--config`` option. The *Nextflow configuration file* is automatically recognized when it's named with the Nextflow-reserved ``nextflow.config`` filename and it's located in the launching directory; alternatively, the user can provide a costum filename or path through the ``-c`` option.
+    The *ksrates configuration file* is specified through the ``--config`` parameter. The *Nextflow configuration file* is automatically recognized when it's named with the Nextflow-reserved ``nextflow.config`` file name and located in the launching directory; alternatively, the user can provide a custom file by specifying its name or path using the ``-C`` option (see `Nextflow documentation <https://www.nextflow.io/docs/latest/cli.html#hard-configuration-override>`__).
     
     The first time the command is launched it downloads the *ksrates* Nextflow pipeline from the ``VIB-PSB/ksrates`` GitHub repository; from then on it uses the local copy stored in the ``.nextflow`` directory. If running a container, the image is pulled from Docker Hub and stored locally for successive usage.
 
@@ -178,4 +178,3 @@ When *ksrates* is run, the ortholog *K*:sub:`S` values for each species pair in 
 When the *ksrates* pipeline is subsequently rerun with additional species included in the input phylogeny, *ksrates* will skip the ortholog *K*:sub:`S` calculations for any species pair for which an ortholog *K*:sub:`S` mode has already been stored. The database consists of two tabular files (``ortholog_peak_db.tsv`` and ``ortholog_ks_list_db.tsv``, see :ref:`other_output` for more details) generated/accessed by default in the working directory. A custom path location can be otherwise specified in the :ref:`pipeline_config_section`.
 
 In case a user doesn't want to reuse an existing ortholog *K*:sub:`S` mode of a particular species pair and wants instead to re-estimate it from the same input data but using e.g. a different number of bootstrap iterations or KDE bandwidth, the line concerning the mode has to be manually deleted from the ``ortholog_peak_db.tsv`` database file. The successive *ksrates* pipeline will re-estimate the mode according to the new parameters by starting from the previously computed ortholog *K*:sub:`S` estimates for the species pair concerned, thereby skipping the onerous ortholog *K*:sub:`S` estimation step.
-
