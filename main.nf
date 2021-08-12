@@ -19,6 +19,7 @@ log.info """\
          
          Configuration file:                    $params.config
          Logs folder:                           logs_${workflow.sessionId.toString().substring(0,8)}
+         Preserve leftover files:               $params.preserve
          """
          .stripIndent()
 log.info ""
