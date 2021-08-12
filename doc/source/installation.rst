@@ -138,4 +138,4 @@ Testing your installation
      
         nextflow run VIB-PSB/ksrates --config ./config_elaeis.txt
 
-    Nextflow will download *ksrates* and will by default run the test pipeline on the local executor by means of a Singularity container, as configured in the ``nextflow.config`` Nextflow configuration file (automatically detected). If needed, please adapt the configuration to the available resources (e.g. switching to a Docker container) as described in the :ref:`nextflow_config_section` section.
+    Nextflow will download *ksrates* and will by default run the test pipeline on the ``local`` executor using the *ksrates* Singularity container, as configured in the included ``nextflow.config`` Nextflow configuration file (automatically detected). If needed, please adapt the configuration to the available resources (e.g. available CPUs/cores or switching to a Docker container or no container at all for a local installation) as described in the :ref:`nextflow_config_section` section.
