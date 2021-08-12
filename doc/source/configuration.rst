@@ -172,12 +172,7 @@ The Nextflow configuration file is used to configure various settings for the *k
 
 * The **process** scope defines the configuration for the processes of the *ksrates* pipeline:
 
-    * **container** defines the Singularity or Docker *ksrates* container image to be used (from Docker Hub or from a local copy if already downloaded):
-
-        * to pull a Singularity container from Docker Hub: ``docker://vibpsb/ksrates:latest``
-        * to pull a Docker container from Docker Hub: ``vibpsb/ksrates:latest``
-        
-      Has to match enabled container type (see above).
+    * **container** defines the Singularity or Docker *ksrates* container image to be used, ``vibpsb/ksrates:latest``. A local copy is pulled from Docker Hub and stored for successive usage.
 
     * **withName** defines settings for individual processes in the *ksrates* Nextflow pipeline.
     
