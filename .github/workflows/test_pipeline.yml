@@ -36,6 +36,7 @@ jobs:
       - name: Running ksrates Nextflow pipeline
         run: |
           cd test
+          mv nextflow.config custom_nextflow.config
           nextflow run ../main.nf --config config_elaeis.txt -with-docker ksrates
         
       - name: Visualize output files
