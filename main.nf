@@ -6,17 +6,6 @@ LOG = true  // should probably use our own Logger...
  * Pipeline input parameters
  */
 
-// set to true to not parallelize any processes
-params.sequential = false
-
-// threads used by wgd paralog runs
-// (will be overriden by job configuration if run on a cluster)
-params.nThreadsParalogs = 1
-  
-// threads used by wgd ortholog runs
-// (will be overriden by job configuration if run on a cluster)
-params.nThreadsOrthologs = 1
-
 // Parameter to automatically delete or not leftover folders at the end of the pipeline
 params.preserve = false
 
@@ -30,9 +19,7 @@ log.info """\
          
          Configuration file:                    $params.config
          Logs folder:                           logs_${workflow.sessionId.toString().substring(0,8)}
-         Sequential mode:                       $params.sequential
-         Default threads per paralog process:   $params.nThreadsParalogs
-         Default threads per ortholog process:  $params.nThreadsOrthologs
+         Preserve leftover files:               $params.preserve
          """
          .stripIndent()
 log.info ""
@@ -455,9 +442,6 @@ if (LOG) {
  */
 process wgdParalogs {
 
-    if (params.sequential)
-        maxForks 1
-
     input:
         val species from species_channel
         val trigger_wgdPara from trigger_wgdPara_channel
@@ -484,17 +468,10 @@ process wgdParalogs {
     cd $PWD
     echo "NF internal work directory for [wgdParalogs] process:\n\$processDir\n" >> $logs_folder/wgd_paralogs.log
 
-    if [ -z \${NSLOTS+x} ]; then
-        nThreads=$params.nThreadsParalogs
-        echo "Using \${nThreads} threads" >> $logs_folder/wgd_paralogs.log
-        echo "[$species] Using \${nThreads} threads"
-    else
-        nThreads=\${NSLOTS}
-        echo "Found \\\$NSLOTS = \$NSLOTS\n" >> $logs_folder/wgd_paralogs.log
-        echo "[$species] Found \\\$NSLOTS = \$NSLOTS -> using \${nThreads} threads"
-    fi
+    echo "Using ${task.cpus} thread(s)\n">> $logs_folder/wgd_paralogs.log
+    echo "[$species] Using ${task.cpus} thread(s)"
 
-    ksrates paralogs-ks ${config} --n-threads=\$nThreads >> $logs_folder/wgd_paralogs.log 2>&1
+    ksrates paralogs-ks ${config} --n-threads=${task.cpus} >> $logs_folder/wgd_paralogs.log 2>&1
 
     RET_CODE=\$?
     echo "[$species] Done [\${RET_CODE}]"
@@ -529,9 +506,6 @@ if (LOG) {
  */
 process wgdOrthologs {
 
-    if (params.sequential)
-        maxForks 1
-
     input:
         val species from species_channel
         tuple species1, species2 from species_pairs_for_wgd_Orthologs_channel.splitCsv(sep:'\t')
@@ -557,17 +531,10 @@ process wgdOrthologs {
     cd $PWD
     echo "NF internal work directory for [wgdOrthologs (${task.index})] process:\n\$processDir\n" > $logs_folder/wgd_orthologs_${species1}_${species2}.log
 
-    if [ -z \${NSLOTS+x} ]; then
-        nThreads=$params.nThreadsOrthologs
-        echo "Using \${nThreads} threads" >> $logs_folder/wgd_orthologs_${species1}_${species2}.log
-        echo "[$species1 – $species2] Using \${nThreads} threads"
-    else
-        nThreads=\${NSLOTS}
-        echo "Found \\\$NSLOTS = \$NSLOTS\n" >> $logs_folder/wgd_orthologs_${species1}_${species2}.log
-        echo "[$species1 – $species2] Found \\\$NSLOTS = \$NSLOTS -> using \${nThreads} threads"
-    fi
+    echo "Using ${task.cpus} thread(s)\n">> $logs_folder/wgd_orthologs_${species1}_${species2}.log
+    echo "[$species1 – $species2] Using ${task.cpus} thread(s)"
 
-    ksrates orthologs-ks ${config} $species1 $species2 --n-threads=\$nThreads >> $logs_folder/wgd_orthologs_${species1}_${species2}.log 2>&1
+    ksrates orthologs-ks ${config} $species1 $species2 --n-threads=${task.cpus} >> $logs_folder/wgd_orthologs_${species1}_${species2}.log 2>&1
     RET_CODE=\$?
     echo "[$species1 – $species2] wgd done [\${RET_CODE}]"
     
