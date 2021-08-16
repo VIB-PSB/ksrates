@@ -999,7 +999,7 @@ workflow.onError {
         if ( process == ("wgdOrthologs") ) {
             // Find in erroReport the line matching "Work dir:" and get its index
             index_work_dir_line = "${workflow.errorReport}".split("\n").findIndexOf{ it =~ /Work dir:/ }
-            // Get the successive lines, which contains the work directory absolute path
+            // Get the successive line, which contains the work directory absolute path
             species_names_file = "${workflow.errorReport.split("\n")[index_work_dir_line + 1]}/species_names.tsv".trim()
             species1 = file("${species_names_file}").readLines()[0]
             species2 = file("${species_names_file}").readLines()[1]
@@ -1046,7 +1046,10 @@ workflow.onError {
                          "${headline}\n\n"
 
             // Write the "Caused by:" line from errorReport
-            error_cause = "${workflow.errorReport.split("\n")[3]}".trim()
+            // Find in errorReport the line matching "Caused by:" and get its index
+            index_cause = "${workflow.errorReport}".split("\n").findIndexOf{ it =~ /Caused by:/ }
+            // Get the successive line, which contains the related message
+            error_cause = "${workflow.errorReport.split("\n")[index_cause + 1].trim()}"
             error_box += "${error_cause}\n"
             // Write errorMessage, if any
             if ( workflow.errorMessage != null ) {
