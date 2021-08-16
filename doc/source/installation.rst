@@ -36,6 +36,9 @@ The machine where *ksrates* will be executed (either local computer or remote co
 For Linux installation we suggest to follow the *Install from Source* `section <https://sylabs.io/guides/3.7/admin-guide/installation.html#before-you-begin>`__ (*Install Dependencies*, *Install Go*, *Download Singularity from a release* and *Compile Singularity*).
 For up-to-date and version-specific instructions, please refer to this `page <https://sylabs.io/docs/>`__.
 
+.. note::
+   To allow users to run the pipeline from any directory in a cluster (i.e. not necessarily from their home directory), the `user bind control <https://sylabs.io/guides/3.7/admin-guide/configfiles.html?highlight=user%20bind%20control#bind-mount-management>`__ feature needs to be left active during Singularity installation [Default: "YES"].
+
 When using the *ksrates* Nextflow pipeline, the only other dependency that must be installed is Nextflow (for more information see its official installation `page <https://www.nextflow.io/docs/latest/getstarted.html#requirements>`__).
 
 *   First install Java 8 or later. ``default-djk`` works as well::
@@ -131,16 +134,8 @@ Testing your installation
 
         cd ksrates/test
 
-3.  Launch *ksrates* (the execution will take few minutes):
-
-    * Through a Singularity container::
+3.  Launch *ksrates* (the execution will take few minutes)::
      
-        nextflow run VIB-PSB/ksrates --config ./config_elaeis.txt -with-singularity docker://vibpsb/ksrates:latest
-
-    * Through a Docker container::
-        
-        nextflow run VIB-PSB/ksrates --config ./config_elaeis.txt -with-docker vibpsb/ksrates
-    
-    * With local installation::
-    
         nextflow run VIB-PSB/ksrates --config ./config_elaeis.txt
+
+    Nextflow will download *ksrates* and will by default run the test pipeline on the ``local`` executor using the *ksrates* Singularity container, as configured in the included ``nextflow.config`` Nextflow configuration file (automatically detected). If needed, please adapt the configuration to the available resources (e.g. available CPUs/cores or switching to a Docker container or no container at all for a local installation) as described in the :ref:`nextflow_config_section` section.

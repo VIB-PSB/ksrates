@@ -16,14 +16,14 @@ Run example case as a Nextflow pipeline (recommended)
 
 The *ksrates* pipeline can be automatically run through Nextflow with a few preparation steps.
 
-1.  Access in a terminal the directory that will host the rate-adjustment results (assumed here to be ``example``) and unzip the sequence data files in there:: ::
+1.  Access in a terminal the directory that will host the rate-adjustment results (assumed here to be ``example``) and unzip the sequence data files in there::
 
         cd ksrates/example
         gunzip elaeis.fasta.gz oryza.fasta.gz asparagus.fasta.gz elaeis.gff3.gz
 
 2.  Prepare the configuration files.
 
-    The directory already contains a pre-filled *ksrates configuration file* (``config_elaeis.txt``) and a *Nextflow configuration file* template (``custom_nextflow.config``). If running on a cluster or within a container, please fill in the template as described in the :ref:`nextflow_config_section` section.
+    The directory already contains a pre-filled *ksrates configuration file* (``config_elaeis.txt``) and a *Nextflow configuration file* template (``nextflow.config``) to be filled in as described in the :ref:`nextflow_config_section` section.
 
     .. note ::
         When running *ksrates* on a new dataset, the configuration files still have to be generated.
@@ -34,11 +34,11 @@ The *ksrates* pipeline can be automatically run through Nextflow with a few prep
 
 3.  Launch *ksrates* through the following command line::
 
-        nextflow run VIB-PSB/ksrates --config ./config_elaeis.txt -c ./custom_nextflow.config
+        nextflow run VIB-PSB/ksrates --config ./config_elaeis.txt
 
-    The ``--config`` option takes the *ksrates configuration file*, while ``-c`` takes the optional *Nextflow configuration file*. If the Nextflow-reserved ``nextflow.config`` name is used, this latter file is automatically recognized without explicitly calling it in the command line.
+    The *ksrates configuration file* is specified through the ``--config`` parameter. The *Nextflow configuration file* is automatically recognized when it's named with the Nextflow-reserved ``nextflow.config`` file name and located in the launching directory; alternatively, the user can provide a custom file by specifying its name or path using the ``-C`` option (see `Nextflow documentation <https://www.nextflow.io/docs/latest/cli.html#hard-configuration-override>`__).
     
-    The first time the command is launched it downloads the *ksrates* Nextflow pipeline from the ``VIB-PSB/ksrates`` GitHub repository; from then on it uses the local copy stored in the ``.nextflow`` directory. If running a container, the image is pulled from Docker Hub and stored locally for successive usage.  
+    The first time the command is launched it downloads the *ksrates* Nextflow pipeline from the ``VIB-PSB/ksrates`` GitHub repository; from then on it uses the local copy stored in the ``$HOME/.nextflow`` directory. If running a container, the image is pulled from Docker Hub and stored locally for successive usage. The Singularity container is stored by default in the launching folder under ``work/singularity``.
 
 
 .. _`manual_pipeline`:
@@ -165,3 +165,16 @@ The order of execution of the single commands to run the whole workflow is the f
         ksrates paralogs-analyses config_elaeis.txt
     
     The method(s) used for detecting WGD signatures depends on the paralog analysis settings in the *ksrates* configuration file(s): if ``collinearity`` is turned on, the anchor *K*:sub:`S` clustering is performed (``rate_adjustment/elaeis/mixed_elaeis_anchor_clusters.pdf``), otherwise an exponential-lognormal mixture model is performed (``rate_adjustment/elaeis/mixed_species_elmm.pdf``). Additional methods can be executed upon specification in the *ksrates* expert configuration file (``rate_adjustment/elaeis/mixed_species_lmm_paranome.pdf`` and ``rate_adjustment/elaeis/mixed_species_lmm_colinearity.pdf``) (see :ref:`expert_config_section`).
+
+
+
+Practical considerations
+========================
+
+When dealing with large input phylogenies it is useful to know that *ksrates* can be used iteratively, by starting with a small dataset and subsequently adding additional species to finetune the phylogenetic positioning of any hypothesized WGDs.
+For such iterative analyses the pipeline can reuse data from previous runs, and will only perform additional calculations on the extended dataset where needed.
+
+When *ksrates* is run, the ortholog *K*:sub:`S` values for each species pair in the input phylogenetic tree and the associated ortholog *K*:sub:`S` modes are stored in a local database.
+When the *ksrates* pipeline is subsequently rerun with additional species included in the input phylogeny, *ksrates* will skip the ortholog *K*:sub:`S` calculations for any species pair for which an ortholog *K*:sub:`S` mode has already been stored. The database consists of two tabular files (``ortholog_peak_db.tsv`` and ``ortholog_ks_list_db.tsv``, see :ref:`other_output` for more details) generated/accessed by default in the working directory. A custom path location can be otherwise specified in the :ref:`pipeline_config_section`.
+
+In case a user doesn't want to reuse an existing ortholog *K*:sub:`S` mode of a particular species pair and wants instead to re-estimate it from the same input data but using e.g. a different number of bootstrap iterations or KDE bandwidth, the line concerning the mode has to be manually deleted from the ``ortholog_peak_db.tsv`` database file. The successive *ksrates* pipeline will re-estimate the mode according to the new parameters by starting from the previously computed ortholog *K*:sub:`S` estimates for the species pair concerned, thereby skipping the onerous ortholog *K*:sub:`S` estimation step.
