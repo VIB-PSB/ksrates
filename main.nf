@@ -6,16 +6,8 @@ LOG = true  // should probably use our own Logger...
  * Pipeline input parameters
  */
 
-// set to true to not parallelize any processes
-params.sequential = false
-
-// threads used by wgd paralog runs
-// (will be overriden by job configuration if run on a cluster)
-params.nThreadsParalogs = 1
-  
-// threads used by wgd ortholog runs
-// (will be overriden by job configuration if run on a cluster)
-params.nThreadsOrthologs = 1
+// Parameter to automatically delete or not leftover folders at the end of the pipeline
+params.preserve = false
 
 // giving the configuration file through the "input" process section
 configfile = file(params.config)
@@ -27,9 +19,7 @@ log.info """\
          
          Configuration file:                    $params.config
          Logs folder:                           logs_${workflow.sessionId.toString().substring(0,8)}
-         Sequential mode:                       $params.sequential
-         Default threads per paralog process:   $params.nThreadsParalogs
-         Default threads per ortholog process:  $params.nThreadsOrthologs
+         Preserve leftover files:               $params.preserve
          """
          .stripIndent()
 log.info ""
@@ -465,9 +455,6 @@ if (LOG) {
  */
 process wgdParalogs {
 
-    if (params.sequential)
-        maxForks 1
-
     input:
         val species from species_channel
         val trigger_wgdPara from trigger_wgdPara_channel
@@ -494,17 +481,10 @@ process wgdParalogs {
     cd $PWD
     echo "NF internal work directory for [wgdParalogs] process:\n\$processDir\n" >> $logs_folder/${logs_names["wgdParalogs"]}
 
-    if [ -z \${NSLOTS+x} ]; then
-        nThreads=$params.nThreadsParalogs
-        echo "Using \${nThreads} threads" >> $logs_folder/${logs_names["wgdParalogs"]}
-        echo "[$species] Using \${nThreads} threads"
-    else
-        nThreads=\${NSLOTS}
-        echo "Found \\\$NSLOTS = \$NSLOTS\n" >> $logs_folder/${logs_names["wgdParalogs"]}
-        echo "[$species] Found \\\$NSLOTS = \$NSLOTS -> using \${nThreads} threads"
-    fi
+    echo "Using ${task.cpus} thread(s)\n">> $logs_folder/${logs_names["wgdParalogs"]}
+    echo "[$species] Using ${task.cpus} thread(s)"
 
-    ksrates paralogs-ks ${config} --n-threads=\$nThreads >> $logs_folder/${logs_names["wgdParalogs"]} 2>&1
+    ksrates paralogs-ks ${config} --n-threads=${task.cpus} >> $logs_folder/${logs_names["wgdParalogs"]} 2>&1
 
     RET_CODE=\$?
     echo "[$species] Done [\${RET_CODE}]"
@@ -539,9 +519,6 @@ if (LOG) {
  */
 process wgdOrthologs {
 
-    if (params.sequential)
-        maxForks 1
-
     input:
         val species from species_channel
         tuple species1, species2 from species_pairs_for_wgd_Orthologs_channel.splitCsv(sep:'\t')
@@ -567,17 +544,10 @@ process wgdOrthologs {
     cd $PWD
     echo "NF internal work directory for [wgdOrthologs (${task.index})] process:\n\$processDir\n" > $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log
 
-    if [ -z \${NSLOTS+x} ]; then
-        nThreads=$params.nThreadsOrthologs
-        echo "Using \${nThreads} threads" >> $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log
-        echo "[$species1 – $species2] Using \${nThreads} threads"
-    else
-        nThreads=\${NSLOTS}
-        echo "Found \\\$NSLOTS = \$NSLOTS\n" >> $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log
-        echo "[$species1 – $species2] Found \\\$NSLOTS = \$NSLOTS -> using \${nThreads} threads"
-    fi
+    echo "Using ${task.cpus} thread(s)\n">> $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log
+    echo "[$species1 – $species2] Using ${task.cpus} thread(s)"
 
-    ksrates orthologs-ks ${config} $species1 $species2 --n-threads=\$nThreads >> $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log 2>&1
+    ksrates orthologs-ks ${config} $species1 $species2 --n-threads=${task.cpus} >> $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log 2>&1
     RET_CODE=\$?
     echo "[$species1 – $species2] wgd done [\${RET_CODE}]"
     
@@ -912,28 +882,75 @@ if (LOG) {
 
 /*
  * On completion of workflow clean up any temporary files left behind.
- *
- * TODO: This should probably be expanded to cover other possible
- *       temporary files and also maybe wgd intermediate files
- *       (based on a parameter setting)
  */
 workflow.onComplete {
     if (LOG) {
         log.info ""
         log.info("Logs folder: logs_${workflow.sessionId.toString().substring(0,8)}")
-        log.info "Cleaning up any temporary files left behind..."
-        file("$workflow.projectDir/paralog_distributions/ks_tmp*", type: "any")
-            .each {
-                result = it.deleteDir();
-                log.info result ? "$it" : "Can't delete: $it"
+
+        if ( params.preserve == false ) {
+            log.info "Cleaning up any temporary files left behind..."
+            species_name = file("${configfile}").readLines().find{ it =~ /focal_species/ }.split()[2].strip()
+            paralog_dir_path = "${workflow.launchDir}/paralog_distributions/wgd_${species_name}*"
+            ortholog_dir_path = "${workflow.launchDir}/ortholog_distributions/wgd_*"
+
+            // Clean both paralog and ortholog directories
+            for ( dir_path : [ paralog_dir_path, ortholog_dir_path ] ) {
+                file(dir_path, type: "dir")
+                    .each { wgd_dir ->
+                        // Remove BLAST temporary folder, if any
+                        file("${wgd_dir}/*.blast_tmp", type: "dir")
+                            .each { tmp ->
+                                if ( tmp.exists() == true ) {
+                                    result = tmp.deleteDir();
+                                    log.info result ? "Deleted: ${tmp}" : "Can't delete: ${tmp}"
+                                    // Remove associated incomplete BLAST TSV file
+                                    file("${wgd_dir}/*.blast.tsv", type: "file")
+                                        .each { tsv ->
+                                            if ( tsv.exists() == true ) {
+                                                result = tsv.delete()
+                                                log.info result ? "Deleted: ${tsv}" : "Can't delete: ${tsv}"
+                                            }
+                                        }
+                                }
+                            }
+                        // Remove Ks temporary directory, if any
+                        file("${wgd_dir}/*.ks_tmp", type: "dir")
+                            .each { tmp ->
+                                if ( tmp.exists() == true ) {
+                                    result = tmp.deleteDir();
+                                    log.info result ? "Deleted: ${tmp}" : "Can't delete: ${tmp}"
+                                }
+                            }
+                        // Remove i-ADHoRe temporary directory, if any (applicable only to paralog_distributions)
+                        file("${wgd_dir}/*.ks_anchors_tmp", type: "dir")
+                            .each { tmp ->
+                                if ( tmp.exists() == true ) {
+                                    result = tmp.deleteDir();
+                                    log.info result ? "Deleted: ${tmp}" : "Can't delete: ${tmp}"
+                                }
+                            }
+                        // Remove paralog and ortholog sub-directories if they ended up being empty
+                        if ( (wgd_dir.list() as List).empty == true ) {
+                            result = wgd_dir.deleteDir();
+                            log.info result ? "Deleted: ${wgd_dir}" : "Can't delete: ${wgd_dir}"
+                        }
+                    }
             }
-        file("$workflow.projectDir/ortholog_distributions/ks_tmp*", type: "any")
-            .each {
-                result = it.deleteDir();
-                log.info result ? "$it" : "Can't delete: $it"
-            }
-        log.info "Done."
-        log.info ""
+
+            // Remove "core" files generated when the submitted job doesn't have enough memory
+            file("${workflow.launchDir}/core.[0-9]*")
+                .each { core ->
+                    if ( core.exists() == true ) {
+                        result = core.delete();
+                        log.info result ? "Deleted: ${core}" : "Can't delete: ${core}"
+                    }
+                }
+
+            log.info "Done."
+            log.info ""
+        }
+
         log.info "Pipeline completed at: $workflow.complete taking $workflow.duration"
         log.info "Execution status: ${ workflow.success ? 'OK' : 'failed' }"
         log.info ""

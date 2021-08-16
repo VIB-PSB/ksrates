@@ -25,6 +25,12 @@ When Nextflow crashes, an error box appears in the terminal and shows which proc
 More details about any error that terminated the pipeline can usually be found in log files that are stored in ``rate_adjustment/<focal_species>/log_XXXXXXXX``. The log folder name is unique for each run and is reported on the terminal in the error box and also at the beginning and end of a Nextflow run. The more general Nextflow log file ``.nextflow.log`` in the folder where the pipeline has been launched could also contain additional information.
 
 
+I am getting a ``failed to reserve page summary memory`` error?
+---------------------------------------------------------------
+
+Some cluster configurations may not be fully compatible with certain built-in Nextflow process directives used in the Nextflow configuration file. For example, on some cluster configurations the *ksrates* pipeline fails with a ``failed to reserve page summary memory`` error when using the built-in ``memory`` directive to define how much memory a process requires. In these cases it is likely that instead the ``clusterOptions`` process directive (see the `Nextflow documentation <https://www.nextflow.io/docs/latest/process.html#clusteroptions>`__) needs to be used to define configuration settings specific to your cluster. We advise to contact your cluster administrator about these.
+
+
 How do I update a previously downloaded *ksrates* pipeline if a new version becomes available?
 ----------------------------------------------------------------------------------------------
 ::
@@ -66,6 +72,7 @@ To remove a Singularity container, remove its ``.img`` file. You can also check 
 .. --------------------------------------------
 
 
+
 General errors and warnings
 ===========================
 
@@ -84,6 +91,7 @@ The Nextflow ``wgd_paralogs.log`` file reports details over the *K*:sub:`S` anal
 .. TODO
 .. No ... clustering/weighting results for..
 .. -----------------------------------------
+
 
 
 Configuration

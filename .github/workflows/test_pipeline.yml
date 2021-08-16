@@ -23,8 +23,7 @@ jobs:
       
       # Runs commands using the runners shell
       - name: Building dependency Docker container
-        # Temporarly builds here the container
-        # When the container will be public, it will be pulled from Docker Hub
+        # Builds here the Docker container
         run: docker build . --file Dockerfile --tag ksrates
 
       - name: Installing Nextflow
@@ -37,6 +36,7 @@ jobs:
       - name: Running ksrates Nextflow pipeline
         run: |
           cd test
+          mv nextflow.config custom_nextflow.config
           nextflow run ../main.nf --config config_elaeis.txt -with-docker ksrates
         
       - name: Visualize output files
