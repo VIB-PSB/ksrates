@@ -541,10 +541,6 @@ process wgdOrthologs {
     echo "[$species1 – $species2] Starting ortholog wgd analysis"
 
     processDir=\${PWD}
-
-    # Store species names in a file to make them accessible to the error logger
-    echo "$species1\n$species2" > \$processDir/species_names.tsv
-
     cd $PWD
     echo "NF internal work directory for [wgdOrthologs (${task.index})] process:\n\$processDir\n" > $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log
 
@@ -997,12 +993,8 @@ workflow.onError {
         // For process wgdOrthologs, the log filename depends on the two species names,
         // which are stored in a file under the working directory of the interrupted process
         if ( process == ("wgdOrthologs") ) {
-            // Find in erroReport the line matching "Work dir:" and get its index
-            index_work_dir_line = "${workflow.errorReport}".split("\n").findIndexOf{ it =~ /Work dir:/ }
-            // Get the successive line, which contains the work directory absolute path
-            species_names_file = "${workflow.errorReport.split("\n")[index_work_dir_line + 1]}/species_names.tsv".trim()
-            species1 = file("${species_names_file}").readLines()[0]
-            species2 = file("${species_names_file}").readLines()[1]
+            species1 = "${workflow.errorReport}".split("\n").find{ it =~ /\[.*\]/ }.split("–")[0].split("\\[")[1].trim()
+            species2 = "${workflow.errorReport}".split("\n").find{ it =~ /\[.*\]/ }.split("–")[1].split("\\]")[0].trim()
             logs_names["wgdOrthologs"] = "${logs_names["wgdOrthologs"]}${species1}_${species2}.log"
         }
 
