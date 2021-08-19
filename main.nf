@@ -988,7 +988,11 @@ workflow.onError {
                 break;
             }
         }
-        species_name = file("${configfile}").readLines().find{ it =~ /focal_species/ }.split()[2].strip()
+
+        focal_species_line = file("${configfile}").readLines().find{ it =~ /focal_species/ }
+        if ( focal_species_line.split().size() == 3 ) {
+            species_name = focal_species_line.split()[2].strip()
+        }
 
         // For process wgdOrthologs, the log filename depends on the two species names,
         // which are stored in a file under the working directory of the interrupted process
