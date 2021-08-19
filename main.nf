@@ -997,8 +997,11 @@ workflow.onError {
         // For process wgdOrthologs, the log filename depends on the two species names,
         // which are stored in a file under the working directory of the interrupted process
         if ( process == ("wgdOrthologs") ) {
-            species1 = "${workflow.errorReport}".split("\n").find{ it =~ /\[.*\]/ }.split("–")[0].split("\\[")[1].trim()
-            species2 = "${workflow.errorReport}".split("\n").find{ it =~ /\[.*\]/ }.split("–")[1].split("\\]")[0].trim()
+            species_pair = "${workflow.errorReport}".split("\n").find{ it =~ /\[.*\]/ }
+            if ( species_pair != null ) {
+                species1 = species_pair.split("–")[0].split("\\[")[1].trim()
+                species2 = species_pair.split("–")[1].split("\\]")[0].trim()
+            }
             logs_names["wgdOrthologs"] = "${logs_names["wgdOrthologs"]}${species1}_${species2}.log"
         }
 
@@ -1029,7 +1032,7 @@ workflow.onError {
             }
 
             // In any case, point to the complete output of the stopped process log file
-            error_box += "\nMore details may be found in the following log file:\n" + \
+            error_box += "\nMore details can be found in the error report above or in the following log file:\n" + \
                          "${log_filename}\n"
         }
 
