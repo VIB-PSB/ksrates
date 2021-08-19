@@ -28,7 +28,6 @@ import os
 import shutil
 import logging
 import re
-import warnings
 import random
 import numpy as np
 import json
@@ -114,10 +113,10 @@ def get_gfs_for_species(gene_family_dict, gene_pattern):
 def get_sequences(paralog_dict, sequences):
     """
     Fetch sequences from a fasta file or sequence dict and put them in a two
-    level dictionairy {gene_family: {gene: seq, gene: seq, ...}, ...}
+    level dictionary {gene_family: {gene: seq, gene: seq, ...}, ...}
 
     :param paralog_dict:
-    :return: two-level dictionairy
+    :return: two-level dictionary
     """
 
     if not type(sequences) == dict:
@@ -128,9 +127,11 @@ def get_sequences(paralog_dict, sequences):
     for family in paralog_dict:
         paralog_sequence_dict[family] = {}
         for gene in paralog_dict[family]:
-            if gene not in sequences.keys():
-                warnings.warn("Gene {} in gene families but not in protein "
-                              "fasta!".format(gene))
+            if gene == "":
+                logging.warning('Empty gene ID in family, will ignore.')
+            elif gene not in sequences.keys():
+                logging.warning("Gene {} in gene families but not in protein "
+                                "fasta!".format(gene))
             else:
                 paralog_sequence_dict[family][gene] = sequences[gene]
 
