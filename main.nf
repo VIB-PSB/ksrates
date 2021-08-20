@@ -1008,12 +1008,27 @@ workflow.onError {
         // For process wgdOrthologs, the log filename depends on the two species names,
         // which are parsed from the errorReport under "Command executed" (this latter
         // prints the process' "script" section)
+        unknown_species_pair = false
         if ( process == ("wgdOrthologs") ) {
+            // If there is a match in errorReport, use that to retrieve the names
             species_pair = workflow.errorReport =~ /\[(\w+?) – (\w+?)\]/
-            if (species_pair != null ) {
+            if ( species_pair.size() != 0 ) {
                 (full, species1, species2) = species_pair[0]
             }
-            logs_names["wgdOrthologs"] = "${logs_names["wgdOrthologs"]}${species1}_${species2}.log"
+            // If errorReport is not useful, apply the same for errorMessage
+            if ( species_pair.size() == 0 || species1 == null || species1 == "" || species2 == null || species2 == "" ) {
+                species_pair = workflow.errorMessage =~ /\[(\w+?) – (\w+?)\]/
+                if ( species_pair.size() != 0 ) {
+                    (full, species1, species2) = species_pair[0]
+                }
+            }
+            // If species1 and species2 are still unknown, will point to a generic "wgd_orthologs_" later
+            if ( species1 != null && species1 != "" && species2 != null && species2 != "" ) {
+                logs_names["wgdOrthologs"] = "${logs_names["wgdOrthologs"]}${species1}_${species2}.log"
+            }
+            else {
+                unknown_species_pair = true
+            }
         }
 
         log_filename = "rate_adjustment/${focal_species}/logs_${workflow.sessionId.toString().substring(0,8)}/${logs_names[process]}"
@@ -1066,8 +1081,14 @@ workflow.onError {
                 error_box += "${workflow.errorMessage}\n"
             }
 
-            // Point to the complete Nextflow errorReport
-            error_box += "\nMore details may be found in the error report above or in ./.nextflow.log.\n"
+            // Point to the complete Nextflow errorReport (or to the wgd_ortholog_ log file)
+            if ( unknown_species_pair == false ) {
+                error_box += "\nMore details may be found in the error report above or in ./.nextflow.log.\n"
+            }
+            else {
+                error_box += "\nMore details may be found in one of the '${logs_names["wgdOrthologs"]}' log files,\n" + \
+                             "or in the error report above or in ./.nextflow.log.\n"
+            }
         }
 
         // Separator to highlight the end of the error box
