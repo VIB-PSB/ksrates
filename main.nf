@@ -1089,7 +1089,7 @@ workflow.onError {
             }
             else {
                 error_box += "\nMore details may be found in one of the '${logs_names["wgdOrthologs"]}' log files,\n" + \
-                             "or in the error report above or in ./.nextflow.log.\n"
+                             "in the error report above, or in ./.nextflow.log.\n"
             }
         }
 
