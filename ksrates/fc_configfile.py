@@ -105,6 +105,9 @@ class Configuration:
         :return species: informal species name 
         """
         species = self.config.get("SPECIES", "focal_species")
+        if len(species.split()) != 1:
+            logging.error(f"Parameter focal_species [{species}] must be a single word, please change accordingly")
+            sys.exit(1)
         if species == "":
             logging.error("Parameter focal_species in configuration file is empty, please fill in")
             sys.exit(1)
