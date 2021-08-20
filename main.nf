@@ -896,7 +896,7 @@ workflow.onComplete {
                 focal_species = focal_species_line.strip().split("=")[1].strip()
             }
             else {
-                log.info "Focal species' name is not defined in the configuration file: possible leftovers in paralogs_distributions won't be deleted"
+                log.info "Parameter focal_species in configuration file is empty: possible leftovers in paralogs_distributions won't be deleted"
             }
 
             paralog_dir_path = "${workflow.launchDir}/paralog_distributions/wgd_${focal_species}*"
