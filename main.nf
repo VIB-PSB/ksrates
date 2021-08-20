@@ -893,10 +893,13 @@ workflow.onComplete {
 
             focal_species_line = file("${configfile}").readLines().find{ it =~ /focal_species/ }
             if ( focal_species_line.strip().split("=").size() == 2 ) {
-                species_name = focal_species_line.split()[1].strip()
+                focal_species = focal_species_line.split()[1].strip()
+            }
+            else {
+                log.info "Focal species' name is not defined in the configuration file: possible leftovers in paralogs_distributions won't be deleted"
             }
 
-            paralog_dir_path = "${workflow.launchDir}/paralog_distributions/wgd_${species_name}*"
+            paralog_dir_path = "${workflow.launchDir}/paralog_distributions/wgd_${focal_species}*"
             ortholog_dir_path = "${workflow.launchDir}/ortholog_distributions/wgd_*"
 
             // Clean both paralog and ortholog directories
@@ -996,7 +999,11 @@ workflow.onError {
 
         focal_species_line = file("${configfile}").readLines().find{ it =~ /focal_species/ }
         if ( focal_species_line.strip().split("=").size() == 2 ) {
-            species_name = focal_species_line.split()[1].strip()
+            focal_species = focal_species_line.split()[1].strip()
+            focal_species_exists = true
+        }
+        else {
+            focal_species_exists = false
         }
 
         // For process wgdOrthologs, the log filename depends on the two species names,
@@ -1010,7 +1017,7 @@ workflow.onError {
             logs_names["wgdOrthologs"] = "${logs_names["wgdOrthologs"]}${species1}_${species2}.log"
         }
 
-        log_filename = "rate_adjustment/${species_name}/logs_${workflow.sessionId.toString().substring(0,8)}/${logs_names[process]}"
+        log_filename = "rate_adjustment/${focal_species}/logs_${workflow.sessionId.toString().substring(0,8)}/${logs_names[process]}"
 
         log_file = file("${log_filename}")
         if ( log_file.exists() == true ) {
@@ -1041,28 +1048,35 @@ workflow.onError {
                          "${log_filename}\n"
         }
 
-        // Else if the process log file doesn't exist, look for an external cause
-        // in errorReport and errorMessage
+        // Else if the process log file doesn't exist, investigate the cause
         else {
             headline = "The pipeline terminated during process '${process}' with the following error message:"
             // Separator to highlight the beginning of the error box plus headline
             error_box += "${'=' * headline.length()}\n" + \
                          "${headline}\n\n"
 
-            // Write the "Caused by:" line from errorReport
-            // Find in errorReport the line matching "Caused by:" and get its index
-            index_cause = "${workflow.errorReport}".split("\n").findIndexOf{ it =~ /Caused by:/ }
-            if ( index_cause != -1 ) {
-                // Get the successive line, which contains the related message
-                error_box += "${workflow.errorReport.split("\n")[index_cause + 1].trim()}\n"
+            // If there was no focal species configured, the cause is only one: empty field in configuration file
+            if ( focal_species_exists == false ) {
+                error_box += "Focal species' name is not defined in the configuration file, please fill in\n\n" + \
+                             "The error message can be found under rate_adjustment in logs_${workflow.sessionId.toString().substring(0,8)}/${logs_names[process]}\n"
             }
-            // Write errorMessage, if any
-            if ( workflow.errorMessage != null ) {
-                error_box += "${workflow.errorMessage}\n"
-            }
+            // Else look for causes in the errorReport and errorMessage
+            else {
+                // Write the "Caused by:" line from errorReport
+                // Find in errorReport the line matching "Caused by:" and get its index
+                index_cause = "${workflow.errorReport}".split("\n").findIndexOf{ it =~ /Caused by:/ }
+                if ( index_cause != -1 ) {
+                    // Get the successive line, which contains the related message
+                    error_box += "${workflow.errorReport.split("\n")[index_cause + 1].trim()}\n"
+                }
+                // Write errorMessage, if any
+                if ( workflow.errorMessage != null ) {
+                    error_box += "${workflow.errorMessage}\n"
+                }
 
-            // Point to the complete Nextflow errorReport
-            error_box += "\nMore details may be found in the error report above or in ./.nextflow.log.\n"
+                // Point to the complete Nextflow errorReport
+                error_box += "\nMore details may be found in the error report above or in ./.nextflow.log.\n"
+            }
         }
 
         // Separator to highlight the end of the error box
