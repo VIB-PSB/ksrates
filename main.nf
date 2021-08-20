@@ -145,6 +145,14 @@ process setupAdjustment {
 
     species=`grep "^[[:space:]]*focal_species[[:space:]]*=" ${config} | cut -d "=" -f 2 | xargs`
 
+    paranome=`grep "^[[:space:]]*paranome[[:space:]]*=" ${config} | cut -d "=" -f 2 | xargs | tr '[:upper:]' '[:lower:]'`
+    colinearity=`grep "^[[:space:]]*collinearity[[:space:]]*=" ${config} | cut -d "=" -f 2 | xargs | tr '[:upper:]' '[:lower:]'`
+
+    if [ \${paranome} = "no" ] && [ \${colinearity} = "no" ]; then
+        echo "[\$species] Neither whole-paranome analysis nor colinearity analysis has been required in configuration file. Exiting."
+        exit 1
+    fi
+
     # Generating folders for output files, especially to have the log_folder since the very beginning
     if [ ! -d rate_adjustment ]; then
         mkdir rate_adjustment
@@ -239,12 +247,6 @@ process setParalogAnalysis {
     cd $PWD
 
     echo "NF internal work directory for [setParalogAnalysis (${task.index})] process:\n\$processDir\n" > $logs_folder/${logs_names["setParalogAnalysis"]}
-
-    if [ \${paranome} = "no" ] && [ \${colinearity} = "no" ]; then
-        echo "[$species] ERROR: Neither whole-paranome analysis nor colinearity analysis has been required in configuration file. Exiting."
-        echo "[$species] ERROR: Neither whole-paranome analysis nor colinearity analysis has been required in configuration file. Exiting." >> $logs_folder/${logs_names["setParalogAnalysis"]}
-        exit 1
-    fi
 
     # Triggering wgdParalog process only if ".ks.tsv" (and ".ks_anchors.tsv") files are missing
 
