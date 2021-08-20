@@ -106,7 +106,7 @@ class Configuration:
         """
         species = self.config.get("SPECIES", "focal_species")
         if len(species.split()) != 1:
-            logging.error(f"Parameter focal_species [{species}] must be a single word, please change accordingly")
+            logging.error(f"Parameter focal_species [{species}] should be a short name and must not contain any spaces, please change accordingly")
             sys.exit(1)
         if species == "":
             logging.error("Parameter focal_species in configuration file is empty, please fill in")
