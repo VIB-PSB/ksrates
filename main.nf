@@ -893,7 +893,7 @@ workflow.onComplete {
 
             focal_species_line = file("${configfile}").readLines().find{ it =~ /focal_species/ }
             if ( focal_species_line.strip().split("=").size() == 2 ) {
-                focal_species = focal_species_line.split()[1].strip()
+                focal_species = focal_species_line.strip().split("=")[1].strip()
             }
             else {
                 log.info "Focal species' name is not defined in the configuration file: possible leftovers in paralogs_distributions won't be deleted"
@@ -999,7 +999,7 @@ workflow.onError {
 
         focal_species_line = file("${configfile}").readLines().find{ it =~ /focal_species/ }
         if ( focal_species_line.strip().split("=").size() == 2 ) {
-            focal_species = focal_species_line.split()[1].strip()
+            focal_species = focal_species_line.strip().split("=")[1].strip()
         }
         else {
             focal_species = ""
