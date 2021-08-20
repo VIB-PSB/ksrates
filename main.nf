@@ -892,7 +892,7 @@ workflow.onComplete {
             log.info "Cleaning up any temporary files left behind..."
 
             focal_species_line = file("${configfile}").readLines().find{ it =~ /focal_species/ }
-            if ( focal_species_line.split("=").size() == 2 ) {
+            if ( focal_species_line.strip().split("=").size() == 2 ) {
                 species_name = focal_species_line.split()[1].strip()
             }
 
@@ -995,7 +995,7 @@ workflow.onError {
         }
 
         focal_species_line = file("${configfile}").readLines().find{ it =~ /focal_species/ }
-        if ( focal_species_line.split("=").size() == 2 ) {
+        if ( focal_species_line.strip().split("=").size() == 2 ) {
             species_name = focal_species_line.split()[1].strip()
         }
 
