@@ -1000,7 +1000,8 @@ workflow.onError {
         }
 
         // For process wgdOrthologs, the log filename depends on the two species names,
-        // which are stored in a file under the working directory of the interrupted process
+        // which are parsed from the errorReport under "Command executed" (this latter
+        // prints the process' "script" section)
         if ( process == ("wgdOrthologs") ) {
             species_pair = workflow.errorReport =~ /\[(\w+?) – (\w+?)\]/
             if (species_pair != null ) {
