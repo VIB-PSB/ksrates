@@ -1052,9 +1052,10 @@ workflow.onError {
             // Write the "Caused by:" line from errorReport
             // Find in errorReport the line matching "Caused by:" and get its index
             index_cause = "${workflow.errorReport}".split("\n").findIndexOf{ it =~ /Caused by:/ }
-            // Get the successive line, which contains the related message
-            error_cause = "${workflow.errorReport.split("\n")[index_cause + 1].trim()}"
-            error_box += "${error_cause}\n"
+            if ( index_cause != -1 ) {
+                // Get the successive line, which contains the related message
+                error_box += "${workflow.errorReport.split("\n")[index_cause + 1].trim()}"
+            }
             // Write errorMessage, if any
             if ( workflow.errorMessage != null ) {
                 error_box += "${workflow.errorMessage}\n"
