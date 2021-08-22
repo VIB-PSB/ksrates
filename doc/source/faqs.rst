@@ -8,7 +8,21 @@ Nextflow
 If Nextflow crashes, where do I look for the error message?
 -----------------------------------------------------------
 
-When Nextflow crashes, an error message appears on the screen indicating which process exited the pipeline and reporting the error code. More details about the error that stopped the pipeline are stored in log files accessible in ``rate_adjustment/<focal_species>/log_XXXXXXXX``. The log folder name is unique for each run and is reported on the terminal at the beginning of a Nextflow run.
+When Nextflow crashes, an error box appears in the terminal and shows which process stopped the pipeline, the error message lines and points to complete output files. For example:
+
+.. figure:: _images/error_box1.png
+    :align: center
+    :width: 800
+
+    Here the error is traced back to the ``setupAdjustment`` Nextflow process and it is due to a wrong setting in the *ksrates* configuration file concerning the input phylogeny.
+
+.. figure:: _images/error_box2.png
+    :align: center
+    :width: 800
+    
+    Here the error is traced back to the ``wgdParalogs`` Nextflow process and it is due to a wrong setting in the Nextflow configuration file concerning communication with the computer cluster.
+    
+More details about any error that terminated the pipeline can usually be found in log files that are stored in ``rate_adjustment/<focal_species>/log_XXXXXXXX``. The log folder name is unique for each run and is reported on the terminal in the error box and also at the beginning and end of a Nextflow run. The more general Nextflow log file ``.nextflow.log`` in the folder where the pipeline has been launched could also contain additional information.
 
 
 I am getting a ``failed to reserve page summary memory`` error?

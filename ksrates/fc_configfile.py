@@ -105,6 +105,12 @@ class Configuration:
         :return species: informal species name 
         """
         species = self.config.get("SPECIES", "focal_species")
+        if species == "":
+            logging.error("Parameter focal_species in configuration file is empty, please fill in")
+            sys.exit(1)
+        elif len(species.split()) != 1:
+            logging.error(f"Parameter focal_species [{species}] should be a short name and must not contain any spaces, please change accordingly")
+            sys.exit(1)
         return species
 
     def get_newick_tree(self):
