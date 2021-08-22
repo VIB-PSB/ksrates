@@ -29,6 +29,7 @@ from .utils import read_fasta, write_fasta
 from ete3 import Tree
 import subprocess
 import os
+import shutil
 import logging
 import numpy as np
 import fastcluster
