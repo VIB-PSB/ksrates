@@ -25,8 +25,8 @@ def setup_correction(config_file, nextflow_flag):
     colinearity = config.get_colinearity()
 
     if not paranome and not colinearity:
-        logging.error("Neither paranome nor collinearity was requested in the configuration file. Please select at least one option.")
-        logging.error("Exiting")
+        logging.error('At least one of the "paranome" or "collinearity" parameters in the configuration file needs to be set to "yes".')
+        logging.error("Exiting.")
         sys.exit(1)
 
     db_path = config.get_ortho_db()
