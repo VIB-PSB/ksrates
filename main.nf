@@ -1014,13 +1014,13 @@ workflow.onError {
         if ( process == ("wgdOrthologs") ) {
             // If there is a match in errorReport, use that to retrieve the names
             species_pair = workflow.errorReport =~ /\[(\w+?) – (\w+?)\]/
-            if ( species_pair.size() != 0 ) {
+            if ( species_pair != null && species_pair.size() != 0 ) {
                 (full, species1, species2) = species_pair[0]
             }
             // If errorReport is not useful, apply the same for errorMessage
-            if ( species_pair.size() == 0 || species1 == null || species1 == "" || species2 == null || species2 == "" ) {
+            if ( species_pair == null || species_pair.size() == 0 || species1 == null || species1 == "" || species2 == null || species2 == "" ) {
                 species_pair = workflow.errorMessage =~ /\[(\w+?) – (\w+?)\]/
-                if ( species_pair.size() != 0 ) {
+                if ( species_pair != null && species_pair.size() != 0 ) {
                     (full, species1, species2) = species_pair[0]
                 }
             }
