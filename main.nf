@@ -1088,8 +1088,9 @@ workflow.onError {
                 error_box += "\nMore details may be found in the error report above or in ./.nextflow.log.\n"
             }
             else {
-                error_box += "\nMore details may be found in one of the '${logs_names["wgdOrthologs"]}' log files,\n" + \
-                             "in the error report above, or in ./.nextflow.log.\n"
+                error_box += "\nMore details may be found in the error report above, in ./.nextflow.log, or in one of\n" + \
+                             "the log files named rate_adjustment/${focal_species}/" + \
+                             "logs_${workflow.sessionId.toString().substring(0,8)}/${logs_names["wgdOrthologs"]}.\n"
             }
         }
 
