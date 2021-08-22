@@ -145,14 +145,6 @@ process setupAdjustment {
 
     species=`grep "^[[:space:]]*focal_species[[:space:]]*=" ${config} | cut -d "=" -f 2 | xargs`
 
-    paranome=`grep "^[[:space:]]*paranome[[:space:]]*=" ${config} | cut -d "=" -f 2 | xargs | tr '[:upper:]' '[:lower:]'`
-    colinearity=`grep "^[[:space:]]*collinearity[[:space:]]*=" ${config} | cut -d "=" -f 2 | xargs | tr '[:upper:]' '[:lower:]'`
-
-    if [ \${paranome} = "no" ] && [ \${colinearity} = "no" ]; then
-        echo "[\$species] Neither whole-paranome analysis nor colinearity analysis has been required in configuration file. Exiting."
-        exit 1
-    fi
-
     # Generating folders for output files, especially to have the log_folder since the very beginning
     if [ ! -d rate_adjustment ]; then
         mkdir rate_adjustment

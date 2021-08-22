@@ -21,7 +21,13 @@ def setup_correction(config_file, nextflow_flag):
     original_tree = config.get_newick_tree()
     tree = fcTree.reorder_tree_leaves(original_tree, species_of_interest)  # focal species is the top leaf
     latin_names = config.get_latin_names()
+    paranome = config.get_paranome()
     colinearity = config.get_colinearity()
+
+    if not paranome and not colinearity:
+        logging.error("Neither paranome nor collinearity was requested in the configuration file. Please select at least one option.")
+        logging.error("Exiting")
+        sys.exit(1)
 
     db_path = config.get_ortho_db()
     ks_list_db_path = config.get_ks_db()
