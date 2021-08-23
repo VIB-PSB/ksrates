@@ -9,7 +9,7 @@ However, when the lineages involved exhibit different substitution rates, the va
 
 *ksrates* is an open-source tool offering a rate-adjustment strategy that brings all the distributions to a common *K*:sub:`S` scale by compensating for the differences in synonymous substitution rates relative to the species of interest, the focal species. The final mixed plot produced by *ksrates* features rate-adjusted positions of the ortholog *K*:sub:`S` estimates of species divergence times that help to clarify the phylogenetic placement of WGDs inferred in the focal species.
 
-For more detail about the methodology, please see our `preprint <https://www.biorxiv.org/content/10.1101/2021.02.28.433234v1>`__.
+For more detail about the methodology, please see the related `publication <https://doi.org/10.1093/bioinformatics/btab602>`__.
 
 
 .. _`explained_example`:
