@@ -41,7 +41,7 @@ For up-to-date and version-specific instructions, please refer to this `page <ht
 
 When using the *ksrates* Nextflow pipeline, the only other dependency that must be installed is Nextflow (for more information see its official installation `page <https://www.nextflow.io/docs/latest/getstarted.html#requirements>`__).
 
-*   First install Java 8 or later. ``default-djk`` works as well::
+*   First, if you do not have `Java <https://www.oracle.com/java/>`__ installed, install `Java 8 or later <https://www.oracle.com/java/technologies/javase-downloads.html>`__; on Linux you can for example use::
 
         sudo apt-get install default-jdk
 
@@ -49,11 +49,11 @@ When using the *ksrates* Nextflow pipeline, the only other dependency that must 
 
         wget -qO- https://get.nextflow.io | bash
 
-*   Optionally make Nextflow accessible by your ``$PATH`` variable, for example::
+*   Optionally make Nextflow accessible by your ``$PATH`` variable, for example by moving the ``nextflow`` executable::
 
         sudo mv nextflow /usr/local/bin 
 
-When launching the Nextflow pipeline with Singularity, the container will be downloaded from ``vibpsb/ksrates`` repository on Docker Hub and the local copy will be used for successive runs.
+When launching the Nextflow pipeline with Singularity, the container will be downloaded from the ``vibpsb/ksrates`` repository on Docker Hub and the local copy will be used for successive runs.
 
 Docker
 ------
@@ -62,7 +62,7 @@ The machine where *ksrates* will be executed (either local computer or remote co
 
 When using the *ksrates* Nextflow pipeline, the only other dependency that must be installed is Nextflow (for more information see its official installation `page <https://www.nextflow.io/docs/latest/getstarted.html#requirements>`__).
 
-*   First install Java 8 or later. ``default-djk`` works as well::
+*   First, if you do not have `Java <https://www.oracle.com/java/>`__ installed, install `Java 8 or later <https://www.oracle.com/java/technologies/javase-downloads.html>`__; on Linux you can for example use::
 
         sudo apt-get install default-jdk
 
@@ -70,11 +70,11 @@ When using the *ksrates* Nextflow pipeline, the only other dependency that must 
 
         wget -qO- https://get.nextflow.io | bash
 
-*   Optionally make Nextflow accessible by your ``$PATH`` variable, for example::
+*   Optionally make Nextflow accessible by your ``$PATH`` variable, for example by moving the ``nextflow`` executable::
 
         sudo mv nextflow /usr/local/bin 
 
-When launching the Nextflow pipeline with Docker, the container will be downloaded from ``vibpsb/ksrates`` repository on Docker Hub and the local copy will be used for successive runs.
+When launching the Nextflow pipeline with Docker, the container will be downloaded from the ``vibpsb/ksrates`` repository on Docker Hub and the local copy will be used for successive runs.
 
 
 Local installation
@@ -91,7 +91,7 @@ Without the use of a container the installation of *ksrates* and its dependencie
         sudo apt-get update && sudo apt-get -yq install python3-pip default-jdk build-essential ncbi-blast+ muscle mafft prank fasttree mcl phyml
 	wget -qO- https://get.nextflow.io | bash
 
-    Optionally make Nextflow accessible through your ``$PATH`` variable, for example::
+    Optionally make Nextflow accessible by your ``$PATH`` variable, for example by moving the ``nextflow`` executable::
 
         sudo mv nextflow /usr/local/bin
     
