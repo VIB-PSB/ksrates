@@ -823,7 +823,7 @@ workflow.onComplete {
     if (LOG_OUTPUT) {
         log.info ""
         log.info ""
-        if ( params.preserve == false) {
+        if ( params.preserve == false && trigger_pipeline ) {
             log.info "Cleaning up any temporary files left behind..."
 
             focal_species_line = file("${configfile}").readLines().find{ it =~ /focal_species/ }
