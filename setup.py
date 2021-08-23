@@ -9,7 +9,7 @@ with open('requirements.txt') as f:
 
 setup(
     name='ksrates',
-    version='1.0',
+    version='1.1',
     packages=['ksrates', 'wgd_ksrates'],
     url='https://github.com/VIB-PSB/ksrates',
     license='GNU GPL v3.0',

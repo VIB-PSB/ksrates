@@ -22,7 +22,7 @@ if (configfile.isEmpty()) {
 log.info ""
 log.info ""
 log.info """\
-         K S R A T E S   -   N E X T F L O W   P I P E L I N E   (v1.0)
+         K S R A T E S   -   N E X T F L O W   P I P E L I N E   (v1.1)
          --------------------------------------------------------------
          
          Configuration file:                    $params.config
