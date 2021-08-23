@@ -972,7 +972,6 @@ workflow.onError {
         focal_species_dir = focal_species != "" ? "${focal_species}/" : ""
         log_filename = "rate_adjustment/${focal_species_dir}" + \
                        "logs_${workflow.sessionId.toString().substring(0,8)}/${logs_names[process]}"
-        log.info log_filename
 
         // Parse the "Caused by:" line from errorReport
         // Find in errorReport the line matching "Caused by:" and get its index
