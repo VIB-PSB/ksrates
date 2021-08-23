@@ -144,7 +144,7 @@ process checkConfig {
     
     output:
         stdout outCheckConfig
-        env trigger_pipeline into trigger_setupCorrection_channel
+        env trigger_pipeline into trigger_setupAdjustment_channel
 
     script:
     logProcessInfo(task)
@@ -189,14 +189,14 @@ process setupAdjustment {
 
     input:
         file config from configfile
-        val trigger_pipeline from trigger_setupCorrection_channel
+        val trigger_pipeline from trigger_setupAdjustment_channel
 
     output:
         stdout outSetupAdjustment
         env species into species_channel
         env logs_folder into logs_folder_channel
         file "ortholog_pairs_*.tsv" into check_ortholog_pairs_channel
-        env trigger_plot_orthologs into trigger_plotOrtholog_from_setupCorrection_channel
+        env trigger_plot_orthologs into trigger_plotOrtholog_from_setupAdjustment_channel
 
     when:
         trigger_pipeline == "true"
@@ -277,7 +277,7 @@ process setParalogAnalysis {
     output:
         stdout outSetParalogAnalysis
         env trigger_wgdPara into trigger_wgdPara_channel
-        env trigger_doRateCorrection_from_para into trigger_doRateCorrection_from_setParalog_channel
+        env trigger_doRateAdjustment_from_para into trigger_doRateAdjustment_from_setParalog_channel
 
     script:
     logProcessInfo(task)
@@ -285,7 +285,7 @@ process setParalogAnalysis {
     echo ""
     echo "[$species] Setting up paralog wgd analysis for focal species"
 
-    trigger_doRateCorrection_from_para=false
+    trigger_doRateAdjustment_from_para=false
     trigger_wgdPara=false
 
     paranome_status="not_required"
@@ -330,7 +330,7 @@ process setParalogAnalysis {
         echo "[$species] Paralog TSV file(s) already present; skipping paralog wgd pipeline\n" >> $logs_folder/${logs_names["setParalogAnalysis"]}
         
         # Trigger doRateAdjustment process to plot (at least) the paralog distribution in the mixed plot
-        trigger_doRateCorrection_from_para=true
+        trigger_doRateAdjustment_from_para=true
     fi
 
     echo "----------------------------------------------------------------\n" >> $logs_folder/${logs_names["setParalogAnalysis"]}
@@ -448,7 +448,7 @@ process estimatePeaks {
         
     output:
         stdout outEstimatePeaks
-        val true into trigger_doRateCorrection_from_estimatePeak_channel
+        val true into trigger_doRateAdjustment_from_estimatePeak_channel
         val true into trigger_plotOrtholog_from_estimatePeak_channel
         val true into trigger_plotOrtholog_from_estimatePeak_together_with_wgdOrthologs_channel
 
@@ -494,7 +494,7 @@ process wgdParalogs {
 
     output:
         stdout outParalogs
-        val true into trigger_doRateCorrection_from_wgdParalog_channel
+        val true into trigger_doRateAdjustment_from_wgdParalog_channel
 
     when:
         trigger_wgdPara == "true"
@@ -542,7 +542,7 @@ process wgdOrthologs {
 
     output:
         stdout outOrthologs
-        val true into trigger_doRateCorrection_from_wgdOrtholog_channel
+        val true into trigger_doRateAdjustment_from_wgdOrtholog_channel
         val true into trigger_plotOrtholog_from_wgdOrtholog_channel
         val true into trigger_plotOrtholog_from_wgdOrtholog_together_with_estimatePeak_channel
 
@@ -592,7 +592,7 @@ process plotOrthologDistrib {
 
     input:
         val species from species_channel
-        val trigger from trigger_plotOrtholog_from_setupCorrection_channel.mix(trigger_plotOrtholog_from_estimatePeak_together_with_wgdOrthologs_channel.merge(trigger_plotOrtholog_from_wgdOrtholog_together_with_estimatePeak_channel.collect()), trigger_plotOrthologs_together_with_wgdOrtholog_channel.merge(trigger_plotOrtholog_from_wgdOrtholog_channel.collect()), trigger_plotOrthologs_together_with_estimatePeak_channel.merge(trigger_plotOrtholog_from_estimatePeak_channel))
+        val trigger from trigger_plotOrtholog_from_setupAdjustment_channel.mix(trigger_plotOrtholog_from_estimatePeak_together_with_wgdOrthologs_channel.merge(trigger_plotOrtholog_from_wgdOrtholog_together_with_estimatePeak_channel.collect()), trigger_plotOrthologs_together_with_wgdOrtholog_channel.merge(trigger_plotOrtholog_from_wgdOrtholog_channel.collect()), trigger_plotOrthologs_together_with_estimatePeak_channel.merge(trigger_plotOrtholog_from_estimatePeak_channel))
         val logs_folder from logs_folder_channel
         file config from configfile
 
@@ -652,20 +652,20 @@ process doRateAdjustment {
 
     input:
         val species from species_channel
-        val trigger from trigger_doRateCorrection_from_setParalog_channel.mix(trigger_doRateCorrection_from_estimatePeak_channel, trigger_doRateCorrection_from_wgdOrtholog_channel, trigger_doRateCorrection_from_wgdParalog_channel)
+        val trigger from trigger_doRateAdjustment_from_setParalog_channel.mix(trigger_doRateAdjustment_from_estimatePeak_channel, trigger_doRateAdjustment_from_wgdOrtholog_channel, trigger_doRateAdjustment_from_wgdParalog_channel)
         val logs_folder from logs_folder_channel
         file config from configfile
 
     output:
         stdout outDoRateAdjustment
-        val true into trigger_peakCalling_from_doRateCorrection_channel
-        val true into trigger_drawTree_from_doRateCorrection_channel
+        val true into trigger_paralogsAnalyses_from_doRateAdjustment_channel
+        val true into trigger_drawTree_from_doRateAdjustment_channel
 
     when:
         trigger == "true" || trigger == true
         /*
          * String "true" comes from setParalog process, which returns either a string "true" or a string "false" (it uses "env" variable, not a boolean);
-         * Boolean true come from the other triggers, which return a boolean "val" true (trigger_doRateCorrection_from_estimatePeak_channel, trigger_doRateCorrection_from_wgdOrtholog_channel, trigger_doRateCorrection_from_wgdParalog_channel)
+         * Boolean true come from the other triggers, which return a boolean "val" true (trigger_doRateAdjustment_from_estimatePeak_channel, trigger_doRateAdjustment_from_wgdOrtholog_channel, trigger_doRateAdjustment_from_wgdParalog_channel)
          *
          * An accepted trigger can come from setParalog (if paralog data is already present it returns string "true", so that at least the paralog distribution will be plotted),
          *     or from estimatePeaks (updates the databases and sends a boolean true) or from wgdOrthologs (when finishes a single run returns boolean true) or finally
@@ -739,7 +739,7 @@ process paralogsAnalyses {
         val species from species_channel
         val logs_folder from logs_folder_channel
         file config from configfile
-        val trigger from trigger_peakCalling_from_doRateCorrection_channel.collect()
+        val trigger from trigger_paralogsAnalyses_from_doRateAdjustment_channel.collect()
 
     output:
         stdout outParalogsAnalyses
@@ -787,7 +787,7 @@ process drawTree {
         val species from species_channel
         val logs_folder from logs_folder_channel
         file config from configfile
-        val trigger from trigger_drawTree_from_doRateCorrection_channel.collect()
+        val trigger from trigger_drawTree_from_doRateAdjustment_channel.collect()
 
     output:
         stdout outDrawTree
