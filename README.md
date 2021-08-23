@@ -175,8 +175,7 @@ If you come across a bug or have any question or suggestion, please open an [iss
 
 If you publish results generated using *ksrates*, please cite:
 
-Sensalari, C., Maere, S., and Lohaus, R. (2021) *ksrates*: positioning whole-genome duplications relative to speciation events using rate-adjusted mixed paralog&ndash;ortholog *K*<sub>S</sub> distributions. *bioRxiv* 2021.02.28.433234 [doi: 10.1101/2021.02.28.433234](https://doi.org/10.1101/2021.02.28.433234)
->This article is a preprint and has not been certified by peer review [[what does this mean?](https://www.biorxiv.org/content/what-unrefereed-preprint)].
+Sensalari C., Maere S. and Lohaus R. (2021) *ksrates*: positioning whole-genome duplications relative to speciation events in *K*<sub>S</sub> distributions. *Bioinformatics*, btab602, [doi: https://doi.org/10.1093/bioinformatics/btab602](https://doi.org/10.1093/bioinformatics/btab602)
 
 <!--
 ## Acknowledgements
