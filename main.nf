@@ -1049,6 +1049,10 @@ workflow.onError {
                 for ( line : log_file.readLines().findAll { it =~ /ERROR/ } ) {
                         error_box += "${line}\n"
                 }
+                
+                // Point to the complete output of the stopped process log file
+                error_box += "\nMore details may be found in the following log file:\n" + \
+                             "${log_filename}\n"
             }
             // If the process log file exists but there are no "ERROR" lines,
             // print a message from errorReport and errorMessage (it's an unexpected error)
@@ -1061,11 +1065,11 @@ workflow.onError {
                 if ( workflow.errorMessage != null ) {
                     error_box += "${workflow.errorMessage}\n"
                 }
-            }
 
-            // In any case, point to the complete output of the stopped process log file
-            error_box += "\nMore details can be found in the error report above or in the following log file:\n" + \
-                         "${log_filename}\n"
+                // Point to errorReport and to the complete output of the stopped process log file
+                error_box += "\nMore details can be found in the error report above or in the following log file:\n" + \
+                             "${log_filename}\n"
+            }
         }
 
         // Else if the process log file doesn't exist, investigate the cause in errorReport and errorMessage
