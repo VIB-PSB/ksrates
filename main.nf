@@ -26,17 +26,21 @@ log.info """\
          """
          .stripIndent()
 
-log.info "Cmd line:       $workflow.commandLine"
-log.info "Launch dir:     $workflow.launchDir"
-log.info "Work dir:       $workflow.workDir"
-log.info "Project:        $workflow.projectDir"
-//log.info "PWD:            $PWD"
-//log.info "Base dir:       $baseDir"
-//log.info "Logs folder:    logs_${workflow.sessionId.toString().substring(0,8)}"
-// log.info "Session ID:     $workflow.sessionId"
-// log.info "Stats:          $workflow.stats"
+log.info "Command line:               $workflow.commandLine"
+log.info "Launch directory:           $workflow.launchDir"
+//log.info "PWD:                        $PWD"
+log.info "Work directory:             $workflow.workDir"
+//log.info "Base dir:                   $baseDir"
+log.info "ksrates directory:          $workflow.projectDir"
+//log.info "ksrates Git repo:           $workflow.repository"
+//log.info "ksrates Git revision:       $workflow.revision"
+//log.info "ksrates container:          $workflow.container"
+//log.info "ksrates container engine:   $workflow.containerEngine"
+//log.info "Configuration files:        $workflow.configFiles"
+//log.info "Session ID:                 $workflow.sessionId"
+//log.info "Stats:                      $workflow.stats"
 log.info ""
-log.info "Start time:     $workflow.start"
+log.info "Start time:                 $workflow.start"
 log.info ""
 log.info ""
 
@@ -75,7 +79,7 @@ logs_names = [
 "setupAdjustment" : "setup_adjustment.log",
 "setParalogAnalysis" : "wgd_paralogs.log",
 "setOrthologAnalysis": "set_orthologs.log",
-"estimatePeak": "estimate_peak.log", 
+"estimatePeaks": "estimate_peaks.log",
 "wgdParalogs": "wgd_paralogs.log", 
 "wgdOrthologs": "wgd_orthologs_",
 "plotOrthologDistrib": "plot_ortholog_distributions.log", 
@@ -83,8 +87,6 @@ logs_names = [
 "paralogsAnalyses": "paralogs_analyses.log",
 "drawTree": "rate_adjustment.log" ]
 
-
-// [wgdOrthologs] [asparagus-oryza] scheduled as (3) on executor local with 2 CPUs and 16 Gb
 
 /*
  * Function to log various process information before submission/execution
@@ -141,7 +143,7 @@ process checkConfig {
         file config from configfile
     
     output:
-        stdout outcheckConfig
+        stdout outCheckConfig
         env trigger_pipeline into trigger_setupCorrection_channel
 
     script:
@@ -172,7 +174,7 @@ process checkConfig {
 }
 
 // Log output to stdout/console (always, i.e. no matter if LOG_OUTPUT).
-logProcessOutput(outcheckConfig, "checkConfig", true)
+logProcessOutput(outCheckConfig, "checkConfig", true)
 
 
 
@@ -190,7 +192,7 @@ process setupAdjustment {
         val trigger_pipeline from trigger_setupCorrection_channel
 
     output:
-        stdout outsetupAdjustment
+        stdout outSetupAdjustment
         env species into species_channel
         env logs_folder into logs_folder_channel
         file "ortholog_pairs_*.tsv" into check_ortholog_pairs_channel
@@ -253,7 +255,7 @@ process setupAdjustment {
 }
 
 // Log output to stdout/console.
-logProcessOutput(outsetupAdjustment, "setupAdjustment")
+logProcessOutput(outSetupAdjustment, "setupAdjustment")
 
 
 
@@ -273,7 +275,7 @@ process setParalogAnalysis {
         file config from configfile
 
     output:
-        stdout outsetParalogAnalysis
+        stdout outSetParalogAnalysis
         env trigger_wgdPara into trigger_wgdPara_channel
         env trigger_doRateCorrection_from_para into trigger_doRateCorrection_from_setParalog_channel
 
@@ -340,13 +342,13 @@ process setParalogAnalysis {
 }
 
 // Log output to stdout/console.
-logProcessOutput(outsetParalogAnalysis, "setParalogAnalysis")
+logProcessOutput(outSetParalogAnalysis, "setParalogAnalysis")
 
 
 
 /*
  * Process that receives the list of all species pairs missing in database and that 
- * 1) triggers wgdOrthologs for pairs without the ks.tsv file and/or 2) triggers estimatePeak
+ * 1) triggers wgdOrthologs for pairs without the ks.tsv file and/or 2) triggers estimatePeaks
  * for pairs without ortholog peak data in database but that do have the .ks.tsv file.
  */
 process setOrthologAnalysis {
@@ -360,7 +362,7 @@ process setOrthologAnalysis {
         file config from configfile
 
     output:
-        stdout outsetOrthologAnalysis
+        stdout outSetOrthologAnalysis
         file "tmp_species_pairs_for_wgdOrtholog.txt" optional true into species_pairs_for_wgd_Orthologs_channel
         file "tmp_species_pairs_for_estimatePeak.txt" optional true into file_for_estimatePeak_channel
         env estimatePeak_not_needed into trigger_plotOrthologs_together_with_wgdOrtholog_channel
@@ -428,16 +430,16 @@ process setOrthologAnalysis {
 }
 
 // Log output to stdout/console.
-logProcessOutput(outsetOrthologAnalysis, "setOrthologAnalysis")
+logProcessOutput(outSetOrthologAnalysis, "setOrthologAnalysis")
 
 
 
 /*
- * Process that estimates the ortholog Ks distribution peak for a species pair 
- * that has already its .ks.tsv file, but that for some reasons 
- * is not present anymore in the ortholog database(s) (i.e. has been deleted).
+ * Process that estimates the ortholog Ks distribution peak for species pairs
+ * that have already their .ks.tsv files, but that for some reasons
+ * are not present anymore in the ortholog database(s) (i.e. have been deleted).
  */
-process estimatePeak {
+process estimatePeaks {
 
     input:
         file species_pairs_for_peak from file_for_estimatePeak_channel
@@ -445,7 +447,7 @@ process estimatePeak {
         file config from configfile
         
     output:
-        stdout outestimatePeak
+        stdout outEstimatePeaks
         val true into trigger_doRateCorrection_from_estimatePeak_channel
         val true into trigger_plotOrtholog_from_estimatePeak_channel
         val true into trigger_plotOrtholog_from_estimatePeak_together_with_wgdOrthologs_channel
@@ -458,23 +460,23 @@ process estimatePeak {
 
     processDir=\$PWD
     cd $PWD
-    echo "NF internal work directory for [estimatePeak (${task.index})] process:\n\$processDir\n" >> $logs_folder/${logs_names["estimatePeak"]}
+    echo "NF internal work directory for [estimatePeaks (${task.index})] process:\n\$processDir\n" >> $logs_folder/${logs_names["estimatePeaks"]}
 
-    echo "Updating ortholog peak database" >> $logs_folder/${logs_names["estimatePeak"]}
+    echo "Updating ortholog peak database" >> $logs_folder/${logs_names["estimatePeaks"]}
 
-    ksrates orthologs-analysis ${config} --ortholog-pairs=\$processDir/$species_pairs_for_peak >> $logs_folder/${logs_names["estimatePeak"]} 2>&1
+    ksrates orthologs-analysis ${config} --ortholog-pairs=\$processDir/$species_pairs_for_peak >> $logs_folder/${logs_names["estimatePeaks"]} 2>&1
     RET_CODE=\$?
     echo "done [\${RET_CODE}] `date "+%T"`"
 
     echo "Log can be found in:"
-    echo " $logs_folder/${logs_names["estimatePeak"]}"
+    echo " $logs_folder/${logs_names["estimatePeaks"]}"
 
     cd \$processDir
     """
 }
 
 // Log output to stdout/console.
-logProcessOutput(outestimatePeak, "estimatePeak")
+logProcessOutput(outEstimatePeaks, "estimatePeaks")
 
 
 
@@ -595,7 +597,7 @@ process plotOrthologDistrib {
         file config from configfile
 
     output:
-        stdout outplotOrthologDistrib
+        stdout outPlotOrthologDistrib
 
     when:
         trigger == "true" || !trigger.contains("false")
@@ -608,9 +610,9 @@ process plotOrthologDistrib {
          * ["false"/"true", many true] from trigger_plotOrthologs_together_with_estimatePeak_channel.merge(trigger_plotOrtholog_from_estimatePeak_channel)
          *    to be a trigger must be ["true", many true], so it must not contain string "false"
          *
-         * An accepted trigger comes from setupAdjustment if all ortholog data are already present and ready to be plotted; from estimatePeak together with wgdOrthologs 
+         * An accepted trigger comes from setupAdjustment if all ortholog data are already present and ready to be plotted; from estimatePeaks together with wgdOrthologs
          * when they have both finished with all the peaks; from setOrthologs and wgdOrthologs after this latter has done with all ortholog distributions;
-         * from setOrtholog and estimatePeak when all missing peaks are computed.
+         * from setOrtholog and estimatePeaks when all missing peaks are computed.
          */
 
     script:
@@ -635,7 +637,7 @@ process plotOrthologDistrib {
 }
 
 // Log output to stdout/console.
-logProcessOutput(outplotOrthologDistrib, "plotOrthologDistrib")
+logProcessOutput(outPlotOrthologDistrib, "plotOrthologDistrib")
 
 
 
@@ -655,7 +657,7 @@ process doRateAdjustment {
         file config from configfile
 
     output:
-        stdout outRateAdjustmentAnalysis
+        stdout outDoRateAdjustment
         val true into trigger_peakCalling_from_doRateCorrection_channel
         val true into trigger_drawTree_from_doRateCorrection_channel
 
@@ -666,7 +668,7 @@ process doRateAdjustment {
          * Boolean true come from the other triggers, which return a boolean "val" true (trigger_doRateCorrection_from_estimatePeak_channel, trigger_doRateCorrection_from_wgdOrtholog_channel, trigger_doRateCorrection_from_wgdParalog_channel)
          *
          * An accepted trigger can come from setParalog (if paralog data is already present it returns string "true", so that at least the paralog distribution will be plotted),
-         *     or from estimatePeak (updates the databases and sends a boolean true) or from wgdOrthologs (when finishes a single run returns boolean true) or finally
+         *     or from estimatePeaks (updates the databases and sends a boolean true) or from wgdOrthologs (when finishes a single run returns boolean true) or finally
          *     from wgdParalogs (when finishes returns boolean true).
          */
 
@@ -721,7 +723,7 @@ process doRateAdjustment {
 }
 
 // Log output to stdout/console.
-logProcessOutput(outRateAdjustmentAnalysis, "doRateAdjustment")
+logProcessOutput(outDoRateAdjustment, "doRateAdjustment")
 
 
 
@@ -740,7 +742,7 @@ process paralogsAnalyses {
         val trigger from trigger_peakCalling_from_doRateCorrection_channel.collect()
 
     output:
-        stdout outPeakCalling
+        stdout outParalogsAnalyses
 
     script:
     logProcessInfo(task, species)
@@ -766,7 +768,7 @@ process paralogsAnalyses {
 }
 
 // Log output to stdout/console.
-logProcessOutput(outPeakCalling, "paralogsAnalyses")
+logProcessOutput(outParalogsAnalyses, "paralogsAnalyses")
 
 
 
