@@ -45,7 +45,7 @@ See the Usage sections below and the [Tutorial](https://ksrates.readthedocs.io/e
 #### Installation
 
 1. Install [Nextflow](https://github.com/nextflow-io/nextflow), official instructions are [here](https://www.nextflow.io/docs/latest/getstarted.html), but briefly:
-	1. If you do not have [Java](https://www.oracle.com/java/) installed, install [Java 8 or later](https://www.oracle.com/java/technologies/javase-downloads.html) or follow these steps:
+	1. If you do not have [Java](https://www.oracle.com/java/) installed, install [Java 8 or later](https://www.oracle.com/java/technologies/javase-downloads.html); on Linux you can use:
 	
            sudo apt-get install default-jdk
 
@@ -61,7 +61,7 @@ See the Usage sections below and the [Tutorial](https://ksrates.readthedocs.io/e
 	    
            mv nextflow /usr/local/bin
     
-2. Install either [Singularity](https://sylabs.io/guides/3.7/admin-guide/installation.html) (recommended, but see [here]((https://ksrates.readthedocs.io/en/latest/installation.html#container-availability)) or [Docker](https://docs.docker.com/get-docker/). This is needed to run the *ksrates* Singularity or Docker container which contain all other required software dependencies, so nothing else needs to be installed.
+2. Install either [Singularity](https://sylabs.io/guides/3.7/admin-guide/installation.html) (recommended, but see [here](https://ksrates.readthedocs.io/en/latest/installation.html#container-availability)) or [Docker](https://docs.docker.com/get-docker/). This is needed to run the *ksrates* Singularity or Docker container which contain all other required software dependencies, so nothing else needs to be installed.
 
 3. Install *ksrates*: When using Nextflow, *ksrates* and the *ksrates* Singularity or Docker container will be automatically downloaded simply when you execute the launch of the *ksrates* pipeline for the first time, and they will be stored and reused for any further executions (see [Nextflow pipeline sharing](https://www.nextflow.io/docs/latest/sharing.html)). Therefore, in this case it is not necessary to manually install *ksrates*, simply continue with the Usage section below.
 
