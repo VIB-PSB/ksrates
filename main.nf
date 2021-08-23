@@ -981,9 +981,7 @@ workflow.onError {
 
     // Else if pipeline interrupted by an error
     else {
-        error_box = ""
-
-        // Defining variables (the stopped process, the species name and the log filename)
+        // Define the stopped process name
         for ( name : logs_names ) {
             if ( workflow.errorReport.split("\n").find{ it =~ name.key } ) {
                 process = name.key
@@ -991,6 +989,7 @@ workflow.onError {
             }
         }
 
+        // Define the focal species name
         focal_species_line = file("${configfile}").readLines().find{ it =~ /focal_species/ }
         if ( focal_species_line.strip().split("=").size() == 2 ) {
             focal_species = focal_species_line.strip().split("=")[1].strip()
@@ -1001,7 +1000,7 @@ workflow.onError {
 
         // For process wgdOrthologs, the log filename depends on the two species names,
         // which are parsed from the errorReport under "Command executed" (this latter
-        // prints the process' "script" section)
+        // prints the process "script" section where the two names appear)
         unknown_species_pair = false
         if ( process == ("wgdOrthologs") ) {
             // If there is a match in errorReport, use that to retrieve the names
@@ -1025,30 +1024,43 @@ workflow.onError {
             }
         }
 
+        // Define the stopped process log filename
         log_filename = "rate_adjustment/${focal_species}/logs_${workflow.sessionId.toString().substring(0,8)}/${logs_names[process]}"
+
+        // Parse the "Caused by:" line from errorReport
+        // Find in errorReport the line matching "Caused by:" and get its index
+        index_cause = "${workflow.errorReport}".split("\n").findIndexOf{ it =~ /Caused by:/ }
+        if ( index_cause != -1 ) {
+            // Get the successive line, which contains the related message
+            // If not defined, caused_by_line will be null
+            caused_by_line = "${workflow.errorReport.split("\n")[index_cause + 1].trim()}\n"
+        }
+
+        // Print separator to highlight the beginning of the error box; print headline
+        headline = "The pipeline terminated during process '${process}' with the following error message:"
+        error_box = "${'=' * headline.length()}\n" + \
+                    "${headline}\n\n"                     
 
         log_file = file("${log_filename}")
         if ( log_file.exists() == true ) {
             // If the process log file exists and there are "ERROR" lines,
             // print such lines (the error was caught by the script)
             if ( log_file.readLines().findAll{ it =~ /ERROR/ }.size() != 0 ) {
-
-                headline = "The pipeline terminated during process '${process}' with the following error message:"
-                // Separator to highlight the beginning of the error box plus headline
-                error_box += "${'=' * headline.length()}\n" + \
-                             "${headline}\n\n"
-
                 for ( line : log_file.readLines().findAll { it =~ /ERROR/ } ) {
                         error_box += "${line}\n"
                 }
             }
             // If the process log file exists but there are no "ERROR" lines,
-            // don't print any error line (it's an unexpected error)
+            // print a message from errorReport and errorMessage (it's an unexpected error)
             else {
-                headline = "The pipeline terminated during process '${process}'."
-                // Separator to highlight the beginning of the error box plus headline
-                error_box += "${'=' * headline.length()}\n" + \
-                             "${headline}\n"
+                // Print the "Caused by:" line from errorReport
+                if ( caused_by_line != null ) {
+                    error_box += caused_by_line
+                }
+                // Print errorMessage, if any
+                if ( workflow.errorMessage != null ) {
+                    error_box += "${workflow.errorMessage}\n"
+                }
             }
 
             // In any case, point to the complete output of the stopped process log file
@@ -1058,24 +1070,16 @@ workflow.onError {
 
         // Else if the process log file doesn't exist, investigate the cause in errorReport and errorMessage
         else {
-            headline = "The pipeline terminated during process '${process}' with the following error message:"
-            // Separator to highlight the beginning of the error box plus headline
-            error_box += "${'=' * headline.length()}\n" + \
-                         "${headline}\n\n"
-
-            // Write the "Caused by:" line from errorReport
-            // Find in errorReport the line matching "Caused by:" and get its index
-            index_cause = "${workflow.errorReport}".split("\n").findIndexOf{ it =~ /Caused by:/ }
-            if ( index_cause != -1 ) {
-                // Get the successive line, which contains the related message
-                error_box += "${workflow.errorReport.split("\n")[index_cause + 1].trim()}\n"
+            // Print the "Caused by:" line from errorReport
+            if ( caused_by_line != null ) {
+                error_box += caused_by_line
             }
-            // Write errorMessage, if any
+            // Print errorMessage, if any
             if ( workflow.errorMessage != null ) {
                 error_box += "${workflow.errorMessage}\n"
             }
 
-            // Point to the complete Nextflow errorReport (or to the wgd_ortholog_ log file)
+            // Point to the complete Nextflow errorReport, to nextflow.log (and to the wgd_ortholog_ log file)
             if ( unknown_species_pair == false ) {
                 error_box += "\nMore details may be found in the error report above or in ./.nextflow.log.\n"
             }
