@@ -144,11 +144,19 @@ def fit_gmm(X, n1, n2, outfile, parameter_table, max_iter=300, n_init=1, **kwarg
     N = arange(n1, n2 + 1)
     models = [None for i in range(len(N))]
     for i in range(len(N)):
-        models[i] = mixture.GaussianMixture(
-                n_components=N[i], covariance_type='full', max_iter=max_iter,
-                n_init=n_init, tol=1e-6, **kwargs
-        ).fit(X)
-        log_components(X, i+1, models[i], outfile, parameter_table)
+        # Apply LMM only if the number of components is smaller than or equal to the number of data points
+        if N[i] <= len(X):
+            models[i] = mixture.GaussianMixture(
+                    n_components=N[i], covariance_type='full', max_iter=max_iter,
+                    n_init=n_init, tol=1e-6, **kwargs
+            ).fit(X)
+            log_components(X, i+1, models[i], outfile, parameter_table)
+        else:
+            logging.warning(f"Lognormal mixture model with {N[i]} or more components is skipped due to too few input Ks data points")
+            break
+    # Remove any residual None from the list (None's are left in the list if there are
+    # too many components for the number of data points, e.g. only 2 anchor points)
+    models = [m for m in models if m]
 
     # compute the AIC and the BIC
     aic = [m.aic(X) for m in models]
