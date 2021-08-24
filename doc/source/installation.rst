@@ -41,7 +41,7 @@ For up-to-date and version-specific instructions, please refer to this `page <ht
 
 When using the *ksrates* Nextflow pipeline, the only other dependency that must be installed is Nextflow (for more information see its official installation `page <https://www.nextflow.io/docs/latest/getstarted.html#requirements>`__).
 
-*   First, if you do not have `Java <https://www.oracle.com/java/>`__ installed, install `Java 8 or later <https://www.oracle.com/java/technologies/javase-downloads.html>`__; on Linux you can for example use::
+*   First, if you do not have `Java <https://www.oracle.com/java/>`__ installed, install `Java 8 (or later, up to 15) <https://www.oracle.com/java/technologies/javase-downloads.html>`__; on Linux you can for example use::
 
         sudo apt-get install default-jdk
 
@@ -62,7 +62,7 @@ The machine where *ksrates* will be executed (either local computer or remote co
 
 When using the *ksrates* Nextflow pipeline, the only other dependency that must be installed is Nextflow (for more information see its official installation `page <https://www.nextflow.io/docs/latest/getstarted.html#requirements>`__).
 
-*   First, if you do not have `Java <https://www.oracle.com/java/>`__ installed, install `Java 8 or later <https://www.oracle.com/java/technologies/javase-downloads.html>`__; on Linux you can for example use::
+*   First, if you do not have `Java <https://www.oracle.com/java/>`__ installed, install `Java 8 (or later, up to 15) <https://www.oracle.com/java/technologies/javase-downloads.html>`__; on Linux you can for example use::
 
         sudo apt-get install default-jdk
 
