@@ -45,7 +45,7 @@ See the Usage sections below and the [Tutorial](https://ksrates.readthedocs.io/e
 #### Installation
 
 1. Install [Nextflow](https://github.com/nextflow-io/nextflow), official instructions are [here](https://www.nextflow.io/docs/latest/getstarted.html), but briefly:
-	1. If you do not have [Java](https://www.oracle.com/java/) installed, install [Java 8 or later](https://www.oracle.com/java/technologies/javase-downloads.html); on Linux you can use:
+	1. If you do not have [Java](https://www.oracle.com/java/) installed, install [Java (8 or later, up to 15)](https://www.oracle.com/java/technologies/javase-downloads.html); on Linux you can use:
 	
            sudo apt-get install default-jdk
 
