@@ -139,3 +139,25 @@ Testing your installation
         nextflow run VIB-PSB/ksrates --config ./config_elaeis.txt
 
     Nextflow will download *ksrates* and will by default run the test pipeline on the ``local`` executor using the *ksrates* Singularity container, as configured in the included ``nextflow.config`` Nextflow configuration file (automatically detected). If needed, please adapt the configuration to the available resources (e.g. available CPUs/cores or switching to a Docker container or no container at all for a local installation) as described in the :ref:`nextflow_config_section` section.
+
+
+Updating your installation
+==========================
+
+* To update the pipeline to the latest release, run the following command::
+
+        nextflow pull VIB-PSB/ksrates
+
+* To update the Docker image, run the following command to pull the new image from `Docker Hub <https://hub.docker.com/r/vibpsb/ksrates>`__::
+
+        docker pull vibpsb/ksrates:latest
+
+* To update the Singularity image, first remove the old image, which is stored in the ``cacheDir`` directory set in the ``nextflow.config`` or by default within ``work/singularity``::
+
+        rm vibpsb-ksrates-latest.img
+
+ The next time the pipeline is launched, Nextflow will automatically pull the new image from Docker Hub.
+
+ Alternatively, run the following command in the same directory of the old image to manually pull the new image from Docker Hub::
+        
+        singularity pull vibpsb-ksrates-latest.img docker://vibpsb/ksrates:latest
