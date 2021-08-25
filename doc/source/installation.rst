@@ -1,7 +1,30 @@
 Installation
 ************
 
-*ksrates* can either be installed locally on the machine that will run the pipeline (a local computer or remote computer cluster) or can else be shipped in a Singularity or Docker container. Such containers are isolated portable environments in which the package and most dependencies are already installed, which comes in handy when local installation is not possible, for example due to permission issues.
+*ksrates* Python package and its dependencies can either be installed on the machine that will run the pipeline (a local computer or remote computer cluster) or can else be shipped in a Singularity or Docker container. Such containers are isolated portable environments in which the package and most dependencies are already installed, which comes in handy when local installation is not possible, for example due to permission issues. Moreover, beside being available through command line interface, *ksrates* can be launched through a Nextflow pipeline to ease the sequential concatenation of all required steps.
+
+.. _`install_nextflow`:
+
+Run as a Nextflow pipeline
+==========================
+
+It is possible to run the several *ksrates* commands as a single Nextflow pipeline. To install Nextflow and its dependencies, follow the commands below (for more information see its official installation `page <https://www.nextflow.io/docs/latest/getstarted.html#requirements>`__).
+
+*   Make sure you have Bash 3.2 or later.
+
+*   If you do not have `Java <https://www.oracle.com/java/>`__ installed, install `Java 8 (or later, up to 15) <https://www.oracle.com/java/technologies/javase-downloads.html>`__; on Linux you can for example use::
+
+        sudo apt-get install default-jdk
+
+*   Then install Nextflow::
+
+        wget -qO- https://get.nextflow.io | bash
+
+*   Optionally make Nextflow accessible by your ``$PATH`` variable, for example by moving the ``nextflow`` executable::
+
+        sudo mv nextflow /usr/local/bin 
+
+
 
 Container availability
 ======================
@@ -39,19 +62,7 @@ For up-to-date and version-specific instructions, please refer to this `page <ht
 .. note::
    To allow users to run the pipeline from any directory in a cluster (i.e. not necessarily from their home directory), the `user bind control <https://singularity.hpcng.org/admin-docs/master/configfiles.html?highlight=user%20bind%20control#bind-mount-management>`__ feature needs to be left active during Singularity installation [Default: "YES"].
 
-When using the *ksrates* Nextflow pipeline, the only other dependency that must be installed is Nextflow (for more information see its official installation `page <https://www.nextflow.io/docs/latest/getstarted.html#requirements>`__).
-
-*   First, if you do not have `Java <https://www.oracle.com/java/>`__ installed, install `Java 8 (or later, up to 15) <https://www.oracle.com/java/technologies/javase-downloads.html>`__; on Linux you can for example use::
-
-        sudo apt-get install default-jdk
-
-*   Then install Nextflow::
-
-        wget -qO- https://get.nextflow.io | bash
-
-*   Optionally make Nextflow accessible by your ``$PATH`` variable, for example by moving the ``nextflow`` executable::
-
-        sudo mv nextflow /usr/local/bin 
+When using the *ksrates* Nextflow pipeline, the only other dependency that must be installed is Nextflow (for more information see :ref:`install_nextflow` section).
 
 When launching the Nextflow pipeline with Singularity, the container will be downloaded from the ``vibpsb/ksrates`` repository on Docker Hub and the local copy will be used for successive runs.
 
@@ -60,27 +71,15 @@ Docker
 
 The machine where *ksrates* will be executed (either a local computer or remote computer cluster) needs to have Docker installed. More information can be found on the Docker installation `page <https://docs.docker.com/get-docker/>`__.
 
-When using the *ksrates* Nextflow pipeline, the only other dependency that must be installed is Nextflow (for more information see its official installation `page <https://www.nextflow.io/docs/latest/getstarted.html#requirements>`__).
-
-*   First, if you do not have `Java <https://www.oracle.com/java/>`__ installed, install `Java 8 (or later, up to 15) <https://www.oracle.com/java/technologies/javase-downloads.html>`__; on Linux you can for example use::
-
-        sudo apt-get install default-jdk
-
-*   Then install Nextflow::
-
-        wget -qO- https://get.nextflow.io | bash
-
-*   Optionally make Nextflow accessible by your ``$PATH`` variable, for example by moving the ``nextflow`` executable::
-
-        sudo mv nextflow /usr/local/bin 
+When using the *ksrates* Nextflow pipeline, the only other dependency that must be installed is Nextflow (for more information see :ref:`install_nextflow` section).
 
 When launching the Nextflow pipeline with Docker, the container will be downloaded from the ``vibpsb/ksrates`` repository on Docker Hub and the local copy will be used for successive runs.
 
 
-Local installation
-==================
+Manual installation
+===================
 
-Without the use of a container the installation of *ksrates* and its dependencies has to be carried out manually. The following commands guide through the installation on a Linux machine; Windows users can carry out the installation with the same commands by using either WSL2 (recommended; see Note below) or a virtual machine (VM) with Linux installed.
+Without the use of a container or to integrate the tool into existing environments/toolchains, the installation of *ksrates* Python package and its dependencies has to be carried out manually. The following commands guide through the installation on a Linux machine; Windows users can carry out the installation with the same commands by using either WSL2 (recommended; see Note below) or a virtual machine (VM) with Linux installed.
 
 .. note::
    WSL2 (Windows Subsystem for Linux 2) is a native Windows 10 feature that allows to run a GNU/Linux terminal without the use of a VM. It can be installed following the official `documentation <https://docs.microsoft.com/en-us/windows/wsl/install-win10#requirements>`__.
@@ -88,14 +87,11 @@ Without the use of a container the installation of *ksrates* and its dependencie
 
 1.  Most of non-Python dependencies can be installed with the following commands::
 
-        sudo apt-get update && sudo apt-get -yq install python3-pip default-jdk build-essential ncbi-blast+ muscle mafft prank fasttree mcl phyml
-	wget -qO- https://get.nextflow.io | bash
+        sudo apt-get update && sudo apt-get -yq install python3-pip default-jdk build-essential ncbi-blast+ muscle mafft prank fasttree mcl phyml | bash
 
-    Optionally make Nextflow accessible by your ``$PATH`` variable, for example by moving the ``nextflow`` executable::
-
-        sudo mv nextflow /usr/local/bin
+    When using the *ksrates* Nextflow pipeline, install Nextflow following the steps listed in :ref:`install_nextflow` section.
     
-2.  Install PAML 4.9j from source (for more infromation see PAML installation `page <http://abacus.gene.ucl.ac.uk/software/#phylogenetic-analysis-by-maximum-likelihood-paml>`__) to avoid compatibility issues::
+2.  Install PAML 4.9j from source (for more information see PAML installation `page <http://abacus.gene.ucl.ac.uk/software/#phylogenetic-analysis-by-maximum-likelihood-paml>`__) to avoid compatibility issues::
 
         wget http://abacus.gene.ucl.ac.uk/software/paml4.9j.tgz
         tar -xzf paml4.9j.tgz
@@ -161,3 +157,10 @@ Updating your installation
  Alternatively, run the following command in the same directory of the old image to manually pull the new image from Docker Hub::
         
         singularity pull vibpsb-ksrates-latest.img docker://vibpsb/ksrates:latest
+
+* To update your manual installation, uninstall the old version of *ksrates* package, clone the *ksrates* repository from `GitHub <https://github.com/VIB-PSB/ksrates>`__ and re-install the package::
+
+    pip3 uninstall ksrates
+    git clone https://github.com/VIB-PSB/ksrates
+    cd ksrates
+    pip3 install .
