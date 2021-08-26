@@ -1,44 +1,62 @@
 Installation
 ************
 
-*ksrates* Python package and its dependencies can either be installed on the machine that will run the pipeline (a local computer or remote computer cluster) or can else be shipped in a Singularity or Docker container. Such containers are isolated portable environments in which the package and most dependencies are already installed, which comes in handy when local installation is not possible, for example due to permission issues. Moreover, beside being available through command line interface, *ksrates* can be launched through a Nextflow pipeline to ease the sequential concatenation of all required steps.
+*ksrates* is available as a `Singularity <https://singularity.hpcng.org>`__ or `Docker <https://www.docker.com>`__ container, which bundle *ksrates* and all required external software dependencies, and as a Python package, which requires manual installation of the package and its dependencies but allows for more flexibility in integrating it into existing bioinformatics environments and toolchains. In addition to a simple and easy to use command-line interface (CLI), we also provide a user-friendly `Nextflow <https://www.nextflow.io>`__ pipeline that allows to run a complete *ksrates* analysis fully automated.
+
+*ksrates* runs on any Linux or macOS system or on Windows with Windows Subsystem for Linux 2 (WSL2) or a virtual machine installed. However, *ksrates* analyses are computationally demanding, and therefore we recommend the use of a computer cluster (or cloud platform) for any but the simplest data sets.
 
 .. _`install_nextflow`:
 
-Run as a Nextflow pipeline
-==========================
+Nextflow (recommended)
+======================
 
-It is possible to run the several *ksrates* commands as a single Nextflow pipeline. To install Nextflow and its dependencies, follow the commands below (for more information see its official installation `page <https://www.nextflow.io/docs/latest/getstarted.html#requirements>`__).
+The *ksrates* Nextflow pipeline makes it easy to execute the individual steps of a *ksrates* analysis as a single command. Nextflow also makes it easy to configure the execution of the pipeline on a variety of computer clusters (see the :ref:`nextflow_config_section` section).
 
-*   Make sure you have Bash 3.2 or later.
+To install `Nextflow <https://www.nextflow.io>`__ and its dependencies, follow the commands below (or the official `Nextflow installation instructions <https://www.nextflow.io/docs/latest/getstarted.html>`__).
+
+*   Make sure you have Bash 3.2 (or later) installed.
 
 *   If you do not have `Java <https://www.oracle.com/java/>`__ installed, install `Java 8 (or later, up to 15) <https://www.oracle.com/java/technologies/javase-downloads.html>`__; on Linux you can for example use::
 
         sudo apt-get install default-jdk
 
-*   Then install Nextflow::
+*   Then install Nextflow using either::
 
         wget -qO- https://get.nextflow.io | bash
 
-*   Optionally make Nextflow accessible by your ``$PATH`` variable, for example by moving the ``nextflow`` executable::
+    or::
+
+        curl -fsSL https://get.nextflow.io | bash
+
+
+    This creates the ``nextflow`` executable file in the current directory.
+
+*   Optionally make the ``nextflow`` executable accessible by your ``$PATH`` variable, for example by moving it::
 
         sudo mv nextflow /usr/local/bin 
 
 
+The *ksrates* Nextflow pipeline itself does not need to be installed and will be automatically downloaded and set up simply when you execute the launch of the *ksrates* Nextflow pipeline for the first time. The same applies to the *ksrates* package and its dependencies when using the *ksrates* Singularity or Docker container (see below). In other words, if you plan on only using the *ksrates* Nextflow pipeline with a container it is not necessary to manually download or install *ksrates* itself, the only other software you may need to install is the Singularity or Docker software itself (next section). (Note that the *ksrates* Nextflow pipeline code is however also included in the *ksrates* GitHub repository and can thus also be executed from a manually installed *ksrates* package (see the Manual installation section below).)
 
-Container availability
-======================
 
-Singularity runs natively only on Linux; on Windows it requires either WSL2 (recommended; see Note below) or a virtual machine (VM); on macOS it is available as a beta version or it requires a VM.
+Singularity and Docker containers
+=================================
+
+Containers are standalone portable runtime environments that package everything needed to run a software, including application code, external software dependencies and operating system libraries and runtime, and are thus executable in any computing environment for which Singularity and Docker container engines are available. This comes in handy, for example, when local installation of *ksrates* and its software dependencies are not possible, for instance due to permission issues, or for deploying *ksrates* to a computer cluster or cloud.
+
+Availability and dependencies
+-----------------------------
+
+`Singularity <https://singularity.hpcng.org>`__ runs natively only on Linux. On Windows it requires either WSL2 (recommended; see Note below) or a virtual machine (VM). On macOS it is available as a beta version or it also requires a VM.
 Singularity has the advantage over Docker of always producing output files with non-root permissions.
 
 .. note::
    WSL2 (Windows Subsystem for Linux 2) is a native Windows 10 feature that allows to run a GNU/Linux terminal without the use of a VM. It can be installed following the official `documentation <https://docs.microsoft.com/en-us/windows/wsl/install-win10#requirements>`__.
 
-Docker runs natively on Linux and Windows, while on macOS it can be installed as an app that makes use of a VM under the hood.
-When working on Linux machines, Docker produces output files that require root permissions to be handled (e.g. deleted), which is an issue for users who don't have root permissions. Running Docker on Windows and macOS does not instead have such problems because the user has more control on output file permissions. 
+`Docker <https://www.docker.com>`__ runs natively on both Linux and Windows, while on macOS it can be installed as an application that makes use of a VM under the hood.
+When working on Linux machines, Docker produces output files that require root permissions to be handled (e.g. to delete them), which is an issue for users who don't have root permissions. Running Docker on Windows and macOS does not have such problems because the user has more control on output file permissions.
 
-The table below summarizes relevant differences between Singularity and Docker containers:
+The table below summarizes relevant differences between Singularity and Docker containers/engines:
 
 .. include:: <isopub.txt>
 .. table:: Supported (|check|) and unsupported (|cross|) features.
@@ -55,42 +73,36 @@ The table below summarizes relevant differences between Singularity and Docker c
 
 Singularity (recommended)
 -------------------------
-The machine where *ksrates* will be executed (either a local computer or remote computer cluster) needs to have `Singularity <https://singularity.hpcng.org>`__ installed (*ksrates* has been tested with version 3.7). More information can be found on the `Singularity Quick Start page <https://singularity.hpcng.org/user-docs/master/quick_start.html>`__.
-For Linux installation we suggest to follow the `Install from Source section <https://singularity.hpcng.org/admin-docs/master/installation.html#before-you-begin>`__ (*Install Dependencies*, *Install Go*, *Download Singularity from a release* and *Compile Singularity*).
+When using the *ksrates* Singularity container, either to run the *ksrates* CLI or Nextflow pipeline, the machine (i.e. a local computer or a remote computer cluster or cloud node) needs to have `Singularity <https://singularity.hpcng.org>`__ installed (*ksrates* has been tested with version 3.7). More information can be found on the `Singularity Quick Start page <https://singularity.hpcng.org/user-docs/master/quick_start.html>`__.
+For a Linux installation we suggest to follow the `Install from Source section <https://singularity.hpcng.org/admin-docs/master/installation.html#before-you-begin>`__ (*Install Dependencies*, *Install Go*, *Download Singularity from a release* and *Compile Singularity*).
 For up-to-date and version-specific instructions, please refer to this `page <https://singularity.hpcng.org/docs/>`__.
 
 .. note::
    To allow users to run the pipeline from any directory in a cluster (i.e. not necessarily from their home directory), the `user bind control <https://singularity.hpcng.org/admin-docs/master/configfiles.html?highlight=user%20bind%20control#bind-mount-management>`__ feature needs to be left active during Singularity installation [Default: "YES"].
 
-When using the *ksrates* Nextflow pipeline, the only other dependency that must be installed is Nextflow (for more information see :ref:`install_nextflow` section).
-
-When launching the Nextflow pipeline with Singularity, the container will be downloaded from the ``vibpsb/ksrates`` repository on Docker Hub and the local copy will be used for successive runs.
+When using the *ksrates* Nextflow pipeline with the *ksrates* Singularity container, the container will be automatically downloaded from the ``vibpsb/ksrates`` repository on Docker Hub on first launch (this may take awhile depending on your Internet connection speed since the container has a size of about 1 GB) and will then be stored and reused for successive runs.
 
 Docker
 ------
 
-The machine where *ksrates* will be executed (either a local computer or remote computer cluster) needs to have Docker installed. More information can be found on the Docker installation `page <https://docs.docker.com/get-docker/>`__.
+When using the *ksrates* Docker container, either to run the *ksrates* CLI or Nextflow pipeline, the machine (i.e. a local computer or a remote computer cluster or cloud node) needs to have Docker installed. More information can be found on the Docker installation `page <https://docs.docker.com/get-docker/>`__.
 
-When using the *ksrates* Nextflow pipeline, the only other dependency that must be installed is Nextflow (for more information see :ref:`install_nextflow` section).
-
-When launching the Nextflow pipeline with Docker, the container will be downloaded from the ``vibpsb/ksrates`` repository on Docker Hub and the local copy will be used for successive runs.
+When using the *ksrates* Nextflow pipeline with the *ksrates* Docker container, the container will be automatically downloaded from the ``vibpsb/ksrates`` repository on Docker Hub on first launch (this may take awhile depending on your Internet connection speed since the container has a size of about 1 GB) and will then be stored and reused for successive runs.
 
 
 Manual installation
 ===================
 
-Without the use of a container or to integrate the tool into existing environments/toolchains, the installation of *ksrates* Python package and its dependencies has to be carried out manually. The following commands guide through the installation on a Linux machine; Windows users can carry out the installation with the same commands by using either WSL2 (recommended; see Note below) or a virtual machine (VM) with Linux installed.
+When not using or not being able to use one of the *ksrates* containers, for example to integrate the tool into existing bioinformatics environments and toolchains, the installation of the *ksrates* Python package and its dependencies can or has to be carried out manually. The following commands guide you through the installation on a Linux machine. Windows users can carry out the installation with the same commands by using either WSL2 (recommended; see Note below) or a virtual machine (VM) with Linux installed. macOS users can for example use `Homebrew <https://brew.sh>`__ instead of ``apt-get``.
 
 .. note::
    WSL2 (Windows Subsystem for Linux 2) is a native Windows 10 feature that allows to run a GNU/Linux terminal without the use of a VM. It can be installed following the official `documentation <https://docs.microsoft.com/en-us/windows/wsl/install-win10#requirements>`__.
 
 
-1.  Most of non-Python dependencies can be installed with the following commands::
+1.  Most of the non-Python dependencies can be installed with the following commands::
 
-        sudo apt-get update && sudo apt-get -yq install python3-pip default-jdk build-essential ncbi-blast+ muscle mafft prank fasttree mcl phyml | bash
+        sudo apt-get update && sudo apt-get -yq install python3-pip default-jdk build-essential ncbi-blast+ muscle fasttree mcl phyml | bash
 
-    When using the *ksrates* Nextflow pipeline, install Nextflow following the steps listed in :ref:`install_nextflow` section.
-    
 2.  Install PAML 4.9j from source (for more information see PAML installation `page <http://abacus.gene.ucl.ac.uk/software/#phylogenetic-analysis-by-maximum-likelihood-paml>`__) to avoid compatibility issues::
 
         wget http://abacus.gene.ucl.ac.uk/software/paml4.9j.tgz
@@ -107,7 +119,7 @@ Without the use of a container or to integrate the tool into existing environmen
 
                 export PATH=$PATH:~/bin
 
-3. Install i-ADHoRe 3.0 from its GitHub `page <https://github.com/VIB-PSB/i-ADHoRe>`__ (required only for collinearity analysis of genome data).
+3. Install i-ADHoRe 3.0 from its GitHub `page <https://github.com/VIB-PSB/i-ADHoRe>`__ (required only for collinearity analysis of genome data for the focal species).
 
 4.  Clone the *ksrates* repository from `GitHub <https://github.com/VIB-PSB/ksrates>`__ and install the package and its Python dependencies::
 
