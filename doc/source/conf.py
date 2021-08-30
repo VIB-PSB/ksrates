@@ -1,8 +1,8 @@
 project = "ksrates"
 author = "Cecilia Sensalari, Steven Maere and Rolf Lohaus"
 
-version = "0.1"
-release = "0.1"
+version = "1.1"
+release = "1.1"
 
 html_theme = "sphinx_rtd_theme"
 

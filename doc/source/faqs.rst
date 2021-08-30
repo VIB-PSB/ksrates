@@ -8,7 +8,27 @@ Nextflow
 If Nextflow crashes, where do I look for the error message?
 -----------------------------------------------------------
 
-When Nextflow crashes, an error message appears on the screen indicating which process exited the pipeline and reporting the error code. More details about the error that stopped the pipeline are stored in log files accessible in ``rate_adjustment/<focal_species>/log_XXXXXXXX``. The log folder name is unique for each run and is reported on the terminal at the beginning of a Nextflow run.
+When Nextflow crashes, an error box appears in the terminal and shows which process stopped the pipeline, the error message lines and points to complete output files. For example:
+
+.. figure:: _images/error_box1.png
+    :align: center
+    :width: 800
+
+    Here the error is traced back to the ``setupAdjustment`` Nextflow process and it is due to a wrong setting in the *ksrates* configuration file concerning the input phylogeny.
+
+.. figure:: _images/error_box2.png
+    :align: center
+    :width: 800
+    
+    Here the error is traced back to the ``wgdParalogs`` Nextflow process and it is due to a wrong setting in the Nextflow configuration file concerning communication with the computer cluster.
+    
+More details about any error that terminated the pipeline can usually be found in log files that are stored in ``rate_adjustment/<focal_species>/log_XXXXXXXX``. The log folder name is unique for each run and is reported on the terminal in the error box and also at the beginning and end of a Nextflow run. The more general Nextflow log file ``.nextflow.log`` in the folder where the pipeline has been launched could also contain additional information.
+
+
+I am getting a ``failed to reserve page summary memory`` error?
+---------------------------------------------------------------
+
+Some cluster configurations may not be fully compatible with certain built-in Nextflow process directives used in the Nextflow configuration file. For example, on some cluster configurations the *ksrates* pipeline fails with a ``failed to reserve page summary memory`` error when using the built-in ``memory`` directive to define how much memory a process requires. In these cases it is likely that instead the ``clusterOptions`` process directive (see the `Nextflow documentation <https://www.nextflow.io/docs/latest/process.html#clusteroptions>`__) needs to be used to define configuration settings specific to your cluster. We advise to contact your cluster administrator about these.
 
 
 How do I update a previously downloaded *ksrates* pipeline if a new version becomes available?
@@ -52,6 +72,7 @@ To remove a Singularity container, remove its ``.img`` file. You can also check 
 .. --------------------------------------------
 
 
+
 General errors and warnings
 ===========================
 
@@ -72,6 +93,7 @@ The Nextflow ``wgd_paralogs.log`` file reports details over the *K*:sub:`S` anal
 .. -----------------------------------------
 
 
+
 Configuration
 =============
 
@@ -79,4 +101,3 @@ How can I change the fit of the KDE line(s) on the paranome and anchor distribut
 -------------------------------------------------------------------------------------
 
 Adjust the ``kde_bandwidth_modifier`` parameter in the expert configuration file (see :ref:`expert_config_section`).
-

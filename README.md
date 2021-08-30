@@ -16,7 +16,7 @@ To position ancient WGD events with respect to speciation events in a phylogeny,
 
 *ksrates* is user-friendly command-line tool and [Nextflow](https://github.com/nextflow-io/nextflow) pipeline to compare paralog and ortholog *K*<sub>S</sub> distributions derived from genomic or transcriptomic sequences. *ksrates* estimates differences in synonymous substitution rates among the lineages involved and generates an adjusted mixed plot of paralog and ortholog *K*<sub>S</sub> distributions that allows to assess the relative phylogenetic positioning of presumed WGD and speciation events.
 
-For more details, see our [preprint](https://www.biorxiv.org/content/10.1101/2021.02.28.433234v1) and the documentation below.
+For more details, see the related [publication](https://doi.org/10.1093/bioinformatics/btab602) and the documentation below.
 
 ## Documentation
 
@@ -45,7 +45,7 @@ See the Usage sections below and the [Tutorial](https://ksrates.readthedocs.io/e
 #### Installation
 
 1. Install [Nextflow](https://github.com/nextflow-io/nextflow), official instructions are [here](https://www.nextflow.io/docs/latest/getstarted.html), but briefly:
-	1. If you do not have [Java](https://www.oracle.com/java/) installed, install [Java 8 or later](https://www.oracle.com/java/technologies/javase-downloads.html) or follow these steps:
+	1. If you do not have [Java](https://www.oracle.com/java/) installed, install [Java (8 or later, up to 15)](https://www.oracle.com/java/technologies/javase-downloads.html); on Linux you can use:
 	
            sudo apt-get install default-jdk
 
@@ -61,7 +61,7 @@ See the Usage sections below and the [Tutorial](https://ksrates.readthedocs.io/e
 	    
            mv nextflow /usr/local/bin
     
-2. Install either [Singularity](https://sylabs.io/guides/3.7/admin-guide/installation.html) (recommended, but see [here]((https://ksrates.readthedocs.io/en/latest/installation.html#container-availability)) or [Docker](https://docs.docker.com/get-docker/). This is needed to run the *ksrates* Singularity or Docker container which contain all other required software dependencies, so nothing else needs to be installed.
+2. Install either [Singularity](https://singularity.hpcng.org/admin-docs/master/installation.html) (recommended, but see [here](https://ksrates.readthedocs.io/en/latest/installation.html#container-availability)) or [Docker](https://docs.docker.com/get-docker/). This is needed to run the *ksrates* Singularity or Docker container which contain all other required software dependencies, so nothing else needs to be installed.
 
 3. Install *ksrates*: When using Nextflow, *ksrates* and the *ksrates* Singularity or Docker container will be automatically downloaded simply when you execute the launch of the *ksrates* pipeline for the first time, and they will be stored and reused for any further executions (see [Nextflow pipeline sharing](https://www.nextflow.io/docs/latest/sharing.html)). Therefore, in this case it is not necessary to manually install *ksrates*, simply continue with the Usage section below.
 
@@ -79,42 +79,32 @@ We briefly illustrate here how to run the *ksrates* Nextflow pipeline on the `te
            cp ksrates/test ~
            cd ~/test
 
-2. Launch the *ksrates* Nextflow pipeline.
-    (If this is the first time you launch the pipeline, Nextflow will first download *ksrates* and the *ksrates* Singularity or Docker container.)
+2. Prepare the configuration files.
 
-    * Running locally on a laptop/desktop:
+      The `test` directory already contains:
+      
+      * A pre-filled *ksrates* configuration file (`config_elaeis.txt`) for the oil palm use case.
 
-        When using Singularity (recommended):<!-- ***TODO:*** check command -->
+      * A Nextflow configuration file template (`nextflow.config`) to configure the executor to be used (i.e., a local computer or a compute cluster) and its resources made available to Nextflow such as the number of CPUs. It also configures whether to use the *ksrates* Singularity or Docker container. The configuration file may need to be adapted to your available resources.
 
-          nextflow run VIB-PSB/ksrates --config config_elaeis.txt -with-singularity docker://vibpsb/ksrates:latest
+        See the [full documentation](https://ksrates.readthedocs.io/) and the [Nextflow documentation](https://www.nextflow.io/docs/latest/config.html) for more detail on Nextflow configuration, e.g. for different HPC schedulers. We also provide additional, more general template Nextflow configuration files in the [doc](doc/source) directory in the repository.
 
-        Or when using Docker:<!-- ***TODO:*** check command -->
 
-          nextflow run VIB-PSB/ksrates --config config_elaeis.txt -with-docker vibpsb/ksrates:latest
-		  
-        The required `--config` parameter specifies the (path to the) pipeline configuration file for the *ksrates* analyses to be run. If the specified file does not exist (at the given path) a new template configuration file will be generated and the pipeline exits. Edit and fill in the generated configuration file (see the [full documentation](https://ksrates.readthedocs.io/) for more detail) and then rerun the same command above to relaunch the pipeline. 
-	
-        The dataset directory already contains a pre-filled *ksrates* pipeline configuration file for the oil palm example use case, `config_elaeis.txt`, therefore the above Nextflow command should directly launch the pipeline.
+3. Launch the *ksrates* Nextflow pipeline.
 
-    * Running on a compute cluster:
-	
-          nextflow run VIB-PSB/ksrates --config config_elaeis.txt -c custom_nextflow.config
-	
-        The `--config` parameter is the same as above.
-		
-        The `-c` parameter specifies a Nextflow configuration file. This file contains settings to configure the compute cluster to be used and the pipelines resources on it such as number of CPUs and amount of memory. It also now configures whether to use the *ksrates* Singularity or Docker container. 
-        The dataset directory already contains a template Nextflow configuration file called `custom_nextflow.config` that can be adapted to your resources. Other general template Nextflow configuration files can be found in the [doc](doc/source) directory in the repository.
+   > **Note:** If this is the first time you launch the pipeline, Nextflow will first download *ksrates* Nextflow pipeline and the *ksrates* Singularity or Docker container.
+       
+       nextflow run VIB-PSB/ksrates --config ./config_elaeis.txt
+	   
+   The path to the *ksrates* configuration file is specified through the `--config` parameter. If the Nextflow configuration file is named `nextflow.config` and located in the launching folder the file is automatically detected. Alternatively, the user can specify a custom file by using the `-C` option (see [Nextflow documentation](https://www.nextflow.io/docs/latest/cli.html#hard-configuration-override)).
 
-        If the Nextflow configuration file is simply named `nextflow.config`, the configuration file will be automatically recognized and used without having to specify it using the `-c` parameter.
-
-        Please see the [full documentation](https://ksrates.readthedocs.io/) and the [Nextflow documentation](https://www.nextflow.io/docs/latest/config.html) for more detail on Nextflow configuration, e.g. for different HPC schedulers.
-
+   > **Note:** To generate a new *ksrates* configuration file template for a new analysis, use the `--config` option to specify its file name or file path. If the specified file does not exist (at the given path), the pipeline will generate the template and then exit. Edit and fill in this generated configuration file (see the [full documentation](https://ksrates.readthedocs.io/) for more detail) and then rerun the same command above to relaunch the pipeline.
 
 ### Command-line interface
 
 #### Installation
    
-Install either [Singularity](https://sylabs.io/guides/3.7/admin-guide/installation.html) (recommended, but see [here](https://ksrates.readthedocs.io/en/latest/installation.html#container-availability)) or [Docker](https://docs.docker.com/get-docker/). This is needed to run the *ksrates* Singularity or Docker container which contain *ksrates* and all other required software dependencies, so nothing else needs to be installed.
+Install either [Singularity](https://singularity.hpcng.org/admin-docs/master/installation.html) (recommended, but see [here](https://ksrates.readthedocs.io/en/latest/installation.html#container-availability)) or [Docker](https://docs.docker.com/get-docker/). This is needed to run the *ksrates* Singularity or Docker container which contain *ksrates* and all other required software dependencies, so nothing else needs to be installed.
 The *ksrates* Singularity or Docker container will be automatically downloaded simply when you execute a *ksrates* command on the publicly accessible container for the first time, and they will be stored and reused for any further command executions.
 
 <!--
@@ -185,8 +175,7 @@ If you come across a bug or have any question or suggestion, please open an [iss
 
 If you publish results generated using *ksrates*, please cite:
 
-Sensalari, C., Maere, S., and Lohaus, R. (2021) *ksrates*: positioning whole-genome duplications relative to speciation events using rate-adjusted mixed paralog&ndash;ortholog *K*<sub>S</sub> distributions. *bioRxiv* 2021.02.28.433234 [doi: 10.1101/2021.02.28.433234](https://doi.org/10.1101/2021.02.28.433234)
->This article is a preprint and has not been certified by peer review [[what does this mean?](https://www.biorxiv.org/content/what-unrefereed-preprint)].
+Sensalari C., Maere S. and Lohaus R. (2021) *ksrates*: positioning whole-genome duplications relative to speciation events in *K*<sub>S</sub> distributions. *Bioinformatics*, btab602, [doi: https://doi.org/10.1093/bioinformatics/btab602](https://doi.org/10.1093/bioinformatics/btab602)
 
 <!--
 ## Acknowledgements

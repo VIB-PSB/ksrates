@@ -22,8 +22,8 @@ def plot_paralogs_distr(config_file, correction_table_file, paralog_tsv_file, an
     paranome_analysis = config.get_paranome()
     colinearity_analysis = config.get_colinearity()
     if not colinearity_analysis and not paranome_analysis:
-        logging.error("At least 'paranome_analysis' or 'colinearity_analysis' parameters in configuration file needs to be set to 'yes'.")
-        logging.error("Exiting")
+        logging.error('At least one of the "paranome" or "collinearity" parameters in the configuration file needs to be set to "yes".')
+        logging.error("Exiting.")
         sys.exit(1)
 
     # Get paralog and anchors TSV files
