@@ -20,6 +20,11 @@ def wgd_paralogs(config_file, n_threads):
     paranome = config.get_paranome()
     colinearity = config.get_colinearity()
 
+    if not paranome and not colinearity:
+        logging.error('At least one of the "paranome" or "collinearity" parameters in the configuration file needs to be set to "yes".')
+        logging.error("Exiting.")
+        sys.exit(1)
+
     logging.info(f"Checking if sequence data files exist and if sequence IDs are compatible with wgd pipeline...")
     # Will exit if FASTA or GFF files are missing or empty or if GFF feature/attribute are missing
     trigger_exit = False
