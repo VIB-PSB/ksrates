@@ -81,8 +81,8 @@ def generate_best_model_figure(latin_species, x_max_lim, y_max_lim, correction_t
   :param latin_species: scientific name of the focal species
   :param x_max_lim: upper Ks limit in the x-axis range
   :param y_max_lim: upper Ks limit in the y-axis range
-  :param correction_table_available: boolean stating whether the correction results are available or not
-  :param plot_correction_arrows: boolean stating whether there will be plotted correction arrows or not
+  :param correction_table_available: boolean stating whether the adjustment results are available or not
+  :param plot_correction_arrows: boolean stating whether there will be plotted adjustment arrows or not
   :return figure, axes and figure title
   """
   fig_best_model, ax_best_ks = fcPlot.generate_mixed_plot_figure(latin_species, x_max_lim, y_max_lim, "corrected",
@@ -817,8 +817,8 @@ def plot_fitted_comp(ax_ks, ax_logks, means, stdevs, lambd, weights, max_x_axis_
   :param weights: list of component weights after fitting
   :param max_x_axis_lim: upper limit in the x-axis 
   :param peak_stats: states whether the cluster peak is intended as median or mode
-  :param correction_table_available: boolean stating whether the correction results are available or not
-  :param plot_correction_arrows: boolean stating whether there will be plotted correction arrows or not
+  :param correction_table_available: boolean stating whether the adjustment results are available or not
+  :param plot_correction_arrows: boolean stating whether there will be plotted adjustment arrows or not
   :param scaling: proportional factor used to convert density plot into real count plot (in case this is not needed, scaling is set to 1)
   :param plot_peak_markers: boolean flag stating whether to plot markers in correspondence of the peaks of the lognormal components
   :param plot_logtranformed: boolean to flag whether to plot or not also the Gaussians on the right plot with log-transformed data
@@ -1025,8 +1025,8 @@ def plot_marker(axis, x_value, y_value, color, comp_ID, correction_table_availab
   :param y_value: the peak y-axis value
   :param color: the color associated to the lognormal curve
   :param comp_ID: the letter ID associated to the lognormal component
-  :param correction_table_available: boolean stating whether the correction results are available or not
-  :param plot_correction_arrows: boolean stating whether there will be plotted correction arrows or not
+  :param correction_table_available: boolean stating whether the adjustment results are available or not
+  :param plot_correction_arrows: boolean stating whether there will be plotted adjustment arrows or not
   :param zorder_ID: takes care of the z-axis (depth) order of the plotted items
   """
   # Plot a vertical line from the median x coordinate up until a fraction of y above the KDE curve
@@ -1078,13 +1078,13 @@ def plot_best_model(fig_best_model, ax_best_model, species, ks_data, ks_weights,
   :param best_model_id: ID number of the model with lowest BIC score
   :param all_models_init_parameters: dictionary assigning to each model ID its initial parameters
   :param all_models_fitted_parameters: dictionary assigning to each model ID its fitted parameters
-  :param correction_table: correction results in DataFrame format (contains both possible types of consensus strategy for how to deal with multiple outgroups)
-  :param correction_table_available: boolean stating whether the correction results are available or not
-  :param consensus_peak_for_multiple_outgroups: choice of how to deal with multiple corrections
+  :param correction_table: adjustment results in DataFrame format (contains both possible types of consensus strategy for how to deal with multiple outgroups)
+  :param correction_table_available: boolean stating whether the adjustment results are available or not
+  :param consensus_peak_for_multiple_outgroups: choice of how to deal with multiple adjustments
           for the same divergence (expected values: either "mean among outgroups" or "best outgroup")
   :param peak_stats: states whether the cluster peak is intended as median or mode
   :param color_list: list of colors that will be used to distinguish all divergence lines
-  :param plot_correction_arrows: boolean stating whether there will be plotted correction arrows or not
+  :param plot_correction_arrows: boolean stating whether there will be plotted adjustment arrows or not
   :param deconvoluted_data: artificial dataset that produces the same histogram shape, used to avoid having weights in EM
   :param max_ks_EM: upper limit of the Ks range considered for the mixture modeling fitting
   """

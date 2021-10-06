@@ -398,8 +398,8 @@ def plot_clusters(axis, cluster_of_ks, bin_width, max_ks_para, peak_stats, corre
     :param bin_width: width of histogram bins in ortholog Ks plots
     :param max_ks_para: maximum paralog Ks value accepted for the analysis
     :param peak_stats: states whether the cluster peak is intended as median or mode
-    :param correction_table_available: boolean tag to state if the correction table data are available or not
-    :param plot_correction_arrows: boolean tag to state whether to plot the correction arrows at the bottom of the corrected plot (default: False)
+    :param correction_table_available: boolean tag to state if the adjustment table data are available or not
+    :param plot_correction_arrows: boolean tag to state whether to plot the adjustment arrows at the bottom of the adjusted plot (default: False)
     :return clusters_sorted_by_median: list of cluster IDs sorted according to their age
     :return cluster_color_letter_list: dictionary assigning to each cluster the right color and letter according to age
     """
@@ -454,8 +454,8 @@ def plot_cluster_marker(axis, median_of_the_cluster, kde_x, kde_y, color, letter
     :param letter: letter of the cluster whose median is calculated
     :param zorder_ID: determines the order of objects along the z-axis (depth of the plot)
     :param peak_stats: states whether the cluster peak is intended as median or mode
-    :param correction_table_available: boolean tag to state if the correction table data are available or not
-    :param plot_correction_arrows: boolean tag to state whether to plot the correction arrows at the bottom of the corrected plot (default: False)
+    :param correction_table_available: boolean tag to state if the adjustment table data are available or not
+    :param plot_correction_arrows: boolean tag to state whether to plot the adjustment arrows at the bottom of the adjusted plot (default: False)
     """
     if peak_stats == "median":
         # Get the point of the KDE line that is as closest as possible to the median of the raw data
@@ -579,13 +579,13 @@ def save_anchor_cluster_plot(fig_corr, fig_uncorr, ax_corr, ax_uncorr, species, 
     This function must be called to save the figure of anchor clusters in order to adjust the figure layout:
     the plot area is shrunk to the left and some reasonable space is left on the right side for the legend.
 
-    :param fig_corr: figure object of the corrected mixed distribution
-    :param fig_uncorr: figure object of the un-corrected mixed distribution
-    :param ax_corr: axis object of the corrected mixed distribution
-    :param ax_uncorr: axis object of the un-corrected mixed distribution
+    :param fig_corr: figure object of the adjusted mixed distribution
+    :param fig_uncorr: figure object of the un-adjusted mixed distribution
+    :param ax_corr: axis object of the adjusted mixed distribution
+    :param ax_uncorr: axis object of the un-adjusted mixed distribution
     :param species: focal species
     :param latin_names: dictionary of scientific names
-    :param correction_table_available: boolean to state if the correction table data are available or not
+    :param correction_table_available: boolean to state if the adjustment table data are available or not
     :param cluster_of_ks: dictionary that associates to each cluster its anchor Ks list
     :param output: output subfolder name where to store all pictures associated to paralogs analyses
     :param round_number: tag to state if it is the first or the second clustering round

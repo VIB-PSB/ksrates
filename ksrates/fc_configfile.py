@@ -303,7 +303,7 @@ class Configuration:
 
     def get_max_num_outspecies(self):
         """
-        Gets the config file field specifying the maximum number of outgroup species to be used when correcting a divergence.
+        Gets the config file field specifying the maximum number of outgroup species to be used when adjusting a divergence.
 
         :return max_outspecies: integer
         """
@@ -343,9 +343,9 @@ class Configuration:
 
     def get_consensus_peak_for_multiple_outgroups(self):
         """
-        Gets the config file field of the consensus method for how to deal with multiple corrections for the same divergence.
+        Gets the config file field of the consensus method for how to deal with multiple adjustments for the same divergence.
         Checks if the user has misspelled or left empty the field in the configuration file for
-        the choice on how to deal with multiple outgroups when correcting a divergent pair.
+        the choice on how to deal with multiple outgroups when adjusting a divergent pair.
 
         :return consensus_peak_for_multiple_outgroups: a valid string for the consensus method
         """
@@ -500,8 +500,8 @@ class Configuration:
 
     def plot_correction_arrows(self):
         """
-        Checks whether the user wants to show the shifts of the corrected lines as an arrow
-        starting from the original position and ending on the corrected position.
+        Checks whether the user wants to show the shifts of the adjusted lines as an arrow
+        starting from the original position and ending on the adjusted position.
 
         :return correction_arrows: flag that states whether to plot the arrows or not (True/False)
         """

@@ -192,8 +192,8 @@ def plot_mixture_model(model, data, max_x_axis_lim, ax, bin_width, scaling, peak
     :param bin_width: width of the histogram bins
     :param scaling: proportional factor used to convert density plot into real count plot (in case this is not needed, scaling is set to 1)
     :param peak_stats: states whether the cluster peak is intended as median or mode
-    :param correction_table_available: boolean stating whether the correction results are available or not
-    :param plot_correction_arrows: boolean stating whether there will be plotted correction arrows or not
+    :param correction_table_available: boolean stating whether the adjustment results are available or not
+    :param plot_correction_arrows: boolean stating whether there will be plotted adjustment arrows or not
     :param l: lower Ks limit
     :param u: upper Ks limit
     :param color: color for histogram
@@ -266,8 +266,8 @@ def lmm(
     :param parameter_table: list collecting the component parameters
     :param datatype_tag: string for figure title stating if data is paranome or anchors
     :param peak_stats: states whether the cluster peak is intended as median or mode
-    :param correction_table_available: boolean stating whether the correction results are available or not
-    :param plot_correction_arrows: boolean stating whether there will be plotted correction arrows or not
+    :param correction_table_available: boolean stating whether the adjustment results are available or not
+    :param plot_correction_arrows: boolean stating whether there will be plotted adjustment arrows or not
     """
     # Generating artificial dataset with same shape as the Ks histogram with 0.01 bin width
     deconvoluted_data = deconvolute_data(tsv_file, ks_range[1], data_type)
@@ -330,8 +330,8 @@ def save_lmm(fig, axis, species, best_model, datatype, correction_table_availabl
     in order to adjust the figure layout: the plot area is shrunk to the left and some reasonable 
     space is left on the right side for the legend.
 
-    :param fig: figure object of the corrected mixed distribution
-    :param axis: axis object of the corrected mixed distribution
+    :param fig: figure object of the adjusted mixed distribution
+    :param axis: axis object of the adjusted mixed distribution
     :param species: focal species
     :param datatype: string for figure title stating whether data is paranome or comes from "colinearity" analysis
     """
