@@ -41,7 +41,7 @@ def generate_configfile(configfile_name):
     Config.set("ANALYSIS SETTING", "# keyword to parse gene ID from the GFF file (column 9); can be 'ID', 'Name'...\n")
 
     Config.set("ANALYSIS SETTING", "max_number_outgroups", "4")
-    Config.set("ANALYSIS SETTING", "# maximum number of outspecies/trios selected to correct each divergent species pair (default: 4)\n")
+    Config.set("ANALYSIS SETTING", "# maximum number of outspecies/trios selected to rate-adjust each divergent species pair (default: 4)\n")
 
     Config.set("ANALYSIS SETTING", "consensus_mode_for_multiple_outgroups", "mean among outgroups")
     Config.set("ANALYSIS SETTING", "# allowed values: 'mean among outgroups' or 'best outgroup' (default: 'mean among outgroups')\n")

@@ -39,7 +39,7 @@ def exp_log_mixture(config_file, paralog_tsv_file, correction_table_file):
   paranome_analysis = config.get_paranome()
   # Getting the statistical measure for how to determine the representative value of an ortholog distribution
   peak_stats = config.get_peak_stats() # default is mode (other option, median)
-  # Getting the choice on how to deal with the presence of multiple corrections for the same divergent pair
+  # Getting the choice on how to deal with the presence of multiple adjustments for the same divergent pair
   consensus_peak_for_multiple_outgroups = config.get_consensus_peak_for_multiple_outgroups()
 
   # Parameters used during the mixture modeling
@@ -71,10 +71,10 @@ def exp_log_mixture(config_file, paralog_tsv_file, correction_table_file):
 
   ks_data, ks_weights = fc_extract_ks_list.ks_list_from_tsv(paralog_tsv_file, max_ks_para, "paralogs")
 
-  # Get correction results TSV file
+  # Get adjustment results TSV file
   # If correction_table is (still) missing, it will be equal to empty string (""), but the script will not exit
   default_path_correction_table_file = os.path.join("rate_adjustment", f"{species}", f"{_ADJUSTMENT_TABLE.format(species)}")
-  correction_table_file = fcCheck.get_argument_path(correction_table_file, default_path_correction_table_file, "Correction table file")
+  correction_table_file = fcCheck.get_argument_path(correction_table_file, default_path_correction_table_file, "Rate-adjustment table file")
   if correction_table_file == "":
       logging.warning("Rate-adjustment data are not available yet, only Ks paranome distribution will be plotted.")
       correction_table = None

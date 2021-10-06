@@ -45,12 +45,12 @@ def cluster_anchor_ks(config_file, correction_table_file, path_anchorpoints_txt,
     # Getting the statistical measure for how to determine the representative value of an ortholog distribution
     peak_stats = config.get_peak_stats() # default is mode (other option, median)
 
-    # Getting the choice on how to deal with the presence of multiple corrections for the same divergent pair
+    # Getting the choice on how to deal with the presence of multiple adjustments for the same divergent pair
     consensus_peak_for_multiple_outgroups = config.get_consensus_peak_for_multiple_outgroups()
 
     # Checking user-defined path and / or default path for each required input file
     default_path_correction_table_file = os.path.join("rate_adjustment", f"{species}", f"{_ADJUSTMENT_TABLE.format(species)}")
-    correction_table_file = fcCheck.get_argument_path(correction_table_file, default_path_correction_table_file, "Correction table file")
+    correction_table_file = fcCheck.get_argument_path(correction_table_file, default_path_correction_table_file, "Rate-adjustment table file")
     if correction_table_file == "":
         logging.warning("Rate-adjustment data are not available yet, only anchor pair distribution will be plotted.")
         correction_table_available = False
@@ -303,7 +303,7 @@ def cluster_anchor_ks(config_file, correction_table_file, path_anchorpoints_txt,
     clusters_sorted_by_median, cluster_color_letter_list = fcCluster.plot_clusters(ax_corr_first, cluster_of_ks, bin_width, max_ks_para, peak_stats, correction_table_available, plot_correction_arrows)
     fcCluster.plot_clusters(ax_uncorr_first, cluster_of_ks, bin_width, max_ks_para, peak_stats, correction_table_available, plot_correction_arrows)
 
-    # Plotting the ortholog peaks coming from the correction, if available
+    # Plotting the ortholog peaks coming from the adjustment, if available
     if correction_table_available:
         logging.info("Plotting divergence lines")
         fcPlot.plot_divergences(correction_table, peak_stats, consensus_peak_for_multiple_outgroups, ax_uncorr_first, ax_corr_first,
@@ -376,7 +376,7 @@ def cluster_anchor_ks(config_file, correction_table_file, path_anchorpoints_txt,
         fcCluster.plot_clusters(ax_corr_second, filtered_cluster_of_ks, bin_width, max_ks_para, peak_stats, correction_table_available, plot_correction_arrows)
         fcCluster.plot_clusters(ax_uncorr_second, filtered_cluster_of_ks, bin_width, max_ks_para, peak_stats, correction_table_available, plot_correction_arrows)
 
-        # Plotting the ortholog peaks coming from the correction, if available
+        # Plotting the ortholog peaks coming from the adjustment, if available
         if correction_table_available:
             logging.info("Plotting divergence lines")
             fcPlot.plot_divergences(correction_table, peak_stats, consensus_peak_for_multiple_outgroups, ax_uncorr_second,

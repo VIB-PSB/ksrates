@@ -33,25 +33,25 @@ def correct(config_file, trios_file):
             db = pd.read_csv(f, sep="\t", index_col=0)
     except Exception:
         logging.error(f"Ortholog peak database [{db_path}] not found or empty\n\
-            -> correction will be skipped.")
+            -> rate-adjustment will be skipped.")
         sys.exit(0)
 
     # Getting the statistical measure for how to determine the representative value of an ortholog distribution
     peak_stats = config.get_peak_stats() # default is mode (other option, median)
 
-    # Getting the choice on how to deal with the presence of multiple corrections for the same divergent pair
-    # due to the use of multiple trios/outgroup during correction
+    # Getting the choice on how to deal with the presence of multiple adjustments for the same divergent pair
+    # due to the use of multiple trios/outgroup during adjustment
     consensus_peak_for_multiple_outgroups = config.get_consensus_peak_for_multiple_outgroups()
 
     # -------------------------------------------------------------------
 
-    all_trios_correction_array = []  # will contain the corrected peak for each trio
-    all_pairs_array = []    # will contain the corrected peak for each divergent pair after getting a consensus from multiple outspecies; 
+    all_trios_correction_array = []  # will contain the adjusted peak for each trio
+    all_pairs_array = []    # will contain the adjusted peak for each divergent pair after getting a consensus from multiple outspecies; 
                             # (both "best OC" and "multiple outspecies" strategies)
     sisters_per_node = {}   # keys=nodes, values=list with sisters
 
     # FILLING IN THE DATAFRAME FOR ALL TRIOS
-    # It lists the correction results for each outgroup that has been used
+    # It lists the adjustment results for each outgroup that has been used
     logging.info("")
     logging.info(f"Performing rate-adjustment of each divergent pair by using one or more outgroups:")
     with open(trios_file, "r") as f:
@@ -92,7 +92,7 @@ def correct(config_file, trios_file):
             if species_out not in db.index: logging.warning(f" - [{species_out}] not in ortholog peak database.")
             if sister_out not in db.index: logging.warning(f" - [{sister_out}] not in ortholog peak database.")
 
-    # Generating file with correction data for each trio.
+    # Generating file with adjustment data for each trio.
     all_trios_correction_df = DataFrame.from_records(all_trios_correction_array, columns=["Node", "Focal_Species",
                               "Sister_Species", "Out_Species", "Adjusted_Mode", "Adjusted_Mode_SD", "Original_Mode",
                               "Original_Mode_SD", "Ks_Focal", "Ks_Sister", "Ks_Out"])
@@ -116,7 +116,7 @@ def correct(config_file, trios_file):
         node_df = all_trios_correction_df.loc[all_trios_correction_df['Node'] == node]
 
         for sister in sisters_per_node[node]:
-            # FIRST STRATEGY: taking the MEAN among corrected peaks from all outgroups
+            # FIRST STRATEGY: taking the MEAN among adjusted peaks from all outgroups
             # TODO: take the median too?
             peak_list = node_df.loc[node_df['Sister_Species'] == sister, ['Adjusted_Mode']]
             sd_list = node_df.loc[node_df['Sister_Species'] == sister, ['Adjusted_Mode_SD']]
@@ -128,13 +128,13 @@ def correct(config_file, trios_file):
             for sd in sd_list:
                 sd_err_prop += pow(sd, 2)
             sd_err_prop = sqrt(sd_err_prop) / len(sd_list)
-            # Getting the mean rate_species and the mean rate_sister out of the corrections (when multiple trios/outgroups are used)
+            # Getting the mean rate_species and the mean rate_sister out of the adjustments (when multiple trios/outgroups are used)
             rate_species_list = node_df.loc[node_df['Sister_Species'] == sister, ['Ks_Focal']]
             rate_species_mean = float(rate_species_list.mean())
             rate_sister_list = node_df.loc[node_df['Sister_Species'] == sister, ['Ks_Sister']]
             rate_sister_mean = float(rate_sister_list.mean())        
 
-            # SECOND STRATEGY: taking only the corrected peak from the "BEST" outgroup (lowest OC value)
+            # SECOND STRATEGY: taking only the adjusted peak from the "BEST" outgroup (lowest OC value)
             # TODO: use DataFrame.at?
             oc_list = node_df.loc[node_df['Sister_Species'] == sister, ['Ks_Out']]
             oc_best_value = float(oc_list.min())
@@ -142,7 +142,7 @@ def correct(config_file, trios_file):
             peak_best_oc_float = float(peak_best_oc.mean()) # trick to make it a float number
             sd_best_oc = node_df.loc[node_df['Ks_Out'] == oc_best_value, ['Adjusted_Mode_SD']]
             sd_best_oc_float = float(sd_best_oc.mean())  # trick to make it a float number
-            # Getting the rate_species and Ks_Sister associated to the correction with the best outgroup 
+            # Getting the rate_species and Ks_Sister associated to the adjustment with the best outgroup 
             rate_species_best_out = node_df.loc[node_df['Ks_Out'] == oc_best_value, ['Ks_Focal']]
             rate_species_best_out_float = float(rate_species_best_out.mean()) # trick to make it a float number
             rate_sister_best_out = node_df.loc[node_df['Ks_Out'] == oc_best_value, ['Ks_Sister']]
@@ -158,7 +158,7 @@ def correct(config_file, trios_file):
                                     round(orig_mode, 6), round(orig_mode_sd, 6)])
 
 
-    # Generating file with correction data for each divergent pair,
+    # Generating file with adjustment data for each divergent pair,
     # namely after obtaining a consensus value for the results coming from using different outspecies on the same divergent pair.
     all_pairs_df = DataFrame.from_records(all_pairs_array, columns=["Node", "Focal_Species", "Sister_Species",
                                                         "Adjusted_Mode_Mean", "Adjusted_Mode_Mean_SD", "Ks_Focal_Mean", "Ks_Sister_Mean",
