@@ -4,6 +4,9 @@
 LOG_OUTPUT = true  // log process and other output via log.info
 LOG_PROCESS_INFO = false  // log process details before submission
 
+version_file = file("${workflow.projectDir}/ksrates/_version.py").readLines()[0] =~ /__version__ = "(.*)"/
+version = version_file[0][1]
+
 /*
  * Pipeline input parameters
  */
@@ -22,8 +25,8 @@ if (configfile.isEmpty()) {
 log.info ""
 log.info ""
 log.info """\
-         K S R A T E S   -   N E X T F L O W   P I P E L I N E   (v1.1)
-         --------------------------------------------------------------
+         K S R A T E S   -   N E X T F L O W   P I P E L I N E   (v${version})
+         ----------------------------------------------------------------
          
          Configuration file:                    $params.config
          Logs folder:                           logs_${workflow.sessionId.toString().substring(0,8)}

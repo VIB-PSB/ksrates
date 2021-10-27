@@ -1,5 +1,5 @@
-
 from setuptools import setup
+from ksrates._version import __version__
 
 with open("README.md", 'r') as f:
     long_description = f.read()
@@ -9,7 +9,7 @@ with open('requirements.txt') as f:
 
 setup(
     name='ksrates',
-    version='1.1',
+    version=__version__,
     packages=['ksrates', 'wgd_ksrates'],
     url='https://github.com/VIB-PSB/ksrates',
     license='GNU GPL v3.0',
