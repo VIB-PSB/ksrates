@@ -1,3 +1,8 @@
+import os, sys
+
+# Import version following relative path ../../ksrates/ksrates/_version.py
+p = os.path.abspath('../..')
+sys.path.insert(1, p)
 from ksrates._version import __version__
 
 project = "ksrates"
