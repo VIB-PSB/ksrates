@@ -1,8 +1,10 @@
+from ksrates._version import __version__
+
 project = "ksrates"
 author = "Cecilia Sensalari, Steven Maere and Rolf Lohaus"
 
-version = "1.1"
-release = "1.1"
+version = __version__
+release = __version__
 
 html_theme = "sphinx_rtd_theme"
 

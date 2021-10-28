@@ -1,9 +1,10 @@
 import click
 import logging
 from sys import argv
+from ksrates._version import __version__
 
 @click.group(context_settings={'help_option_names': ['-h', '--help']})
-@click.version_option("1.1", prog_name="ksrates", help="Print version number.")
+@click.version_option(__version__, prog_name="ksrates", help="Print version number.")
 def cli():
     """
     Welcome to ksrates!
