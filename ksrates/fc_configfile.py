@@ -127,10 +127,21 @@ class Configuration:
             sys.exit(1)
         try:
             tree = Tree(tree_string)
-            return tree
         except Exception:
             logging.error("Unrecognized format for parameter newick_tree in configuration file (for example, parentheses do not match)")
             sys.exit(1)
+
+        # Check if species' informal names contain illegal characters (underscore or spaces)
+        species_illegal_char=[]
+        for informal_name in tree.get_leaf_names():
+            if "_" in informal_name or " " in informal_name:
+                species_illegal_char.append(informal_name)
+        if len(species_illegal_char) != 0:
+            logging.error(f"Informal species' names must not contain any spaces or underscores. Please change the following names in the configuration file:")
+            for informal_name in species_illegal_char:
+                logging.error(f"- {informal_name}")
+            sys.exit(1)
+        return tree
 
     def check_complete_latin_names_dict(self, dictionary):
         """
