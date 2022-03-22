@@ -209,9 +209,9 @@ def check_integrity_newick_tree(tree):
 
     if len(internal_nodes_with_one_child) != 0:
         logging.error(f'The tree structure provided in "newick_tree" configuration file field has one ore more incomplete internal nodes:')
-        logging.error(f"likely there are unnecessary pairs of parentheses that generate internal nodes with only one child node instead of two")
-        logging.error(f"Please remove the unnecessary parentheses in the configuration file and rerun the analysis")
-        logging.error(f"Such syntax error has been encountered at the base of the following subtree(s):\n")
+        logging.error(f"likely there are unnecessary pairs of parentheses that generate internal nodes with only one child node instead of two children nodes")
+        logging.error(f"Please adjust the input tree in the configuration file as suggested below and rerun the analysis")
+        logging.error(f"Such syntax error can be solved by removing the unnecessary outermost pair of parentheses in the following subtree(s):\n")
         for node in internal_nodes_with_one_child:
             logging.error(f'Subtree {internal_nodes_with_one_child.index(node)+1}: {node.write(format=9).rstrip(";")}{node}\n')
         trigger_exit = True
