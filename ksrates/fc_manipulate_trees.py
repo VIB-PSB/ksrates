@@ -168,26 +168,27 @@ def check_integrity_newick_tree(tree):
     :param tree: the original tree object
 
     Checks if there are syntax errors in the newick_tree input. Exists if there are errors.
+
     - Case 1: The presence of extra unnecessary pairs of parenthesis generates internal nodes with only one child node,
       instead of two children nodes; this will rise problems during the parsing of the tree to obtain the species trios.
       Therefore, the code exists and prompts the user to remove such unnecessary parentheses.
 
-      Example of subtree where the outmost pair of parenthesis has to be removed:
-      String visualization:   (((elaeis,oryza),asparagus))
-      ASCII visualization (note the extra node at the root of this subtree)
+      Example: the input Newick tree contains a subtree where the outermost pair of parenthesis has to be removed.
+      String visualization of the subtree:   (((elaeis,oryza),asparagus))
+      ASCII visualization of the subtree - note the extra node at the base of this subtree:
                                      /-elaeis
                                   /-|
                             -- /-|   \-oryza
                                  |
                                   \-asparagus
 
-    - Case 2: Unresolved divergences, where there are three or more children nodes branching off from an internal node;
-      this will rise problems in downstream analysis due to ambiguous outgroup relationships.
+    - Case 2: In presence of unresolved phylogeny (i.e. three or more children nodes branching off from an internal node)
+      there will be problems in downstream analysis due to ambiguous outgroup relationships.
       Therefore, the code exists and prompts the user to rearrange the node(s).
       
-      Example of subtree where the basal node has three children nodes:
-      String visualization: (elaeis,oryza,maize)
-      ASCII visualization:   
+      Example: the input Newick tree contains a subtree where the basal node has three children nodes.
+      String visualization of the subtree: (elaeis,oryza,maize)
+      ASCII visualization of the subtree:   
                                /-elaeis
                               |
                             --|--oryza
