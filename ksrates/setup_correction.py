@@ -19,6 +19,7 @@ def setup_correction(config_file, nextflow_flag):
     # Check configfile
     species_of_interest = config.get_species()
     original_tree = config.get_newick_tree()
+    fcTree.check_integrity_newick_tree(original_tree)
     tree = fcTree.reorder_tree_leaves(original_tree, species_of_interest)  # focal species is the top leaf
     latin_names = config.get_latin_names()
     paranome = config.get_paranome()

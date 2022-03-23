@@ -116,6 +116,7 @@ class Configuration:
     def get_newick_tree(self):
         """
         Gets the config file field of the Newick tree.
+        Checks and exits if the species' names in the Newick tree contain illegal characters (underscore or spaces).
 
         :return tree_string: the tree object by ete3
         """

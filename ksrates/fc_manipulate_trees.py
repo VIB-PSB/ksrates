@@ -161,7 +161,72 @@ def find_missing_pairs_for_tree_rates(tree, species, species_history, latin_name
                     missing_pairs_with_latin_names.append([sorted_latin_tag, sorted([leaf1.name, leaf2.name], key=str.casefold)])
                     missing_pairs.append(sorted([leaf1.name, leaf2.name], key=str.casefold))
     return missing_pairs_with_latin_names, missing_pairs
-            
+
+
+def check_integrity_newick_tree(tree):
+    """
+    :param tree: the original tree object
+
+    Checks if there are syntax errors in the newick_tree input. Exists if there are errors.
+
+    - Case 1: The presence of extra unnecessary pairs of parenthesis generates internal nodes with only one child node,
+      instead of two children nodes; this will rise problems during the parsing of the tree to obtain the species trios.
+      Therefore, the code exists and prompts the user to remove such unnecessary parentheses.
+
+      Example: the input Newick tree contains a subtree whose outermost pair of parenthesis has to be removed.
+      String visualization of the subtree:   (((elaeis,oryza),asparagus))
+      ASCII visualization of the subtree - note the extra node at the base of this subtree:
+                                     /-elaeis
+                                  /-|
+                            -- /-|   \-oryza
+                                 |
+                                  \-asparagus
+
+    - Case 2: In presence of unresolved phylogeny (i.e. three or more children nodes branching off from an internal node)
+      there will be problems in downstream analysis due to ambiguous outgroup relationships.
+      Therefore, the code exists and prompts the user to rearrange the node(s).
+      
+      Example: the input Newick tree contains a subtree where the basal node has three children nodes.
+      String visualization of the subtree: (elaeis,oryza,maize)
+      ASCII visualization of the subtree:   
+                               /-elaeis
+                              |
+                            --|--oryza
+                              |
+                               \-maize
+    """
+    # For each internal node, check integrity (must have exactly two children)
+    logging.info("Checking structural integrity of input Newick tree...")
+    trigger_exit = False
+    internal_nodes_with_one_child, internal_nodes_with_three_children = [], []
+    for node in tree.traverse():
+        if not node.is_leaf():
+            number_of_children_nodes = len(node.get_children())
+            if number_of_children_nodes == 1:
+                internal_nodes_with_one_child.append(node)
+            elif number_of_children_nodes > 2:
+                internal_nodes_with_three_children.append(node)
+
+    if len(internal_nodes_with_one_child) != 0:
+        logging.error(f'The tree structure provided in "newick_tree" configuration file field has one ore more incomplete internal nodes:')
+        logging.error(f"likely there are unnecessary pairs of parentheses that generate internal nodes with only one child node instead of two children nodes")
+        logging.error(f"Please adjust the input tree in the configuration file as suggested below and rerun the analysis")
+        logging.error(f"Such syntax error can be solved by removing the unnecessary outermost pair of parentheses in the following subtree(s):\n")
+        for node in internal_nodes_with_one_child:
+            logging.error(f'Subtree {internal_nodes_with_one_child.index(node)+1}: {node.write(format=9).rstrip(";")}{node}\n')
+        trigger_exit = True
+
+    if len(internal_nodes_with_three_children) != 0:
+        logging.error(f'The tree structure provided in "newick_tree" configuration file field contains unresolved phylogenetic relationships')
+        logging.error(f"Please adjust the tree so that each internal node has exactly two children nodes")
+        logging.error(f"Such structural issue has been encountered at the base of the following subtree(s):\n")
+        for node in internal_nodes_with_three_children:
+            logging.error(f'Subtree {internal_nodes_with_three_children.index(node)+1}: {node.write(format=9).rstrip(";")}{node}\n')
+        trigger_exit = True
+
+    if trigger_exit:
+        sys.exit(1)
+
 
 def reorder_tree_leaves(tree, species):
     """
