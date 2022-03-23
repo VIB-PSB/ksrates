@@ -22,6 +22,7 @@ def setup_correction(config_file, nextflow_flag):
     fcTree.check_integrity_newick_tree(original_tree)
     tree = fcTree.reorder_tree_leaves(original_tree, species_of_interest)  # focal species is the top leaf
     latin_names = config.get_latin_names()
+    divergence_colors = config.get_color_list()
     paranome = config.get_paranome()
     colinearity = config.get_colinearity()
 
@@ -104,14 +105,24 @@ def setup_correction(config_file, nextflow_flag):
         logging.error(f"Please add at least one outgroup species or change the focal species.")
         sys.exit(1)
 
+    # Obtaining the numeric labels for internal nodes relevant in the species analysis
+    fcTree.labeling_internal_nodes(species_of_interest_node)
+    # If the amount of colors provided for the divergence lines in the config file
+    # is insufficient for the number of divergence nodes in the tree, exit
+    num_required_colors = sp_history[-2].name
+    if len(divergence_colors) < num_required_colors:
+        logging.error("")
+        logging.error(f'Configuration file field "divergence_colors" is missing {num_required_colors - len(divergence_colors)} color(s) ' +
+                      f"out of {num_required_colors} required for the analysis on focal species [{species_of_interest}]")
+        logging.error("Please add the missing color(s) and rerun the analysis")
+        logging.error("Exiting.")
+        sys.exit(1)
+
     trios_array = []  # list of trios
     outfile_drawing_path = os.path.join("rate_adjustment", f"{species_of_interest}",
                                         f"tree_{species_of_interest}.txt")
     with open(outfile_drawing_path, "w+") as outfile_drawing:
         outfile_drawing.write(f"Focal species: {species_of_interest}\n\n")
-
-        # Obtaining the numeric labels for internal nodes relevant in the species analysis
-        fcTree.labeling_internal_nodes(species_of_interest_node)
         
         node = 0
         while node < len(sp_history)-2:

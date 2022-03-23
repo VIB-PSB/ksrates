@@ -462,6 +462,10 @@ class Configuration:
         """
         color_list_string = self.config.get("PARAMETERS", "divergence_colors")
         colors = [c.strip() for c in color_list_string.split(',')]
+        if len(colors) == 1 and colors[0] == "":
+            logging.error('Field "divergence_colors" in configuration file is empty, please fill in')
+            logging.error("Exiting.")
+            sys.exit(1)
         return colors
 
 
