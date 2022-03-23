@@ -2,6 +2,7 @@ import configparser
 import os
 from ete3 import Tree
 import ksrates.fc_check_input as fcCheck
+from matplotlib.colors import is_color_like
 import logging
 import sys
 from ast import literal_eval
@@ -458,6 +459,8 @@ class Configuration:
         is assigned to the second internal node encountered along this path, and so on.
         There must be at least as many colors as the number of divergence nodes.
 
+        Checks if there are colors whose name is not recognized by matplotlib, e.g. misspelled.
+
         :return colors: list of colors
         """
         color_list_string = self.config.get("PARAMETERS", "divergence_colors")
@@ -466,6 +469,17 @@ class Configuration:
             logging.error('Field "divergence_colors" in configuration file is empty, please fill in')
             logging.error("Exiting.")
             sys.exit(1)
+
+        # Check if color names are recognized by matplotlib
+        faulty_color_names = []
+        for color in colors:
+            if not is_color_like(color):
+                faulty_color_names.append(color)
+        if len(faulty_color_names) != 0:
+            logging.error('Field "divergence_colors" in configuration file contains color names not recognized by Matplotlib, please adjust the following:')
+            for color in faulty_color_names:
+                logging.error(f"- {color}")
+            sys.exit(1)            
         return colors
 
 
