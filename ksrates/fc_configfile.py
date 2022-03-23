@@ -106,10 +106,10 @@ class Configuration:
         """
         species = self.config.get("SPECIES", "focal_species")
         if species == "":
-            logging.error("Parameter focal_species in configuration file is empty, please fill in")
+            logging.error('Field "focal_species" in configuration file is empty, please fill in')
             sys.exit(1)
-        elif len(species.split()) != 1:
-            logging.error(f"Parameter focal_species [{species}] should be a short name and must not contain any spaces, please change accordingly")
+        elif len(species.split()) != 1 or "_" in species:
+            logging.error(f'Field "focal_species" [{species}] should be a short name and must not contain any spaces or underscores, please change accordingly')
             sys.exit(1)
         return species
 
@@ -123,13 +123,13 @@ class Configuration:
         tree_string = self.config.get("SPECIES", "newick_tree")
         if not (tree_string.endswith(';')):
             tree_string += ";"
-        if tree_string == "();":
-            logging.error("Parameter newick_tree in configuration file is empty, please fill in")
+        if tree_string == "();" or tree_string == ";":
+            logging.error('Field "newick_tree" in configuration file is empty, please fill in')
             sys.exit(1)
         try:
             tree = Tree(tree_string)
         except Exception:
-            logging.error("Unrecognized format for parameter newick_tree in configuration file (for example, parentheses do not match)")
+            logging.error('Unrecognized format for field "newick_tree" in configuration file (for example, parentheses do not match)')
             sys.exit(1)
 
         # Check if species' informal names contain illegal characters (underscore or spaces)
@@ -157,9 +157,9 @@ class Configuration:
         missing_species = list(set.difference(set(all_leaves), set(dictionary.keys())))
         if len(missing_species) != 0:
             if len(missing_species) == 1:
-                logging.error(f"The following species is missing from the [latin_names] configuration file field:")
+                logging.error(f'The following species is missing from the "latin_names" configuration file field:')
             else:
-                logging.error(f"The following species are missing from the [latin_names] configuration file field:")
+                logging.error(f'The following species are missing from the "latin_names" configuration file field:')
             for missing_name in missing_species:
                 logging.error(f" - {missing_name}")
             
@@ -177,7 +177,7 @@ class Configuration:
         if latin_names != "":
             latin_names_dict = self._get_clean_dict_stringent(latin_names, "latin_names")
         else:
-            logging.error("Configuration file field [latin_names] is empty, please fill in and restart the analysis.")
+            logging.error('Configuration file field "latin_names" is empty, please fill in and restart the analysis.')
             logging.error("Exiting.")
             sys.exit(1)
         # Check if latin_names contains all the species present in the Newick tree; if not, exits
@@ -689,12 +689,12 @@ class Configuration:
                     logging.warning(f'Unrecognized field in expert configuration file [max_mixture_model_components = {max_comp}]. Please choose a positive integer >= 2. Default choice will be applied [5]')  
                     max_comp = 5
                 elif max_comp == 1:
-                    logging.warning(f"Parameter [max_mixture_model_components] has been changed from {max_comp} to the minimum required, 2.")
+                    logging.warning(f'Field "max_mixture_model_components" has been changed from {max_comp} to the minimum required, 2')
                     max_comp = 2 # exponential + buffer
                 elif max_comp <= 3:
-                    logging.warning(f"A low number of mixture model components [max_mixture_model_components = {max_comp}] can produce poor fitting.")
+                    logging.warning(f"A low number of mixture model components [max_mixture_model_components = {max_comp}] can produce poor fitting")
                 elif max_comp >= 7:
-                    logging.warning(f"A high number of mixture model components [max_mixture_model_components = {max_comp}] increases overfitting risk.")
+                    logging.warning(f"A high number of mixture model components [max_mixture_model_components = {max_comp}] increases overfitting risk")
             except Exception:
                 logging.warning(f'Missing field in expert configuration file [max_mixture_model_components]. Please choose a positive integer. Default choice will be applied [5]')
                 max_comp = 5
