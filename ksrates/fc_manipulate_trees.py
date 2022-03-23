@@ -173,7 +173,7 @@ def check_integrity_newick_tree(tree):
       instead of two children nodes; this will rise problems during the parsing of the tree to obtain the species trios.
       Therefore, the code exists and prompts the user to remove such unnecessary parentheses.
 
-      Example: the input Newick tree contains a subtree where the outermost pair of parenthesis has to be removed.
+      Example: the input Newick tree contains a subtree whose outermost pair of parenthesis has to be removed.
       String visualization of the subtree:   (((elaeis,oryza),asparagus))
       ASCII visualization of the subtree - note the extra node at the base of this subtree:
                                      /-elaeis
