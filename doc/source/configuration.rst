@@ -201,7 +201,17 @@ The Nextflow configuration file is used to configure various settings for the *k
 Expert configuration file
 =========================
 
-This is an optional configuration file that contains several \"expert\" parameters for fine-tuning the analysis or for development/debug purposes. The file has to be named `config_expert.txt` and is then automatically detected when launching *ksrates*. The following can be used as a template::
+This is an optional configuration file that contains several \"expert\" parameters for fine-tuning the analysis or for development/debug purposes. The file can be provided in the command line through the ``--expert`` option. However, when named with default name ``config_expert.txt`` and placed in the launching directory, the file is automatically detected without needing the option in the command line.
+    
+Syntax for the Nextflow pipeline::
+
+        nextflow run VIB-PSB/ksrates --config config_elaeis.txt --expert path/to/my_expert_config.txt
+    
+Syntax for single `ksrates` commands::
+
+        ksrates init config_elaeis.txt --expert path/to/my_expert_config.txt 
+
+The following can be used as a template::
 
     [EXPERT PARAMETERS]
     
