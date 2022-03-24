@@ -588,7 +588,6 @@ process wgdParalogs {
     echo "NF internal work directory for [wgdParalogs (${task.index})] process:\n\$processDir\n" >> $logs_folder/${logs_names["wgdParalogs"]}
 
     echo "Using ${task.cpus} thread(s)\n">> $logs_folder/${logs_names["wgdParalogs"]}
-    echo "[$species] Using ${task.cpus} thread(s)"
 
     ksrates paralogs-ks ${config_args} --n-threads=${task.cpus} >> $logs_folder/${logs_names["wgdParalogs"]} 2>&1
 
@@ -636,7 +635,6 @@ process wgdOrthologs {
     echo "NF internal work directory for [wgdOrthologs (${task.index})] process:\n\$processDir\n" > $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log
 
     echo "Using ${task.cpus} thread(s)\n">> $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log
-#    echo "[$species1 – $species2] Using ${task.cpus} thread(s)"
 
     ksrates orthologs-ks ${config_args} $species1 $species2 --n-threads=${task.cpus} >> $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log 2>&1
 
