@@ -26,7 +26,7 @@ def generate_config(filename):
 
 @cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Initializes rate-adjustment.")
 @click.argument('config_file', type=click.Path(exists=True))
-@click.option('--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
+@click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option("-n", "--nextflow", is_flag=True, help="Flag for Nextflow pipeline (Default: False)")
 def init(config_file, expert, nextflow):
     """
@@ -46,7 +46,7 @@ def init(config_file, expert, nextflow):
 @cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Performs paralog Ks estimation.")
 @click.argument('config_file', type=click.Path(exists=True))
 @click.option("--n-threads", type=int, default=4, help="Number of threads (default: 4)")
-@click.option('--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
+@click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 def paralogs_ks(config_file, expert, n_threads):
     """
     Performs paralog Ks estimation for the focal species through wgd.
@@ -65,7 +65,7 @@ def paralogs_ks(config_file, expert, n_threads):
 
 @cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Performs ortholog Ks estimation.")
 @click.argument('config_file', type=click.Path(exists=True))
-@click.option('--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
+@click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.argument("species1")
 @click.argument("species2")
 @click.option("--n-threads", type=int, default=4, help="Number of threads (default: 4)")
@@ -91,7 +91,7 @@ def orthologs_ks(config_file, expert, species1, species2, n_threads):
 @cli.command(context_settings={'help_option_names': ['-h', '--help']}, 
              short_help="Computes ortholog divergence times Ks estimates.")
 @click.argument('config_file', type=click.Path(exists=True))
-@click.option('--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
+@click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option('--ortholog-pairs', type=click.Path(exists=True), help="User-defined path to file containing the ortholog pairs with missing ortholog Ks peak in database (default: rate_adjustment/species/ortholog_pairs_species.tsv)")
 def orthologs_analysis(config_file, expert, ortholog_pairs):
     """
@@ -115,7 +115,7 @@ def orthologs_analysis(config_file, expert, ortholog_pairs):
 @cli.command(context_settings={'help_option_names': ['-h', '--help']}, 
              short_help="Performs ortholog substitution rate-adjustment.")
 @click.argument('config_file', type=click.Path(exists=True))
-@click.option('--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
+@click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option("--trios", type=click.Path(exists=True), help="User-defined path to file containing the ortholog trios (default: rate_adjustment/species/orthologs_trios_species.tsv)")
 def orthologs_adjustment(config_file, expert, trios):
     """
@@ -138,7 +138,7 @@ def orthologs_adjustment(config_file, expert, trios):
 
 @cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Generates rate-adjusted mixed Ks plot.")
 @click.argument('config_file', type=click.Path(exists=True))
-@click.option('--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
+@click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option("--adjustment-table", type=click.Path(exists=True), help="User-defined path to file containing adjustment results (default: rate_adjustment/species/adjustment_table_species.tsv)")
 @click.option("--paranome-table", type=click.Path(exists=True), help="User-defined path to file containing paranome Ks (default: paralog_distributions/wgd_species/species.ks.tsv)")
 @click.option("--anchors-table", type=click.Path(exists=True), help="User-defined path to file containing anchor pair Ks (default: paralog_distribution/wgd_species/species.ks_anchors.tsv)")
@@ -167,7 +167,7 @@ def plot_paralogs(config_file, expert, adjustment_table, paranome_table, anchors
 
 @cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Generates phylogram with Ks-unit branch lengths.")
 @click.argument('config_file', type=click.Path(exists=True))
-@click.option('--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
+@click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option("--adjustment-table", type=click.Path(exists=True), help="User-defined path to file containing adjustment results (default: rate_adjustment/species/adjustment_table_species.tsv)")
 @click.option("-n", "--nextflow", is_flag=True, help="Flag for Nextflow pipeline (Default: False)")
 def plot_tree(config_file, expert, adjustment_table, nextflow):
@@ -192,7 +192,7 @@ def plot_tree(config_file, expert, adjustment_table, nextflow):
 
 @cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Generates ortholog Ks distributions plot.")
 @click.argument('config_file', type=click.Path(exists=True))
-@click.option('--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
+@click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option("--trios", type=click.Path(exists=True), help="User-defined path to file containing the ortholog trios (default: rate_adjustment/species/orthologs_trios_species.tsv)")
 def plot_orthologs(config_file, expert, trios):
     """
@@ -215,7 +215,7 @@ def plot_orthologs(config_file, expert, trios):
 
 @cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Detects WGD signatures in paralog Ks distribution.")
 @click.argument('config_file', type=click.Path(exists=True))
-@click.option('--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
+@click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option("--paranome-table", type=click.Path(exists=True), help="User-defined path to file containing paranome Ks (default: paralog_distributions/wgd_species/species.ks.tsv)")
 @click.option("--anchors-table", type=click.Path(exists=True), help="User-defined path to file containing anchor pair Ks (default: paralog_distribution/wgd_species/species.ks_anchors.tsv)")
 @click.option("--adjustment-table", type=click.Path(exists=True), help="User-defined path to file containing adjustment results (default: rate_adjustment/species/adjustment_table_species.tsv)")
