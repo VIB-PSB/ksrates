@@ -8,10 +8,10 @@ import ksrates.fc_wgd as fc_wgd
 from ksrates.utils import init_logging
 
 
-def wgd_paralogs(config_file, n_threads):
+def wgd_paralogs(config_file, expert_config_file, n_threads):
     # INPUT
     # Get parameters and FASTA files from configuration file
-    config = fcConf.Configuration(config_file)
+    config = fcConf.Configuration(config_file, expert_config_file)
     species = config.get_species()
     init_logging(f"Paralog wgd analysis for species [{species}]", config.get_logging_level())
 

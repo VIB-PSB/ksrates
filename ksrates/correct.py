@@ -10,9 +10,9 @@ import ksrates.fc_configfile as fcConf
 from ksrates.utils import init_logging
 
 
-def correct(config_file, trios_file):
+def correct(config_file, expert_config_file, trios_file):
     # INPUT
-    config = fcConf.Configuration(config_file)
+    config = fcConf.Configuration(config_file, expert_config_file)
     init_logging("Rate-adjustment of ortholog Ks distributions", config.get_logging_level())
     logging.info("Loading parameters and input files")
 

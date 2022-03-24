@@ -15,9 +15,9 @@ from ksrates.fc_cluster_anchors import subfolder
 from ksrates.fc_rrt_correction import _ADJUSTMENT_TABLE
 
 
-def exp_log_mixture(config_file, paralog_tsv_file, correction_table_file):
+def exp_log_mixture(config_file, expert_config_file, paralog_tsv_file, correction_table_file):
   # INPUT
-  config = fcConf.Configuration(config_file)
+  config = fcConf.Configuration(config_file, expert_config_file)
   init_logging("Exponential-Lognormal mixture model on Ks paranome", config.get_logging_level())
   logging.info("Loading parameters and input files")
 

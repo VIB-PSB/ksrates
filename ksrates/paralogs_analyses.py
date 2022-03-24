@@ -7,9 +7,9 @@ from ksrates.exp_log_mixture import exp_log_mixture
 from ksrates.lognormal_mixture import lognormal_mixture
 import ksrates.fc_configfile as fcConf
 
-def paralogs_analyses_methods(config_file, paranome_table, anchors_table, correction_table, anchorpoints, multiplicons, segments, list_elements, multiplicon_pairs):
+def paralogs_analyses_methods(config_file, expert_config_file, paranome_table, anchors_table, correction_table, anchorpoints, multiplicons, segments, list_elements, multiplicon_pairs):
   # INPUT
-  config = fcConf.Configuration(config_file)
+  config = fcConf.Configuration(config_file, expert_config_file)
   logging.basicConfig(format='%(levelname)s\t%(message)s', level=config.get_logging_level(), stream=sys.stdout)
 
   paranome = config.get_paranome()

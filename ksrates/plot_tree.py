@@ -9,9 +9,9 @@ from ksrates.utils import init_logging
 import pandas
 
 
-def plot_tree_rates(config_file, correction_table_file, nextflow_flag):
+def plot_tree_rates(config_file, expert_config_file, correction_table_file, nextflow_flag):
     # INPUT
-    config = fcConf.Configuration(config_file)
+    config = fcConf.Configuration(config_file, expert_config_file)
     init_logging("Generating PDF of input tree with branch length equal to Ks distances", config.get_logging_level())
     logging.info("Loading parameters and input files")
 

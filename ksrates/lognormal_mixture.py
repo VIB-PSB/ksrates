@@ -14,9 +14,9 @@ from ksrates.fc_plotting import COLOR_ANCHOR_HISTOGRAM
 from ksrates.fc_cluster_anchors import subfolder
 from ksrates.fc_rrt_correction import _ADJUSTMENT_TABLE
 
-def lognormal_mixture(config_file, paralog_tsv_file, anchors_ks_tsv_file, correction_table_file):
+def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors_ks_tsv_file, correction_table_file):
     # INPUT
-    config = fcConf.Configuration(config_file)
+    config = fcConf.Configuration(config_file, expert_config_file)
     init_logging(f"Lognormal mixture model on Ks distribution", config.get_logging_level())
     logging.info("Loading parameters and input files")
 

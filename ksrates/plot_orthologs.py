@@ -15,9 +15,9 @@ import matplotlib
 matplotlib.use('Agg')
 
 
-def plot_orthologs_distr(config_file, trios_file):
+def plot_orthologs_distr(config_file, expert_config_file, trios_file):
     # INPUT
-    config = fcConf.Configuration(config_file)
+    config = fcConf.Configuration(config_file, expert_config_file)
     init_logging("Plotting ortholog distributions for all ortholog trios", config.get_logging_level())
     logging.info("Loading parameters and input files")
 
