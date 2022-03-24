@@ -59,7 +59,7 @@ else {
 }
 
 // Collect input configuration files in a string that will be given to each ksrates command.
-// The string contains always the standard config file, plus additionally the expert config file
+// The string always contains the standard config file, plus additionally the expert config file
 // if this latter was provided by the user through the --expert option or if it was found 
 // with default name "config_expert.txt".
 config_args = "${configfile}"
