@@ -9,9 +9,9 @@ import ksrates.fc_check_input as fcCheck
 import ksrates.fc_configfile as fcConf
 from ksrates.fc_rrt_correction import _ADJUSTMENT_TABLE
 
-def plot_paralogs_distr(config_file, correction_table_file, paralog_tsv_file, anchors_ks_tsv_file):
+def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, paralog_tsv_file, anchors_ks_tsv_file):
     # INPUT
-    config = fcConf.Configuration(config_file)
+    config = fcConf.Configuration(config_file, expert_config_file)
     init_logging("Generating mixed paralog and ortholog distributions", config.get_logging_level())
     logging.info("Loading parameters and input files")
 

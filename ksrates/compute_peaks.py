@@ -10,9 +10,9 @@ import ksrates.fc_configfile as fcConf
 from ksrates.utils import init_logging
 
 
-def compute_peaks(config_file, ortholog_pairs_file):
+def compute_peaks(config_file, expert_config_file, ortholog_pairs_file):
     # INPUT
-    config = fcConf.Configuration(config_file)
+    config = fcConf.Configuration(config_file, expert_config_file)
     init_logging("Computing ortholog distribution peaks with related error", config.get_logging_level())
     logging.info("Loading parameters and input files")
 

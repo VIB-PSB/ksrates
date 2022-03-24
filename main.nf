@@ -14,12 +14,58 @@ version = version_file[0][1]
 // Parameter to automatically delete or not leftover folders at the end of the pipeline
 params.preserve = false
 
-// giving the configuration file through the "input" process section
+// Giving the configuration file through the "input" process section
+// NOTE:
+// $params.config is what the user has entered after --config in the command line, for example ./config_files/config_elaeis.txt 
+// $configfile is the config file absolute path, e.g. /home/config_files/config_elaeis.txt
+// $config is the basename of the config file, e.g. config_elaeis.txt
 configfile = file(params.config)
 if (configfile.isEmpty()) {
      newConfigFile = true
 } else {
      newConfigFile = false
+}
+
+// Giving the expert configuration file as input
+// NOTE:
+// $params.expert is what the user has entered after --expert in the command line, for example ./config_files/config_expert.txt 
+// $expert_configfile is the expert config file absolute path, e.g. /home/config_files/config_expert.txt
+// $expert_config is the basename of the expert config file, e.g. config_expert.txt
+
+// Set parameter expert to false by default (can be overwritten to something else by using --expert in command line)
+params.expert = false
+user_defined_expert_config_missing = false
+default_expert_config_file_available = true
+// If user specified the expert config file through command line (e.g. to specify a certain path), overwrite "false" and read file
+if (params.expert) {
+    expert_configfile = file(params.expert)
+    // If user has defined a file/path, but it doesn't exists, flag it and interrupt pipeline at later checkpoint
+    if (expert_configfile.exists() == false) {
+        user_defined_expert_config_missing = true
+    }
+}
+else {
+    // If parameter --expert not used in command line but file config_expert.txt is actually present in the launching folder, use it
+    if (file("config_expert.txt").exists()) {
+        expert_configfile = file("config_expert.txt")
+        // Note that default_expert_config_file_available is already set to true
+    }
+    // If parameter --expert not used in command line and default filename config_expert.txt doesn't exist,
+    // set the parameter to an empty string so that default parameters will be used
+    else {
+        expert_configfile = ""
+        default_expert_config_file_available = false
+    }
+}
+
+// Collect input configuration files in a string that will be given to each ksrates command.
+// The string always contains the standard config file, plus additionally the expert config file
+// if this latter was provided by the user through the --expert option or if it was found 
+// with default name "config_expert.txt".
+config_args = "${configfile}"
+// If expert_configfile is NOT a string, it means that it has been provided and will be used
+if (expert_configfile !instanceof String) {
+    config_args = config_args + " --expert ${expert_configfile}"
 }
 
 log.info ""
@@ -149,7 +195,8 @@ process checkConfig {
 
     input:
         file config from configfile
-    
+        file expert_config from expert_configfile
+
     output:
         stdout outCheckConfig
         env trigger_pipeline into trigger_setupAdjustment_channel
@@ -175,8 +222,28 @@ process checkConfig {
 
         trigger_pipeline=false
     else
+        echo ""
+        echo -n "Configuration file [${config}] found"
         trigger_pipeline=true
     fi
+
+    # Expert config file
+    # If the file at the user-defined path is not found, warn and exit
+    if [ ${user_defined_expert_config_missing} = "true" ]; then
+        echo ""
+        echo "User-defined expert configuration file [${params.expert}] not found:"
+        echo "please check the input path after the '--expert' parameter in the command line and rerun the analysis"
+        exit 1
+    # If the file with default name can't be found, will use default parameters 
+    elif [ ${default_expert_config_file_available} = "false" ]; then
+        echo ""
+        echo -n "Expert configuration file [config_expert.txt] not available: will use default parameters"
+    # If the file with default name is found, will use parameter therein listed
+    else
+        echo ""
+        echo -n "Expert configuration file [${expert_config}] found"
+    fi
+
     cd \$processDir
     """
 }
@@ -238,7 +305,8 @@ process setupAdjustment {
     echo -n "Extracting ortholog species pairs and trios from Newick tree... "
     echo "NF internal work directory for [setupAdjustment] process:\n\$processDir\n" > \${logs_folder}/${logs_names["setupAdjustment"]}
 
-    ksrates init ${config} --nextflow >> \${logs_folder}/${logs_names["setupAdjustment"]} 2>&1
+    ksrates init ${config_args} --nextflow >> \${logs_folder}/${logs_names["setupAdjustment"]} 2>&1
+
     RET_CODE=\$?
     echo "done [\${RET_CODE}]"
 
@@ -281,6 +349,7 @@ process setParalogAnalysis {
         val species from species_channel
         val logs_folder from logs_folder_channel
         file config from configfile
+        file expert_config from expert_configfile
 
     output:
         stdout outSetParalogAnalysis
@@ -472,7 +541,8 @@ process estimatePeaks {
 
     echo "Updating ortholog peak database" >> $logs_folder/${logs_names["estimatePeaks"]}
 
-    ksrates orthologs-analysis ${config} --ortholog-pairs=\$processDir/$species_pairs_for_peak >> $logs_folder/${logs_names["estimatePeaks"]} 2>&1
+    ksrates orthologs-analysis ${config_args} --ortholog-pairs=\$processDir/$species_pairs_for_peak >> $logs_folder/${logs_names["estimatePeaks"]} 2>&1
+
     RET_CODE=\$?
     echo "done [\${RET_CODE}] `date "+%T"`"
 
@@ -499,7 +569,7 @@ process wgdParalogs {
         val trigger_wgdPara from trigger_wgdPara_channel
         val logs_folder from logs_folder_channel
         file config from configfile
-
+        
     output:
         stdout outParalogs
         val true into trigger_doRateAdjustment_from_wgdParalog_channel
@@ -518,9 +588,9 @@ process wgdParalogs {
     echo "NF internal work directory for [wgdParalogs (${task.index})] process:\n\$processDir\n" >> $logs_folder/${logs_names["wgdParalogs"]}
 
     echo "Using ${task.cpus} thread(s)\n">> $logs_folder/${logs_names["wgdParalogs"]}
-    echo "[$species] Using ${task.cpus} thread(s)"
 
-    ksrates paralogs-ks ${config} --n-threads=${task.cpus} >> $logs_folder/${logs_names["wgdParalogs"]} 2>&1
+    ksrates paralogs-ks ${config_args} --n-threads=${task.cpus} >> $logs_folder/${logs_names["wgdParalogs"]} 2>&1
+
     RET_CODE=\$?
     echo "done [\${RET_CODE}] `date "+%T"`"
 
@@ -547,7 +617,7 @@ process wgdOrthologs {
         tuple species1, species2 from species_pairs_for_wgd_Orthologs_channel.splitCsv(sep:'\t')
         val logs_folder from logs_folder_channel
         file config from configfile
-
+        
     output:
         stdout outOrthologs
         val true into trigger_doRateAdjustment_from_wgdOrtholog_channel
@@ -565,16 +635,18 @@ process wgdOrthologs {
     echo "NF internal work directory for [wgdOrthologs (${task.index})] process:\n\$processDir\n" > $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log
 
     echo "Using ${task.cpus} thread(s)\n">> $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log
-#    echo "[$species1 – $species2] Using ${task.cpus} thread(s)"
 
-    ksrates orthologs-ks ${config} $species1 $species2 --n-threads=${task.cpus} >> $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log 2>&1
+    ksrates orthologs-ks ${config_args} $species1 $species2 --n-threads=${task.cpus} >> $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log 2>&1
+
     RET_CODE=\$?
     echo "done [\${RET_CODE}] `date "+%T"`"
     
     echo -n "[$species1 – $species2] `date "+%T"` Starting ortholog peak analysis... "
     echo "\n" >> $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log
     echo "Species1\tSpecies2\n$species1\t$species2" > \${processDir}/tmp_${species1}_${species2}.txt
-    ksrates orthologs-analysis ${config} --ortholog-pairs=\${processDir}/tmp_${species1}_${species2}.txt >> $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log 2>&1
+    
+    ksrates orthologs-analysis ${config_args} --ortholog-pairs=\${processDir}/tmp_${species1}_${species2}.txt >> $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log 2>&1
+
     RET_CODE=\$?
     echo "done [\${RET_CODE}] `date "+%T"`"
 
@@ -603,7 +675,7 @@ process plotOrthologDistrib {
         val trigger from trigger_plotOrtholog_from_setupAdjustment_channel.mix(trigger_plotOrtholog_from_estimatePeak_together_with_wgdOrthologs_channel.merge(trigger_plotOrtholog_from_wgdOrtholog_together_with_estimatePeak_channel.collect()), trigger_plotOrthologs_together_with_wgdOrtholog_channel.merge(trigger_plotOrtholog_from_wgdOrtholog_channel.collect()), trigger_plotOrthologs_together_with_estimatePeak_channel.merge(trigger_plotOrtholog_from_estimatePeak_channel))
         val logs_folder from logs_folder_channel
         file config from configfile
-
+        
     output:
         stdout outPlotOrthologDistrib
 
@@ -633,7 +705,8 @@ process plotOrthologDistrib {
     cd $PWD
     echo "NF internal work directory for [plotOrthologDistrib] process:\n\$processDir\n" > $logs_folder/${logs_names["plotOrthologDistrib"]}
 
-    ksrates plot-orthologs ${config} >> $logs_folder/${logs_names["plotOrthologDistrib"]} 2>&1
+    ksrates plot-orthologs ${config_args} >> $logs_folder/${logs_names["plotOrthologDistrib"]} 2>&1
+    
     RET_CODE=\$?
     echo "done [\${RET_CODE}] `date "+%T"`"
 
@@ -663,7 +736,8 @@ process doRateAdjustment {
         val trigger from trigger_doRateAdjustment_from_setParalog_channel.mix(trigger_doRateAdjustment_from_estimatePeak_channel, trigger_doRateAdjustment_from_wgdOrtholog_channel, trigger_doRateAdjustment_from_wgdParalog_channel)
         val logs_folder from logs_folder_channel
         file config from configfile
-
+        file expert_config from expert_configfile
+        
     output:
         stdout outDoRateAdjustment
         val true into trigger_paralogsAnalyses_from_doRateAdjustment_channel
@@ -710,14 +784,18 @@ process doRateAdjustment {
     echo "NF internal work directory for [doRateAdjustment (${task.index})] process:\n\$processDir\n" >> $logs_folder/${logs_names["doRateAdjustment"]}
 
     echo -n "`date "+%T"` Starting rate-adjustment analysis... "
-    ksrates orthologs-adjustment ${config} >> $logs_folder/${logs_names["doRateAdjustment"]} 2>&1
+
+    ksrates orthologs-adjustment ${config_args} >> $logs_folder/${logs_names["doRateAdjustment"]} 2>&1
+
     RET_CODE=\$?
     echo "done [\${RET_CODE}] `date "+%T"`"
 
     echo "\n" >> $logs_folder/${logs_names["doRateAdjustment"]}
 
     echo -n "`date "+%T"` Plotting mixed distributions... "
-    ksrates plot-paralogs ${config} >> $logs_folder/${logs_names["doRateAdjustment"]} 2>&1
+
+    ksrates plot-paralogs ${config_args} >> $logs_folder/${logs_names["doRateAdjustment"]} 2>&1
+    
     RET_CODE=\$?
     echo "done [\${RET_CODE}] `date "+%T"`"
 
@@ -748,7 +826,7 @@ process paralogsAnalyses {
         val logs_folder from logs_folder_channel
         file config from configfile
         val trigger from trigger_paralogsAnalyses_from_doRateAdjustment_channel.collect()
-
+        
     output:
         stdout outParalogsAnalyses
 
@@ -762,7 +840,8 @@ process paralogsAnalyses {
     cd $PWD
     echo "NF internal work directory for [paralogsAnalyses (${task.index})] process:\n\$processDir\n" >> $logs_folder/${logs_names["paralogsAnalyses"]}
 
-    ksrates paralogs-analyses ${config} >> $logs_folder/${logs_names["paralogsAnalyses"]} 2>&1
+    ksrates paralogs-analyses ${config_args} >> $logs_folder/${logs_names["paralogsAnalyses"]} 2>&1
+ 
     RET_CODE=\$?
     echo "done [\${RET_CODE}] `date "+%T"`"
 
@@ -796,7 +875,7 @@ process drawTree {
         val logs_folder from logs_folder_channel
         file config from configfile
         val trigger from trigger_drawTree_from_doRateAdjustment_channel.collect()
-
+        
     output:
         stdout outDrawTree
 
@@ -810,7 +889,8 @@ process drawTree {
     cd $PWD
     echo "NF internal work directory for [drawTree] process:\n\$processDir\n" >> $logs_folder/${logs_names["drawTree"]}
 
-    ksrates plot-tree ${config} --nextflow >> $logs_folder/${logs_names["drawTree"]} 2>&1
+    ksrates plot-tree ${config_args} --nextflow >> $logs_folder/${logs_names["drawTree"]} 2>&1
+
     RET_CODE=\$?
     echo "done [\${RET_CODE}] `date "+%T"`"
 

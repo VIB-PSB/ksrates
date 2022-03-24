@@ -9,7 +9,7 @@ from ast import literal_eval
 
 class Configuration:
     
-    def __init__(self, config_path):
+    def __init__(self, config_path, expert_config_file):
         """
         Initializes the configuration file and the expert configuration file.
         This latter is always named "config_expert.txt", the code looks for it
@@ -19,13 +19,31 @@ class Configuration:
         # Configuration file
         self.config = configparser.ConfigParser()
         self.config.read(config_path)
-        # Expert configuration file
-        if os.path.exists("config_expert.txt"):
-            self.expert_config = configparser.ConfigParser()
-            self.expert_config.read("config_expert.txt")
-        else:
-            self.expert_config = None
 
+        # Expert configuration file
+        self.expert_config = configparser.ConfigParser()
+        # If there is no user-defined expert config file given through "--expert" in the command line,
+        # variable "expert_config_file" was set to an empty string in the CLI code block
+        if expert_config_file == "":
+            # If there is in the launching folder an expert config file called with the default name "config_expert.txt", fallback to this latter
+            if os.path.exists("config_expert.txt"):
+                self.expert_config.read("config_expert.txt")
+            else:
+                # Else set the variable to None (scripts will use default expert parameters)
+                self.expert_config = None
+        # Else if there is a user-defined expert config file given through "--expert",
+        # variable expert_config_file has already been set to such given filename (so, it's not an empty string)
+        else:
+            # If the user-defined file exists, read it
+            if os.path.exists(expert_config_file):
+                self.expert_config.read(expert_config_file)
+            else:
+                # Else if the user-defined file doesn't exists (e.g. misspelled), print an error and exit
+                # (This case is actually already caught by the CLI option definition of "--expert")
+                logging.error(f"User-defined expert configuration file {expert_config_file} not found:")
+                logging.error("please check the input path after the '--expert' parameter in the command line and rerun the analysis")
+                sys.exit(1)
+    
 
     def _get_clean_dict(self, dict_like_string, parameter):
         """This method reads a dictionary-like field from the configuration file \\

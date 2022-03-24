@@ -16,8 +16,8 @@ from ksrates.utils import init_logging
 from ksrates.fc_cluster_anchors import subfolder
 from ksrates.fc_rrt_correction import _ADJUSTMENT_TABLE
 
-def cluster_anchor_ks(config_file, correction_table_file, path_anchorpoints_txt, path_multiplicons_txt, path_segments_txt, path_list_elements_txt, path_ks_anchor_file, path_multiplicon_pair_txt):
-    config = fcConf.Configuration(config_file)
+def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, path_anchorpoints_txt, path_multiplicons_txt, path_segments_txt, path_list_elements_txt, path_ks_anchor_file, path_multiplicon_pair_txt):
+    config = fcConf.Configuration(config_file, expert_config_file)
     init_logging(f"Clustering anchorpoints Ks values to reconstruct recent WGD events", config.get_logging_level())
     logging.info("Loading parameters and input files")
 

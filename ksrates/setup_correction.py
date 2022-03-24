@@ -10,8 +10,8 @@ import ksrates.fc_manipulate_trees as fcTree
 from ksrates.utils import init_logging
 
 
-def setup_correction(config_file, nextflow_flag):
-    config = fcConf.Configuration(config_file)
+def setup_correction(config_file, expert_config_file, nextflow_flag):
+    config = fcConf.Configuration(config_file, expert_config_file)
 
     init_logging("Setting up the analysis from configuration file", config.get_logging_level())
     logging.info("Loading parameters and input files")

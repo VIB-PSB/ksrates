@@ -26,8 +26,9 @@ def generate_config(filename):
 
 @cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Initializes rate-adjustment.")
 @click.argument('config_file', type=click.Path(exists=True))
+@click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option("-n", "--nextflow", is_flag=True, help="Flag for Nextflow pipeline (Default: False)")
-def init(config_file, nextflow):
+def init(config_file, expert, nextflow):
     """
     Initializes rate-adjustment from CONFIG_FILE.
 
@@ -35,13 +36,18 @@ def init(config_file, nextflow):
     """
     from ksrates.setup_correction import setup_correction
     click.format_filename(config_file)
-    setup_correction(config_file, nextflow)
+    if expert:
+        click.format_filename(expert)
+    else:
+        expert = ""
+    setup_correction(config_file, expert, nextflow)
 
 
 @cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Performs paralog Ks estimation.")
 @click.argument('config_file', type=click.Path(exists=True))
 @click.option("--n-threads", type=int, default=4, help="Number of threads (default: 4)")
-def paralogs_ks(config_file, n_threads):
+@click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
+def paralogs_ks(config_file, expert, n_threads):
     """
     Performs paralog Ks estimation for the focal species through wgd.
 
@@ -51,15 +57,19 @@ def paralogs_ks(config_file, n_threads):
     """
     from ksrates.wgd_paralogs import wgd_paralogs
     click.format_filename(config_file)
-    wgd_paralogs(config_file, n_threads)
-
+    if expert:
+        click.format_filename(expert)
+    else:
+        expert = ""
+    wgd_paralogs(config_file, expert, n_threads)
 
 @cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Performs ortholog Ks estimation.")
 @click.argument('config_file', type=click.Path(exists=True))
+@click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.argument("species1")
 @click.argument("species2")
 @click.option("--n-threads", type=int, default=4, help="Number of threads (default: 4)")
-def orthologs_ks(config_file, species1, species2, n_threads):
+def orthologs_ks(config_file, expert, species1, species2, n_threads):
     """
     Performs ortholog Ks estimation for SPECIES1 and SPECIES2 through wgd.
 
@@ -72,14 +82,18 @@ def orthologs_ks(config_file, species1, species2, n_threads):
     """
     from ksrates.wgd_orthologs import wgd_orthologs
     click.format_filename(config_file)
-    wgd_orthologs(config_file, species1, species2, n_threads)
-
+    if expert:
+        click.format_filename(expert)
+    else:
+        expert = ""
+    wgd_orthologs(config_file, expert, species1, species2, n_threads)
 
 @cli.command(context_settings={'help_option_names': ['-h', '--help']}, 
              short_help="Computes ortholog divergence times Ks estimates.")
 @click.argument('config_file', type=click.Path(exists=True))
+@click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option('--ortholog-pairs', type=click.Path(exists=True), help="User-defined path to file containing the ortholog pairs with missing ortholog Ks peak in database (default: rate_adjustment/species/ortholog_pairs_species.tsv)")
-def orthologs_analysis(config_file, ortholog_pairs):
+def orthologs_analysis(config_file, expert, ortholog_pairs):
     """
     Computes ortholog Ks distribution mode (or median) and updates the ortholog databases.
 
@@ -89,16 +103,21 @@ def orthologs_analysis(config_file, ortholog_pairs):
     """
     from ksrates.compute_peaks import compute_peaks
     click.format_filename(config_file)
+    if expert:
+        click.format_filename(expert)
+    else:
+        expert = ""
     if ortholog_pairs:
         click.format_filename(ortholog_pairs)
-    compute_peaks(config_file, ortholog_pairs)
+    compute_peaks(config_file, expert, ortholog_pairs)
 
 
 @cli.command(context_settings={'help_option_names': ['-h', '--help']}, 
              short_help="Performs ortholog substitution rate-adjustment.")
 @click.argument('config_file', type=click.Path(exists=True))
+@click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option("--trios", type=click.Path(exists=True), help="User-defined path to file containing the ortholog trios (default: rate_adjustment/species/orthologs_trios_species.tsv)")
-def orthologs_adjustment(config_file, trios):
+def orthologs_adjustment(config_file, expert, trios):
     """
     Performs substitution rate-adjustment relative to the focal species.
 
@@ -108,17 +127,22 @@ def orthologs_adjustment(config_file, trios):
     """
     from ksrates.correct import correct
     click.format_filename(config_file)
+    if expert:
+        click.format_filename(expert)
+    else:
+        expert = ""
     if trios:
         click.format_filename(trios)
-    correct(config_file, trios)
+    correct(config_file, expert, trios)
 
 
 @cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Generates rate-adjusted mixed Ks plot.")
 @click.argument('config_file', type=click.Path(exists=True))
+@click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option("--adjustment-table", type=click.Path(exists=True), help="User-defined path to file containing adjustment results (default: rate_adjustment/species/adjustment_table_species.tsv)")
 @click.option("--paranome-table", type=click.Path(exists=True), help="User-defined path to file containing paranome Ks (default: paralog_distributions/wgd_species/species.ks.tsv)")
 @click.option("--anchors-table", type=click.Path(exists=True), help="User-defined path to file containing anchor pair Ks (default: paralog_distribution/wgd_species/species.ks_anchors.tsv)")
-def plot_paralogs(config_file, adjustment_table, paranome_table, anchors_table):
+def plot_paralogs(config_file, expert, adjustment_table, paranome_table, anchors_table):
     """
     Plots rate-adjusted mixed paralog-ortholog Ks distribution.
         
@@ -128,20 +152,25 @@ def plot_paralogs(config_file, adjustment_table, paranome_table, anchors_table):
     """
     from ksrates.plot_paralogs import plot_paralogs_distr
     click.format_filename(config_file)
+    if expert:
+        click.format_filename(expert)
+    else:
+        expert = ""
     if adjustment_table:
         click.format_filename(adjustment_table)
     if paranome_table:
         click.format_filename(paranome_table)
     if anchors_table:
         click.format_filename(anchors_table)
-    plot_paralogs_distr(config_file, adjustment_table, paranome_table, anchors_table)
+    plot_paralogs_distr(config_file, expert, adjustment_table, paranome_table, anchors_table)
 
 
 @cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Generates phylogram with Ks-unit branch lengths.")
 @click.argument('config_file', type=click.Path(exists=True))
+@click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option("--adjustment-table", type=click.Path(exists=True), help="User-defined path to file containing adjustment results (default: rate_adjustment/species/adjustment_table_species.tsv)")
 @click.option("-n", "--nextflow", is_flag=True, help="Flag for Nextflow pipeline (Default: False)")
-def plot_tree(config_file, adjustment_table, nextflow):
+def plot_tree(config_file, expert, adjustment_table, nextflow):
     """
     Generates a phylogram of the input dataset with branch lengths set to\
     Ks distances estimated from ortholog KS distributions.
@@ -152,15 +181,20 @@ def plot_tree(config_file, adjustment_table, nextflow):
     """
     from ksrates.plot_tree import plot_tree_rates
     click.format_filename(config_file)
+    if expert:
+        click.format_filename(expert)
+    else:
+        expert = ""
     if adjustment_table:
         click.format_filename(adjustment_table)
-    plot_tree_rates(config_file, adjustment_table, nextflow)
+    plot_tree_rates(config_file, expert, adjustment_table, nextflow)
 
 
 @cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Generates ortholog Ks distributions plot.")
 @click.argument('config_file', type=click.Path(exists=True))
+@click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option("--trios", type=click.Path(exists=True), help="User-defined path to file containing the ortholog trios (default: rate_adjustment/species/orthologs_trios_species.tsv)")
-def plot_orthologs(config_file, trios):
+def plot_orthologs(config_file, expert, trios):
     """
     Plots ortholog Ks distributions used for rate-adjustment.
 
@@ -170,13 +204,18 @@ def plot_orthologs(config_file, trios):
     """
     from ksrates.plot_orthologs import plot_orthologs_distr
     click.format_filename(config_file)
+    if expert:
+        click.format_filename(expert)
+    else:
+        expert = ""
     if trios:
         click.format_filename(trios)
-    plot_orthologs_distr(config_file, trios)
+    plot_orthologs_distr(config_file, expert, trios)
 
 
 @cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Detects WGD signatures in paralog Ks distribution.")
 @click.argument('config_file', type=click.Path(exists=True))
+@click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option("--paranome-table", type=click.Path(exists=True), help="User-defined path to file containing paranome Ks (default: paralog_distributions/wgd_species/species.ks.tsv)")
 @click.option("--anchors-table", type=click.Path(exists=True), help="User-defined path to file containing anchor pair Ks (default: paralog_distribution/wgd_species/species.ks_anchors.tsv)")
 @click.option("--adjustment-table", type=click.Path(exists=True), help="User-defined path to file containing adjustment results (default: rate_adjustment/species/adjustment_table_species.tsv)")
@@ -185,7 +224,7 @@ def plot_orthologs(config_file, trios):
 @click.option("--segments", type=click.Path(exists=True), help="User-defined path to i-ADHoRe file segments.txt (default: paralog_distributions/wgd_species/species_i-adhore/segments.txt)")
 @click.option("--list-elements", type=click.Path(exists=True), help="User-defined path to i-ADHoRe file list_elements.txt (default: paralog_distributions/wgd_species/species_i-adhore/list_elements.txt)")
 @click.option("--multiplicon-pairs", type=click.Path(exists=True), help="User-defined path to i-ADHoRe file multiplicons_pairs.txt (default: paralog_distributions/wgd_species/species_i-adhore/multiplicons_pairs.txt)")
-def paralogs_analyses(config_file, paranome_table, anchors_table, adjustment_table, anchorpoints, multiplicons, segments, list_elements, multiplicon_pairs):
+def paralogs_analyses(config_file, expert, paranome_table, anchors_table, adjustment_table, anchorpoints, multiplicons, segments, list_elements, multiplicon_pairs):
     """
     Reconstructs potential WGD peaks in the paralog Ks distributions.
 
@@ -199,6 +238,10 @@ def paralogs_analyses(config_file, paranome_table, anchors_table, adjustment_tab
     """
     from ksrates.paralogs_analyses import paralogs_analyses_methods
     click.format_filename(config_file)
+    if expert:
+        click.format_filename(expert)
+    else:
+        expert = ""
     if paranome_table:
         click.format_filename(paranome_table)
     if anchors_table:
@@ -215,7 +258,7 @@ def paralogs_analyses(config_file, paranome_table, anchors_table, adjustment_tab
         click.format_filename(list_elements)
     if multiplicon_pairs:
         click.format_filename(multiplicon_pairs)
-    paralogs_analyses_methods(config_file, paranome_table, anchors_table, adjustment_table, 
+    paralogs_analyses_methods(config_file, expert, paranome_table, anchors_table, adjustment_table, 
                   anchorpoints, multiplicons, segments, list_elements, multiplicon_pairs)
 
 
