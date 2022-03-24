@@ -63,14 +63,10 @@ else {
 // if this latter was provided by the user through the --expert option or if it was found 
 // with default name "config_expert.txt".
 config_args = "${configfile}"
-// If expert_configfile is NOT a string, it means that it has been defined and will be used
+// If expert_configfile is NOT a string, it means that it has been provided and will be used
 if (expert_configfile !instanceof String) {
     config_args = config_args + " --expert ${expert_configfile}"
 }
-config_args_channel = Channel.value(config_args)
-
-user_defined_expert_config_missing_channel = Channel.value(user_defined_expert_config_missing)
-default_expert_config_file_available_channel = Channel.value(default_expert_config_file_available)
 
 log.info ""
 log.info ""
@@ -200,8 +196,6 @@ process checkConfig {
     input:
         file config from configfile
         file expert_config from expert_configfile
-        val user_defined_expert_config_missing from user_defined_expert_config_missing_channel
-        val default_expert_config_file_available from default_expert_config_file_available_channel
 
     output:
         stdout outCheckConfig
@@ -271,7 +265,6 @@ process setupAdjustment {
     input:
         file config from configfile
         val trigger_pipeline from trigger_setupAdjustment_channel
-        val config_args from config_args_channel
 
     output:
         stdout outSetupAdjustment
@@ -357,7 +350,6 @@ process setParalogAnalysis {
         val logs_folder from logs_folder_channel
         file config from configfile
         file expert_config from expert_configfile
-        val config_args from config_args_channel
 
     output:
         stdout outSetParalogAnalysis
@@ -445,7 +437,6 @@ process setOrthologAnalysis {
         file ortholog_pairs from check_ortholog_pairs_channel
         val logs_folder from logs_folder_channel
         file config from configfile
-        val config_args from config_args_channel
 
     output:
         stdout outSetOrthologAnalysis
@@ -531,7 +522,6 @@ process estimatePeaks {
         file species_pairs_for_peak from file_for_estimatePeak_channel
         val logs_folder from logs_folder_channel
         file config from configfile
-        val config_args from config_args_channel
         
     output:
         stdout outEstimatePeaks
@@ -579,7 +569,6 @@ process wgdParalogs {
         val trigger_wgdPara from trigger_wgdPara_channel
         val logs_folder from logs_folder_channel
         file config from configfile
-        val config_args from config_args_channel
         
     output:
         stdout outParalogs
@@ -629,7 +618,6 @@ process wgdOrthologs {
         tuple species1, species2 from species_pairs_for_wgd_Orthologs_channel.splitCsv(sep:'\t')
         val logs_folder from logs_folder_channel
         file config from configfile
-        val config_args from config_args_channel
         
     output:
         stdout outOrthologs
@@ -689,7 +677,6 @@ process plotOrthologDistrib {
         val trigger from trigger_plotOrtholog_from_setupAdjustment_channel.mix(trigger_plotOrtholog_from_estimatePeak_together_with_wgdOrthologs_channel.merge(trigger_plotOrtholog_from_wgdOrtholog_together_with_estimatePeak_channel.collect()), trigger_plotOrthologs_together_with_wgdOrtholog_channel.merge(trigger_plotOrtholog_from_wgdOrtholog_channel.collect()), trigger_plotOrthologs_together_with_estimatePeak_channel.merge(trigger_plotOrtholog_from_estimatePeak_channel))
         val logs_folder from logs_folder_channel
         file config from configfile
-        val config_args from config_args_channel
         
     output:
         stdout outPlotOrthologDistrib
@@ -752,7 +739,6 @@ process doRateAdjustment {
         val logs_folder from logs_folder_channel
         file config from configfile
         file expert_config from expert_configfile
-        val config_args from config_args_channel
         
     output:
         stdout outDoRateAdjustment
@@ -842,7 +828,6 @@ process paralogsAnalyses {
         val logs_folder from logs_folder_channel
         file config from configfile
         val trigger from trigger_paralogsAnalyses_from_doRateAdjustment_channel.collect()
-        val config_args from config_args_channel
         
     output:
         stdout outParalogsAnalyses
@@ -892,7 +877,6 @@ process drawTree {
         val logs_folder from logs_folder_channel
         file config from configfile
         val trigger from trigger_drawTree_from_doRateAdjustment_channel.collect()
-        val config_args from config_args_channel
         
     output:
         stdout outDrawTree
