@@ -21,7 +21,7 @@ To install `Nextflow <https://www.nextflow.io>`__ and its dependencies, follow t
         sudo apt-get install default-jdk  
    
    .. note::
-      Nextflow versions before `22.01.x-edge` require Java version 8 up to 15 for their execution.
+      Nextflow versions before ``22.01.x-edge`` require Java version 8 up to 15 for their execution.
 
 *   Then install Nextflow using either::
 
