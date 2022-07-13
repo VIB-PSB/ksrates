@@ -21,7 +21,7 @@ To install `Nextflow <https://www.nextflow.io>`__ and its dependencies, follow t
         sudo apt-get install default-jdk  
    
    .. note::
-      Nextflow versions before ``22.01.x-edge`` require Java version 8 up to 15 for their execution.
+      Nextflow versions before ``22.01.x-edge`` `require <https://www.nextflow.io/blog/2022/evolution-of-nextflow-runtime.html>`__ Java version 8 up to 15 for their execution.
 
 *   Then install Nextflow using either::
 
@@ -35,7 +35,7 @@ To install `Nextflow <https://www.nextflow.io>`__ and its dependencies, follow t
     This creates the ``nextflow`` executable file in the current directory.
 
 .. note::
-   ``ksrates``'s Nextflow pipeline is written using the older DSL1 syntax, which will be `removed <https://www.nextflow.io/blog/2022/evolution-of-nextflow-runtime.html#>`__ after Nextflow version ``22.10.x`` in favor of DSL2. Using Nextflow version ``22.03.0-edge`` or later will require the use of ``ksrates`` version ``v1.1.3`` or later. We will do our best to preserve compatibility with future Nextflow versions.
+   ``ksrates``'s Nextflow pipeline is written using the older DSL1 syntax, which will be `removed <https://www.nextflow.io/blog/2022/evolution-of-nextflow-runtime.html>`__ after Nextflow version ``22.10.x`` in favor of DSL2. Using Nextflow version ``22.03.0-edge`` or later will require the use of ``ksrates`` version ``v1.1.3`` or later. We will do our best to preserve compatibility with future Nextflow versions.
 
 *   Optionally make the ``nextflow`` executable accessible by your ``$PATH`` variable, for example by moving it::
 
