@@ -37,7 +37,7 @@ The *ksrates* pipeline can be automatically run through Nextflow with a few prep
         nextflow run VIB-PSB/ksrates --config ./config_elaeis.txt
 
     .. note::
-       Please update ``ksrates`` to version ``v1.1.3`` or later when launching it with Nextflow versions ``22.03.0-edge`` or later to prevent compatibility issues. See our :ref:`install_nextflow` installation page on how to install the latest version of Nextflow, or launch a specific version by adding the `NXF_VER` environmental variable in the command line (see Nextflow `docs <https://www.nextflow.io/docs/latest/getstarted.html#updates>`__)::
+       Please update `ksrates` to version ``v1.1.3`` or later when launching it with Nextflow versions ``22.03.0-edge`` or later to prevent compatibility issues. See our :ref:`installation page <install_nextflow>` about how to get the latest Nextflow version. You can also launch a specific (e.g. previous) Nextflow version through the ``NXF_VER`` environmental `variable <https://www.nextflow.io/docs/latest/getstarted.html#updates>`__ in the command line::
 
             NXF_VER=21.10.6 nextflow run VIB-PSB/ksrates --config ./config_elaeis.txt
     
