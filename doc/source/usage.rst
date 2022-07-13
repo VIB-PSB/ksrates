@@ -36,6 +36,11 @@ The *ksrates* pipeline can be automatically run through Nextflow with a few prep
 
         nextflow run VIB-PSB/ksrates --config ./config_elaeis.txt
 
+    .. note::
+       Please update `ksrates` to version `v1.1.3` or later when launching it with Nextflow versions `22.03.0-edge` or later to prevent compatibility issues. See our :ref:`install_nextflow` installation page on how to install the latest version of Nextflow, or launch a specific version by adding the `NXF_VER` environmental variable in the command line (see Nextflow `docs <https://www.nextflow.io/docs/latest/getstarted.html#updates>`__)::
+
+            NXF_VER=21.10.6 nextflow run VIB-PSB/ksrates --config ./config_elaeis.txt
+    
     The *ksrates configuration file* is specified through the ``--config`` parameter. The *Nextflow configuration file* is automatically recognized when it's named with the Nextflow-reserved ``nextflow.config`` file name and located in the launching directory; alternatively, the user can provide a custom file by specifying its name or path using the ``-C`` option (see `Nextflow documentation <https://www.nextflow.io/docs/latest/cli.html#hard-configuration-override>`__).
     
     The first time the command is launched it downloads the *ksrates* Nextflow pipeline from the ``VIB-PSB/ksrates`` GitHub repository; from then on it uses the local copy stored in the ``$HOME/.nextflow`` directory. If running a container, the image is pulled from Docker Hub and stored locally for successive usage. The Singularity container is stored by default in the launching folder under ``work/singularity``.
