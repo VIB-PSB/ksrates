@@ -1,4 +1,5 @@
 #!/usr/bin/env nextflow
+nextflow.enable.dsl = 1
 
 // should probably use our own Logger...
 LOG_OUTPUT = true  // log process and other output via log.info
