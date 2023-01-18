@@ -792,8 +792,15 @@ def _run_iadhore(config_file):
         if err:
             # i-ADHoRe can fail without a proper exit/return code, but just with an error on stderr
             logging.error("i-ADHoRe execution failed with standard error output:\n" + err)
-            logging.error("Exiting.")
-            sys.exit(1)
+
+            # Some i-ADHoRe error output is an actual fatal error and the pipeline must be interrupted,
+            # but there is at least one i-ADHoRe message that is passed as error output ("cerr" in source code)
+            # that is actually only a warning (it starts with "Warning:"): this kind of cerr is not supposed 
+            # to interrupt ksrates pipeline! To take this into account, the following if-clause allows any
+            # i-ADHoRe error output message starting with "Warning" to be tolerated.
+            if not err.lower().startswith("warning"):
+                logging.error("Exiting.")
+                sys.exit(1)
     except subprocess.CalledProcessError as e:
         logging.error(f"i-ADHoRe execution failed with return code: {e.returncode}")
         if e.stderr:
