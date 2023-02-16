@@ -27,7 +27,7 @@ The analysis configuration file is composed of a first section defining the spec
     latin_names = elaeis:Elaeis guineensis, oryza:Oryza sativa, asparagus:Asparagus officinalis
 
     fasta_filenames = elaeis:elaeis.fasta, oryza:oryza.fasta, asparagus:asparagus.fasta
-    gff_filename = elaeis:elaeis.gff3
+    gff_filename = elaeis.gff3
 
     peak_database_path = ortholog_peak_db.tsv
     ks_list_database_path = ortholog_ks_list_db.tsv
