@@ -713,12 +713,12 @@ def print_details_model(model_id, model_iteration, max_model_iteration, max_num_
   if convergence_flag:
     outfile.write(f"The EM algorithm has reached convergence after {convergence_iteration} iterations\n")
   else:
-    outfile.write(f"The EM algorithm didn't reach convergence after {max_em_iteration} iterations (diff is ~{round(loglik_diff, 2)})\n")
+    outfile.write(f"The EM algorithm didn't reach convergence after {max_em_iteration} iterations (diff is {loglik_diff})\n")
   outfile.write("\n")
 
-  print_parameters("fitted", round(fitted_means, 2), round(fitted_stdevs, 2), round(fitted_lambd, 2), round(fitted_weights, 2), outfile)
-  outfile.write(f"Log-likelihood: {round(final_loglik, 3)}\n")
-  outfile.write(f"BIC: {round(bic, 3)}\n")
+  print_parameters("fitted", fitted_means, fitted_stdevs, fitted_lambd, fitted_weights, outfile)
+  outfile.write(f"Log-likelihood: {final_loglik}\n")
+  outfile.write(f"BIC: {bic}\n")
 
   # if EM_data_random or EM_random:
   if (model_id == 2 or model_id == 5) and model_iteration == max_model_iteration:
@@ -736,8 +736,8 @@ def print_details_model(model_id, model_iteration, max_model_iteration, max_num_
   else:
     model_iteration = int(model_iteration)
   for mean, stdev, weight in zip(fitted_means, fitted_stdevs, fitted_weights[1:]):
-    parameter_table.append([model_id, model_iteration, round(bic, 3), round(final_loglik, 3), convergence_iteration,
-                      round(fitted_lambd, 2), fitted_weights[0], round(mean, 2), round(stdev, 2), weight])
+    parameter_table.append([model_id, model_iteration, bic, final_loglik, convergence_iteration,
+                      fitted_lambd, fitted_weights[0], mean, stdev, weight])
 
 
 def make_parameter_table_file(parameter_table, species):
@@ -773,11 +773,7 @@ def print_parameters(starting_or_fitted, means, stdevs, lambd, weights, outfile)
   outfile.write(f"  EXP   : {lambd}\n")
   for n in range(len(means)):
       outfile.write(f"  NORM {n+1}: {means[n]} +- {stdevs[n]}\n")
-  rounded_weights = []
-  for w in weights:
-      w = round(w, 2)
-      rounded_weights.append(w)
-  outfile.write(f"  WEIGHT: {rounded_weights}\n")
+  outfile.write(f"  WEIGHT: {weights}\n")
 
 
 def plot_init_comp(ax_ks, ax_logks, means, stdevs, lambd, weights, plot_logtranformed=True):
@@ -986,7 +982,7 @@ def eval_best_model(bic_dict, outfile):
       if delta_bic > 2: j = 1
       if delta_bic > 6: j = 2
       if delta_bic > 10: j = 3
-      outfile.write(f"   Model {m}: delta(BIC) = {round(delta_bic, 2):>8} ({l[j]})\n")
+      outfile.write(f"   Model {m}: delta(BIC) = {delta_bic:>8} ({l[j]})\n")
     outfile.write("\n")
   return best_model_id
 
