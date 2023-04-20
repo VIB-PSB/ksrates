@@ -588,7 +588,7 @@ def m_step(num_comp, data, posteriors):
   new_weights = []
   for k in range(0, num_comp):
     weight = points_per_k[k] / len(data)
-    new_weights.append(round(weight, 2))
+    new_weights.append(weight)
 
   # Computes updated means and stdevs of the lognormal components
   new_means, new_stdevs = [], []
