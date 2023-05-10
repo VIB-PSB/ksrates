@@ -1,4 +1,5 @@
 from math import sqrt
+import logging
 
 # Filenames
 _ADJUSTMENT_TABLE_ALL = "adjustment_table_{}_all.tsv"
@@ -44,6 +45,37 @@ def decompose_ortholog_ks(ortholog_db, idx_species_sister, idx_species_outgroup,
     # Error propagation rules
     rel_rate_species_sd = sqrt(pow(sd_sp_out, 2) + pow(sd_sp_sis, 2) + pow(sd_sis_out, 2)) / 2.0 # also called k_AO_sd
     rel_rate_sister_sd = sqrt(pow(sd_sp_sis, 2) + pow(sd_sis_out, 2) + pow(sd_sp_out, 2)) / 2.0 # also called k_BO_sd
+
+    focal_species = idx_species_sister.split("_")[0]
+    sister_species = idx_species_sister.split("_")[1]
+    
+    # Checkpoint to spot negative Ks distances for the focal and/or sister species.
+    # Prints a warning, doesn't stop the pipeline
+    if rel_rate_species < 0:
+        logging.warning("")
+        logging.warning(f"ksrates has returned a negative number ({round(rel_rate_species, 5)}) for the genetic distance accumulated by")
+        logging.warning(f"focal species [{focal_species}] since its divergence with sister species {sister_species}")
+        logging.warning(f"(refer to the 'K_OA' segment in Supplementary materials).")
+    if rel_rate_sister < 0:
+        logging.warning("")
+        logging.warning(f"ksrates has returned a negative number ({round(rel_rate_sister, 5)}) for the genetic distance accumulated by")
+        logging.warning(f"sister species {sister_species} since its divergence with focal species [{focal_species}]")
+        logging.warning(f"(refer to the 'K_OB' segment in Supplementary materials).")
+    if rel_rate_species < 0 or rel_rate_sister < 0:
+        logging.warning("")
+        logging.warning("Negative distances are an artefact due to poor estimate of the ortholog distribution peaks")
+        logging.warning(f"used as input values for the rate-adjustment formulas.")
+        logging.warning("")
+        logging.warning("Poor peak estimation is often due to the very old divergence age between")
+        logging.warning(f"the two chosen species and/or outgroup, or by bad genome/sequence quality.")
+        logging.warning("It is thus recommended to visually check the quality of the ortholog distributions and their peak estimates")
+        logging.warning(f"in the 'orthologs_species1_species2.pdf' output files.")
+        logging.warning("")
+        logging.warning("TIPS! Try rerunning your analysis with one or more of the following changes:")
+        logging.warning(" - limit the number of distant outgroups by decreasing 'max_number_outgroups' (default is 4)")
+        logging.warning(" - set 'consensus_mode_for_multiple_outgroups' to 'best outgroup' (see Documentation)")
+        logging.warning(" - remove species responsible for very old divergences in the input phylogeny")
+        logging.warning("")
 
     return rel_rate_species, rel_rate_species_sd, rel_rate_sister, rel_rate_sister_sd
 
