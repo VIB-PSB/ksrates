@@ -112,17 +112,17 @@ def log_components(X, model_id, m, outfile, parameter_table, max_iter=300):
 
     outfile.write("FITTED PARAMETERS:\n")
     for j in range(len(m.means_)):
-        outfile.write(f"  NORM {j+1}: {round(m.means_[j][0], 2)} +- {round(sqrt(m.covariances_[j][0][0]), 2)}\n")
+        outfile.write(f"  NORM {j+1}: {m.means_[j][0]} +- {sqrt(m.covariances_[j][0][0])}\n")
         
-        parameter_table.append([model_id, round(m.bic(X), 3), round(m.lower_bound_, 3), convergence, 
-                                round(m.means_[j][0], 2), round(m.covariances_[j][0][0], 2), round(m.weights_[j], 2)])
+        parameter_table.append([model_id, m.bic(X), m.lower_bound_, convergence, 
+                                m.means_[j][0], m.covariances_[j][0][0], m.weights_[j]])
 
-    rounded_weights = []
+    weight_list = []
     for w in m.weights_:
-        rounded_weights.append(round(w, 2))
-    outfile.write(f"  WEIGHT: {rounded_weights}\n")
-    outfile.write(f"Log-likelihood: {round(m.lower_bound_, 3)}\n")
-    outfile.write(f"BIC: {round(m.bic(X), 3)}\n\n")
+        weight_list.append(w)
+    outfile.write(f"  WEIGHT: {weight_list}\n")
+    outfile.write(f"Log-likelihood: {m.lower_bound_}\n")
+    outfile.write(f"BIC: {m.bic(X)}\n\n")
 
 
 def fit_gmm(X, n1, n2, outfile, parameter_table, max_iter=300, n_init=1, **kwargs):
