@@ -91,7 +91,7 @@ def inspect_bic(bic, outfile):
     outfile.write("\n")
 
 
-def log_components(X, model_id, m, outfile, parameter_table, max_iter=300):
+def log_components(X, model_id, m, outfile, parameter_table, max_iter):
     """
     Modified from wgd.
 
@@ -125,7 +125,7 @@ def log_components(X, model_id, m, outfile, parameter_table, max_iter=300):
     outfile.write(f"BIC: {m.bic(X)}\n\n")
 
 
-def fit_gmm(X, n1, n2, outfile, parameter_table, max_iter=300, n_init=1, **kwargs):
+def fit_gmm(X, n1, n2, outfile, parameter_table, max_iter=600, n_init=1, **kwargs):
     """
     Modified from wgd.
     Compute Gaussian mixtures for different numbers of components
@@ -150,7 +150,7 @@ def fit_gmm(X, n1, n2, outfile, parameter_table, max_iter=300, n_init=1, **kwarg
                     n_components=N[i], covariance_type='full', max_iter=max_iter,
                     n_init=n_init, tol=1e-6, **kwargs
             ).fit(X)
-            log_components(X, i+1, models[i], outfile, parameter_table)
+            log_components(X, i+1, models[i], outfile, parameter_table, max_iter)
         else:
             logging.warning(f"Lognormal mixture model with {N[i]} or more components is skipped due to too few input Ks data points")
             break

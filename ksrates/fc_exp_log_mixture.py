@@ -607,7 +607,7 @@ def em(num_comp, max_iter, ks_data_proxy, init_lambd, init_means, init_stdevs, i
   """
   Performs the EM algorithm with a given number of components, their parameters on the proxy dataset
   for the weighted Ks paranome (the deconvoluted data). If convergence of the algorithm based on
-  threshold of 1e-6 is not reached in 300 iterations, it prints a warning.
+  threshold of 1e-6 is not reached in 600 iterations, it prints a warning.
 
   :param num_comp: number of components (1 exponential distribution + N lognormal components)
   :param max_iter: maximum number of iterations for the EM steps

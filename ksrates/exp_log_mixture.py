@@ -44,7 +44,7 @@ def exp_log_mixture(config_file, expert_config_file, paralog_tsv_file, correctio
 
   # Parameters used during the mixture modeling
   max_ks_EM = config.get_max_ks_for_mixture_model(max_ks_para) # upper Ks limit considered for the mixture model fitting
-  max_EM_iterations = config.get_max_EM_iterations() # default 300
+  max_EM_iterations = config.get_max_EM_iterations() # default 600
   num_EM_initializations = config.get_num_EM_initializations() # how many times the fitting with N given components is initialized 
                                                                # in the random method and in the "peak + random" method). default 10
   max_num_comp = config.get_max_mixture_model_components() # max number of components used in the fitting with random components (exp + buffer lognormal + lognormal)

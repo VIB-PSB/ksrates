@@ -71,7 +71,7 @@ Among its outputs (for a complete list see section :ref:`output_files`), the ELM
     * The model initialization approach is stored in column 1 ``Model`` according to a numerical code (1: data-driven, 2: hybrid data-driven plus a random lognormal component, 3: random initialization with exponential component and one lognormal component, 4: random initialization with exponential component and two lognormal components; higher numbers feature random initialization with exponential component and increasing number of lognormal components).
     * The initialization round is stored in column 2 ``Initialization``. By default each model type (except type 1) is initialized and fitted 10 times, so this column shows numbers from 1 to 10. 
     * The BIC and loglikelihood scores for the fitted model are stored in columns 3 ``BIC`` and 4 ``Loglikelihood``.
-    * The number of algorithm iterations needed to reach convergence is stored in column 5 ``Convergence``. If greater than 300 iterations would be needed, convergence is not reached and the cell will show *NA*.
+    * The number of algorithm iterations needed to reach convergence is stored in column 5 ``Convergence``. If greater than (by default) 600 iterations would be needed, convergence is not reached and the cell will show *NA*.
     * The fitted exponential rate parameter and its component weight are stored in columns 6 ``Exponential_Rate`` and 7 ``Exponential_Weight``.
     * The mean, standard deviation and weight of the fitted Normal components used to define the correspondent lognormal components are stored in columns 8 to 10: ``Normal_Mean``, ``Normal_SD`` and ``Normal_Weight``. When there are multiple lognormal components, the data for each of them are stored in a separate row (the number of rows for each model and initialization is thus equal to the number of lognormal components).
 
@@ -106,7 +106,7 @@ Among its outputs (for a complete list see section :ref:`output_files`), the LMM
 
     * The model type is stored in column 1 ``Model`` according to a numerical code (1: one lognormal component, 2: two lognormal components, 3: three lognormal components; and so on).
     * The BIC and loglikelihood scores for the fitted model are stored in columns 2 ``BIC`` and 3 ``Loglikelihood``
-    * The number of algorithm iterations needed to reach convergence is stored in column 4 ``Convergence``. If greater than 300 iterations would be needed, convergence is not reached and the cell will show *NA*.
+    * The number of algorithm iterations needed to reach convergence is stored in column 4 ``Convergence``. If greater than (by default) 600 iterations would be needed, convergence is not reached and the cell will show *NA*.
     * The mean, standard deviation and weight of the fitted Normal components used to define the correspondent lognormal components are stored in columns 5 to 7: ``Normal_Mean``, ``Normal_SD`` and ``Normal_Weight``. When there are multiple lognormal components, the data for each of them are stored in a separate row (the number of rows per model is thus equal to the number of components).
 
 
