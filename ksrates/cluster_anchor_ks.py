@@ -37,7 +37,7 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
     color_list = config.get_color_list()
     plot_correction_arrows = config.plot_correction_arrows()
 
-    max_EM_iterations = config.get_max_EM_iterations() # default 300
+    max_EM_iterations = config.get_max_EM_iterations() # default 600
     num_EM_initializations = config.get_num_EM_initializations() # how many times the fitting with N given components is initialized 
     logging.info(f" - maximum EM iterations: {max_EM_iterations}")
     logging.info(f" - number of EM initializations: {num_EM_initializations}")

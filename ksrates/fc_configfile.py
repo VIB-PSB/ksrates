@@ -607,7 +607,7 @@ class Configuration:
 
     def get_max_EM_iterations(self):
         """
-        Gets the maximum number of EM iterations to apply during mixture modeling [Default: 300].
+        Gets the maximum number of EM iterations to apply during mixture modeling [Default: 600].
 
         :return max_mixture_model_iterations: max number of iterations for the exponential-maximization
         algorithm 
@@ -620,20 +620,20 @@ class Configuration:
                 except Exception:
                     pass
                 if not isinstance(max_iter, int):
-                    logging.warning(f'Unrecognized field in expert configuration file [max_mixture_model_iterations = {max_iter}]. Please choose a positive integer. Default choice will be applied [300]')
-                    max_iter = 300
+                    logging.warning(f'Unrecognized field in expert configuration file [max_mixture_model_iterations = {max_iter}]. Please choose a positive integer. Default choice will be applied [600]')
+                    max_iter = 600
                 elif max_iter <= 0:
-                    logging.warning(f'Unrecognized field in expert configuration file [max_mixture_model_iterations = {max_iter}]. Please choose a positive integer. Default choice will be applied [300]')
-                    max_iter = 300
-                elif max_iter < 100:
+                    logging.warning(f'Unrecognized field in expert configuration file [max_mixture_model_iterations = {max_iter}]. Please choose a positive integer. Default choice will be applied [600]')
+                    max_iter = 600
+                elif max_iter <= 300:
                     logging.warning(f"A small maximum number of mixture model iterations [max_mixture_model_iterations = {max_iter}] can produce poor fitting.")
-                elif max_iter > 400:
+                elif max_iter > 600:
                     logging.warning(f"A large maximum number of mixture model iterations [max_mixture_model_iterations = {max_iter}] can increase the runtime.")
             except Exception:
-                logging.warning(f'Missing field in expert configuration file [max_mixture_model_iterations]. Please choose a positive integer. Default choice will be applied [300]')
-                max_iter = 300
+                logging.warning(f'Missing field in expert configuration file [max_mixture_model_iterations]. Please choose a positive integer. Default choice will be applied [600]')
+                max_iter = 600
         else:
-            max_iter = 300
+            max_iter = 600
         return max_iter
 
 

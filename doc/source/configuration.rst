@@ -221,7 +221,7 @@ The following can be used as a template::
     kde_bandwidth_modifier = 0.4
     plot_adjustment_arrows = no
     num_mixture_model_initializations = 10
-    max_mixture_model_iterations = 300
+    max_mixture_model_iterations = 600
     max_mixture_model_components = 5
     max_mixture_model_ks = 5
     extra_paralogs_analyses_methods = no
@@ -232,7 +232,7 @@ The following can be used as a template::
 * **kde_bandwidth_modifier**: modifier to adjust the fitting of the KDE curve on the underlying whole-paranome or anchor *K*:sub:`S` distribution. The KDE Scott's factor internally computed by SciPy tends to produce an overly smooth KDE curve, especially with steep WGD peaks, and therefore it is reduced by multiplying it by a modifier. Decreasing the modifier leads to tighter fits, increasing it leads to smoother fits, and setting it to 1 gives the default KDE factor. Note that a too small factor is likely to take into account data noise. [Default: 0.4]
 * **plot_adjustment_arrows**: flag to toggle the plotting of rate-adjustment arrows below the adjusted mixed paralog--ortholog *K*:sub:`S` plot. These arrows start from the original unadjusted ortholog divergence *K*:sub:`S` estimate and end on the rate-adjusted estimate (options: "yes" and "no"). [Default: "no"]
 * **num_mixture_model_initializations**: number of times the EM algorithm is initialized (either for the random initialization in the exponential-lognormal mixture model or for k-means in the lognormal mixture model). [Default: 10]
-* **max_mixture_model_iterations**: maximum number of EM iterations for mixture modeling. [Default: 300]
+* **max_mixture_model_iterations**: maximum number of EM iterations for mixture modeling. [Default: 600]
 * **max_mixture_model_components**: maximum number of components considered during execution of the mixture models. [Default: 5]
 * **max_mixture_model_ks**: upper limit for the *K*:sub:`S` range in which the exponential-lognormal and lognormal-only mixture models are performed. [Default: 5]
 * **extra_paralogs_analyses_methods**: flag to toggle the optional analysis of the paralog *K*:sub:`S` distribution with non default mixture model methods (see section :ref:`paralogs_analyses` and Supplementary Materials) [Default: "no"]
