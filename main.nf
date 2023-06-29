@@ -369,7 +369,7 @@ process checkConfig {
         echo ""
         echo -n "Configuration file [${config}] not found: it will now be generated... "
 
-        python3 /home/cesen/ksrates/ksrates_cli.py generate-config ${config} >> \$processDir/generate_config.txt
+        ksrates generate-config ${config} >> \$processDir/generate_config.txt
         RET_CODE=\$?
         echo "done [\${RET_CODE}]"
 
@@ -460,7 +460,7 @@ process setupAdjustment {
     echo -n "Extracting ortholog species pairs and trios from Newick tree... "
     echo "NF internal work directory for [setupAdjustment] process:\n\$processDir\n" > \${logs_folder}/${logs_names["setupAdjustment"]}
 
-    python3 /home/cesen/ksrates/ksrates_cli.py init ${config_args} --nextflow >> \${logs_folder}/${logs_names["setupAdjustment"]} 2>&1
+    ksrates init ${config_args} --nextflow >> \${logs_folder}/${logs_names["setupAdjustment"]} 2>&1
 
     RET_CODE=\$?
     echo "done [\${RET_CODE}]"
@@ -687,7 +687,7 @@ process estimatePeaks {
 
     echo "Updating ortholog peak database" >> $logs_folder/${logs_names["estimatePeaks"]}
 
-    python3 /home/cesen/ksrates/ksrates_cli.py orthologs-analysis ${config_args} --ortholog-pairs=\$processDir/$species_pairs_for_peak >> $logs_folder/${logs_names["estimatePeaks"]} 2>&1
+    ksrates orthologs-analysis ${config_args} --ortholog-pairs=\$processDir/$species_pairs_for_peak >> $logs_folder/${logs_names["estimatePeaks"]} 2>&1
 
     RET_CODE=\$?
     echo "done [\${RET_CODE}] `date "+%T"`"
@@ -732,7 +732,7 @@ process wgdParalogs {
 
     echo "Using ${task.cpus} thread(s)\n">> $logs_folder/${logs_names["wgdParalogs"]}
 
-    python3 /home/cesen/ksrates/ksrates_cli.py paralogs-ks ${config_args} --n-threads=${task.cpus} >> $logs_folder/${logs_names["wgdParalogs"]} 2>&1
+    ksrates paralogs-ks ${config_args} --n-threads=${task.cpus} >> $logs_folder/${logs_names["wgdParalogs"]} 2>&1
 
     RET_CODE=\$?
     echo "done [\${RET_CODE}] `date "+%T"`"
@@ -776,7 +776,7 @@ process wgdOrthologs {
 
     echo "Using ${task.cpus} thread(s)\n">> $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log
 
-    python3 /home/cesen/ksrates/ksrates_cli.py orthologs-ks ${config_args} $species1 $species2 --n-threads=${task.cpus} >> $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log 2>&1
+    ksrates orthologs-ks ${config_args} $species1 $species2 --n-threads=${task.cpus} >> $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log 2>&1
 
     RET_CODE=\$?
     echo "done [\${RET_CODE}] `date "+%T"`"
@@ -785,7 +785,7 @@ process wgdOrthologs {
     echo "\n" >> $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log
     echo "Species1\tSpecies2\n$species1\t$species2" > \${processDir}/tmp_${species1}_${species2}.txt
     
-    python3 /home/cesen/ksrates/ksrates_cli.py orthologs-analysis ${config_args} --ortholog-pairs=\${processDir}/tmp_${species1}_${species2}.txt >> $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log 2>&1
+    ksrates orthologs-analysis ${config_args} --ortholog-pairs=\${processDir}/tmp_${species1}_${species2}.txt >> $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log 2>&1
 
     RET_CODE=\$?
     echo "done [\${RET_CODE}] `date "+%T"`"
@@ -842,7 +842,7 @@ process plotOrthologDistrib {
     cd $PWD
     echo "NF internal work directory for [plotOrthologDistrib] process:\n\$processDir\n" > $logs_folder/${logs_names["plotOrthologDistrib"]}
 
-    python3 /home/cesen/ksrates/ksrates_cli.py plot-orthologs ${config_args} >> $logs_folder/${logs_names["plotOrthologDistrib"]} 2>&1
+    ksrates plot-orthologs ${config_args} >> $logs_folder/${logs_names["plotOrthologDistrib"]} 2>&1
     
     RET_CODE=\$?
     echo "done [\${RET_CODE}] `date "+%T"`"
@@ -919,7 +919,7 @@ process doRateAdjustment {
 
     echo -n "`date "+%T"` Starting rate-adjustment analysis... "
 
-    python3 /home/cesen/ksrates/ksrates_cli.py orthologs-adjustment ${config_args} >> $logs_folder/${logs_names["doRateAdjustment"]} 2>&1
+    ksrates orthologs-adjustment ${config_args} >> $logs_folder/${logs_names["doRateAdjustment"]} 2>&1
 
     RET_CODE=\$?
     echo "done [\${RET_CODE}] `date "+%T"`"
@@ -928,7 +928,7 @@ process doRateAdjustment {
 
     echo -n "`date "+%T"` Plotting mixed distributions... "
 
-    python3 /home/cesen/ksrates/ksrates_cli.py plot-paralogs ${config_args} >> $logs_folder/${logs_names["doRateAdjustment"]} 2>&1
+    ksrates plot-paralogs ${config_args} >> $logs_folder/${logs_names["doRateAdjustment"]} 2>&1
     
     RET_CODE=\$?
     echo "done [\${RET_CODE}] `date "+%T"`"
@@ -971,7 +971,7 @@ process paralogsAnalyses {
     cd $PWD
     echo "NF internal work directory for [paralogsAnalyses (${task.index})] process:\n\$processDir\n" >> $logs_folder/${logs_names["paralogsAnalyses"]}
 
-    python3 /home/cesen/ksrates/ksrates_cli.py paralogs-analyses ${config_args} >> $logs_folder/${logs_names["paralogsAnalyses"]} 2>&1
+    ksrates paralogs-analyses ${config_args} >> $logs_folder/${logs_names["paralogsAnalyses"]} 2>&1
  
     RET_CODE=\$?
     echo "done [\${RET_CODE}] `date "+%T"`"
@@ -1017,7 +1017,7 @@ process drawTree {
     cd $PWD
     echo "NF internal work directory for [drawTree] process:\n\$processDir\n" >> $logs_folder/${logs_names["drawTree"]}
 
-    python3 /home/cesen/ksrates/ksrates_cli.py plot-tree ${config_args} --nextflow >> $logs_folder/${logs_names["drawTree"]} 2>&1
+    ksrates plot-tree ${config_args} --nextflow >> $logs_folder/${logs_names["drawTree"]} 2>&1
 
     RET_CODE=\$?
     echo "done [\${RET_CODE}] `date "+%T"`"
