@@ -1,5 +1,4 @@
 #!/usr/bin/env nextflow
-nextflow.enable.dsl = 1
 
 // should probably use our own Logger...
 LOG_OUTPUT = true  // log process and other output via log.info
@@ -188,6 +187,164 @@ def logProcessOutput(out, processName, print=LOG_OUTPUT) {
 }
 
 
+////////////////////////////////////////////////////////////
+
+
+/*
+ * Calling ksrates workflow
+ */
+
+workflow {
+
+    checkConfig(
+        configfile,
+        expert_configfile
+    )
+    // Log output to stdout/console (always, i.e. no matter if LOG_OUTPUT).
+    logProcessOutput(checkConfig.out.outCheckConfig, "checkConfig", true)
+
+
+    setupAdjustment(
+        configfile,
+        checkConfig.out.trigger_setupAdjustment_channel
+    )
+    // Log output to stdout/console.
+    logProcessOutput(setupAdjustment.out.outSetupAdjustment, "setupAdjustment")
+
+
+    setParalogAnalysis(
+        setupAdjustment.out.species_channel,
+
+        setupAdjustment.out.logs_folder_channel,
+
+        configfile,
+        
+        expert_configfile
+    )
+    // Log output to stdout/console.
+    logProcessOutput(setParalogAnalysis.out.outSetParalogAnalysis, "setParalogAnalysis")
+
+
+    setOrthologAnalysis(
+        setupAdjustment.out.check_ortholog_pairs_channel,
+        
+        setupAdjustment.out.logs_folder_channel,
+        
+        configfile
+    )
+    // Log output to stdout/console.
+    logProcessOutput(setOrthologAnalysis.out.outSetOrthologAnalysis, "setOrthologAnalysis")
+
+
+    estimatePeaks(
+        setOrthologAnalysis.out.file_for_estimatePeak_channel,
+
+        setupAdjustment.out.logs_folder_channel,
+
+        configfile
+    )
+    // Log output to stdout/console.
+    logProcessOutput(estimatePeaks.out.outEstimatePeaks, "estimatePeaks")
+
+
+    wgdParalogs(
+        setupAdjustment.out.species_channel,
+
+        setParalogAnalysis.out.trigger_wgdPara_channel,
+
+        setupAdjustment.out.logs_folder_channel,
+
+        configfile
+    )
+    // Log output to stdout/console.
+    logProcessOutput(wgdParalogs.out.outParalogs, "wgdParalogs")
+
+
+    wgdOrthologs(
+        setupAdjustment.out.species_channel,
+
+        setOrthologAnalysis.out.species_pairs_for_wgd_Orthologs_channel.splitCsv(sep:'\t'),
+
+        setupAdjustment.out.logs_folder_channel, 
+        
+        configfile
+    )
+    // Log output to stdout/console.
+    logProcessOutput(wgdOrthologs.out.outOrthologs, "wgdOrthologs")
+
+
+    plotOrthologDistrib(
+        setupAdjustment.out.species_channel,
+
+        setupAdjustment.out.trigger_plotOrtholog_from_setupAdjustment_channel.mix(
+            estimatePeaks.out.trigger_plotOrtholog_from_estimatePeak_together_with_wgdOrthologs_channel.merge(
+                wgdOrthologs.out.trigger_plotOrtholog_from_wgdOrtholog_together_with_estimatePeak_channel.collect()
+                ),
+            setOrthologAnalysis.out.trigger_plotOrthologs_together_with_wgdOrtholog_channel.merge(
+                wgdOrthologs.out.trigger_plotOrtholog_from_wgdOrtholog_channel.collect()
+                ), 
+            setOrthologAnalysis.out.trigger_plotOrthologs_together_with_estimatePeak_channel.merge(
+                estimatePeaks.out.trigger_plotOrtholog_from_estimatePeak_channel
+                )
+        ),
+
+        setupAdjustment.out.logs_folder_channel, 
+
+        configfile
+    )
+    // Log output to stdout/console.
+    logProcessOutput(plotOrthologDistrib.out.outPlotOrthologDistrib, "plotOrthologDistrib")
+
+
+    doRateAdjustment(
+        setupAdjustment.out.species_channel,
+
+        setParalogAnalysis.out.trigger_doRateAdjustment_from_setParalog_channel.mix(
+            estimatePeaks.out.trigger_doRateAdjustment_from_estimatePeak_channel,
+            wgdOrthologs.out.trigger_doRateAdjustment_from_wgdOrtholog_channel,
+            wgdParalogs.out.trigger_doRateAdjustment_from_wgdParalog_channel
+            ),
+        
+        setupAdjustment.out.logs_folder_channel, 
+        
+        configfile,
+
+        expert_configfile
+    )
+    // Log output to stdout/console.
+    logProcessOutput(doRateAdjustment.out.outDoRateAdjustment, "doRateAdjustment")
+    
+
+    paralogsAnalyses(
+        setupAdjustment.out.species_channel,
+
+        setupAdjustment.out.logs_folder_channel, 
+
+        configfile,
+
+        doRateAdjustment.out.trigger_paralogsAnalyses_from_doRateAdjustment_channel.collect()
+    )
+    // Log output to stdout/console.
+    logProcessOutput(paralogsAnalyses.out.outParalogsAnalyses, "paralogsAnalyses")
+
+
+    drawTree(
+        setupAdjustment.out.species_channel,
+
+        setupAdjustment.out.logs_folder_channel, 
+
+        configfile,
+
+        doRateAdjustment.out.trigger_drawTree_from_doRateAdjustment_channel.collect()
+    )
+    // Log output to stdout/console.
+    logProcessOutput(drawTree.out.outDrawTree, "drawTree")
+
+}
+
+
+////////////////////////////////////////////////////////////
+
 
 process checkConfig {
 
@@ -195,12 +352,12 @@ process checkConfig {
     maxForks 1
 
     input:
-        file config from configfile
-        file expert_config from expert_configfile
+        file config /// from configfile DONE
+        file expert_config /// from expert_configfile DONE
 
     output:
-        stdout outCheckConfig
-        env trigger_pipeline into trigger_setupAdjustment_channel
+        stdout emit: outCheckConfig /// DONE
+        env trigger_pipeline, emit: trigger_setupAdjustment_channel /// into trigger_setupAdjustment_channel DONE
 
     script:
     logProcessInfo(task)
@@ -212,7 +369,7 @@ process checkConfig {
         echo ""
         echo -n "Configuration file [${config}] not found: it will now be generated... "
 
-        ksrates generate-config ${config} >> \$processDir/generate_config.txt
+        python3 /home/cesen/ksrates/ksrates_cli.py generate-config ${config} >> \$processDir/generate_config.txt
         RET_CODE=\$?
         echo "done [\${RET_CODE}]"
 
@@ -249,9 +406,6 @@ process checkConfig {
     """
 }
 
-// Log output to stdout/console (always, i.e. no matter if LOG_OUTPUT).
-logProcessOutput(outCheckConfig, "checkConfig", true)
-
 
 
 /* 
@@ -264,15 +418,15 @@ process setupAdjustment {
     maxForks 1
 
     input:
-        file config from configfile
-        val trigger_pipeline from trigger_setupAdjustment_channel
+        file config /// from configfile DONE
+        val trigger_pipeline /// from trigger_setupAdjustment_channel DONE
 
     output:
-        stdout outSetupAdjustment
-        env species into species_channel
-        env logs_folder into logs_folder_channel
-        file "ortholog_pairs_*.tsv" into check_ortholog_pairs_channel
-        env trigger_plot_orthologs into trigger_plotOrtholog_from_setupAdjustment_channel
+        stdout emit: outSetupAdjustment /// DONE
+        env species, emit: species_channel /// into species_channel DONE
+        env logs_folder, emit: logs_folder_channel /// into logs_folder_channel DONE
+        path "ortholog_pairs_*.tsv", emit: check_ortholog_pairs_channel /// into check_ortholog_pairs_channel DONE
+        env trigger_plot_orthologs, emit: trigger_plotOrtholog_from_setupAdjustment_channel /// into trigger_plotOrtholog_from_setupAdjustment_channel DONE
 
     when:
         trigger_pipeline == "true"
@@ -286,7 +440,7 @@ process setupAdjustment {
     processDir=\$PWD
     cd $PWD
 
-    species=`grep "^[[:space:]]*focal_species[[:space:]]*=" ${config} | cut -d "=" -f 2 | xargs`
+    species=`grep "^[[:space:]]*focal_species[[:space:]]*=" ${configfile} | cut -d "=" -f 2 | xargs`
     echo "Focal species: \$species"
 
     # Generating folders for output files, especially to have the log_folder since the very beginning
@@ -306,7 +460,7 @@ process setupAdjustment {
     echo -n "Extracting ortholog species pairs and trios from Newick tree... "
     echo "NF internal work directory for [setupAdjustment] process:\n\$processDir\n" > \${logs_folder}/${logs_names["setupAdjustment"]}
 
-    ksrates init ${config_args} --nextflow >> \${logs_folder}/${logs_names["setupAdjustment"]} 2>&1
+    python3 /home/cesen/ksrates/ksrates_cli.py init ${config_args} --nextflow >> \${logs_folder}/${logs_names["setupAdjustment"]} 2>&1
 
     RET_CODE=\$?
     echo "done [\${RET_CODE}]"
@@ -331,9 +485,6 @@ process setupAdjustment {
     """
 }
 
-// Log output to stdout/console.
-logProcessOutput(outSetupAdjustment, "setupAdjustment")
-
 
 
 /*
@@ -347,15 +498,15 @@ process setParalogAnalysis {
     maxForks 1
 
     input:
-        val species from species_channel
-        val logs_folder from logs_folder_channel
-        file config from configfile
-        file expert_config from expert_configfile
+        val species /// from species_channel
+        val logs_folder /// from logs_folder_channel
+        file config /// from configfile
+        file expert_config /// from expert_configfile
 
     output:
-        stdout outSetParalogAnalysis
-        env trigger_wgdPara into trigger_wgdPara_channel
-        env trigger_doRateAdjustment_from_para into trigger_doRateAdjustment_from_setParalog_channel
+        stdout emit: outSetParalogAnalysis /// DONE
+        env trigger_wgdPara, emit: trigger_wgdPara_channel /// into trigger_wgdPara_channel DONE
+        env trigger_doRateAdjustment_from_para, emit: trigger_doRateAdjustment_from_setParalog_channel /// into trigger_doRateAdjustment_from_setParalog_channel DONE
 
     script:
     logProcessInfo(task)
@@ -419,9 +570,6 @@ process setParalogAnalysis {
     """
 }
 
-// Log output to stdout/console.
-logProcessOutput(outSetParalogAnalysis, "setParalogAnalysis")
-
 
 
 /*
@@ -435,16 +583,16 @@ process setOrthologAnalysis {
     maxForks 1
 
     input:
-        file ortholog_pairs from check_ortholog_pairs_channel
-        val logs_folder from logs_folder_channel
-        file config from configfile
+        file ortholog_pairs /// from check_ortholog_pairs_channel DONE
+        val logs_folder /// from logs_folder_channel DONE
+        file config /// from configfile DONE
 
     output:
-        stdout outSetOrthologAnalysis
-        file "tmp_species_pairs_for_wgdOrtholog.txt" optional true into species_pairs_for_wgd_Orthologs_channel
-        file "tmp_species_pairs_for_estimatePeak.txt" optional true into file_for_estimatePeak_channel
-        env estimatePeak_not_needed into trigger_plotOrthologs_together_with_wgdOrtholog_channel
-        env wgdOrtholog_not_needed into trigger_plotOrthologs_together_with_estimatePeak_channel
+        stdout emit: outSetOrthologAnalysis /// DONE
+        path "tmp_species_pairs_for_wgdOrtholog.txt", optional: true, emit: species_pairs_for_wgd_Orthologs_channel /// into species_pairs_for_wgd_Orthologs_channel DONE
+        path "tmp_species_pairs_for_estimatePeak.txt", optional: true, emit: file_for_estimatePeak_channel /// into file_for_estimatePeak_channel DONE
+        env estimatePeak_not_needed, emit: trigger_plotOrthologs_together_with_wgdOrtholog_channel /// into trigger_plotOrthologs_together_with_wgdOrtholog_channel DONE
+        env wgdOrtholog_not_needed, emit: trigger_plotOrthologs_together_with_estimatePeak_channel /// into trigger_plotOrthologs_together_with_estimatePeak_channel DONE
 
     script:
     logProcessInfo(task)
@@ -507,9 +655,6 @@ process setOrthologAnalysis {
     """
 }
 
-// Log output to stdout/console.
-logProcessOutput(outSetOrthologAnalysis, "setOrthologAnalysis")
-
 
 
 /*
@@ -520,15 +665,15 @@ logProcessOutput(outSetOrthologAnalysis, "setOrthologAnalysis")
 process estimatePeaks {
 
     input:
-        file species_pairs_for_peak from file_for_estimatePeak_channel
-        val logs_folder from logs_folder_channel
-        file config from configfile
+        file species_pairs_for_peak /// from file_for_estimatePeak_channel
+        val logs_folder /// from logs_folder_channel
+        file config /// from configfile
         
     output:
-        stdout outEstimatePeaks
-        val true into trigger_doRateAdjustment_from_estimatePeak_channel
-        val true into trigger_plotOrtholog_from_estimatePeak_channel
-        val true into trigger_plotOrtholog_from_estimatePeak_together_with_wgdOrthologs_channel
+        stdout emit: outEstimatePeaks /// DONE
+        val true, emit: trigger_doRateAdjustment_from_estimatePeak_channel /// into trigger_doRateAdjustment_from_estimatePeak_channel DONE
+        val true, emit: trigger_plotOrtholog_from_estimatePeak_channel /// into trigger_plotOrtholog_from_estimatePeak_channel DONE
+        val true, emit: trigger_plotOrtholog_from_estimatePeak_together_with_wgdOrthologs_channel /// into trigger_plotOrtholog_from_estimatePeak_together_with_wgdOrthologs_channel DONE
 
     script:
     logProcessInfo(task)
@@ -542,7 +687,7 @@ process estimatePeaks {
 
     echo "Updating ortholog peak database" >> $logs_folder/${logs_names["estimatePeaks"]}
 
-    ksrates orthologs-analysis ${config_args} --ortholog-pairs=\$processDir/$species_pairs_for_peak >> $logs_folder/${logs_names["estimatePeaks"]} 2>&1
+    python3 /home/cesen/ksrates/ksrates_cli.py orthologs-analysis ${config_args} --ortholog-pairs=\$processDir/$species_pairs_for_peak >> $logs_folder/${logs_names["estimatePeaks"]} 2>&1
 
     RET_CODE=\$?
     echo "done [\${RET_CODE}] `date "+%T"`"
@@ -554,9 +699,6 @@ process estimatePeaks {
     """
 }
 
-// Log output to stdout/console.
-logProcessOutput(outEstimatePeaks, "estimatePeaks")
-
 
 
 /*
@@ -566,14 +708,14 @@ logProcessOutput(outEstimatePeaks, "estimatePeaks")
 process wgdParalogs {
 
     input:
-        val species from species_channel
-        val trigger_wgdPara from trigger_wgdPara_channel
-        val logs_folder from logs_folder_channel
-        file config from configfile
+        val species /// from species_channel
+        val trigger_wgdPara /// from trigger_wgdPara_channel
+        val logs_folder /// from logs_folder_channel
+        file config /// from configfile
         
     output:
-        stdout outParalogs
-        val true into trigger_doRateAdjustment_from_wgdParalog_channel
+        stdout emit: outParalogs /// DONE
+        val true, emit: trigger_doRateAdjustment_from_wgdParalog_channel /// into trigger_doRateAdjustment_from_wgdParalog_channel DONE
 
     when:
         trigger_wgdPara == "true"
@@ -590,7 +732,7 @@ process wgdParalogs {
 
     echo "Using ${task.cpus} thread(s)\n">> $logs_folder/${logs_names["wgdParalogs"]}
 
-    ksrates paralogs-ks ${config_args} --n-threads=${task.cpus} >> $logs_folder/${logs_names["wgdParalogs"]} 2>&1
+    python3 /home/cesen/ksrates/ksrates_cli.py paralogs-ks ${config_args} --n-threads=${task.cpus} >> $logs_folder/${logs_names["wgdParalogs"]} 2>&1
 
     RET_CODE=\$?
     echo "done [\${RET_CODE}] `date "+%T"`"
@@ -602,9 +744,6 @@ process wgdParalogs {
     """
 }
 
-// Log output to stdout/console.
-logProcessOutput(outParalogs, "wgdParalogs")
-
 
 
 /*
@@ -614,16 +753,16 @@ logProcessOutput(outParalogs, "wgdParalogs")
 process wgdOrthologs {
 
     input:
-        val species from species_channel
-        tuple species1, species2 from species_pairs_for_wgd_Orthologs_channel.splitCsv(sep:'\t')
-        val logs_folder from logs_folder_channel
-        file config from configfile
+        val species /// from species_channel DONE
+        tuple val(species1), val(species2) /// from species_pairs_for_wgd_Orthologs_channel.splitCsv(sep:'\t') DONE
+        val logs_folder /// from logs_folder_channel DONE
+        file config /// from configfile DONE
         
     output:
-        stdout outOrthologs
-        val true into trigger_doRateAdjustment_from_wgdOrtholog_channel
-        val true into trigger_plotOrtholog_from_wgdOrtholog_channel
-        val true into trigger_plotOrtholog_from_wgdOrtholog_together_with_estimatePeak_channel
+        stdout emit: outOrthologs /// DONE
+        val true , emit: trigger_doRateAdjustment_from_wgdOrtholog_channel /// into trigger_doRateAdjustment_from_wgdOrtholog_channel DONE
+        val true , emit: trigger_plotOrtholog_from_wgdOrtholog_channel /// into trigger_plotOrtholog_from_wgdOrtholog_channel DONE
+        val true , emit: trigger_plotOrtholog_from_wgdOrtholog_together_with_estimatePeak_channel /// into trigger_plotOrtholog_from_wgdOrtholog_together_with_estimatePeak_channel DONE
 
     script:
     logProcessInfo(task, "$species1 – $species2", printIndex=true, print=true)
@@ -637,7 +776,7 @@ process wgdOrthologs {
 
     echo "Using ${task.cpus} thread(s)\n">> $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log
 
-    ksrates orthologs-ks ${config_args} $species1 $species2 --n-threads=${task.cpus} >> $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log 2>&1
+    python3 /home/cesen/ksrates/ksrates_cli.py orthologs-ks ${config_args} $species1 $species2 --n-threads=${task.cpus} >> $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log 2>&1
 
     RET_CODE=\$?
     echo "done [\${RET_CODE}] `date "+%T"`"
@@ -646,7 +785,7 @@ process wgdOrthologs {
     echo "\n" >> $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log
     echo "Species1\tSpecies2\n$species1\t$species2" > \${processDir}/tmp_${species1}_${species2}.txt
     
-    ksrates orthologs-analysis ${config_args} --ortholog-pairs=\${processDir}/tmp_${species1}_${species2}.txt >> $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log 2>&1
+    python3 /home/cesen/ksrates/ksrates_cli.py orthologs-analysis ${config_args} --ortholog-pairs=\${processDir}/tmp_${species1}_${species2}.txt >> $logs_folder/${logs_names["wgdOrthologs"]}${species1}_${species2}.log 2>&1
 
     RET_CODE=\$?
     echo "done [\${RET_CODE}] `date "+%T"`"
@@ -657,9 +796,6 @@ process wgdOrthologs {
     cd \$processDir
     """
 }
-
-// Log output to stdout/console.
-logProcessOutput(outOrthologs, "wgdOrthologs")
 
 
 
@@ -672,13 +808,13 @@ process plotOrthologDistrib {
     maxForks 1
 
     input:
-        val species from species_channel
-        val trigger from trigger_plotOrtholog_from_setupAdjustment_channel.mix(trigger_plotOrtholog_from_estimatePeak_together_with_wgdOrthologs_channel.merge(trigger_plotOrtholog_from_wgdOrtholog_together_with_estimatePeak_channel.collect()), trigger_plotOrthologs_together_with_wgdOrtholog_channel.merge(trigger_plotOrtholog_from_wgdOrtholog_channel.collect()), trigger_plotOrthologs_together_with_estimatePeak_channel.merge(trigger_plotOrtholog_from_estimatePeak_channel))
-        val logs_folder from logs_folder_channel
-        file config from configfile
+        val species /// from species_channel
+        val trigger /// from trigger_plotOrtholog_from_setupAdjustment_channel.mix(trigger_plotOrtholog_from_estimatePeak_together_with_wgdOrthologs_channel.merge(trigger_plotOrtholog_from_wgdOrtholog_together_with_estimatePeak_channel.collect()), trigger_plotOrthologs_together_with_wgdOrtholog_channel.merge(trigger_plotOrtholog_from_wgdOrtholog_channel.collect()), trigger_plotOrthologs_together_with_estimatePeak_channel.merge(trigger_plotOrtholog_from_estimatePeak_channel))
+        val logs_folder /// from logs_folder_channel
+        file config /// from configfile
         
     output:
-        stdout outPlotOrthologDistrib
+        stdout emit: outPlotOrthologDistrib /// DONE
 
     when:
         trigger == "true" || !trigger.contains("false")
@@ -706,7 +842,7 @@ process plotOrthologDistrib {
     cd $PWD
     echo "NF internal work directory for [plotOrthologDistrib] process:\n\$processDir\n" > $logs_folder/${logs_names["plotOrthologDistrib"]}
 
-    ksrates plot-orthologs ${config_args} >> $logs_folder/${logs_names["plotOrthologDistrib"]} 2>&1
+    python3 /home/cesen/ksrates/ksrates_cli.py plot-orthologs ${config_args} >> $logs_folder/${logs_names["plotOrthologDistrib"]} 2>&1
     
     RET_CODE=\$?
     echo "done [\${RET_CODE}] `date "+%T"`"
@@ -717,9 +853,6 @@ process plotOrthologDistrib {
     cd \$processDir
     """
 }
-
-// Log output to stdout/console.
-logProcessOutput(outPlotOrthologDistrib, "plotOrthologDistrib")
 
 
 
@@ -733,16 +866,16 @@ process doRateAdjustment {
     maxForks 1
 
     input:
-        val species from species_channel
-        val trigger from trigger_doRateAdjustment_from_setParalog_channel.mix(trigger_doRateAdjustment_from_estimatePeak_channel, trigger_doRateAdjustment_from_wgdOrtholog_channel, trigger_doRateAdjustment_from_wgdParalog_channel)
-        val logs_folder from logs_folder_channel
-        file config from configfile
-        file expert_config from expert_configfile
+        val species /// from species_channel
+        val trigger /// from trigger_doRateAdjustment_from_setParalog_channel.mix(trigger_doRateAdjustment_from_estimatePeak_channel, trigger_doRateAdjustment_from_wgdOrtholog_channel, trigger_doRateAdjustment_from_wgdParalog_channel)
+        val logs_folder /// from logs_folder_channel
+        file config /// from configfile
+        file expert_config /// from expert_configfile
         
     output:
-        stdout outDoRateAdjustment
-        val true into trigger_paralogsAnalyses_from_doRateAdjustment_channel
-        val true into trigger_drawTree_from_doRateAdjustment_channel
+        stdout emit: outDoRateAdjustment
+        val true, emit: trigger_paralogsAnalyses_from_doRateAdjustment_channel /// into trigger_paralogsAnalyses_from_doRateAdjustment_channel
+        val true, emit: trigger_drawTree_from_doRateAdjustment_channel /// into trigger_drawTree_from_doRateAdjustment_channel
 
     when:
         trigger == "true" || trigger == true
@@ -786,7 +919,7 @@ process doRateAdjustment {
 
     echo -n "`date "+%T"` Starting rate-adjustment analysis... "
 
-    ksrates orthologs-adjustment ${config_args} >> $logs_folder/${logs_names["doRateAdjustment"]} 2>&1
+    python3 /home/cesen/ksrates/ksrates_cli.py orthologs-adjustment ${config_args} >> $logs_folder/${logs_names["doRateAdjustment"]} 2>&1
 
     RET_CODE=\$?
     echo "done [\${RET_CODE}] `date "+%T"`"
@@ -795,7 +928,7 @@ process doRateAdjustment {
 
     echo -n "`date "+%T"` Plotting mixed distributions... "
 
-    ksrates plot-paralogs ${config_args} >> $logs_folder/${logs_names["doRateAdjustment"]} 2>&1
+    python3 /home/cesen/ksrates/ksrates_cli.py plot-paralogs ${config_args} >> $logs_folder/${logs_names["doRateAdjustment"]} 2>&1
     
     RET_CODE=\$?
     echo "done [\${RET_CODE}] `date "+%T"`"
@@ -809,9 +942,6 @@ process doRateAdjustment {
     """
 }
 
-// Log output to stdout/console.
-logProcessOutput(outDoRateAdjustment, "doRateAdjustment")
-
 
 
 /*
@@ -823,13 +953,13 @@ logProcessOutput(outDoRateAdjustment, "doRateAdjustment")
 process paralogsAnalyses {
 
     input:
-        val species from species_channel
-        val logs_folder from logs_folder_channel
-        file config from configfile
-        val trigger from trigger_paralogsAnalyses_from_doRateAdjustment_channel.collect()
+        val species /// from species_channel
+        val logs_folder /// from logs_folder_channel
+        file config /// from configfile
+        val trigger /// from trigger_paralogsAnalyses_from_doRateAdjustment_channel.collect()
         
     output:
-        stdout outParalogsAnalyses
+        stdout emit: outParalogsAnalyses /// DONE
 
     script:
     logProcessInfo(task, species)
@@ -841,7 +971,7 @@ process paralogsAnalyses {
     cd $PWD
     echo "NF internal work directory for [paralogsAnalyses (${task.index})] process:\n\$processDir\n" >> $logs_folder/${logs_names["paralogsAnalyses"]}
 
-    ksrates paralogs-analyses ${config_args} >> $logs_folder/${logs_names["paralogsAnalyses"]} 2>&1
+    python3 /home/cesen/ksrates/ksrates_cli.py paralogs-analyses ${config_args} >> $logs_folder/${logs_names["paralogsAnalyses"]} 2>&1
  
     RET_CODE=\$?
     echo "done [\${RET_CODE}] `date "+%T"`"
@@ -854,9 +984,6 @@ process paralogsAnalyses {
     cd \$processDir
     """
 }
-
-// Log output to stdout/console.
-logProcessOutput(outParalogsAnalyses, "paralogsAnalyses")
 
 
 
@@ -872,13 +999,13 @@ process drawTree {
     maxForks 1
 
     input:
-        val species from species_channel
-        val logs_folder from logs_folder_channel
-        file config from configfile
-        val trigger from trigger_drawTree_from_doRateAdjustment_channel.collect()
+        val species /// from species_channel
+        val logs_folder /// from logs_folder_channel
+        file config /// from configfile
+        val trigger /// from trigger_drawTree_from_doRateAdjustment_channel.collect()
         
     output:
-        stdout outDrawTree
+        stdout emit: outDrawTree /// DONE
 
     script:
     logProcessInfo(task)
@@ -890,7 +1017,7 @@ process drawTree {
     cd $PWD
     echo "NF internal work directory for [drawTree] process:\n\$processDir\n" >> $logs_folder/${logs_names["drawTree"]}
 
-    ksrates plot-tree ${config_args} --nextflow >> $logs_folder/${logs_names["drawTree"]} 2>&1
+    python3 /home/cesen/ksrates/ksrates_cli.py plot-tree ${config_args} --nextflow >> $logs_folder/${logs_names["drawTree"]} 2>&1
 
     RET_CODE=\$?
     echo "done [\${RET_CODE}] `date "+%T"`"
@@ -901,9 +1028,6 @@ process drawTree {
     cd \$processDir
     """
 }
-
-// Log output to stdout/console.
-logProcessOutput(outDrawTree, "drawTree")
 
 
 
