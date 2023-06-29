@@ -37,7 +37,7 @@ jobs:
         run: |
           cd test
           mv nextflow.config custom_nextflow.config
-          NXF_VER=21.10.6 nextflow run ../main.nf --config config_elaeis.txt -with-docker ksrates
+          nextflow run ../main.nf --config config_elaeis.txt -with-docker ksrates
         
       - name: Visualize output files
         if: ${{ always() }}
