@@ -38,9 +38,7 @@ jobs:
       - name: Build and push to Docker Hub
         uses: docker/build-push-action@v2
         with:
-          push: false
+          push: true
           platforms: linux/arm64,linux/amd64
           context: .
-          tags: |
-            vibpsb/ksrates:latest
-            vibpsb/ksrates:${{ steps.meta.outputs.tags }}
+          tags: ${{ steps.meta.outputs.tags }}
