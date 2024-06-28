@@ -1,4 +1,4 @@
-FROM vibpsb/i-adhore
+FROM vibpsb/i-adhore:3.1
 
 MAINTAINER Cecilia Sensalari
 
