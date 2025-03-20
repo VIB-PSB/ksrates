@@ -25,13 +25,13 @@ Main output
 
     Figures:
 
-        * Rate-adjusted mixed paralog--ortholog *K*:sub:`S` distribution plot in PDF format (``mixed_species_adjusted.pdf``).
+        * Rate-adjusted mixed paralog--ortholog *K*:sub:`S` distribution plot in PDF format (``mixed_species_adjusted.pdf``) for whole-paranome, anchor pairs and/or reciprocally retained paralogs.
         * Input phylogenetic tree in PDF format with branch length set to *K*:sub:`S` distances estimated from ortholog *K*:sub:`S` distributions (``tree_species_distances.pdf``).
         * Rate-adjusted mixed anchor pair--ortholog *K*:sub:`S` distribution clustered for inference of putative WGDs, with only significant clusters retained (``mixed_species_anchor_clusters.pdf``).
         * Rate-adjusted mixed paralog--ortholog *K*:sub:`S` distribution with superimposed exponential-lognormal mixture model inference of putative WGDs (``mixed_species_elmm.pdf``).
-        * Rate-adjusted mixed paralog-- and anchor pair--ortholog *K*:sub:`S` distributions with superimposed lognormal-only mixture model for inference of putative WGDs (``mixed_species_lmm_paranome.pdf`` and ``mixed_species_lmm_colinearity.pdf``).
+        * Rate-adjusted mixed paralog-- and anchor pair--ortholog *K*:sub:`S` distributions with superimposed lognormal-only mixture model for inference of putative WGDs (``mixed_species_lmm.pdf``) for whole-paranome, anchor pairs and/or reciprocally retained paralogs.
         * Multi-panel figure(s) of the ortholog *K*:sub:`S` distributions used to adjust a divergent species pair (``orthologs_species1_species2.pdf``).
-        * Unadjusted naive mixed paralog--ortholog *K*:sub:`S` distribution plot in PDF format (``mixed_species_unadjusted.pdf``).
+        * Unadjusted naive mixed paralog--ortholog *K*:sub:`S` distribution plot in PDF format (``mixed_species_unadjusted.pdf``) for whole-paranome, anchor pairs and/or reciprocally retained paralogs.
         * Original input phylogenetic tree in PDF format with fixed branch lengths (``tree_species.pdf``).
 
     Files:
@@ -78,8 +78,8 @@ Main output
 
     From lognormal-only mixture modeling:
 
-        * Multi-panel figure showing the best-fitted mixture model on whole-paranome and anchor pair *K*:sub:`S` distributions obtained for each number of components (``lmm_species_all_models_paranome.pdf`` and ``lmm_species_all_models_colinearity.pdf``).
-        * TSV and TXT files collecting component parameters (``lmm_species_parameters_colinearity.tsv``, ``lmm_species_parameters_colinearity.txt``, ``lmm_species_parameters_paranome.tsv`` and ``lmm_species_parameters_paranome.txt``) (see :ref:`lmm` for more details on the file format).
+        * Multi-panel figure showing the best-fitted mixture model on whole-paranome and anchor pair *K*:sub:`S` distributions obtained for each number of components (``lmm_species_all_models.pdf``) for whole-paranome, anchor pairs and/or reciprocally retained paralogs.
+        * TSV and TXT files collecting component parameters (``lmm_species_parameters.tsv`` and ``lmm_species_parameters.txt``) for whole-paranome, anchor pairs and/or reciprocally retained paralogs (see :ref:`lmm` for more details on the file format).
 
 
 Nextflow log files
@@ -104,7 +104,7 @@ Nextflow log files
 
     * ``species.blast.tsv`` lists the paralog BLAST homology hits in tabular output format (``-outfmt 6``) 
     * ``species.mcl.tsv`` lists the paralog gene families, one family per line from the largest to the smallest family with the gene IDs of individual family members separated by tabs.
-    *   ``species.ks.tsv`` and  ``species.ks_anchors.tsv`` are tabular format files listing the *K*:sub:`S` estimate (column 9 ``Ks``) for every paralog and anchor pair found, respectively. Other noteworthy data per pair includes the alignment coverage, identity and length (columns 2--5: ``AlignmentCoverage``, ``AlignmentIdentity``, ``AlignmentLength`` and ``AlignmentLengthStripped``), the gene family (column 7 ``Family``), the node in the gene family's tree (column 10 ``Node``), and the weight associated with the pair's *K*:sub:`S` estimate (column 15 ``WeightOutliersExcluded``). For more details, see the *wgd* `documentation <https://wgd.readthedocs.io/en/latest/methods.html?highlight=some%20information>`__.
+    * ``species.ks.tsv``, ``species.ks_anchors.tsv`` and ``species.ks_recret_top2000.tsv`` are tabular format files listing the *K*:sub:`S` estimate (column 9 ``Ks``) for every paralog pair found when analyzing whole-paranome, anchor pairs and/or reciprocally retained gene families, respectively. Other noteworthy data per pair includes the alignment coverage, identity and length (columns 2--5: ``AlignmentCoverage``, ``AlignmentIdentity``, ``AlignmentLength`` and ``AlignmentLengthStripped``), the gene family (column 7 ``Family``), the node in the gene family's tree (column 10 ``Node``), and the weight associated with the pair's *K*:sub:`S` estimate (column 15 ``WeightOutliersExcluded``). For more details, see the *wgd* `documentation <https://wgd.readthedocs.io/en/latest/methods.html?highlight=some%20information>`__.
 
         .. figure:: _images/ks_tsv.png
             :align: center
@@ -113,7 +113,7 @@ Nextflow log files
             File section showing the structure of the ``.ks.tsv`` format.
 
     * ``species_i-adhore``: this directory contains the i-ADHoRe output files necessary for the anchor *K*:sub:`S` clustering (see :ref:`anchor_ks_clustering`).
-
+    * ``reciprocal_retention``: this directory contains the OrthoMCL-related files generated when running the reciprocal retention pipeline.
 
 * ``ortholog_distributions/wgd_species1_species2``: these directories contain the files generated during the *wgd* one-to-one ortholog *K*:sub:`S` estimation for each species pair:
 

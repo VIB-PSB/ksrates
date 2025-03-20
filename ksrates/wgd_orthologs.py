@@ -13,7 +13,8 @@ def wgd_orthologs(config_file, expert_config_file, species_one, species_two, n_t
     species1, species2 = species_pair[0], species_pair[1] # sorted!
 
     config = fcConf.Configuration(config_file, expert_config_file)
-    init_logging(f"Ortholog wgd analysis for species pair [{species1} - {species2}]", config.get_logging_level())
+    logging_level = init_logging(f"Ortholog wgd analysis for species pair [{species1} - {species2}]", config.get_logging_level())
+    logging.info("Loading parameters and input files")
 
     # Get parameters and FASTA files from configuration file
     latin_names = config.get_latin_names()
@@ -35,13 +36,15 @@ def wgd_orthologs(config_file, expert_config_file, species_one, species_two, n_t
     if not os.path.exists(ortholog_dists_dir):
         logging.info(f"Creating directory {ortholog_dists_dir}")
         os.makedirs(ortholog_dists_dir, exist_ok=True)
+        
+    preserve = config.get_preserve_ks_tmp_files()
 
     # -----------------------------------------------------------------------------
 
     # ESTIMATING ORTHOLOG Ks VALUES
     logging.info("Running wgd ortholog Ks pipeline...")
     fc_wgd.ks_orthologs(species1, species2, species1_fasta_file, species2_fasta_file, base_dir=ortholog_dists_dir,
-                        n_threads=n_threads)
+                        n_threads=n_threads, logging_level=logging_level, preserve=preserve)
 
     logging.info(datetime.datetime.today().ctime())
     logging.info("Done")

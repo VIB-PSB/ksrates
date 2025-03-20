@@ -9,10 +9,8 @@ from matplotlib.colors import to_rgba
 import random
 import seaborn
 import numpy as np
-import pandas
 from pandas import Series
 from scipy import stats
-import ksrates.fc_kde_bootstrap as fcPeak
 import matplotlib
 # Use the Agg (Anti-Grain Geometry) backend to avoid needing a graphical user interface (X11 backend)
 matplotlib.use('Agg')
@@ -31,15 +29,16 @@ class StringLegendHandler(HandlerBase):
 Legend.update_default_handler_map({str: StringLegendHandler()})
 
 # Some constants to use in plotting
-ALPHA_PARANOME_HISTOGRAM = 0.75
-ALPHA_ANCHOR_HISTOGRAM = 0.75
+ALPHA_HISTOGRAM = 0.75
 ALPHA_DIVERGENCE_RECT = 0.3
 ALPHA_DIVERGENCE_LINE = 0.6
 
-COLOR_PARANOME_HISTOGRAM = to_rgba("0.79", ALPHA_PARANOME_HISTOGRAM)
-COLOR_ANCHOR_HISTOGRAM = to_rgba("0.64", ALPHA_ANCHOR_HISTOGRAM)
+COLOR_PARANOME_HISTOGRAM = to_rgba("0.79", ALPHA_HISTOGRAM)
+COLOR_ANCHOR_HISTOGRAM = to_rgba("0.64", ALPHA_HISTOGRAM)
+COLOR_REC_RET_HISTOGRAM = to_rgba("0.48", ALPHA_HISTOGRAM)  # todo: check IF 0.48 corresponds to 0.2 below!
 COLOR_PARANOME_KDE = "0.6"
 COLOR_ANCHOR_KDE = "0.4"
+COLOR_REC_RET_KDE = "0.2"
 
 SIZE_CIRCLE_LABEL_WHITE = 220
 LINEWIDTH_CIRCLE_LABEL_BORDER = 1
@@ -47,13 +46,15 @@ LINEWIDTH_CIRCLE_LABEL_BORDER = 1
 # Fraction of total y range by which to extend the plot below if adjustment arrows are drawn
 NEGATIVE_Y_FRACTION = 0.08
 
-# Filenames
-_MIXED_ADJUSTED_PLOT_FILENAME = "mixed_{}_adjusted.pdf"
-_MIXED_UNADJUSTED_PLOT_FILENAME = "mixed_{}_unadjusted.pdf"
+# Template filenames
+_MIXED_ADJUSTED_PLOT_FILENAME = "mixed_{}_adjusted_{}.pdf"
+_MIXED_UNADJUSTED_PLOT_FILENAME = "mixed_{}_unadjusted_{}.pdf"
+_OTHER_MIXED_PLOTS_SUBDIR = "other_mixed_plots"
 
 
 def generate_mixed_plot_figure(species, x_max_lim, y_max_lim, corrected_or_not, correction_table_available, 
-                               plot_correction_arrows, paranome_data=True, colinearity_data=True):
+                               plot_correction_arrows, paranome_data=False, colinearity_data=False, 
+                               reciprocal_retention_data=False, top=None, rank_type=None):
     """
     Initializes a figure with a single empty plot for the mixed distribution.
 
@@ -63,6 +64,11 @@ def generate_mixed_plot_figure(species, x_max_lim, y_max_lim, corrected_or_not, 
     :param corrected_or_not: string to specify if the plot will be the adjusted or the un-adjusted mixed plot ["corrected", "un-corrected"]
     :param correction_table_available: boolean flag to state whether the adjustment table is available yet or not
     :param plot_correction_arrows: boolean stating whether there will be plotted adjustment arrows or not
+    :param paranome_data: boolean to include or not whole-paranome Ks values
+    :param colinearity_data: boolean to include or not anchor pair Ks values
+    :param reciprocal_retention_data: boolean to include or not reciprocal retention Ks values
+    :param top: cut-off for the reciprocal retention ranking of the 9178 core-angiosperm gene families
+    :param rank_type: Type of reciprocal retention ranking ('lambda' by default or 'combined')
     :return: figure and axis objects
     """
     species_escape_whitespaces = species.replace(' ', '\ ')
@@ -88,11 +94,17 @@ def generate_mixed_plot_figure(species, x_max_lim, y_max_lim, corrected_or_not, 
     else:
         fig.suptitle("$K_\mathregular{S}$" + f" distribution for ${species_escape_whitespaces}$")
 
+    # TODO: will this subtitle stay in the final version of the Ks plot?
+    # if reciprocal_retention_data:
+    #     ax.set_title(f"Top {top} GFs from {rank_type} ranking")
+
     seaborn.despine(offset=10)
     ax.set_xlabel("$K_\mathregular{S}$")
-    if paranome_data:  # If paranome (with or without anchors) is going to be plotted
+    if paranome_data or reciprocal_retention_data:
+        # If paranome or rec.ret paralogs appear in the plot, use "duplicates"
         ax.set_ylabel("Number of retained duplicates (weighted)")
-    elif colinearity_data:  # If only anchor pairs are going to plotted
+    elif colinearity_data:
+        # If instead only anchor pairs are going to plotted, use "anchor pairs"
         ax.set_ylabel("Number of retained anchor pairs (weighted)")
 
     ax.set_xlim(0, x_max_lim)
@@ -187,6 +199,8 @@ def plot_histogram(legend_label, axis, ks_list, bin_list, bin_width, max_ks, bw_
             color_hist = COLOR_PARANOME_KDE
         elif legend_label == "Anchor pairs":
             color_hist = COLOR_ANCHOR_KDE
+        elif legend_label == "Reciprocally retained paralogs":
+            color_hist = COLOR_REC_RET_KDE
         axis.plot(kde_x, kde_y * len(ks_list_reflected) * bin_width * np.mean(weight_list_reflected), 
                       color=color_hist, linewidth=1.3)
     return hist
@@ -207,12 +221,16 @@ def plot_histogram_for_anchor_clustering(axis, anchor_ks_list, anchors_weights, 
         set_mixed_plot_height(axis, y_max_lim, hist)
 
 
-def set_mixed_plot_height(axis, y_max_lim, hist):
+def set_mixed_plot_height(axis, y_max_lim, hist, second_hist=None):
     """
-    Sets the height of the plot based on the tallest histogram bin (either of the
-    paranome distribution or of the anchor pair distribution).
+    Sets the height of the plot based on the tallest histogram bin:
+    - if only one histogram is provided, check its highest bin;
+    - if two histograms are given (i.e. anchor pair and reciprocally retained distributions),
+      check which histogram has the tallest bin.
     """
     tallest_bin = max(hist[0])
+    if second_hist != None and max(second_hist[0]) > tallest_bin:
+        tallest_bin = max(second_hist[0])
     axis.set_ylim(0, tallest_bin * 1.25)
 
 
@@ -449,40 +467,64 @@ def define_legend_size(axis):
     return final_legend_size
 
 
-def create_legend(axis, paranome, colinearity, legend_size):
+def create_legend(axis, paranome, colinearity, reciprocal_retention, legend_size):
     """
-    Places the legend elements associated to the histograms at the beginning of the legend,\\
-    while by default they are placed at the end.
+    Introduces an empty line and the text string "Divergence with:" in the legend, when the legend also includes the ortholog divergence lines.
 
     :param axis: matplotlib axis object from which the legend is taken
-    :param paranome: the config file field that states if the whole-paranome has to be plotted [yes/no]
-    :param colinearity: the config file field that states if the anchor pairs have to be plotted [yes/no]
+    :param paranome: the config file field that states if the whole-paranome has to be plotted [True/False]
+    :param colinearity: the config file field that states if anchor pairs have to be plotted [True/False]
+    :param reciprocal_retention: the config file field that states if reciprocally retained GFs have to be plotted [True/False]
     :param legend_size: size of the legend box as a tuple of format "(x, y, width, height)"
     :return: the updated legend object
     """
+    # Get how many types of analysis are requested
+    num_analysis_types = [paranome, colinearity, reciprocal_retention].count(True) 
+
+    # Get current handles and generate rectangular handles
     handles, labels = axis.get_legend_handles_labels()
     sorted_handles, sorted_labels = handles.copy(), labels.copy()
     paranome_rect = Patch(facecolor=COLOR_PARANOME_HISTOGRAM, edgecolor="w")
     anchors_rect = Patch(facecolor=COLOR_ANCHOR_HISTOGRAM, edgecolor="w")
-    # empty patch used as spacer between histograms and divergence line legend entries
-    empty_rect = Patch(fill=False, edgecolor='none', visible=False)
+    rec_ret_rect = Patch(facecolor=COLOR_REC_RET_HISTOGRAM, edgecolor="w")
+    # Make empty patch used as spacer between histograms and divergence line legend entries
+    transparent_rect = Patch(fill=False, edgecolor='none', visible=False)
 
-    if paranome and not colinearity:
-        sorted_handles = [paranome_rect, empty_rect, "Divergence with:"] + sorted_handles[:-1]
-        sorted_labels = [sorted_labels[-1]] + ["", ""] + sorted_labels[:-1]
-    elif not paranome and colinearity:
-        sorted_handles = [anchors_rect, empty_rect, "Divergence with:"] + sorted_handles[:-1]
-        sorted_labels = [sorted_labels[-1]] + ["", ""] + sorted_labels[:-1]
-    elif paranome and colinearity:
-        sorted_handles = [paranome_rect, anchors_rect, empty_rect, "Divergence with:"] + sorted_handles[:-2]
-        sorted_labels = sorted_labels[-2:] + ["", ""] + sorted_labels[:-2]
+    # Update legend handle list introducing spacing and "Divergence with:" string in the middle of it
+    # A handle is the symbol of a legend item, e.g. a gray rectangle
+    sorted_handles = []
+    # First append the legend rectangular symbols related to the Ks distribution type(s)
+    for analysis_type, analysis_type_rect in zip([paranome, colinearity, reciprocal_retention], [paranome_rect, anchors_rect, rec_ret_rect]):
+        if analysis_type:
+            sorted_handles.append(analysis_type_rect)
+    # Then add a transparent rectangle to generate an empty line to divide from the subsequent list of ortholog divergences
+    sorted_handles.append(transparent_rect)
+    # Then add a line with string "Divergence with:" to anticipate the subsequent list
+    sorted_handles.append("Divergence with:")
+    # Finally add the list of ortholog divergences, starting from index "num_analysis_types"
+    sorted_handles.extend(handles[num_analysis_types:])
+    # E.g. "num_analysis_types" is 2 when col and recret are requested; the first 2 elements are skipped in the list:
+    # [rectangle_anchors, rectangle_recret, first_divergence_symbol, second_divergence_symbol, ... ]
+    
+    # Update legend label list introducing spacing and "Divergence with:" string in the middle of it
+    # A label is the text description of a legend item, e.g. the text "Whole-paranome"
+    sorted_labels = []
+    # First the analysis type description(s) are located before the index "num_analysis_types"
+    sorted_labels.extend(labels[:num_analysis_types])
+    # Then add two empty strings in correspondence of the transparent rectangle and of "Divergence with:"
+    sorted_labels.extend(["", ""])
+    # Finally, the list of ortholog divergences starts from index "num_analysis_types"
+    sorted_labels.extend(labels[num_analysis_types:])
+    # E.g. "num_analysis_types" is 2 when col and recret are requested; the first 2 elements are skipped in the list:
+    # ['Anchor pairs', 'Reciprocally retained paralogs', 'first_divergence_age', 'second_divergence_age', ... ]
 
     lgd = axis.legend(sorted_handles, sorted_labels, handlelength=1.5, mode="expand", loc="upper left",
                       bbox_to_anchor=legend_size)
     return lgd
 
 
-def save_mixed_plot(fig_corr, fig_uncorr, ax_corr, ax_uncorr, species, correction_table_available, paranome, colinearity):
+def save_mixed_plot(fig_corr, fig_uncorr, ax_corr, ax_uncorr, species, correction_table_available,
+                    paranome, colinearity, reciprocal_retention, filename_adjusted, filename_unadjusted):
     """
     This function must be called to save the mixed distribution figure in order to adjust the figure layout:
     the plot area is shrunk to the left and some reasonable space is left on the right side for the legend.
@@ -493,29 +535,35 @@ def save_mixed_plot(fig_corr, fig_uncorr, ax_corr, ax_uncorr, species, correctio
     :param ax_uncorr: axis object of the un-adjusted mixed distribution
     :param species: focal species
     :param paranome: the config file field that states if the whole-paranome has to be plotted [True/False]
-    :param colinearity: the config file field that states if the anchor pairs have to be plotted [True/False]
+    :param colinearity: the config file field that states if anchor pairs have to be plotted [yes/no]
+    :param reciprocal_retention: the config file field that states if reciprocally retained GFs have to be plotted [yes/no]
     """
+    directory_path = os.path.join("rate_adjustment", f"{species}")
+    # Generate the subdirectory for mixed plot composed of two or three data types (e.g. paranome & anchor pairs)
+    if not os.path.exists(os.path.join(directory_path, _OTHER_MIXED_PLOTS_SUBDIR)):
+        os.makedirs(os.path.join(directory_path, _OTHER_MIXED_PLOTS_SUBDIR))
+
     if correction_table_available:
         legend_size = define_legend_size(ax_corr)
         chart_box = ax_uncorr.get_position()
 
         ax_uncorr.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
-        lgd = create_legend(ax_uncorr, paranome, colinearity, legend_size)
-        fig_uncorr.savefig(os.path.join("rate_adjustment", f"{species}", _MIXED_UNADJUSTED_PLOT_FILENAME.format(species)),
+        lgd = create_legend(ax_uncorr, paranome, colinearity, reciprocal_retention, legend_size)
+        fig_uncorr.savefig(os.path.join(directory_path, filename_unadjusted),
                        bbox_extra_artists=(lgd, fig_uncorr._suptitle), bbox_inches="tight", transparent=True, format="pdf")
 
         ax_corr.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
-        lgd = create_legend(ax_corr, paranome, colinearity, legend_size)
-        fig_corr.savefig(os.path.join("rate_adjustment", f"{species}", _MIXED_ADJUSTED_PLOT_FILENAME.format(species)),
+        lgd = create_legend(ax_corr, paranome, colinearity, reciprocal_retention, legend_size)
+        fig_corr.savefig(os.path.join(directory_path, filename_adjusted.format(species)),
                      bbox_extra_artists=(lgd, fig_corr._suptitle), bbox_inches="tight", transparent=True, format="pdf")
     else:
-        # if not correction_table_available use a simpler layout with the legend
-        # inside the plot and no right margin
+        # If the adjustment table is not available, use a simpler layout with
+        # the legend inside the plot and no right margin
         lgd = ax_uncorr.legend(handlelength=1.5, loc="upper right")
-        fig_uncorr.savefig(os.path.join("rate_adjustment", f"{species}", _MIXED_UNADJUSTED_PLOT_FILENAME.format(species)),
+        fig_uncorr.savefig(os.path.join(directory_path, filename_unadjusted),
                            transparent=True, format="pdf")
         lgd = ax_corr.legend(handlelength=1.5, loc="upper right")
-        fig_corr.savefig(os.path.join("rate_adjustment", f"{species}", _MIXED_ADJUSTED_PLOT_FILENAME.format(species)), 
+        fig_corr.savefig(os.path.join(directory_path, filename_adjusted), 
                          transparent=True, format="pdf")
 
 

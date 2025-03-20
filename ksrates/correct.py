@@ -2,7 +2,7 @@ import sys
 import os
 import pandas as pd
 from pandas import DataFrame
-from math import sqrt, floor
+from math import sqrt
 import logging
 import ksrates.fc_rrt_correction as fcCorrect
 import ksrates.fc_check_input as fcCheck
@@ -117,7 +117,7 @@ def correct(config_file, expert_config_file, trios_file):
 
         for sister in sisters_per_node[node]:
             # FIRST STRATEGY: taking the MEAN among adjusted peaks from all outgroups
-            # TODO: take the median too?
+            # todo: take the median too?
             peak_list = node_df.loc[node_df['Sister_Species'] == sister, ['Adjusted_Mode']]
             sd_list = node_df.loc[node_df['Sister_Species'] == sister, ['Adjusted_Mode_SD']]
             sd_list = sd_list["Adjusted_Mode_SD"].values.tolist()
@@ -135,7 +135,7 @@ def correct(config_file, expert_config_file, trios_file):
             rate_sister_mean = float(rate_sister_list.mean())        
 
             # SECOND STRATEGY: taking only the adjusted peak from the "BEST" outgroup (lowest OC value)
-            # TODO: use DataFrame.at?
+            # todo: use DataFrame.at?
             oc_list = node_df.loc[node_df['Sister_Species'] == sister, ['Ks_Out']]
             oc_best_value = float(oc_list.min())
             peak_best_oc = node_df.loc[node_df['Ks_Out'] == oc_best_value, ['Adjusted_Mode']]

@@ -1,4 +1,5 @@
 __pycache__
 .vscode
 .nextflow
-doc/outdir
+.nextflow.log*
+docs/outdir

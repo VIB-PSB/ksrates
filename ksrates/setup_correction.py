@@ -8,6 +8,7 @@ import ksrates.fc_configfile as fcConf
 import ksrates.fc_check_input as fcCheck
 import ksrates.fc_manipulate_trees as fcTree
 from ksrates.utils import init_logging
+from ksrates.fc_rec_ret_orthomcl import check_recret_name_compatibility
 
 
 def setup_correction(config_file, expert_config_file, nextflow_flag):
@@ -22,12 +23,13 @@ def setup_correction(config_file, expert_config_file, nextflow_flag):
     fcTree.check_integrity_newick_tree(original_tree)
     tree = fcTree.reorder_tree_leaves(original_tree, species_of_interest)  # focal species is the top leaf
     latin_names = config.get_latin_names()
-    divergence_colors = config.get_color_list()
     paranome = config.get_paranome()
     colinearity = config.get_colinearity()
+    reciprocal_retention = config.get_reciprocal_retention()
+    divergence_colors = config.get_color_list()
 
-    if not paranome and not colinearity:
-        logging.error('At least one of the "paranome" or "collinearity" parameters in the configuration file needs to be set to "yes".')
+    if not paranome and not colinearity and not reciprocal_retention:
+        logging.error('At least "paranome", "collinearity" or "reciprocal_retention" in the configuration file needs to be set to "yes".')
         logging.error("Exiting.")
         sys.exit(1)
 
@@ -65,11 +67,15 @@ def setup_correction(config_file, expert_config_file, nextflow_flag):
             fcCheck.check_IDs(fasta, latin_names[species], gff)
         else:  # Warn only about FASTA file
             fcCheck.check_IDs(fasta, latin_names[species])
-            
+
+    # Check species informal names' compatibility with reciprocal retention pipeline
+    if check_recret_name_compatibility(tree.get_leaf_names(), reciprocal_retention):
+        trigger_exit = True
+    
     if trigger_exit:
-        logging.error("Please add the missing information to the configuration file and rerun the analysis. Exiting.")
+        logging.error("Please adjust the configuration file and rerun the analysis. Exiting.")
         sys.exit(1)
-    logging.info("Completed")
+    logging.info("Done")
 
     # Creating folders for correction output files
     if not os.path.exists('rate_adjustment'):

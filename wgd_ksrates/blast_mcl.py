@@ -29,7 +29,7 @@ import logging
 import glob
 
 def all_v_all_blast(query, db, output_directory='./', output_file='blast.tsv',
-                    eval_cutoff=1e-10, n_threads=4):
+                    eval_cutoff=1e-10, n_threads=1):
     """
     Perform all-versus-all Blastp.
     Runs a blast of ``query`` vs. ``db``.

@@ -95,3 +95,77 @@ def compute_corrected_ks_species_sister(rel_rate_species, rel_rate_species_sd):
     corrected_peak_sd = sqrt(2) * rel_rate_species_sd
 
     return corrected_peak, corrected_peak_sd
+
+
+def interpretation_adjusted_plot(focal_species_latin, consensus_peak_for_multiple_outgroups, 
+                                wgd_peaks, correction_table):
+    """
+    Prints an automatic interpretation of the rate-adjusted mixed Ks plots in which for each
+    inferred (putative) WGD peak it is said which species share it with the focal species.
+    This is done by comparing the x-coordinate of WGD peaks coming from mixture
+    modeling analyses and the rate-adjusted ortholog modes.
+    The WGD x-coordinate (its Ks age) is either coming from a component when the method is 
+    exponential-lognormal mixture modeling and lognormal mixture modeling, or from an 
+    anchor cluster when the method is anchor clustering.
+    
+    :param focal_species_latin: latin name of focal species
+    :param consensus_peak_for_multiple_outgroups: choice of how to deal with multiple adjustments
+       for the same divergence (expected values: either "mean among outgroups" or "best outgroup")
+    :param wgd_peaks: dictionary associating to a wgd letter the coordinate of its peak (either component or anchor cluster)
+    :param correction_table: adjustment results in DataFrame format (contains both possible types of consensus strategy for how to deal with multiple outgroups)
+    """
+    if consensus_peak_for_multiple_outgroups == "mean among outgroups":
+        # Then consider the columns in the correction_table that are generated using the average method
+        column_header_peak = "Adjusted_Mode_Mean"
+    elif consensus_peak_for_multiple_outgroups == "best outgroup":
+        # Then consider the columns in the correction_table that are generated using the best outgroup method
+        column_header_peak = "Adjusted_Mode_Best"
+
+    species_interpretation = {}
+    shared_wgd_interpretation = {}
+
+    # Generate dictionary associating each divergent species to its mode
+    ortholog_modes = {}
+    for diverging_species, mode in zip(correction_table["Sister_Species"], correction_table[column_header_peak]):
+        ortholog_modes[diverging_species] = mode
+        # Also initialize a dictionary for the final interpretation logging output
+        species_interpretation[diverging_species] = []
+
+    logging.info("")
+    logging.info(f"Automatic interpretation of rate-adjusted mixed Ks plot:")
+    logging.info("Please revise it manually due to known overfitting of mixture modeling methods!")
+    # Figuring out which species share which (putative) WGDs
+    if len(wgd_peaks) == 0:
+        logging.info(" - There are no inferred (putative) WGD peaks.")
+        return
+
+    for peak in wgd_peaks:  # For each wgd peak
+        shared_wgd_interpretation[peak] = []
+        for diverging_species in ortholog_modes:  # For each divergent species
+            # What about when it's "=="?
+            if ortholog_modes[diverging_species] < wgd_peaks[peak]:
+                species_interpretation[diverging_species].append(peak)
+                shared_wgd_interpretation[peak].append(diverging_species)
+    
+    # For every peak, say which species share it with the focal species
+    for peak_letter in wgd_peaks:
+        # If wgd peak is not shared with any other species
+        if len(shared_wgd_interpretation[peak_letter]) == 0:
+            logging.info(f' - Inferred (putative) WGD signature "{peak_letter}" is ' +
+                         f'specific to focal species {focal_species_latin}')
+            continue
+        # If wgd peak is shared with all of the other species in the plots
+        elif len(shared_wgd_interpretation[peak_letter]) == len(ortholog_modes):
+            logging.info(f' - Inferred (putative) WGD signature "{peak_letter}" is shared ' + 
+                        f"with all involved species in the provided phylogeny")
+            continue
+        # If wgd peak is shared with only one other species
+        elif len(shared_wgd_interpretation[peak_letter]) == 1:
+            logging.info(f' - Inferred (putative) WGD signature "{peak_letter}" is shared with {shared_wgd_interpretation[peak_letter][0]}')
+        else: # If wgd peak is shared with some other species
+            logging.info(f' - Inferred (putative) WGD signature "{peak_letter}" is shared ' + 
+                         f"with the following species:")
+            for species in shared_wgd_interpretation[peak_letter]:
+                logging.info(f"   {species}")
+    logging.info("")
+    return

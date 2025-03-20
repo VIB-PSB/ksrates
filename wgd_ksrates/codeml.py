@@ -23,7 +23,7 @@ A python wrapper for codeml (PAML package, Yang 2007)
 
 --------------------------------------------------------------------------------
 """
-# TODO have a look at the BioPython wrapper
+# todo: have a look at the BioPython wrapper
 
 import pandas as pd
 import numpy as np
@@ -61,6 +61,7 @@ def _parse_codeml_out(codeml_out):
     ka_p = re.compile('\s+dN\s*=\s*(\d+\.\d+)')
     w_p = re.compile('\s+dN\/dS\s*=\s*(\d+\.\d+)')
     likelihood = re.compile('lnL\s*=(\D*\d+.\d+)')
+    t_p = re.compile('\s+t\s*=\s*(\d+\.\d+)')
 
     # read codeml output file
     with open(codeml_out, 'r') as f:
@@ -86,6 +87,10 @@ def _parse_codeml_out(codeml_out):
         'Omega': pd.DataFrame(
                 np.zeros((len(list(columns)), len(list(columns)))),
                 index=sorted(list(columns)),
+                columns=sorted(list(columns))),
+        't': pd.DataFrame(
+                np.zeros((len(list(columns)), len(list(columns)))),
+                index=sorted(list(columns)),
                 columns=sorted(list(columns)))
     }
 
@@ -100,6 +105,7 @@ def _parse_codeml_out(codeml_out):
         ka_value_m = ka_p.search(pairwise_estimate)
         w_m = w_p.search(pairwise_estimate)
         likelihood_m = likelihood.search(pairwise_estimate)
+        t_m = t_p.search(pairwise_estimate)
         if likelihood_m:
             if not ln_l:
                 ln_l = 0
@@ -112,25 +118,32 @@ def _parse_codeml_out(codeml_out):
                             .format(family_id))
 
         if ks_value_m:
-            ks_value = ks_value_m.group(1)
+            ks_value = float(ks_value_m.group(1))
         else:
             logging.warning("No Ks value for {} - {} in gene family {}"
                             .format(gene_1, gene_2, family_id))
             ks_value = np.nan
 
         if ka_value_m:
-            ka_value = ka_value_m.group(1)
+            ka_value = float(ka_value_m.group(1))
         else:
             logging.debug("No Ka value for {} - {} in gene family {}"
                           .format(gene_1, gene_2, family_id))
             ka_value = np.nan
 
         if w_m:
-            w = w_m.group(1)
+            w = float(w_m.group(1))
         else:
             logging.debug("No omega value for {} - {} in gene family {}"
                           .format(gene_1, gene_2, family_id))
             w = np.nan
+            
+        if t_m:
+            t = float(t_m.group(1))
+        else:
+            logging.debug("No t value for {} - {} in gene family {}"
+                          .format(gene_1, gene_2, family_id))
+            t = np.nan
 
         results_dict['Ks'][gene_1][gene_2] = ks_value
         results_dict['Ks'][gene_2][gene_1] = ks_value
@@ -138,7 +151,9 @@ def _parse_codeml_out(codeml_out):
         results_dict['Ka'][gene_2][gene_1] = ka_value
         results_dict['Omega'][gene_1][gene_2] = w
         results_dict['Omega'][gene_2][gene_1] = w
-
+        results_dict['t'][gene_1][gene_2] = t
+        results_dict['t'][gene_2][gene_1] = t
+        
     return {'results': results_dict, 'raw': fcont}, ln_l
 
 
@@ -224,7 +239,7 @@ class Codeml:
         :param id: filename prefix for output/tmp files
         :param kwargs: any codeml control option (see PAML user guide)
         """
-        self.codeml = codeml
+        self.codeml = codeml # the actual command: just "codeml"
         self.tmp = tmp
 
         if not os.path.isdir(self.tmp):
@@ -305,20 +320,18 @@ class Codeml:
 
             subprocess.run([self.codeml, self.control_file],
                            stdout=subprocess.PIPE)
+            
             for file_to_be_removed in ['2ML.dN', '2ML.dS', '2ML.t', 
                 '2NG.dN', '2NG.dS', '2NG.t', 'rst', 'rst1', 'rub']:
                 try:
                     os.remove(file_to_be_removed)
-                except Exception:
-                    pass
-            # subprocess.run(
-            #         ['rm', '2ML.dN', '2ML.dS', '2ML.t', '2NG.dN', '2NG.dS',
-            #          '2NG.t', 'rst', 'rst1', 'rub'],
-            #         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                except Exception as error:
+                    logging.debug(f"File {file_to_be_removed} couldn't be removed due to: {error}")
+
             if not os.path.isfile(self.out_file):
                 logging.warning(
                         'Codeml output file {} not found'.format(self.out_file))
-                return None
+                return None, None
 
             d, likelihood = _parse_codeml_out(self.out_file)
             output.append(d)
@@ -330,7 +343,7 @@ class Codeml:
         results = output[best_index]
 
         if not output:
-            return None
+            return None, None
 
         os.remove(self.control_file)
 

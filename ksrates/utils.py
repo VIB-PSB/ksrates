@@ -20,6 +20,7 @@ def init_logging(log_heading, logging_level):
     logging.info(log_heading)
     logging.info(datetime.datetime.today().ctime())
     logging.info('- ' * length)
+    return logging_level
 
 
 def merge_dicts(dict1, dict2):
@@ -67,20 +68,25 @@ def can_i_run_software(software):
     for s in software:
         # codeml needs input otherwise it prompts the user for input, so a dummy
         # file is created
-        if s == 'codeml':
+        if os.path.basename(s) == 'codeml':
             tmp_file = "codeml.ctl"
-            command = ['codeml', tmp_file]
+            command = [s, tmp_file]
         elif s == 'prank':
             command = [s, '--help']
         elif s == 'FastTree':
             command = s
-        elif s in ['blastp', 'makeblastdb', 'blast', 'muscle', 'i-adhore']:
+        elif s in ['blastp', 'makeblastdb', 'blast', 'muscle', 'i-adhore', 'orthofinder']:
             command = [s, '-version']
+        elif s in ['orthomclight']:
+            command = ['orthomclight.pl']
+        elif s in ['orthomcl']:
+            command = ['orthomcl.pl']
+        elif s in ['diamond']:
+            command = [s, '--version']
         else:
             command = [s, '--version']
         try:
-            # logging.info(command)
-            if s == "codeml":
+            if os.path.basename(s) == "codeml":
                 # Since the Nextflow pipeline processes multiple wgd runs at the same time,
                 # let's generate for each run the dummy "codeml.ctl" files within a different
                 # temporary directory named with a unique ID. This way, the several parallel
@@ -120,7 +126,7 @@ def translate_cds(sequence_dict, skip_invalid=False):
         stop codon or end)
     :return: dictionary with gene IDs and proteins sequences
     """
-    # TODO I should just use the Biopython translator
+    # todo: I should just use the Biopython translator
     aa_dict = {
         'ATA': 'I', 'ATC': 'I', 'ATT': 'I', 'ATG': 'M',
         'ACA': 'T', 'ACC': 'T', 'ACG': 'T', 'ACT': 'T',

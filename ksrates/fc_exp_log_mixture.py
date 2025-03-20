@@ -17,11 +17,8 @@ from ksrates.fc_cluster_anchors import ALPHA_ANCHOR_CLUSTERS
 from ksrates.fc_plotting import NEGATIVE_Y_FRACTION
 from ksrates.fc_cluster_anchors import subfolder
 
-
-# TODO: when the script will be moved to the final directory, do we have to change this path?
 plt.style.use(os.path.join(f"{os.path.dirname(os.path.abspath(__file__))}", "ks.mplstyle"))
-# this should be the path to the directory of the current file,
-# and ks.mplstyle is supposed to be in the same directory
+
 
 def generate_peak_model_figure(species_escape_whitespace, x_max_lim):
   """
@@ -86,7 +83,7 @@ def generate_best_model_figure(latin_species, x_max_lim, y_max_lim, correction_t
   :return figure, axes and figure title
   """
   fig_best_model, ax_best_ks = fcPlot.generate_mixed_plot_figure(latin_species, x_max_lim, y_max_lim, "corrected",
-                     correction_table_available, plot_correction_arrows, paranome_data=True, colinearity_data=False)
+                     correction_table_available, plot_correction_arrows, paranome_data=True)
   return fig_best_model, ax_best_ks
 
 
@@ -437,7 +434,7 @@ def deconvolute_data(tsv_file, max_ks, data_type):
   """
   tail_length = 0.5 # tail spans for 0.5 extra Ks range
 
-  if data_type == "paralogs" or data_type == "anchor pairs":
+  if data_type == "paralogs" or data_type == "anchor pairs" or data_type == "reciprocally retained":
     ks_data, ks_weights = fc_extract_ks_list.ks_list_from_tsv(tsv_file, max_ks, data_type)
   elif data_type == "orthologs":
     ks_data = fc_extract_ks_list.ks_list_from_tsv(tsv_file, max_ks, data_type)
@@ -799,7 +796,9 @@ def plot_init_comp(ax_ks, ax_logks, means, stdevs, lambd, weights, plot_logtranf
       ax_logks.plot(x_points, weights[comp+1] * norm.pdf(x_points, means[comp], stdevs[comp]), style, lw=1.5, alpha=0.4)
 
 
-def plot_fitted_comp(ax_ks, ax_logks, means, stdevs, lambd, weights, max_x_axis_lim, peak_stats, correction_table_available, plot_correction_arrows, scaling=1, plot_peak_markers=False, plot_logtranformed=True):
+def plot_fitted_comp(ax_ks, ax_logks, means, stdevs, lambd, weights, max_x_axis_lim, 
+                     peak_stats, correction_table_available, plot_correction_arrows, scaling=1, 
+                     plot_peak_markers=False, plot_logtranformed=True):
   """
   Plots the mixture components with fitted parameters plus their overall PDF curve.
   On the left axis it plots the lognormal and the exponential components,
@@ -833,7 +832,8 @@ def plot_fitted_comp(ax_ks, ax_logks, means, stdevs, lambd, weights, max_x_axis_
     linestyle = ":"
     alpha = 1
 
-  ax_ks.plot(x_points_strictly_positive, scaling * weights[0] * expon.pdf(x_points_strictly_positive, scale=1/lambd), c=color, ls=linestyle, lw=1.5, alpha=alpha, label='Exponential')
+  ax_ks.plot(x_points_strictly_positive, scaling * weights[0] * expon.pdf(x_points_strictly_positive, 
+             scale=1/lambd), c=color, ls=linestyle, lw=1.5, alpha=alpha, label='Exponential')
     
   # Getting the representative value of the lognormal peak and sort lognormals accordingly
   lognormal_peaks = {} # key: lognormal component ID, value: peak
@@ -845,17 +845,25 @@ def plot_fitted_comp(ax_ks, ax_logks, means, stdevs, lambd, weights, max_x_axis_
     lognormal_peaks[comp] = peak_coord
   lognormals_sorted_by_peak = sorted(lognormal_peaks, key=lognormal_peaks.get) # sort by values (peaks)
   letter_dict = dict(zip(lognormals_sorted_by_peak, [ "a", "b", "c", "d", "e", "f", "g"][:len(lognormals_sorted_by_peak)])) # assign progressive letter
+  letter_to_peak_dict = {}
 
   colors = ["b-", "r-", "c-", "m-", "k-"][:len(means)-1] + ["y-"]
 
   for comp, style in zip(lognormals_sorted_by_peak, colors):
+    # Letter associated to its peak x-coordinate: key a, value float
+    letter_to_peak_dict[letter_dict[comp]] = lognormal_peaks[comp]
+
     color = style[0]
     linestyle = style[1:]
     if plot_peak_markers: # True only for the final plot
       color = "dimgrey"
       linestyle = "--"
-      plot_marker(ax_ks, lognormal_peaks[comp], scaling * weights[comp+1] * lognorm.pdf(lognormal_peaks[comp], scale=exp(means[comp]), s=stdevs[comp]), "k", letter_dict[comp], correction_table_available, plot_correction_arrows)
-    ax_ks.plot(x_points_strictly_positive, scaling * weights[comp+1] * lognorm.pdf(x_points_strictly_positive, scale=exp(means[comp]), s=stdevs[comp]), c=color, ls=linestyle, lw=1.5, alpha=alpha, label=f'Lognormal {letter_dict[comp]} ({peak_stats} {lognormal_peaks[comp]})')
+      plot_marker(ax_ks, lognormal_peaks[comp], scaling * weights[comp+1] * lognorm.pdf(lognormal_peaks[comp],
+                  scale=exp(means[comp]), s=stdevs[comp]), "k", letter_dict[comp], correction_table_available, 
+                  plot_correction_arrows)
+    ax_ks.plot(x_points_strictly_positive, scaling * weights[comp+1] * lognorm.pdf(x_points_strictly_positive, 
+               scale=exp(means[comp]), s=stdevs[comp]), c=color, ls=linestyle, lw=1.5, alpha=alpha, 
+               label=f'Lognormal {letter_dict[comp]} ({peak_stats} {lognormal_peaks[comp]})')
 
     if plot_logtranformed:
       ax_logks.plot(x_points, scaling * weights[comp+1] * norm.pdf(x_points, means[comp], stdevs[comp]), c=color, ls=linestyle, lw=1.5, alpha=alpha, label=f'Norm {letter_dict[comp]}')
@@ -869,8 +877,8 @@ def plot_fitted_comp(ax_ks, ax_logks, means, stdevs, lambd, weights, max_x_axis_
   # Only in multi-panel figures for all ELMM models, generate legend with handles as tuples,
   # for fitted components (solid line) and initialized components (dotted)  
   if not plot_peak_markers:  # Applies for the multi-panel figures with ELMM models
-    handles_tuple_list = make_tuple_handles(ax_ks)
-    ax_ks.legend(handles_tuple_list, ax_ks.get_legend_handles_labels()[1],
+    handles_tuple_list, labels_tuple_list = make_tuple_legend_elmm_models(ax_ks)
+    ax_ks.legend(handles_tuple_list, labels_tuple_list,
                  handler_map={tuple: HandlerTuple(ndivide=None)}, handlelength=3, loc="upper right")
   
   if plot_logtranformed:
@@ -879,15 +887,16 @@ def plot_fitted_comp(ax_ks, ax_logks, means, stdevs, lambd, weights, max_x_axis_
     # Only in multi-panel figures for all ELMM models, generate legend with handles as tuples,
     # for fitted components (solid line) and initialized components (dotted)
     if not plot_peak_markers:  # True for the multi-panel figures with ELMM models
-      handles_tuple_list = make_tuple_handles(ax_logks)
-      ax_logks.legend(handles_tuple_list, ax_logks.get_legend_handles_labels()[1],
+      handles_tuple_list, labels_tuple_list = make_tuple_legend_elmm_models(ax_logks)
+      ax_logks.legend(handles_tuple_list, labels_tuple_list,
                      handler_map={tuple: HandlerTuple(ndivide=None)}, handlelength=3, loc="upper left")
 
+  return letter_to_peak_dict
 
-def make_tuple_handles(axis):
+def make_tuple_legend_elmm_models(axis):
   """
   Generates a list of handles for the legend of the multi-panel figures of ELMM models,
-  where some handles are a tuple of two handles: on the left a solid line (fitted
+  where some handles consists of a tuple of two handles: on the left a solid line (fitted
   component) and on the right a dotted line (initialized component). This is needed
   because the models show both the initialized and the fitted component curve.
   For the two non-paired handles (the total probability ELMM curve and the histogram),
@@ -895,16 +904,29 @@ def make_tuple_handles(axis):
 
   :param axis: the axis object for which the legend will be updated with the new handles
   :return handles_tuple_list: list of handles paired in tuples
+  :return labels_list: list of labels (not tuples)
   """
-  handles_tuple_list = []
+  # Get current legend items and initialize the future list
   handles, labels = axis.get_legend_handles_labels()
-  for handle in handles[:-2]:
+  handles_tuple_list, labels_list = [], []   
+
+  # Add first the tuple of (gray rectangle and transparent rectangle) related to "Whole-paranome" label
+  # This is always located at the first index of the handle list [0]
+  handles_tuple_list.extend([(handles[0], Patch(fill=False, edgecolor='none', visible=False))])
+  labels_list.append(labels[0])
+
+  # Add then all entries related to the components
+  for handle, label in zip(handles[1:-1], labels[1:-1]):
     handles_tuple_list.append((Line2D([0], [0], color=handle._color, ls='-', lw=handle._linewidth),
                                Line2D([0], [0], color=handle._color, ls=':', lw=handle._linewidth)))
+    labels_list.append(label)
 
-  handles_tuple_list.extend([(handles[-2], Patch(fill=False, edgecolor='none', visible=False)),
-                             (handles[-1], Patch(fill=False, edgecolor='none', visible=False))])
-  return handles_tuple_list
+  # Add tuple of (black solid line and transparent rectangle) as handle and text "Exp-lognormal mixture model" as label
+  # They are always located at the last index of the list
+  handles_tuple_list.extend([(handles[-1], Patch(fill=False, edgecolor='none', visible=False))])
+  labels_list.append(labels[-1])
+
+  return handles_tuple_list, labels_list
 
 
 def plot_histograms_mixture(ax_ks, ax_logks, ks_data, ks_weights, ks_data_log, ks_weights_log, bin_list, bin_width, y_lim, best_model=False):
@@ -987,7 +1009,7 @@ def eval_best_model(bic_dict, outfile):
   return best_model_id
 
 
-def create_legend_mixture_model(axis, legend_size, num_mixture_model_lines):
+def create_legend_best_elmm_model(axis, legend_size, num_mixture_model_lines):
   """
   Places the legend elements associated to the histograms at the beginning of the legend,\\
   while by default they are placed at the end.
@@ -997,14 +1019,39 @@ def create_legend_mixture_model(axis, legend_size, num_mixture_model_lines):
   :param num_mixture_model_lines: number of lines generated by mixture models (components + total PDF)
   :return: the updated legend object
   """
+  # Get current handles
   handles, labels = axis.get_legend_handles_labels()
-  sorted_handles, sorted_labels = handles.copy(), labels.copy()
+  # E.g. of labels:
+  # ['Whole-paranome', first_divergence_age, second_divergence_age, 'Exponential', first_lognorm_comp, second_lognorm_comp, 'Exp-lognormal mixture model']
+  
+  sorted_handles, sorted_labels = [], []
+  # Add grey rectangle as paranome handle; its correspondent label is always the first entry
   paranome_rect = Patch(facecolor=fcPlot.COLOR_PARANOME_HISTOGRAM, edgecolor="w")
-  # empty patch used as spacer between histograms and divergence line legend entries
-  empty_rect = Patch(fill=False, edgecolor='none', visible=False)
+  sorted_handles.append(paranome_rect)
+  sorted_labels.append(labels[0])
+  # Add transparent rectangle handle with empty string label as spacer between histogram and component entries
+  transparent_rect = Patch(fill=False, edgecolor='none', visible=False)
+  sorted_handles.append(transparent_rect)
+  sorted_labels.append("")
+  
+  # Add all entries related to components, starting from "Exponential" and until the second-to-last element  
+  index_of_exp_comp = labels.index("Exponential")
+  sorted_handles.extend(handles[index_of_exp_comp:-1])
+  sorted_labels.extend(labels[index_of_exp_comp:-1])
+  # Add black solid line handle and "Exp-lognormal mixture model" label, always located at the last index of the list
+  sorted_handles.append(handles[-1])
+  sorted_labels.append(labels[-1])
+  # Add transparent rectangle handle with empty string label as spacer between components and divergence entries
+  sorted_handles.append(transparent_rect)
+  sorted_labels.append("")
+  
+  # Add text "Divergence with:" as handle and an empty string as label
+  sorted_handles.append("Divergence with:")
+  sorted_labels.append("")
+  # Add all entries related to divergences, starting from the second element until before "Exponential"
+  sorted_handles.extend(handles[1:index_of_exp_comp])
+  sorted_labels.extend(labels[1:index_of_exp_comp])
 
-  sorted_handles = [paranome_rect, empty_rect, sorted_handles[-2]] + sorted_handles[-1-num_mixture_model_lines:-2] + [empty_rect, "Divergence with:"] + sorted_handles[:-1-num_mixture_model_lines]
-  sorted_labels = [sorted_labels[-1], "", sorted_labels[-2]] + sorted_labels[-1-num_mixture_model_lines:-2] + ["", ""] + sorted_labels[:-1-num_mixture_model_lines]
   lgd = axis.legend(sorted_handles, sorted_labels, handlelength=1.5, mode="expand", loc="upper left",
                     bbox_to_anchor=legend_size)
   return lgd
@@ -1093,20 +1140,24 @@ def plot_best_model(fig_best_model, ax_best_model, species, ks_data, ks_weights,
   # PLOTTING THE ORTHOLOG DIVERGENCE LINES on the paralog distribution
   if correction_table_available:
     dummy_fig, dummy_axis = plt.subplots()
-    fcPlot.plot_divergences(correction_table, peak_stats, consensus_peak_for_multiple_outgroups, dummy_axis, ax_best_model, color_list, plot_correction_arrows)
+    fcPlot.plot_divergences(correction_table, peak_stats, consensus_peak_for_multiple_outgroups, 
+                            dummy_axis, ax_best_model, color_list, plot_correction_arrows)
 
   init_means, init_stdevs, init_lambd, init_weights = all_models_init_parameters[best_model_id]
 
   final_means, final_stdevs, final_lambd, final_weights = all_models_fitted_parameters[best_model_id]
 
   scaling = bin_width * len(deconvoluted_data[deconvoluted_data <= max_ks_EM])
-  plot_fitted_comp(ax_best_model, None, final_means, final_stdevs, final_lambd, final_weights, max_x_axis_lim, peak_stats, correction_table_available, plot_correction_arrows, scaling=scaling, plot_peak_markers=True, plot_logtranformed=False)
+  letter_to_peak_dict = plot_fitted_comp(ax_best_model, None, final_means, final_stdevs, final_lambd, final_weights, 
+                        max_x_axis_lim, peak_stats, correction_table_available, plot_correction_arrows, 
+                        scaling=scaling, plot_peak_markers=True, plot_logtranformed=False)
+  logging.info("Done")
 
   if correction_table_available:
     legend_size = fcPlot.define_legend_size(ax_best_model)
     chart_box = ax_best_model.get_position()
     ax_best_model.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
-    lgd = create_legend_mixture_model(ax_best_model, legend_size, len(init_means)+2)
+    lgd = create_legend_best_elmm_model(ax_best_model, legend_size, len(init_means)+2)
     # Number of plotted lines is: exp + lognormals + total PDF
 
     fig_best_model.savefig(os.path.join("rate_adjustment", f"{species}", f"mixed_{species}_elmm.pdf"),
@@ -1119,17 +1170,4 @@ def plot_best_model(fig_best_model, ax_best_model, species, ks_data, ks_weights,
     fig_best_model.savefig(os.path.join("rate_adjustment", f"{species}", f"mixed_{species}_elmm.pdf"),
                   transparent=True, format="pdf")
 
-
-  # # TEMPORARY FOR A FIGURE PLOT WITH DENSITY FOR COMPARISON AFTER SCALING
-  # fig, ax = generate_best_model_figure("elaeis", "Elaeis guineensis", 3, None, True, True)
-  # fcPlot.plot_histogram("Whole-paranome", ax, ks_data, bin_list, None, None, None, ks_weights, plot_kde=False, density=True)
-  # if correction_table_available:
-  #   fcPlot.plot_divergences(correction_table, consensus_peak_for_multiple_outgroups, dummy_axis, ax, color_list, plot_correction_arrows)
-  # plot_fitted_comp(ax, None, final_means, final_stdevs, final_lambd, final_weights, peak_stats, scaling=1, plot_peak_markers=True, plot_logtranformed=False)
-
-  # legend_size = fcPlot.define_legend_size(ax)
-  # chart_box = ax.get_position()
-  # ax.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
-  # lgd = create_legend_mixture_model(ax, legend_size, len(init_means)+2) # number of plotted lines is: exp + lognormals + total PDF
-  # fig.savefig(os.path.join("rate_adjustment", f"{species}", f"mixed_density_elmm.pdf"),
-  #                   bbox_extra_artists=(lgd, fig._suptitle), bbox_inches="tight", transparent=True, format="pdf")
+  return letter_to_peak_dict

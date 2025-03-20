@@ -35,7 +35,7 @@ To install `Nextflow <https://www.nextflow.io>`__ and its dependencies, follow t
     This creates the ``nextflow`` executable file in the current directory.
 
 .. note::
-   `ksrates`'s Nextflow pipeline is written using the older DSL1 syntax, which will be `removed <https://www.nextflow.io/blog/2022/evolution-of-nextflow-runtime.html>`__ after Nextflow version ``22.10.x`` in favor of DSL2. Using Nextflow version ``22.03.0-edge`` or later will require the use of `ksrates` version ``v1.1.3`` or later. We will do our best to preserve compatibility with future Nextflow versions.
+   As from `ksrates` ``v2.0.0``, the Nextflow pipeline has been ported to DSL2 syntax and requires at least Nextflow version ``22.03.0-edge``. Concerning older `ksrates` versions written with DSL1, ``v1.1.3`` and ``v1.1.4`` support from ``22.03.0-edge`` until before ``22.12.0-edge``, while ``v1.1.2`` and previous ones require earlier versions than ``22.03.0-edge``.
 
 *   Optionally make the ``nextflow`` executable accessible by your ``$PATH`` variable, for example by moving it::
 
@@ -108,6 +108,10 @@ When not using or not being able to use one of the *ksrates* containers, for exa
 1.  Most of the non-Python dependencies can be installed with the following commands::
 
         sudo apt-get update && sudo apt-get -yq install python3-pip default-jdk build-essential ncbi-blast+ muscle fasttree mcl phyml | bash
+
+        .. note::
+        The workflow was developed using BLAST 2.6.0+ and it might error when using a much older versions such as 2.12.0+ (see GitHub issue `#48 <https://github.com/VIB-PSB/ksrates/issues/48>`__ ). Moreover it is only compatible with MUSCLE v3 (`v3.8.31 <https://drive5.com/muscle/downloads_v3.htm>`__) and not with v5 (see GitHub issue `#41 <https://github.com/VIB-PSB/ksrates/issues/41>`__).
+
 
 2.  Install PAML 4.9j from source (for more information see PAML installation `page <http://abacus.gene.ucl.ac.uk/software/#phylogenetic-analysis-by-maximum-likelihood-paml>`__) to avoid compatibility issues::
 

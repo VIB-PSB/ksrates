@@ -18,7 +18,7 @@ setup(
     description='Command line tool for substitution rate-adjustment in mixed paralog-ortholog Ks distributions.',
     long_description=long_description,
     package_data={
-        'ksrates': ['ks.mplstyle']
+        'ksrates': ['ks.mplstyle','reciprocal_retention/gene_families_new_lambda_ranking.xlsx','reciprocal_retention/original_angiosperm_sequences.tar.gz']
     },
     py_modules=['ksrates_cli'],
     install_requires=[required],

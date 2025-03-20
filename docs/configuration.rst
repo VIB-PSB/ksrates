@@ -36,6 +36,7 @@ The analysis configuration file is composed of a first section defining the spec
     [ANALYSIS SETTING]
     paranome = yes
     collinearity = yes
+    reciprocal_retention = no
 
     gff_feature = mrna
     gff_attribute = id
@@ -72,6 +73,7 @@ The [ANALYSIS SETTING] section includes:
 
 * **paranome**: whether to build/plot the whole-paranome *K*:sub:`S` distribution of the focal species (options: "yes" and "no"). [Default: "yes"]
 * **collinearity**: whether to build/plot the anchor pair *K*:sub:`S` distribution of the focal species (options: "yes" and "no"). A GFF file for the focal species is required, see parameter `gff_filename` above. [Default: "no"]
+* **reciprocal_retention**: whether to build/plot the reciprocally retained *K*:sub:`S` distribution of the focal species (options: "yes" and "no"). [Default: "no"]
 * **gff_feature**: parsing keyword from the third column of the GFF file (e.g. gene, mrna...). Case insensitive.
 * **gff_attribute**: parsing keyword from the ninth column of the GFF file (e.g. id, name...). Case insensitive. 
 * **max_number_outgroups**: maximum number of trios/outspecies allowed to adjust a divergent pair; if None, all possible outspecies obtained from the phylogenetic tree will be used to form trios and adjust the pair. For more details see below. [Default: 4]
@@ -104,7 +106,7 @@ The [PARAMETERS] section includes:
 Guidelines to set the maximum number of outgroups per rate-adjustment
 ---------------------------------------------------------------------
 
-``max_number_outgroups`` is a parameter used to limit the amount of outgroup species used to adjust a species pair; without that, all possible outgroups would be taken. Having multiple rate-adjustments on the same divergence can provide stronger support for the rate-adjusted plot and is therefore advised to adjust with at least 3 or 4 outgroups to have more reliable results.
+Parameter ``max_number_outgroups`` limits the number of outgroup species used to adjust a species pair; without that, all possible outgroups would be taken. Having multiple rate-adjustments on the same divergence can provide stronger support for the rate-adjusted plot and is therefore advised to adjust with at least 3 or 4 outgroups to have more reliable results.
 
 However, the more the outgroups, the more the number of ortholog distributions that will have to be computed by the `wgd` ortholog pipeline, which is a quite computationally demanding step. Setting a maximum amount of outgroups lowers the number of rate-adjustments and can therefore save time and resources. It is a good option in case the tree has a complex structure that would collect an unnecessary large number of outgroups or in case the user wants to have a quicker, although somewhat less reliable, result. Note that another option to lower the number of ortholog distributions is to start with a simpler tree structure.
 
@@ -209,24 +211,28 @@ Syntax for the Nextflow pipeline::
     
 Syntax for single `ksrates` commands::
 
-        ksrates init config_elaeis.txt --expert path/to/my_expert_config.txt 
+        ksrates <command> config_elaeis.txt --expert path/to/my_expert_config.txt 
 
 The following can be used as a template::
 
     [EXPERT PARAMETERS]
     
     logging_level = info
+    preserve_ks_tmp_files = no
     max_gene_family_size = 200
-    distribution_peak_estimate = mode
-    kde_bandwidth_modifier = 0.4
     plot_adjustment_arrows = no
+    kde_bandwidth_modifier = 0.4
+    distribution_peak_estimate = mode
     num_mixture_model_initializations = 10
     max_mixture_model_iterations = 600
     max_mixture_model_components = 5
     max_mixture_model_ks = 5
     extra_paralogs_analyses_methods = no
+    top_reciprocally_retained_gfs = 2000
+    use_original_orthomcl_version = no
 
 * **logging_level**: the lowest logging/verbosity level of messages printed to the console/logs (increasing severity levels: *notset*, *debug*, *info*, *warning*, *error*, *critical*). Messages less severe than *level* will be ignored; *notset* causes all messages to be processed. [Default: "info"]
+* **preserve_ks_tmp_files**: whether to preserve or not the intermediate files generated during the paralogs *K*:sub:`S` and ortholog *K*:sub:`S` pipelines (options: "yes" and "no"). [Default: "no"]
 * **max_gene_family_size**: maximum number of members that any paralog gene family can have to be included in *K*:sub:`S` estimation. Large gene families increase the run time and are often composed of unrelated sequences grouped together by shared protein domains or repetitive sequences. But this is not always the case, so one may want to check manually the gene families in file ``paralog_distributions/wgd_species/species.mcl.tsv`` and increase (or even decrease) this number. [Default: 200]
 * **distribution_peak_estimate**: the statistical method used to obtain a single ortholog *K*:sub:`S` estimate for the divergence time of a species pair from its ortholog distribution or to obtain a single paralog *K*:sub:`S` estimate from an anchor *K*:sub:`S` cluster or from lognormal components in mixture models (options: "mode" or "median"). [Default: "mode"]
 * **kde_bandwidth_modifier**: modifier to adjust the fitting of the KDE curve on the underlying whole-paranome or anchor *K*:sub:`S` distribution. The KDE Scott's factor internally computed by SciPy tends to produce an overly smooth KDE curve, especially with steep WGD peaks, and therefore it is reduced by multiplying it by a modifier. Decreasing the modifier leads to tighter fits, increasing it leads to smoother fits, and setting it to 1 gives the default KDE factor. Note that a too small factor is likely to take into account data noise. [Default: 0.4]
@@ -236,3 +242,5 @@ The following can be used as a template::
 * **max_mixture_model_components**: maximum number of components considered during execution of the mixture models. [Default: 5]
 * **max_mixture_model_ks**: upper limit for the *K*:sub:`S` range in which the exponential-lognormal and lognormal-only mixture models are performed. [Default: 5]
 * **extra_paralogs_analyses_methods**: flag to toggle the optional analysis of the paralog *K*:sub:`S` distribution with non default mixture model methods (see section :ref:`paralogs_analyses` and Supplementary Materials) [Default: "no"]
+* **top_reciprocally_retained_gfs**: number of gene families at the top of the reciprocal retention ranking that will be used to build the related *K*:sub:`S` distribution. [Default: 2000]
+* **use_original_orthomcl_version**: allows compatibility with the original OrthoMCL v1.4 version; by default it is used a modified faster version called OrthoMCLight. [Default: "no"]

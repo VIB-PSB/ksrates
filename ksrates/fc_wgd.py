@@ -3,26 +3,50 @@ import sys
 import logging
 import shutil
 import subprocess
-import pandas as pd
+import tarfile
+from pandas import read_table, read_excel, Series
 from numpy import zeros
+import ksrates.fc_rec_ret_orthomcl as fcRecRet_OMCL # get recret GFs generated with OrthoMCL (default)
+import ksrates.fc_rec_ret_orthofinder as fcRecRet_OF # get recret GFs generate with OrthoFinder (NOT USED)
+import ksrates.fc_rec_ret_diamond as fcRetRet_dmd # get recret GFs generate with diamond (NOT USED)
+from ksrates.utils import merge_dicts, concat_files, can_i_run_software, translate_cds, write_fasta
 from wgd_ksrates.utils import read_fasta
 from wgd_ksrates.blast_mcl import run_mcl_ava, ava_blast_to_abc, get_one_v_one_orthologs_rbh
 from wgd_ksrates.ks_distribution import ks_analysis_paranome, ks_analysis_one_vs_one
 from wgd_ksrates.colinearity import gff_parser
-from ksrates.utils import merge_dicts, concat_files, can_i_run_software, translate_cds, write_fasta
 
-_OUTPUT_BLAST_FILE_PATTERN = '{}.blast.tsv'
-_OUTPUT_MCL_FILE_PATTERN = '{}.mcl.tsv'
-_OUTPUT_KS_FILE_PATTERN = '{}.ks.tsv'
+# Templates for output filenames
+# For paralogs
+_OUTPUT_BLAST_FILE_PATTERN_PARA = '{}.blast.tsv'
+_OUTPUT_MCL_FILE_PATTERN_PARA = '{}.mcl.tsv'
+_OUTPUT_KS_FILE_PATTERN_PARA = '{}.ks.tsv'
+_OUTPUT_KS_FILE_PATTERN_ANCHORS = '{}.ks_anchors.tsv'
+# For orthologs
+_OUTPUT_BLAST_FILE_PATTERN_ORTHO = '{}_{}.blast.tsv'
+_OUTPUT_RBH_FILE_PATTERN_ORTHO = '{}_{}.orthologs.tsv'
+_OUTPUT_KS_FILE_PATTERN_ORTHO = '{}_{}.ks.tsv'
+# For OrthoMCL-based reciprocal retention (default)
+_OUTPUT_MCL_FILE_PATTERN_RR_OMCL = '{}_rec_ret_top_{}.mcl.tsv'
+_OUTPUT_MCL_FILE_PATTERN_RR_OMCL_IDs = '{}_rec_ret_top_{}_ids.mcl.tsv'
+_OUTPUT_KS_FILE_PATTERN_RR_OMCL = '{}.ks_recret_top{}.tsv'
+# For OrthoFinder-based reciprocal retention
+_OUTPUT_MCL_FILE_PATTERN_RR_OF = '{}_rec_ret_top_{}_{}_orthofinder.mcl.tsv'
+_OUTPUT_KS_FILE_PATTERN_RR_OF = '{}.ks_recret_top{}_{}.tsv'
+# For output directories
 _PARALOGS_OUTPUT_DIR_PATTERN = 'wgd_{}'
 _ORTHOLOGS_OUTPUT_DIR_PATTERN = 'wgd_{}_{}'
-
+# For temporary directories
 _TMP_BLAST = '{}.blast_tmp'
 _TMP_KS = '{}.ks_tmp'
+_TMP_KS_ANCHORS = '{}.ks_anchors_tmp'
+_TMP_KS_RR_OMCL = '{}.ks_recret_top{}_tmp' # OrthoFinder-based reciprocal retention (NOT AVAILABLE)
+_TMP_KS_RR_OF = '{}.ks_recret_top{}_tmp' # OrthoMCL-based reciprocal retention (default)
+_TMP_OF = '{}.of_tmp'
+
 
 def ks_paralogs(species_name, cds_fasta, base_dir='.', eval_cutoff=1e-10, inflation_factor=2.0, aligner='muscle',
-                min_msa_length=100, codeml='codeml', codeml_times=1, pairwise=False,
-                max_gene_family_size=200, weighting_method='fasttree', n_threads=4, overwrite=False):
+                min_msa_length=100, codeml='codeml', codeml_times=1, pairwise=False, preserve=False,
+                max_gene_family_size=200, weighting_method='fasttree', n_threads=1, overwrite=False, logging_level="INFO"):
     """
     Modified from wgd_cli.py
 
@@ -49,9 +73,16 @@ def ks_paralogs(species_name, cds_fasta, base_dir='.', eval_cutoff=1e-10, inflat
         logging.error('No species name provided. Exiting.')
         sys.exit(1)
 
-    output_blast_file = _OUTPUT_BLAST_FILE_PATTERN.format(species_name)
-    output_mcl_file = _OUTPUT_MCL_FILE_PATTERN.format(species_name)
-    output_ks_file = _OUTPUT_KS_FILE_PATTERN.format(species_name)
+    # Check species name compatibility with reciprocal retention pipeline
+    # Although names have been already checked with the "init" command,
+    # this is an additional checkpoint for when running the individual "paralogs-ks" command
+    if fcRecRet_OMCL.check_recret_name_compatibility([species_name], True):
+        logging.error("Exiting.")
+        sys.exit(1)
+
+    output_blast_file = _OUTPUT_BLAST_FILE_PATTERN_PARA.format(species_name)
+    output_mcl_file = _OUTPUT_MCL_FILE_PATTERN_PARA.format(species_name)
+    output_ks_file = _OUTPUT_KS_FILE_PATTERN_PARA.format(species_name)
 
     output_dir = os.path.abspath(os.path.join(base_dir, _PARALOGS_OUTPUT_DIR_PATTERN.format(species_name)))
 
@@ -64,7 +95,6 @@ def ks_paralogs(species_name, cds_fasta, base_dir='.', eval_cutoff=1e-10, inflat
     do_ks = True
     if os.path.exists(output_dir):
         if os.path.exists(os.path.join(output_dir, output_blast_file)):
-                
             # Check if blast tmp folder of previous failed run exists (in this case the blast table is incomplete)
             if os.path.exists(tmp_blast_paralogs):
                 logging.error(f'tmp directory [{tmp_blast_paralogs}] was found: leftover from a failed earlier run?')
@@ -75,20 +105,21 @@ def ks_paralogs(species_name, cds_fasta, base_dir='.', eval_cutoff=1e-10, inflat
             if overwrite:
                 logging.warning(f'Paralog blast file {output_blast_file} exists, will overwrite')
             else:
-                logging.info(f'Paralog blast data {output_blast_file} already exists, '
-                             f'will skip wgd all versus all Blastp')
+                logging.info(f'Paralog blast file {output_blast_file} already exists, '
+                             f'will skip wgd all-versus-all blastp')
                 do_blast = False
         else:
-            logging.info('No paralog blast data, will run wgd all versus all Blastp')
+            logging.info('No paralog blast file, will run wgd all-versus-all blastp')
+        
         if os.path.exists(os.path.join(output_dir, output_mcl_file)):
             if overwrite or do_blast:
                 logging.warning(f'Paralog gene families file {output_mcl_file} exists, will overwrite')
             else:
-                logging.info(f'Paralog gene family data {output_mcl_file} already exists, '
+                logging.info(f'Paralog gene family file {output_mcl_file} already exists, '
                              f'will skip wgd mcl')
                 do_mcl = False
         else:
-            logging.info('No paralog gene family data, will run wgd mcl')
+            logging.info('No paralog gene family file, will run wgd mcl')
 
         # Check if Ks tmp folder of previous failed run exists (in this case the Ks data will be incomplete)
         if os.path.exists(tmp_ks_paralogs): # if there is a Ks tmp folder from previous failed run
@@ -101,10 +132,10 @@ def ks_paralogs(species_name, cds_fasta, base_dir='.', eval_cutoff=1e-10, inflat
             if overwrite or do_blast or do_mcl:
                 logging.warning(f'Paralog Ks file {output_ks_file} exists, will overwrite')
             else:
-                logging.info(f'Paralog Ks data {output_ks_file} already exists, will skip wgd Ks analysis')
+                logging.info(f'Paralog Ks file {output_ks_file} already exists, will skip wgd Ks analysis')
                 do_ks = False
         else:
-            logging.info('No paralog Ks data, will run wgd Ks analysis')
+            logging.info('No paralog Ks file, will run wgd Ks analysis')
 
     if not do_blast and not do_mcl and not do_ks:
         logging.info('All paralog data already exist, nothing to do')
@@ -178,6 +209,7 @@ def ks_paralogs(species_name, cds_fasta, base_dir='.', eval_cutoff=1e-10, inflat
         logging.info(f'Running gene family construction (MCL clustering with inflation factor = {inflation_factor})')
         ava_graph = ava_blast_to_abc(os.path.join(output_dir, output_blast_file))
         run_mcl_ava(ava_graph, output_dir=output_dir, output_file=output_mcl_file, inflation=inflation_factor)
+        logging.info("Done")
 
     # whole paranome Ks analysis
     if do_ks:
@@ -191,11 +223,11 @@ def ks_paralogs(species_name, cds_fasta, base_dir='.', eval_cutoff=1e-10, inflat
         os.chdir(tmp_ks_paralogs)  # change dir to tmp dir, as codeml writes non-unique file names to the working dir
 
         output_mcl_path = os.path.join(output_dir, output_mcl_file)
-        results_df = ks_analysis_paranome(cds_sequences, protein_sequences, output_mcl_path, tmp_ks_paralogs,
-                                          output_dir, codeml, times=codeml_times, aligner=aligner,
+        results_df = ks_analysis_paranome(cds_sequences, protein_sequences, output_mcl_path, tmp_dir=tmp_ks_paralogs,
+                                          output_dir=output_dir, codeml_path=codeml, times=codeml_times, aligner=aligner,
                                           ignore_prefixes=False, min_length=min_msa_length, pairwise=pairwise,
                                           max_gene_family_size=max_gene_family_size, method=weighting_method,
-                                          preserve=False, n_threads=n_threads)
+                                          preserve=preserve, n_threads=n_threads, logging_level=logging_level)
         if os.path.exists(tmp_ks_paralogs):
             logging.error(f'tmp directory {tmp_ks_paralogs} still exists after analysis, '
                           f'paralog Ks data may be incomplete and will not be written to paralog Ks file!')
@@ -210,10 +242,320 @@ def ks_paralogs(species_name, cds_fasta, base_dir='.', eval_cutoff=1e-10, inflat
 
     logging.info('---')
     logging.info('Done')
+    logging.info('---')
+
+
+def ks_paralogs_rec_ret(species_name, cds_fasta, latin_name, custom_recret_gfs, parsed_homology_table,
+                        top=2000, rank_type="lambda", orthomcl_inflation=1.5, use_original_orthomcl_version=False,
+                        max_extra_original_genes_in_new_gfs=15, min_common_old_genes_in_new_gfs=3,
+                        base_dir='.', aligner='muscle', min_msa_length=100, codeml='codeml', codeml_times=1, pairwise=False,
+                        max_gene_family_size=200, weighting_method='fasttree', n_threads=1, overwrite=False, preserve=False,
+                        is_test_run=False, logging_level="INFO"):
+    """
+    Modified from wgd_cli.py
+
+    Finds reciprocally retained GFs for focal species and computes their Ks values.
+    All vs. all diamond; orthogroup formation with OrthoMCL or OrthoFinder;
+    filtering for top reciprocally retained GFs; Ks value estimate.
+    
+    :param species_name: name or ID of the species, used in output file names
+    :param cds_fasta: CDS fasta file of the focal species
+    :param top : 
+    :param rank_type: 
+    :param orthomcl_inflation: 
+    :param use_original_orthomcl_version: by default, code uses the edited OrthoMCLight version (Default: False)
+    :param custom_recret_gfs: 
+    :param parsed_homology_table: user-defined path to existing parsed homology table (BPO file) generated by previous OrthoMCL 
+    :param max_extra_original_genes_in_new_gfs: 
+    :param min_common_old_genes_in_new_gfs: [NOT USED]
+    :param base_dir: directory where the output directory will be created in
+    :param aligner: aligner to use
+    :param min_msa_length: minimum multiple sequence alignment length
+    :param codeml: path to codeml executable for ML estimation of Ks
+    :param codeml_times: number of times to iteratively perform codeml ML estimation of Ks
+    :param pairwise: run in pairwise mode
+    :param max_gene_family_size: maximum size of a gene family to be included in analysis
+    :param weighting_method: weighting method (fasttree, phyml or alc)
+    :param n_threads: number of threads to use
+    :param overwrite: overwrite existing results
+    :return: nothing
+    """
+    # input checks
+    if not species_name:
+        logging.error('No species name provided. Exiting.')
+        sys.exit(1)
+
+    # If OrthoFinder will be integrated as alternative to OrthoMCL, check here
+    # which program the user has requested to generate the reciprocally retained GFs for focal species.
+    # Currently only OrthoMCL is implemented
+    use_orthomcl = True
+    use_orthofinder = False
+    
+    # Setup the correct output file name on the basis of the software used to extend the orthogroups
+    output_dir = os.path.abspath(os.path.join(base_dir, _PARALOGS_OUTPUT_DIR_PATTERN.format(species_name)))
+    
+    if use_orthomcl and not use_orthofinder:
+        output_mcl_rec_ret_file = _OUTPUT_MCL_FILE_PATTERN_RR_OMCL.format(species_name, top, rank_type)
+        output_mcl_rec_ret_file_with_gfs_id = _OUTPUT_MCL_FILE_PATTERN_RR_OMCL_IDs.format(species_name, top, rank_type)
+        output_ks_file = _OUTPUT_KS_FILE_PATTERN_RR_OMCL.format(species_name, top, rank_type)
+        tmp_ks_paralogs = os.path.join(output_dir, _TMP_KS_RR_OMCL.format(species_name, top, rank_type))
+    elif use_orthofinder and not use_orthomcl:
+        output_mcl_rec_ret_file = _OUTPUT_MCL_FILE_PATTERN_RR_OF.format(species_name, top, rank_type)
+        output_ks_file = _OUTPUT_KS_FILE_PATTERN_RR_OF.format(species_name, top, rank_type)
+        tmp_ks_paralogs = os.path.join(output_dir, _TMP_KS_RR_OF.format(species_name, top, rank_type))
+    else:
+        logging.error("Please either select OrthoFinder or OrthoMCL to generate the reciprocally retained GFs.")
+        sys.exit("Exiting.")
+
+    # Define main output file (mcl-like table without headers)
+    # Note that the analogous output file with GF index as first column is generated in dir reciprocal_retention/orthomcl
+    output_mcl_path = os.path.join(output_dir, output_mcl_rec_ret_file)
+
+    # Determine which parts to run
+    do_rec_ret = True
+    do_ks = True
+    if os.path.exists(output_dir):
+        
+        # Check first if default filepath for reciprocally retained gene families (MCL-like) already exist
+        if os.path.exists(output_mcl_path):
+            logging.info(f'Reciprocally retained gene family file [{os.path.basename(output_mcl_path)}] already exists, will skip reciprocal retention pipeline')
+            do_rec_ret = False
+        # Check if the user provided a custom filepath for the recret GFs (MCL-like format)
+        #   It can be a gene family file located at a custom path or that has been generated with
+        #   an external analogous pipeline for reciprocal retention. If so, skip default recret pipeline. 
+        elif custom_recret_gfs:
+            logging.info(f'Found user-defined reciprocally retained gene family file, will skip reciprocal retention pipeline')
+            logging.info(f"Provided filepath: {custom_recret_gfs}")
+            do_rec_ret = False
+        # Else will start our recret pipeline to generate the MCL-like file
+        else:
+            logging.info("No reciprocally retained gene family file, will run reciprocal retention pipeline")
+
+        # Check if Ks tmp folder of previous failed run exists (in this case the Ks data will be incomplete)
+        if os.path.exists(tmp_ks_paralogs): # if there is a Ks tmp folder from previous failed run
+            logging.error(f'tmp directory [{tmp_ks_paralogs}] was found: leftover from a failed earlier run?')
+            logging.error('Paralog Ks data may be incomplete. Please delete the tmp directory and rerun '
+                        'the analysis. Exiting.')
+            sys.exit(1)
+
+        # Check if reciprocally retained Ks data already exists
+        if os.path.exists(os.path.join(output_dir, output_ks_file)):
+            if overwrite or do_rec_ret:
+                logging.warning(f'Reciprocally retained Ks file {output_ks_file} exists, will overwrite')
+            else:
+                logging.info(f'Reciprocally retained Ks file {output_ks_file} already exists, will skip wgd Ks analysis')
+                do_ks = False
+        else:
+            logging.info('No reciprocally retained Ks file, will run wgd Ks analysis')
+
+    if not do_rec_ret and not do_ks:
+        logging.info('All reciprocally retained paralog data already exist, nothing to do')
+        logging.info('Done')
+        return
+
+    # Software checks
+    logging.info('---')
+    logging.info('Checking external software...')
+    software = []
+    if do_rec_ret:
+        if use_orthomcl:
+            # By default, use the faster OrthoMCLight version
+            if not use_original_orthomcl_version:
+                software += ['orthomclight']
+            # Still allow compatibility with original OrthoMCL v1.4:
+            else:
+                software += ['orthomcl']
+            software += ['diamond', 'mcl']
+        elif use_orthofinder:
+            software += ['orthofinder']
+        else:
+            software += ['diamond']
+    if do_ks:
+        software += [aligner, codeml]
+        if weighting_method == 'fasttree':
+            software += ['FastTree']
+        elif weighting_method == 'phyml':
+            software += ['phyml']
+    if can_i_run_software(software) == 1:
+        logging.error('Could not run all required external software. Exiting.')
+        sys.exit(1)
+
+    # Input checks
+    if not cds_fasta:
+        logging.error('No CDS fasta file provided. Exiting.')
+        sys.exit(1)
+
+    if not os.path.exists(output_dir):
+        logging.info(f'Creating output directory {output_dir}')
+        os.makedirs(output_dir)
+
+    # Get reciprocally retained gene families (MCL-like format)
+    if do_rec_ret:
+        logging.info('---')
+     
+        if use_orthomcl:
+                        
+            # Log setup related to reciprocal retention analysis
+            logging.info(f"Reciprocal retention pipeline setup:")
+            logging.info(f"- Number of top reciprocally retained GF to consider: {top}")
+            logging.info(f"- The 9178 core-angiosperm GFs are ranked according to: {rank_type} ranking.")
+            logging.info(f"- OrthoMCL will be used to reconstruct the top {top} GFs for focal species [{species_name}]")
+            logging.info(f"- OrthoMCL inflation: {orthomcl_inflation}")
+            logging.info(f"- Maximum allowed number of extra original genes for accepting a matched new GF: {max_extra_original_genes_in_new_gfs}")
+            logging.info("")                
+
+            # Make OrthoMCL subdirectory for output files
+            orthomcl_outdir_focal = os.path.join(output_dir, "reciprocal_retention", "orthomcl")
+            if not os.path.exists(orthomcl_outdir_focal):
+                logging.debug(f"Make OrthoMCL subdirectory for [{species_name}]")
+                os.makedirs(orthomcl_outdir_focal)
+
+            # Define mcl-like table output file containing also the GF index as first column
+            output_mcl_path_with_gf_ids = os.path.join(orthomcl_outdir_focal, output_mcl_rec_ret_file_with_gfs_id)
+
+            # Path to directory containing lambda ranking and original 37 angiosperms' FASTAs to be used in the workflow
+            # TODO: how do provide this to user? tar.gz directory to decompress?
+            ksrates_rec_ret_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "reciprocal_retention")
+            
+            # 1) Generate GFs from scratch for original 37 angiosperms plus focal species
+            # ---------------------------------------------------------------------------
+
+            orthomcl_output_renamed = f"{species_name}_original_37.orthomcl.out"
+            orthomcl_output_renamed_path = os.path.join(orthomcl_outdir_focal, orthomcl_output_renamed)
+            
+            if os.path.exists(orthomcl_output_renamed_path):
+                logging.info(f"OrthoMCL orthogroup file [{orthomcl_output_renamed}] already exists, will skip OrthoMCL pipeline")
+            else:
+                logging.info(f"OrthoMCL orthogroup file [{orthomcl_output_renamed}] not found, will run OrthoMCL pipeline")
+        
+                # Define path to directory containing the original FASTA files of the 37 angiosperms
+                if not is_test_run:
+                    original_37_fasta_dir = os.path.join(ksrates_rec_ret_dir, "original_angiosperm_sequences")
+                    original_37_fasta_dir_targz = os.path.join(ksrates_rec_ret_dir, f"{original_37_fasta_dir}.tar.gz")
+                else: # The "test" run however only uses a subset of FASTA sequences from only 3 original species
+                    logging.info("This is a test run: will only use a few sequences from the original 37 angiosperms!")
+                    original_37_fasta_dir = os.path.join("sequences", "original_angiosperm_sequences_test")
+                    original_37_fasta_dir_targz = os.path.join("sequences", "original_angiosperm_sequences_test.tar.gz")
+
+                # Translate focal species FASTA
+                focal_species_aa_filename = f"{os.path.splitext(os.path.basename(cds_fasta))[0]}.faa"
+                focal_species_aa_filepath = os.path.join(orthomcl_outdir_focal, focal_species_aa_filename)
+                fcRecRet_OMCL.translate_focal_fasta_for_recret(species_name, cds_fasta, focal_species_aa_filepath)
+                
+                # Generate homology search table, or reuse an older one provided by user
+                if parsed_homology_table == "":
+                    # Merge all FASTAs for diamond search
+                    merged_fasta_outpath = fcRecRet_OMCL.merge_all_amino_fasta_for_recret(species_name, focal_species_aa_filepath,
+                                                                                    orthomcl_outdir_focal, original_37_fasta_dir_targz)
+                    # Run diamond on merged files
+                    dmd_homology_table_filepath = fcRecRet_OMCL.make_homology_table_for_orthomcl(species_name, orthomcl_outdir_focal, 
+                                                        n_threads, merged_fasta_outpath)
+                # Else skip diamond if user provided an existing PARSED homology table (BPO file) generated in a previous OrthoMCL run
+                elif parsed_homology_table != "":
+                    logging.info(f"Skipping diamond and using user-provided parsed homology table (BPO file) generated during a previous OrthoMCL run:")
+                    logging.info(f"{parsed_homology_table}")
+                    dmd_homology_table_filepath = ""
+                logging.info("")
+                
+                # Run OrthoMCL
+                fcRecRet_OMCL.generate_gfs_orthomcl(species_name, focal_species_aa_filepath, original_37_fasta_dir_targz, orthomcl_output_renamed_path, 
+                                               orthomcl_outdir_focal, n_threads, orthomcl_inflation,
+                                               dmd_homology_table_filepath, parsed_homology_table, use_original_orthomcl_version)
+            logging.info("")
+            
+            # 2) Match original top GFs to newly obtained OrthoMCL GFs
+            # --------------------------------------------------------
+
+            # Get the top X GFs of the original lambda ranking
+            logging.info(f"Importing the original top {top} GFs from the reciprocal retention {rank_type} ranking")
+            logging.info("")
+            original_top_gfs_raw_path = os.path.join(ksrates_rec_ret_dir, "gene_families_new_lambda_ranking.xlsx")
+            original_top_gfs_ranking = read_excel(original_top_gfs_raw_path, sheet_name="gene family rankings", header=None)
+            gf_ids_ranked_to_top = original_top_gfs_ranking.iloc[:top, 0]
+            original_top_gf_genes_raw = read_excel(original_top_gfs_raw_path, sheet_name="orthogroup member genes", header=None)
+
+            logging.debug(f"Getting genes from the original top GFs and from the new OrthoMCL GFs")
+            # Count the number of original 37 species' genes and focal species' genes in each newly generated GF
+            original_and_focal_genes_in_orthomcl_gfs = fcRecRet_OMCL.count_original_and_focal_genes_in_orthomcl_gfs(orthomcl_output_renamed_path)
+
+            # Match original top GFs from 37 species with new GFs expanded with focal species
+            matched_orthomcl_gfs_path = os.path.join(orthomcl_outdir_focal, f"{species_name}_matched_gfs_max_{max_extra_original_genes_in_new_gfs}_extra.tsv")
+            if os.path.exists(matched_orthomcl_gfs_path):                
+                logging.info(f"The original top {top} GFs have already been matched to the new OrthoMCL GFs [{os.path.basename(matched_orthomcl_gfs_path)}]")
+            else:
+                logging.info(f"Matching the original top {top} GFs to the newly obtained OrthoMCL GFs...")
+                fcRecRet_OMCL.match_and_reconstruct_gfs(top, gf_ids_ranked_to_top, original_and_focal_genes_in_orthomcl_gfs, 
+                                             original_top_gf_genes_raw, matched_orthomcl_gfs_path, 
+                                             max_extra_original_genes_in_new_gfs, min_common_old_genes_in_new_gfs)
+            matched_orthomcl_gfs = read_table(matched_orthomcl_gfs_path, index_col=0)
+            
+            # Log how many original GFs shared some genes with the new OrthoMCL GFs, and how well they match
+            fcRecRet_OMCL.log_match_quality(top, matched_orthomcl_gfs)
+            logging.info("")
+            
+            # 3) Reconstruct top GFs that were well-matched to the new OrthoMCL GFs
+            # ---------------------------------------------------------------------
+            
+            logging.info(f"Reconstructing top reciprocally retained GFs for focal species [{species_name}]...")
+            fcRecRet_OMCL.reconstruct_top_gfs(species_name, output_mcl_path, output_mcl_path_with_gf_ids, 
+                                            original_and_focal_genes_in_orthomcl_gfs, matched_orthomcl_gfs)
+            logging.info("")
+
+        # NOTE: The following two alternative methods to get the RecRet GFs are not implemented;
+        #       however OrthoFinder might be integrated in the future.
+        
+        # Choose OrthoFinder to obtain the reciprocally retained gene families for the focal species
+        elif use_orthofinder:
+            logging.info("OrthoFinder-based reciprocal retention pipeline is not implemented [fcRecRet_OF.main_rec_ret_orthofinder_pipeline]")
+            sys.exit(1)
+
+        # Choose diamond to obtain the reciprocally retained gene families for the focal species
+        # NOTE: discontinued and not available, for legacy
+        else:
+            logging.error("diamond-based reciprocal retention pipeline is not implemented [fcRetRet_dmd.main_rec_ret_diamond_pipeline]")
+            sys.exit(1)
+    
+    # Rec ret Ks analysis
+    if do_ks:
+        logging.info('---')
+        logging.info('Running reciprocally retained gene families Ks analysis...')
+        cds_sequences = read_fasta(os.path.abspath(cds_fasta))
+
+        # tmp directory
+        cw_dir = os.getcwd()
+        if not os.path.exists(tmp_ks_paralogs):
+            os.mkdir(tmp_ks_paralogs)
+        os.chdir(tmp_ks_paralogs)  # change dir to tmp dir, as codeml writes non-unique file names to the working dir
+
+        logging.info(f'Translating CDS file {cds_fasta}...')
+        protein_sequences = translate_cds(cds_sequences)
+
+        results_df = ks_analysis_paranome(cds_sequences, protein_sequences, output_mcl_path, 
+                                          tmp_dir=tmp_ks_paralogs, output_dir=output_dir,
+                                          codeml_path=codeml, times=codeml_times, aligner=aligner,
+                                          ignore_prefixes=False, min_length=min_msa_length, pairwise=pairwise,
+                                          max_gene_family_size=max_gene_family_size, method=weighting_method,
+                                          preserve=preserve, n_threads=n_threads, logging_level=logging_level)
+
+        if os.path.exists(tmp_ks_paralogs):
+            logging.error(f'tmp directory {tmp_ks_paralogs} still exists after analysis, '
+                          f'paralog Ks data may be incomplete and will not be written to paralog Ks file!')
+            logging.error('Please delete the tmp directory and rerun the analysis. Exiting.')
+            sys.exit(1)
+        if isinstance(results_df, type(None)) or results_df.empty:
+            logging.warning('No paralog Ks data computed, will write empty paralog Ks file!')
+        with open(os.path.join(output_dir, output_ks_file), 'w+') as o:
+            o.write(results_df.round(5).to_csv(sep='\t'))
+        # Change back to current directory as tmp dir got deleted and subsequent os.getcwd() may fail
+        os.chdir(cw_dir)
+
+    logging.info('---')
+    logging.info('Done')
+    logging.info('---')
 
 
 def ks_orthologs(species1, species2, cds_fasta1, cds_fasta2, base_dir='.', eval_cutoff=1e-10, aligner='muscle',
-                 codeml='codeml', codeml_times=1, n_threads=4, overwrite=False):
+                 codeml='codeml', codeml_times=1, n_threads=1, overwrite=False, preserve=False, logging_level="INFO"):
     """
     Modified from wgd_cli.py
 
@@ -236,10 +578,10 @@ def ks_orthologs(species1, species2, cds_fasta1, cds_fasta2, base_dir='.', eval_
     if not species1 and not species2:
         logging.error('No ortholog species names provided. Exiting.')
         sys.exit(1)
-
-    output_blast_file = f'{species1}_{species2}.blast.tsv'
-    output_orthologs_file = f'{species1}_{species2}.orthologs.tsv'
-    output_ks_file = f'{species1}_{species2}.ks.tsv'
+    
+    output_blast_file = _OUTPUT_BLAST_FILE_PATTERN_ORTHO.format(species1, species2)
+    output_orthologs_file = _OUTPUT_RBH_FILE_PATTERN_ORTHO.format(species1, species2)
+    output_ks_file = _OUTPUT_KS_FILE_PATTERN_ORTHO.format(species1, species2)
 
     output_dir = os.path.abspath(os.path.join(base_dir, _ORTHOLOGS_OUTPUT_DIR_PATTERN.format(species1, species2)))
 
@@ -373,8 +715,8 @@ def ks_orthologs(species1, species2, cds_fasta1, cds_fasta2, base_dir='.', eval_
         protein_sequences = merge_dicts(protein_sequences1, protein_sequences2)
         output_orthologs_path = os.path.join(output_dir, output_orthologs_file)
         results_df = ks_analysis_one_vs_one(cds_sequences, protein_sequences, output_orthologs_path, tmp_ks_orthologs,
-                                            output_dir, codeml, times=codeml_times, aligner=aligner, preserve=False,
-                                            n_threads=n_threads)
+                                            output_dir, codeml, times=codeml_times, aligner=aligner, preserve=preserve,
+                                            n_threads=n_threads, logging_level=logging_level)
         if os.path.exists(tmp_ks_orthologs):
             logging.error(f'tmp directory {tmp_ks_orthologs} still exists after analysis, '
                           f'ortholog Ks data may be incomplete and will not be written to ortholog Ks file!')
@@ -390,6 +732,7 @@ def ks_orthologs(species1, species2, cds_fasta1, cds_fasta2, base_dir='.', eval_
 
     logging.info('---')
     logging.info('Done')
+    logging.info('---')
 
 
 def all_v_all_blast_1way(species1, species2, protein_seq_dict1, protein_seq_dict2, tmp_dir, output_dir, output_file,
@@ -463,7 +806,7 @@ def all_v_all_blast_2ways(species1, species2, protein_seq_dict1, protein_seq_dic
     concat_files(output_blast_file_tmp12, output_blast_file_tmp21, os.path.join(output_dir, output_file))
 
 
-def all_v_all_blast(query, db, output_directory='./', output_file='blast.tsv', eval_cutoff=1e-10, n_threads=4):
+def all_v_all_blast(query, db, output_directory='./', output_file='blast.tsv', eval_cutoff=1e-10, n_threads=1):
     """
     Modified from wgd/blast_mcl.py
 
@@ -561,7 +904,7 @@ def ks_colinearity(species_name, gff_file, base_dir='.', gff_feature='mRNA', gff
         sys.exit(1)
 
     output_dir = os.path.abspath(os.path.join(base_dir, _PARALOGS_OUTPUT_DIR_PATTERN.format(species_name)))
-    output_file = f'{species_name}.ks_anchors.tsv'
+    output_file = _OUTPUT_KS_FILE_PATTERN_ANCHORS.format(species_name)
 
     if os.path.exists(os.path.join(output_dir, output_file)):
         if overwrite:
@@ -586,25 +929,25 @@ def ks_colinearity(species_name, gff_file, base_dir='.', gff_feature='mRNA', gff
         logging.error('No GFF file provided. Exiting.')
         sys.exit(1)
 
-    mcl_file = os.path.join(output_dir, _OUTPUT_MCL_FILE_PATTERN.format(species_name))
+    mcl_file = os.path.join(output_dir, _OUTPUT_MCL_FILE_PATTERN_PARA.format(species_name))
     if not os.path.exists(mcl_file):
         logging.error(f'Paralog gene families file {mcl_file} does not exist. Exiting.')
         sys.exit(1)
 
-    ks_file = os.path.join(output_dir, _OUTPUT_KS_FILE_PATTERN.format(species_name))
+    ks_file = os.path.join(output_dir, _OUTPUT_KS_FILE_PATTERN_PARA.format(species_name))
     if not os.path.exists(ks_file):
         logging.error(f'Paralog Ks file {ks_file} does not exist. Exiting.')
         sys.exit(1)
 
     # i-ADHoRe tmp directory
-    tmp_dir = os.path.join(output_dir, f'{species_name}.ks_anchors_tmp')
+    tmp_ks_anchors = os.path.join(output_dir, _TMP_KS_ANCHORS.format(species_name))
 
     if not os.path.exists(output_dir):
         logging.info(f'Creating output directory {output_dir}')
         os.makedirs(output_dir)
-    if not os.path.exists(tmp_dir):
-        logging.info(f'Creating i-ADHoRe tmp directory {tmp_dir}')
-        os.mkdir(tmp_dir)
+    if not os.path.exists(tmp_ks_anchors):
+        logging.info(f'Creating i-ADHoRe tmp directory {tmp_ks_anchors}')
+        os.mkdir(tmp_ks_anchors)
 
     # parse the gff
     logging.info("Parsing GFF file")
@@ -617,47 +960,49 @@ def ks_colinearity(species_name, gff_file, base_dir='.', gff_feature='mRNA', gff
     if not genome:
         logging.error("Gene lists for i-ADHoRe are empty, check GFF feature and (gene) attribute configurations. "
                       "Exiting.")
-        shutil.rmtree(tmp_dir)
+        shutil.rmtree(tmp_ks_anchors)
         sys.exit(1)
 
     # generate necessary files for i-ADHoRe
     logging.info("Writing gene lists for i-ADHoRe")
-    _write_gene_lists(genome, os.path.join(tmp_dir, 'i-adhore_gene_lists'))
+    _write_gene_lists(genome, os.path.join(tmp_ks_anchors, 'i-adhore_gene_lists'))
 
     logging.info("Writing families file for i-ADHoRe")
-    n_matched = _write_families_file(mcl_file, all_genes, os.path.join(tmp_dir, 'families.tsv'))
+    n_matched = _write_families_file(mcl_file, all_genes, os.path.join(tmp_ks_anchors, 'families.tsv'))
     if not n_matched:
         logging.error("None of the (gene) IDs in the MCL gene families file match (gene) IDs in the GFF file, "
                       "check GFF feature and (gene) attribute configurations and/or (gene) IDs between FASTA and GFF "
                       "files. Exiting.")
-        shutil.rmtree(tmp_dir)
+        shutil.rmtree(tmp_ks_anchors)
         sys.exit(1)
 
     logging.info("Writing i-ADHoRe configuration file")
-    _write_config_iadhore('i-adhore_gene_lists', 'families.tsv', base_dir=tmp_dir, genome=species_name,
+    _write_config_iadhore('i-adhore_gene_lists', 'families.tsv', base_dir=tmp_ks_anchors, genome=species_name,
                           number_of_threads=n_threads)
 
     # run i-ADHoRe
     logging.info("Running i-ADHoRe 3.0...")
-    _run_iadhore(os.path.join(tmp_dir, 'i-adhore.conf'))
+    _run_iadhore(os.path.join(tmp_ks_anchors, 'i-adhore.conf'))
 
     # Ks distribution for anchors
     logging.info("Constructing Ks distribution for anchors")
-    anchor_points_file = os.path.join(tmp_dir, 'i-adhore_out', 'anchorpoints.txt')
+    anchor_points_file = os.path.join(tmp_ks_anchors, 'i-adhore_out', 'anchorpoints.txt')
     _write_anchor_pairs_ks(anchor_points_file, ks_file, os.path.join(output_dir, output_file))
 
     logging.info('Removing i-ADHoRe tmp directory')
     subfolder = os.path.join(output_dir, f"{species_name}_i-adhore")
     if not os.path.exists(subfolder):
         os.mkdir(subfolder)
-    shutil.copy2(os.path.join(tmp_dir, 'i-adhore_out', 'anchorpoints.txt'), subfolder)
-    shutil.copy2(os.path.join(tmp_dir, "i-adhore_out", "multiplicons.txt"), subfolder)
-    shutil.copy2(os.path.join(tmp_dir, "i-adhore_out", "segments.txt"), subfolder)
-    shutil.copy2(os.path.join(tmp_dir, "i-adhore_out", "list_elements.txt"), subfolder)
-    shutil.copy2(os.path.join(tmp_dir, "i-adhore_out", "multiplicon_pairs.txt"), subfolder)
-    shutil.rmtree(tmp_dir)
+    shutil.copy2(os.path.join(tmp_ks_anchors, 'i-adhore_out', 'anchorpoints.txt'), subfolder)
+    shutil.copy2(os.path.join(tmp_ks_anchors, "i-adhore_out", "multiplicons.txt"), subfolder)
+    shutil.copy2(os.path.join(tmp_ks_anchors, "i-adhore_out", "segments.txt"), subfolder)
+    shutil.copy2(os.path.join(tmp_ks_anchors, "i-adhore_out", "list_elements.txt"), subfolder)
+    shutil.copy2(os.path.join(tmp_ks_anchors, "i-adhore_out", "multiplicon_pairs.txt"), subfolder)
+    shutil.rmtree(tmp_ks_anchors)
 
+    logging.info('---')
     logging.info("Done")
+    logging.info('---')
 
 
 def _write_gene_lists(genome, output_dir='gene_lists'):
@@ -851,7 +1196,7 @@ def _write_anchor_pairs_ks(anchor_points_file, ks_file, out_file='ks_anchors.tsv
     :param out_file: output file name
     :return: nothing
     """
-    # anchor_points = pd.read_csv(anchor_points_file, sep='\t')
+    # anchor_points = read_table(anchor_points_file)
     # anchor_points = anchor_points[['gene_x', 'gene_y']]
     # anchor_points.drop_duplicates()
     # ids = anchor_points.apply(lambda x: '__'.join(sorted(x)), axis=1)
@@ -859,7 +1204,7 @@ def _write_anchor_pairs_ks(anchor_points_file, ks_file, out_file='ks_anchors.tsv
     # ids.drop_duplicates()
     # print(ids)
     #
-    # ks_distribution = pd.read_csv(ks_file, index_col=0, sep='\t')
+    # ks_distribution = read_table(ks_file, index_col=0)
     # # if (gene) IDs in the Ks file contain pipes remove them (i-ADHoRe anchor (gene) IDs should not contain pipes)
     # index_list = list(ks_distribution.index.values)
     # if index_list[0].count('|') == 2:
@@ -878,7 +1223,7 @@ def _write_anchor_pairs_ks(anchor_points_file, ks_file, out_file='ks_anchors.tsv
     #     ks_anchors.to_csv(out_file, sep='\t')
 
     with open(anchor_points_file, "r") as apf, open(ks_file, "r") as ksf:
-        anchor_points = pd.read_csv(apf, sep="\t")
+        anchor_points = read_table(apf)
         anchor_points = anchor_points[['gene_x', 'gene_y']]
         anchor_points.drop_duplicates()
         anchor_points_id_list = []
@@ -889,7 +1234,7 @@ def _write_anchor_pairs_ks(anchor_points_file, ks_file, out_file='ks_anchors.tsv
             if not anchor_point_id in anchor_points_id_list:
                 anchor_points_id_list.append(anchor_point_id)
 
-        ks = pd.read_csv(ksf, index_col=0, sep='\t')
+        ks = read_table(ksf, index_col=0, sep='\t')
         # if (gene) IDs in the Ks file contain pipes remove them (i-ADHoRe anchor (gene) IDs should not contain pipes)
         index_list = list(ks.index.values)
         if isinstance(index_list[0], str) and index_list[0].count('|') == 2:
@@ -902,7 +1247,7 @@ def _write_anchor_pairs_ks(anchor_points_file, ks_file, out_file='ks_anchors.tsv
                 nonpiped_index_list[i] = f"{gene1}__{gene2}"
             ks = ks.rename(index=dict(zip(index_list, nonpiped_index_list)))
 
-        ks_anchors = ks.loc[ks.index.intersection(pd.Series(anchor_points_id_list))]
+        ks_anchors = ks.loc[ks.index.intersection(Series(anchor_points_id_list))]
 
         # (Re)calculate and update weights of anchor pairs
         ks_anchors_weighted = compute_weights_anchor_pairs(ks_anchors)
