@@ -6,6 +6,8 @@ ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 ENV DEBIAN_FRONTEND=noninteractive
 
+RUN apt-get update
+
 # Install PAML from source
 
 RUN apt-get install -y wget && wget http://abacus.gene.ucl.ac.uk/software/paml4.9j.tgz && \
