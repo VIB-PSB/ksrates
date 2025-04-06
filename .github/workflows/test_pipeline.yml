@@ -36,7 +36,6 @@ jobs:
       - name: Running ksrates Nextflow pipeline
         run: |
           cd test
-          mv nextflow.config custom_nextflow.config
           NXF_VER=24.10.5 nextflow run ../main.nf --test -profile docker --config config_files/config_elaeis.txt --expert config_files/config_expert.txt -with-docker ksrates
         
       - name: Visualize output files
