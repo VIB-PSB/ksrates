@@ -7,8 +7,6 @@ import tarfile
 from pandas import read_table, read_excel, Series
 from numpy import zeros
 import ksrates.fc_rec_ret_orthomcl as fcRecRet_OMCL # get recret GFs generated with OrthoMCL (default)
-# import ksrates.fc_rec_ret_orthofinder as fcRecRet_OF # get recret GFs generate with OrthoFinder (NOT USED)
-# import ksrates.fc_rec_ret_diamond as fcRetRet_dmd # get recret GFs generate with diamond (NOT USED)
 from ksrates.utils import merge_dicts, concat_files, can_i_run_software, translate_cds, write_fasta
 from wgd_ksrates.utils import read_fasta
 from wgd_ksrates.blast_mcl import run_mcl_ava, ava_blast_to_abc, get_one_v_one_orthologs_rbh
