@@ -19,7 +19,7 @@ RUN apt-get update && \
 RUN apt-get install -yq git curl default-jdk build-essential mcl ncbi-blast+ muscle fasttree 
 
 # Install PAML from source
-RUN apt-get install -y wget && wget http://abacus.gene.ucl.ac.uk/software/paml4.9j.tgz && \
+RUN apt-get install -y wget && wget https://gitlab.renkulab.io/tzzteresa/polyploid-summer-school-2023day4-2/-/raw/rimjhim.choudhury-master-patch-51949/src/paml4.9j.tgz && \
 	tar -xzf paml4.9j.tgz && cd paml4.9j/src && make -f Makefile && mv codeml /bin && cd /
 
 # Install DIAMOND
