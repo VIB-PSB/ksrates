@@ -15,10 +15,6 @@ RUN apt-get update && \
 	curl -sS https://bootstrap.pypa.io/get-pip.py | python3.9 && \
 	python3.9 -m pip install --upgrade pip
 
-# Install numpy dependency
-RUN python3.9 -m pip install --upgrade pip setuptools wheel
-RUN python3.9 -m pip install numpy
-
 # Install non-python wgd dependencies
 RUN apt-get install -yq git curl default-jdk build-essential mcl ncbi-blast+ muscle fasttree 
 
@@ -47,5 +43,7 @@ ADD /README.md /ksrates/README.md
 ADD /ksrates_cli.py /ksrates/ksrates_cli.py
 
 # Install ksrates and requirements from requirements.txt
-RUN python3.9 -m pip install /ksrates && \
-	rm -r /ksrates
+RUN python3.9 -m pip install -r /ksrates/requirements.txt
+
+# Then install ksrates package itself
+RUN python3.9 -m pip install /ksrates && rm -r /ksrates
