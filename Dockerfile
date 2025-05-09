@@ -6,14 +6,14 @@ ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install Python3.8
+# Install Python3.9
 RUN apt-get update && \
     apt-get install -y software-properties-common && \
     add-apt-repository ppa:deadsnakes/ppa && \
     apt-get update && \
-    apt-get install -y python3.8 python3.8-distutils && \
-	curl -sS https://bootstrap.pypa.io/get-pip.py | python3.8 && \
-	python3.8 -m pip install --upgrade pip
+    apt-get install -y python3.9 python3.9-distutils && \
+	curl -sS https://bootstrap.pypa.io/get-pip.py | python3.9 && \
+	python3.9 -m pip install --upgrade pip
 
 # Install non-python wgd dependencies
 RUN apt-get install -yq git curl default-jdk build-essential mcl ncbi-blast+ muscle fasttree 
@@ -43,5 +43,5 @@ ADD /README.md /ksrates/README.md
 ADD /ksrates_cli.py /ksrates/ksrates_cli.py
 
 # Install ksrates and requirements from requirements.txt
-RUN python3.8 -m pip install /ksrates && \
+RUN python3.9 -m pip install /ksrates && \
 	rm -r /ksrates
