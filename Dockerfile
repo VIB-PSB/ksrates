@@ -16,8 +16,8 @@ RUN apt-get update && \
 	python3.9 -m pip install --upgrade pip
 
 # Install numpy dependency
-RUN	python3.9 -m pip install --upgrade pip \
-	python3.9 -m pip install numpy
+RUN python3.9 -m pip install --upgrade pip setuptools wheel
+RUN python3.9 -m pip install numpy
 
 # Install non-python wgd dependencies
 RUN apt-get install -yq git curl default-jdk build-essential mcl ncbi-blast+ muscle fasttree 
