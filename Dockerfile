@@ -19,7 +19,7 @@ RUN apt-get update && \
 RUN apt-get install -yq git curl default-jdk build-essential mcl ncbi-blast+ muscle fasttree 
 
 # Install PAML from source
-RUN apt-get install -y wget && wget https://gitlab.renkulab.io/tzzteresa/polyploid-summer-school-2023day4-2/-/raw/rimjhim.choudhury-master-patch-51949/src/paml4.9j.tgz && \
+RUN apt-get install -y wget && wget http://abacus.gene.ucl.ac.uk/software/paml4.9j.tgz && \
 	tar -xzf paml4.9j.tgz && cd paml4.9j/src && make -f Makefile && mv codeml /bin && cd /
 
 # Install DIAMOND
@@ -31,14 +31,17 @@ RUN wget https://raw.githubusercontent.com/VIB-PSB/OrthoMCLight/main/orthomcligh
 	wget https://raw.githubusercontent.com/VIB-PSB/OrthoMCLight/main/orthomclight_module.pm -P /bin && \
 	chmod a+rx /usr/bin/orthomclight*
 
+# Download the 37 angiosperm sequence zipped file from Zenodo for the reciprocal retention pipeline
+RUN wget https://zenodo.org/records/15225340/files/original_angiosperm_sequences.tar.gz -P /ksrates/reciprocal_retention
+
 # Copy ksrates files
-ADD /requirements.txt /install/requirements.txt
-ADD /setup.py /install/setup.py
-ADD /ksrates /install/ksrates
-ADD /wgd_ksrates /install/wgd_ksrates
-ADD /README.md /install/README.md
-ADD /ksrates_cli.py /install/ksrates_cli.py
+ADD /requirements.txt /ksrates/requirements.txt
+ADD /setup.py /ksrates/setup.py
+ADD /ksrates /ksrates/ksrates
+ADD /wgd_ksrates /ksrates/wgd_ksrates
+ADD /README.md /ksrates/README.md
+ADD /ksrates_cli.py /ksrates/ksrates_cli.py
 
 # Install ksrates and requirements from requirements.txt
-RUN python3.8 -m pip install /install && \
-	rm -r /install
+RUN python3.8 -m pip install /ksrates && \
+	rm -r /ksrates
