@@ -2,4 +2,8 @@ __pycache__
 .vscode
 .nextflow
 docs/outdir
-test
+test/work
+test/.nextflow*
+test/ortholog_distributions
+test/.nextflow
+test/rate_adjustment
