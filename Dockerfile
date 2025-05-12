@@ -55,5 +55,5 @@ ADD /README.md /ksrates/README.md
 ADD /ksrates_cli.py /ksrates/ksrates_cli.py
 
 # Install ksrates and requirements from requirements.txt, with isolated build
-RUN python3.9 -m pip install --no-cache-dir --isolated /ksrates && \
-	rm -r /ksrates
+# RUN python3.9 -m pip install --no-cache-dir --isolated /ksrates && \
+# 	rm -r /ksrates
