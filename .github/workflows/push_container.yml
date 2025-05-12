@@ -1,8 +1,8 @@
 name: Push DockerHub CI
 
 on:
-  release:
-    types: [published]
+  push:
+    branches: [ v2 ]
   workflow_dispatch:
 
 jobs:
@@ -19,7 +19,7 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: |
-            vibpsb/ksrates
+            Cecilia-Sensalari/ksrates
           tags: |
             type=ref,event=tag
       
