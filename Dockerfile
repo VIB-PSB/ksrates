@@ -43,7 +43,5 @@ ADD /README.md /ksrates/README.md
 ADD /ksrates_cli.py /ksrates/ksrates_cli.py
 
 # Install ksrates and requirements from requirements.txt
-RUN python3.9 -m pip install -r /ksrates/requirements.txt
-
-# Then install ksrates package itself
-RUN python3.9 -m pip install /ksrates && rm -r /ksrates
+RUN python3.9 -m pip install /ksrates && \
+	rm -r /ksrates
