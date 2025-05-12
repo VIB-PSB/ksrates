@@ -16,7 +16,7 @@ RUN apt-get update && \
 	python3.9 -m pip install --upgrade pip
 
 # Install non-python wgd dependencies
-RUN apt-get update && apt-get install \
+RUN apt-get update && apt-get install -yq \
     git \
     curl \
     default-jdk \
