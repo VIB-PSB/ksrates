@@ -1,8 +1,6 @@
 name: Push DockerHub CI
 
 on:
-  push:
-    branches: [ v2 ]
   workflow_dispatch:
 
 jobs:
