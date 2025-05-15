@@ -26,13 +26,16 @@ jobs:
         # Builds here the Docker container
         run: docker build . --file Dockerfile --tag ksrates
 
+      - name: Set Java 17 Environment
+        run: |
+          echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
+          echo "/usr/lib/jvm/java-17-openjdk-amd64/bin" >> $GITHUB_PATH
+
       - name: Installing Nextflow
         run: |
           sudo apt-get update
           sudo apt-get install wget openjdk-17-jdk
-          echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
-          echo "PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH" >> $GITHUB_ENV
-          sudo wget -qO- https://get.nextflow.io | bash
+          wget -qO- https://get.nextflow.io | bash
           sudo mv nextflow /usr/bin
             
       - name: Running ksrates Nextflow pipeline
