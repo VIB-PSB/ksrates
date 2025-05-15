@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -yq \
     wget \
     git \
     curl \
-    openjdk-17-jdk \
+    default-jdk \
     build-essential \
     mcl \
     ncbi-blast+ \
