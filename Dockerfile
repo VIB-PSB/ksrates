@@ -11,7 +11,7 @@ RUN apt-get update && \
     apt-get install -y software-properties-common && \
     add-apt-repository ppa:deadsnakes/ppa && \
     apt-get update && \
-    apt-get install -y python3.9 python3.9-distutils python3.9-dev && \
+    apt-get install -y python3.9 python3.9-distutils && \
 	curl -sS https://bootstrap.pypa.io/get-pip.py | python3.9 && \
 	python3.9 -m pip install --upgrade pip
 
