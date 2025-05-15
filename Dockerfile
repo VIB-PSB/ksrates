@@ -17,6 +17,7 @@ RUN apt-get update && \
 
 # Install non-python wgd dependencies
 RUN apt-get update && apt-get install -yq \
+    wget \
     git \
     curl \
     default-jdk \
@@ -27,19 +28,16 @@ RUN apt-get update && apt-get install -yq \
     fasttree
 
 # Install PAML from source
-RUN apt-get update && apt-get install -y wget && \
-    wget http://abacus.gene.ucl.ac.uk/software/paml4.9j.tgz && \
+RUN wget http://abacus.gene.ucl.ac.uk/software/paml4.9j.tgz && \
     tar -xzf paml4.9j.tgz && cd paml4.9j/src && make -f Makefile && \
     mv codeml /bin && cd /
 
 # Install DIAMOND
-RUN apt-get update && apt-get install -y wget && \
-    wget http://github.com/bbuchfink/diamond/releases/download/v2.1.9/diamond-linux64.tar.gz && \
+RUN wget http://github.com/bbuchfink/diamond/releases/download/v2.1.9/diamond-linux64.tar.gz && \
     tar -xzf diamond-linux64.tar.gz && mv diamond /bin
 
 # Install OrthoMCLight
-RUN apt-get update && apt-get install -y wget && \
-    wget https://raw.githubusercontent.com/VIB-PSB/OrthoMCLight/main/orthomclight.pl -P /bin && \
+RUN wget https://raw.githubusercontent.com/VIB-PSB/OrthoMCLight/main/orthomclight.pl -P /bin && \
     wget https://raw.githubusercontent.com/VIB-PSB/OrthoMCLight/main/orthomclight_module.pm -P /bin && \
     chmod a+rx /usr/bin/orthomclight*
 
