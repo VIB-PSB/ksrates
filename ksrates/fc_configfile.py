@@ -790,8 +790,8 @@ class Configuration:
                 except Exception:
                     pass
                 if (not isinstance(min_ks_anchors, int) and not isinstance(min_ks_anchors, float)) or min_ks_anchors < 0:
-                    logging.warning(f'Unrecognized field in expert configuration file [min_ks_anchor_pairs = {min_ks_anchors}]. Please enter a positive integer or float. Default choice will be applied [0.05]')
-                    min_ks_anchors = 0.05
+                    logging.warning(f'Unrecognized field in expert configuration file [min_ks_anchor_pairs = {min_ks_anchors}]. Please enter a non-negative integer or float.')
+                    exit
             except Exception:
                 logging.warning(f'Missing field in expert configuration file [min_ks_anchor_pairs]. Please enter a positive integer or float. Default choice will be applied [0.05]')
                 min_ks_anchors = 0.05
