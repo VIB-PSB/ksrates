@@ -775,9 +775,9 @@ class Configuration:
 
     def get_min_ks_anchors(self):
         """
-        Gets in the expert configuration file the lower limit for the Ks range used to build the anchor pair distribution.
+        Gets in the expert configuration file the lower limit for the Ks range used to build the anchor pair Ks distribution.
         Removing very small Ks values (<0.05) in the anchor distribition can help removing noise at recent Ks age that
-        could be mistakenly interpreted as a very recent WGM. However, some WGMs with actual very young age might be thereby
+        could be mistakenly interpreted as a very recent WGM. However, some WGMs with actual very young age might thereby be
         erroneously cut off. This parameter allows user customization. [Default: 0.05].
 
         :param min_ks_anchors: minimum anchor pair Ks value used to build the anchor pair distribution
@@ -789,7 +789,7 @@ class Configuration:
                     min_ks_anchors = literal_eval(min_ks_anchors)
                 except Exception:
                     pass
-                if (not isinstance(min_ks_anchors, int) and not isinstance(min_ks_anchors, float)) or min_ks_anchors <= 0:
+                if (not isinstance(min_ks_anchors, int) and not isinstance(min_ks_anchors, float)) or min_ks_anchors < 0:
                     logging.warning(f'Unrecognized field in expert configuration file [min_ks_anchor_pairs = {min_ks_anchors}]. Please enter a positive integer or float. Default choice will be applied [0.05]')
                     min_ks_anchors = 0.05
             except Exception:
