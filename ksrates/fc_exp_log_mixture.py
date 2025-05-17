@@ -416,7 +416,7 @@ def find_peak_init_parameters(spl_x, spl_y, species, species_escape_whitespace, 
   return init_means, init_stdevs
 
 
-def deconvolute_data(tsv_file, max_ks, data_type):
+def deconvolute_data(tsv_file, max_ks, data_type, min_ks_anchors=0.05):
   """
   Generates an artificial proxy dataset for the weighted paranome Ks that doesn't need weights.
   If the dataset is being generated for exp-log mixture model, adds a tail of 1 Ks data beyond 
@@ -430,6 +430,12 @@ def deconvolute_data(tsv_file, max_ks, data_type):
   and so on for the remaining bins. 
   The reason for this choice is that the EM algorithm is implemented in a way that is not able to handle the Ks weights.
 
+  min_ks_anchors is used to customize the presence of very small Ks values in anchor pairs plots. By default,
+  only values equal to or larger than 0.05 Ks are used in this function.
+  Note: in order to use lower values (e.g. down to 0 Ks), you have to first make sure that the anchor Ks values
+  were generated with the min_ks_anchor_pairs expert configuration set to e.g. 0 Ks, otherwise such small values do
+  not have a weight (weight=0) and are not plotted in any case.
+
   :param tsv_file: wgd output file containing either paranome or anchor pairs Ks values (suffix formats: ".ks.tsv", "ks_anchors.tsv")
   :param max_ks: maximum Ks value consideref for the mixture model algorithm
   :param data_type: flag stating whether input Ks are "paralogs" or "anchor pairs"
@@ -442,6 +448,13 @@ def deconvolute_data(tsv_file, max_ks, data_type):
   elif data_type == "orthologs":
     ks_data = fc_extract_ks_list.ks_list_from_tsv(tsv_file, max_ks, data_type)
     ks_weights = [1] * len(ks_data) # dummy weights all equal to 1
+
+  if data_type == "anchor pairs":
+    # Remove anchor Ks values that are smaller than min_ks_anchors
+    ks_data_filtered = [val for val in ks_data if val >= min_ks_anchors]
+    ks_weights_filtered = [w for val, w in zip(ks_data, ks_weights) if val >= min_ks_anchors]
+    # Rename with default name
+    ks_data, ks_weights = ks_data_filtered, ks_weights_filtered
 
   if max_ks <= 4.5:
     # Avoid having a truncated distribution for the EM fitting in the exp-log mixture model
