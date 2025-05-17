@@ -239,7 +239,7 @@ def plot_mixture_model(model, data, max_x_axis_lim, ax, bin_width, scaling, peak
 
 
 def lmm(
-    fig, max_x_axis_lim, data_type, tsv_file, species, axis, ks_range, 
+    fig, max_x_axis_lim, data_type, tsv_file, species, axis, ks_range, min_ks_anchors,
     components, bins, bin_width_para, max_iter, n_init,
     output_dir, outfile, parameter_table, datatype_tag, peak_stats, correction_table_available, plot_correction_arrows):
     """
@@ -256,6 +256,7 @@ def lmm(
     :param species: informal name of the focal species
     :param axis: axis object
     :param ks_range: Ks range used for models
+    :param min_ks_anchors: minimum anchor Ks value to be modelled 
     :param components: number of components to use (tuple: (min, max))
     :param bins: number histogram bins for visualization
     :param bin_width_para: bin width of paralog Ks histogram
@@ -270,7 +271,7 @@ def lmm(
     :param plot_correction_arrows: boolean stating whether there will be plotted adjustment arrows or not
     """
     # Generating artificial dataset with same shape as the Ks histogram with 0.01 bin width
-    deconvoluted_data = deconvolute_data(tsv_file, ks_range[1], data_type)
+    deconvoluted_data = deconvolute_data(tsv_file, ks_range[1], data_type, min_ks_anchors)
     deconvoluted_data = log(deconvoluted_data).reshape(-1, 1) # log-transform and reshape data for fit_gmm
 
     models, bic, aic, best = fit_gmm(
