@@ -27,6 +27,7 @@ def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors
     latinSpecies = latin_names[species]
     species_escape_whitespace = latinSpecies.replace(' ', '\ ')
     max_ks_para = config.get_max_ks_para()
+    min_ks_anchors = config.get_min_ks_anchors()
     bin_width_para = config.get_bin_width_para()
     bin_list = fcPlot.get_bins(max_ks_para, bin_width_para)
     x_max_lim = config.get_x_max_lim()
@@ -122,18 +123,24 @@ def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors
     if colinearity_analysis:
         with open (os.path.join("rate_adjustment", f"{species}", subfolder, f"lmm_{species}_parameters_anchors.txt"), "w+") as outfile:
             logging.info("Performing lognormal mixture model on anchor pair Ks distribution")
+
             anchors_list, anchors_weights = fc_extract_ks_list.ks_list_from_tsv(anchors_ks_tsv_file, max_ks_para, "anchor pairs")
+            
+            # Remove anchor Ks values that are smaller than min_ks_anchors
+            anchors_list_filtered = [val for val in anchors_list if val >= min_ks_anchors]
+            anchors_weights_filtered = [w for val, w in zip(anchors_list, anchors_weights) if val >= min_ks_anchors]
+
             if len(anchors_list) == 0:
                 logging.warning(f"No anchor pairs found! Maybe check your (gene) IDs between "
                                 f"the [*species*.ks_anchors.tsv] file and the [*species*.ks.tsv] files.")
-            hist_anchors = fcPlot.plot_histogram("Anchor pairs", axis_colin, anchors_list, bin_list, bin_width_para,
-                                        max_ks_para, kde_bandwidth_modifier, anchors_weights, color=COLOR_ANCHOR_HISTOGRAM, plot_kde=False)
+            hist_anchors = fcPlot.plot_histogram("Anchor pairs", axis_colin, anchors_list_filtered, bin_list, bin_width_para,
+                                        max_ks_para, kde_bandwidth_modifier, anchors_weights_filtered, color=COLOR_ANCHOR_HISTOGRAM, plot_kde=False)
             # Setting the plot height based on tallest histogram bin
             if y_lim is None:
                 fcPlot.set_mixed_plot_height(axis_colin, y_lim, hist_anchors)
 
             best_model_anchors = fcLMM.lmm(
-                    fig_colin, x_max_lim, "anchor pairs", anchors_ks_tsv_file, species, axis_colin, (0, max_ks_EM),
+                    fig_colin, x_max_lim, "anchor pairs", anchors_ks_tsv_file, species, axis_colin, (0, max_ks_EM), min_ks_anchors,
                     (1, max_num_comp), arange(-10, max_ks_EM + bin_width_para, bin_width_para), bin_width_para, max_EM_iterations, num_EM_initializations,
                     output_dir, outfile, parameter_table, "anchors", peak_stats, correction_table_available, plot_correction_arrows)
 
