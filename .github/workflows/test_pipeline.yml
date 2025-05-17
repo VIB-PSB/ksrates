@@ -42,3 +42,8 @@ jobs:
       - name: Visualize output files
         if: ${{ always() }}
         run: ls -l test/rate_adjustment/elaeis
+
+      - name: Show working directory and structure
+        run: |
+          pwd
+          ls
