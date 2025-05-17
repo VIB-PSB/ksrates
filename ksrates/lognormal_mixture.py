@@ -109,7 +109,7 @@ def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors
                 fcPlot.set_mixed_plot_height(axis_para, y_lim, hist_paranome)
 
             best_model_paranome = fcLMM.lmm(
-                    fig_para, x_max_lim, "paralogs", paralog_tsv_file, species, axis_para, (0, max_ks_EM),
+                    fig_para, x_max_lim, "paralogs", paralog_tsv_file, species, axis_para, (0, max_ks_EM), min_ks_anchors,
                     (1, max_num_comp), arange(-10, max_ks_EM + bin_width_para, bin_width_para), bin_width_para, max_EM_iterations, num_EM_initializations,
                     output_dir, outfile, parameter_table, "paranome", peak_stats, correction_table_available, plot_correction_arrows)
         
