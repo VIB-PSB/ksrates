@@ -30,6 +30,7 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
     latin_names = config.get_latin_names()
     latin_name = latin_names[species].replace(' ', '\ ') # replace the space to have the correct format in titles
     max_ks_para = config.get_max_ks_para()
+    min_ks_anchors = config.get_min_ks_anchors()
     bin_width = config.get_bin_width_para()
     bin_list = fcPlot.get_bins(max_ks_para, bin_width)
     x_max_lim = config.get_x_max_lim()
@@ -133,7 +134,7 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
             # Process only anchorpoints with acceptable Ks value
             if anchorpoints in ks_anchors:
                 ks = ks_anchors[anchorpoints]
-                if ks != "" and 0.05 <= float(ks) <= max_ks_para:
+                if ks != "" and min_ks_anchors <= float(ks) <= max_ks_para:
                     anchorpoint1, anchorpoint2 = anchorpoints[0], anchorpoints[1]
                     # Get the two segments where the two anchorpoints are placed in the current multiplicon
                     all_segments_anchorpoint1 = segments_from_gene[anchorpoint1]
@@ -203,7 +204,7 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
         anchorpoints_ks_list_current_segment = []
         for anchorpoint in anchorpoints_list_current_segment:
                 ks = ks_anchors[anchorpoint]
-                if ks != "" and 0.05 <= float(ks) <= max_ks_para:
+                if ks != "" and min_ks_anchors <= float(ks) <= max_ks_para:
                     anchorpoints_ks_list_current_segment.append(float(ks))
         if len(anchorpoints_ks_list_current_segment) > 0: # if there is at least one Ks in the list, add the segment pair to the dictionaries
             # Updating the dictionary that takes into account also outliers
@@ -369,8 +370,13 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
                                      paranome_data=False, colinearity_data=True)
         
         # Plot the original complete anchor distribution in the background
-        fcPlot.plot_histogram_for_anchor_clustering(ax_corr_second, anchor_ks_list, anchors_weights, bin_list, y_max_lim)
-        fcPlot.plot_histogram_for_anchor_clustering(ax_uncorr_second, anchor_ks_list, anchors_weights, bin_list, y_max_lim)
+        # (First remove anchor Ks values that are smaller than min_ks_anchors)
+        min_ks_anchors = config.get_min_ks_anchors()
+        anchors_list_filtered = [val for val in anchor_ks_list if val >= min_ks_anchors]
+        anchors_weights_filtered = [w for val, w in zip(anchor_ks_list, anchors_weights) if val >= min_ks_anchors]
+
+        fcPlot.plot_histogram_for_anchor_clustering(ax_corr_second, anchors_list_filtered, anchors_weights_filtered, bin_list, y_max_lim)
+        fcPlot.plot_histogram_for_anchor_clustering(ax_uncorr_second, anchors_list_filtered, anchors_weights_filtered, bin_list, y_max_lim)
 
         # Plot the clusters of anchor Ks and on top of them their KDEs
         fcCluster.plot_clusters(ax_corr_second, filtered_cluster_of_ks, bin_width, max_ks_para, peak_stats, correction_table_available, plot_correction_arrows)
