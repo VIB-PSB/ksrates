@@ -370,8 +370,13 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
                                      paranome_data=False, colinearity_data=True)
         
         # Plot the original complete anchor distribution in the background
-        fcPlot.plot_histogram_for_anchor_clustering(ax_corr_second, anchor_ks_list, anchors_weights, bin_list, y_max_lim)
-        fcPlot.plot_histogram_for_anchor_clustering(ax_uncorr_second, anchor_ks_list, anchors_weights, bin_list, y_max_lim)
+        # (First remove anchor Ks values that are smaller than min_ks_anchors)
+        min_ks_anchors = config.get_min_ks_anchors()
+        anchors_list_filtered = [val for val in anchor_ks_list if val >= min_ks_anchors]
+        anchors_weights_filtered = [w for val, w in zip(anchor_ks_list, anchors_weights) if val >= min_ks_anchors]
+
+        fcPlot.plot_histogram_for_anchor_clustering(ax_corr_second, anchors_list_filtered, anchors_weights_filtered, bin_list, y_max_lim)
+        fcPlot.plot_histogram_for_anchor_clustering(ax_uncorr_second, anchors_list_filtered, anchors_weights_filtered, bin_list, y_max_lim)
 
         # Plot the clusters of anchor Ks and on top of them their KDEs
         fcCluster.plot_clusters(ax_corr_second, filtered_cluster_of_ks, bin_width, max_ks_para, peak_stats, correction_table_available, plot_correction_arrows)
