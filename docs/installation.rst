@@ -35,7 +35,7 @@ To install `Nextflow <https://www.nextflow.io>`__ and its dependencies, follow t
     This creates the ``nextflow`` executable file in the current directory.
 
 .. note::
-   As from `ksrates` ``v2.0.0``, the Nextflow pipeline has been ported to DSL2 syntax and requires at least Nextflow version ``22.03.0-edge``. Concerning older `ksrates` versions written with DSL1, ``v1.1.3`` and ``v1.1.4`` support from ``22.03.0-edge`` until before ``22.12.0-edge``, while ``v1.1.2`` and previous ones require earlier versions than ``22.03.0-edge``.
+   As from `ksrates` ``v2.0.0``, the Nextflow pipeline has been ported to DSL2 syntax and requires at least Nextflow version ``22.03.0-edge``. Concerning older `ksrates` versions written with DSL1, from ``v1.1.3`` to ``v1.1.5`` they support from ``22.03.0-edge`` until before ``22.12.0-edge``, while ``v1.1.2`` and previous ones require earlier versions than ``22.03.0-edge``.
 
 *   Optionally make the ``nextflow`` executable accessible by your ``$PATH`` variable, for example by moving it::
 
