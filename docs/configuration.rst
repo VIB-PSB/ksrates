@@ -196,7 +196,7 @@ The Nextflow configuration file is used to configure various settings for the *k
 
 * The **params** scope accepts the ``preserve`` parameter to keep leftover temporay folders and incomplete files when the pipeline is prematurely interrupted due to an error [Default: false]. Alternatively, ``--preserve`` can be provided directly in the Nextflow launching command line::
 
-    nextflow run VIB-PSB/ksrates --config ./config_elaeis.txt --preserve
+    nextflow run VIB-PSB/ksrates --config config_files/config_elaeis.txt --preserve
 
 .. _`expert_config_section`:
 
@@ -207,11 +207,11 @@ This is an optional configuration file that contains several \"expert\" paramete
     
 Syntax for the Nextflow pipeline::
 
-        nextflow run VIB-PSB/ksrates --config config_elaeis.txt --expert path/to/my_expert_config.txt
+        nextflow run VIB-PSB/ksrates --config config_files/config_elaeis.txt --expert path/to/my_expert_config.txt
     
 Syntax for single `ksrates` commands::
 
-        ksrates <command> config_elaeis.txt --expert path/to/my_expert_config.txt 
+        ksrates <command> config_files/config_elaeis.txt --expert path/to/my_expert_config.txt
 
 The following can be used as a template::
 
