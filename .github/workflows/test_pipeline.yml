@@ -35,7 +35,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install wget openjdk-17-jdk
-          wget -qO- https://get.nextflow.io | bash
+          sudo wget -qO- https://get.nextflow.io | bash
           sudo mv nextflow /usr/bin
             
       - name: Running ksrates Nextflow pipeline
