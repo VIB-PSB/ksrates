@@ -134,7 +134,10 @@ When not using or not being able to use one of the *ksrates* containers, for exa
 4.  Clone the *ksrates* repository from `GitHub <https://github.com/VIB-PSB/ksrates>`__ and install the package and its Python dependencies::
 
         git clone https://github.com/VIB-PSB/ksrates
-    	cd ksrates
+        # Starting from v2.0.0, download also this compressed file:
+        wget https://zenodo.org/records/15225340/files/original_angiosperm_sequences.tar.gz -P ksrates/ksrates/reciprocal_retention
+    	# Move to the ksrates subdirectory and install the package with ``pip``
+        cd ksrates
     	pip3 install .
 
 
@@ -147,6 +150,9 @@ Testing your installation
 1.  Clone the *ksrates* repository from `GitHub <https://github.com/VIB-PSB/ksrates>`__ to get the use case dataset::
 
         git clone https://github.com/VIB-PSB/ksrates
+        # Starting from v2.0.0, download also this compressed file:
+        wget https://zenodo.org/records/15225340/files/original_angiosperm_sequences.tar.gz -P ksrates/ksrates/reciprocal_retention
+
 
 2.  Access the ``test`` directory in a terminal::
 
@@ -184,5 +190,8 @@ Updating your installation
 
     pip3 uninstall ksrates
     git clone https://github.com/VIB-PSB/ksrates
+    # Starting from v2.0.0, download also this compressed file:
+    wget https://zenodo.org/records/15225340/files/original_angiosperm_sequences.tar.gz -P ksrates/ksrates/reciprocal_retention
+    # Move to the ksrates subdirectory and install the package with ``pip``
     cd ksrates
     pip3 install .
