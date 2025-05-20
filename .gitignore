@@ -3,3 +3,5 @@ __pycache__
 .nextflow
 .nextflow.log*
 docs/outdir
+test
+example
