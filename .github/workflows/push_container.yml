@@ -1,6 +1,8 @@
 name: Push DockerHub CI
 
 on:
+  release:
+    types: [published]
   workflow_dispatch:
 
 jobs:
@@ -17,10 +19,9 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: |
-            cesen/ksrates
+            vibpsb/ksrates
           tags: |
-            type=ref,event=branch
-            type=sha
+            type=ref,event=tag
       
       - name: Login to DockerHub
         uses: docker/login-action@v1 
