@@ -36,8 +36,8 @@ In *ksrates*, we utilize the set of gene families spanning up to the top 2000th 
 
 The process of obtaining reciprocally retained gene families for the focal species involves reconstructing them from scratch using a clustering algorithm, encompassing the following steps (for comprehensive details, please consult our preprint's Methods section):
 
-.. note ::
-    When running the pipeline _outside_ the container, first download the compressed archive of the 37 angiosperm species (``original_angiosperm_sequences.tar``) by running ``wget https://zenodo.org/records/15225340/files/original_angiosperm_sequences.tar.gz``, and place the file within the package subdirectory ``ksrates/reciprocal_retention``.
+    .. note ::
+        When running the pipeline *outside* the container, first download the compressed archive of the 37 angiosperm species (``original_angiosperm_sequences.tar``) by running ``wget https://zenodo.org/records/15225340/files/original_angiosperm_sequences.tar.gz``, and place the file within the package subdirectory ``ksrates/reciprocal_retention``.
 
 #. Homology search: execute diamond on the merged sequences from the focal species' FASTA file and the FASTA files originally used for the 37 angiosperms in Li et al. (2016)
 #. Gene family clustering: execute OrthoMCL on the generated diamond table
