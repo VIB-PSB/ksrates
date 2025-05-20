@@ -109,7 +109,7 @@ When not using or not being able to use one of the *ksrates* containers, for exa
 
         sudo apt-get update && sudo apt-get -yq install python3-pip default-jdk build-essential ncbi-blast+ muscle fasttree mcl phyml | bash
 
-        .. note::
+      .. note::
         The workflow was developed using BLAST 2.6.0+ and it might error when using a much older versions such as 2.12.0+ (see GitHub issue `#48 <https://github.com/VIB-PSB/ksrates/issues/48>`__ ). Moreover it is only compatible with MUSCLE v3 (`v3.8.31 <https://drive5.com/muscle/downloads_v3.htm>`__) and not with v5 (see GitHub issue `#41 <https://github.com/VIB-PSB/ksrates/issues/41>`__).
 
 
