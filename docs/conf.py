@@ -44,4 +44,4 @@ extensions = [
 # pip install -U sphinx==6.2.1
 # For LaTeX: sphinx-build -M latexpdf source/ abs/path/outdir
 # It will generate the PDF version in outdir/latex
-# For HTML: sphinx-build -b html source/ outdir
+# For HTML: sphinx-build -b html docs/ docs/outdir
