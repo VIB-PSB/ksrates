@@ -44,8 +44,8 @@ The process of obtaining reciprocally retained gene families for the focal speci
 #. Extracting focal species' genes: discard all but the focal species' genes and retain only gene families including at least two focal genes, which is the minimum required for *K*:sub:`S` estimate
 
 
-Runtime, memory usage and space usage
-=====================================
+Runtime, memory and space usage
+===============================
 
 Compared to the ``paranome`` or ``collinearity`` analyses, the ``reciprocal_retention`` pipeline requires higher runtime (about a day), memory usage during execution (about 40 GB) and writing space for temporary output files (at least 50 GB).
 
