@@ -23,7 +23,7 @@ The *ksrates* pipeline can be automatically run through Nextflow with a few prep
 
 2.  Prepare the configuration files.
 
-    The directory already contains a pre-filled *ksrates configuration file* (``config_elaeis.txt``) and a *Nextflow configuration file* template (``nextflow.config``) to be filled in as described in the :ref:`nextflow_config_section` section.
+    The directory already contains a pre-filled *ksrates configuration file* (``config_files/config_elaeis.txt``) and a *Nextflow configuration file* template (``nextflow.config``) to be filled in as described in the :ref:`nextflow_config_section` section.
 
     .. note ::
         When running *ksrates* on a new dataset, the configuration files still have to be generated.
@@ -112,12 +112,12 @@ The order of execution of the single commands to run the whole workflow is the f
         cd ksrates/example
         gunzip elaeis.fasta.gz oryza.fasta.gz asparagus.fasta.gz elaeis.gff3.gz
 
-2.  The ``example`` directory already contains a pre-filled configuration file (``config_elaeis.txt``).
+2.  The ``example`` directory already contains a pre-filled configuration file (``config_files/config_elaeis.txt``).
 
     .. note ::
         To generate a new configuration file for your own analyses, run the following command and fill in the template as described in :ref:`pipeline_config_section` section::
 
-            ksrates generate-config config_filename.txt
+            ksrates generate-config path/to/config_filename.txt
 
 3.  Run the initialization script to obtain the ortholog trios for the rate-adjustment (``rate_adjustment/elaeis/ortholog_trios_elaeis.tsv``) and to extract the species pairs to be run through the *wgd* ortholog *K*:sub:`S` analysis (``rate_adjustment/elaeis/ortholog_pairs_elaeis.txt``)::
 
