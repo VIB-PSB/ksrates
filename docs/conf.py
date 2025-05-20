@@ -30,9 +30,19 @@ latex_elements = {
     '''
 }
 
+# Add kstates white logo
+html_static_path = ['_static']
+html_css_files = ["custom.css"]
+html_logo = "_static/logo_ksrates_long_inverted.svg"
+html_theme_options = {
+    'logo_only': True # Show only logo and not package name
+}
+
+# Add copy-button in code blocks
 extensions = [
     'sphinx_copybutton'
 ]
+
 # For local export to PDF:
 # import rst2pdf
 # extensions = [
