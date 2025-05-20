@@ -3,10 +3,10 @@
 Reciprocally retained gene families for plant WGMs
 **************************************************
 
-Introducing reciprocal retention analysis
-=========================================
+Concept
+=======
 
-As from *ksrates* v2.0.0, an additional analysis type called ``reciprocal_retention`` and tailored for plants has been introduced alongside the existing ``paranome`` and ``colinearity``.
+As from *ksrates* v2.0.0, an additional *K*:sub:`S` analysis type called ``reciprocal_retention`` and tailored for plants has been introduced alongside the existing ``paranome`` and ``colinearity``.
 
 This new feature offers an approach to construct paralog *K*:sub:`S` distributions on the basis of plant gene families known to undergo preferential expansion via whole-genome duplication (WGD) rather than small-scale duplication (SSD), followed by retention in duplicate.
 This "reciprocal retention" pattern is hypothesized to stem from dosage balance constraints.
