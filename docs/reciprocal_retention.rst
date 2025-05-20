@@ -36,6 +36,9 @@ In *ksrates*, we utilize the set of gene families spanning up to the top 2000th 
 
 The process of obtaining reciprocally retained gene families for the focal species involves reconstructing them from scratch using a clustering algorithm, encompassing the following steps (for comprehensive details, please consult our preprint's Methods section):
 
+.. note ::
+    When running the pipeline _outside_ the container, first download the compressed archive of the 37 angiosperm species (``original_angiosperm_sequences.tar``) by running ``wget https://zenodo.org/records/15225340/files/original_angiosperm_sequences.tar.gz``, and place the file within the package subdirectory ``ksrates/reciprocal_retention``.
+
 #. Homology search: execute diamond on the merged sequences from the focal species' FASTA file and the FASTA files originally used for the 37 angiosperms in Li et al. (2016)
 #. Gene family clustering: execute OrthoMCL on the generated diamond table
 #. Matching gene families: match the original top 2000 gene families in the ranking to the newly generated OrthoMCL families, based on shared gene IDs from the 37 angiosperms. Note that an original gene family may match multiple new gene families.
@@ -63,8 +66,8 @@ Note on OrthoMCL implementation
 
 OrthoMCL v1.4 was chosen over other tools (e.g. OrthoFinder) to be consistent with the software choice made in the original publication that generated the core-angiosperm gene families (Li et al., 2016). We however make use of an edited version, called `OrthoMCLight <https://github.com/VIB-PSB/OrthoMCLight>`__, where a few optimizations have reduced memory requirement from 100 GB to 40 GB and the runtime from several days to about a day. This was achieved by changing the following:
 
-    - The ``blast_parse`` subroutine avoids loading the entire diamond table into memory and instead processes it line by line;
-    - Multi-threading is supported in the MCL step
+- The ``blast_parse`` subroutine avoids loading the entire diamond table into memory and instead processes it line by line;
+- Multi-threading is supported in the MCL step
 
 Both OrthoMCL mode 3 and 4 are available. Mode 3 is always performed at first execution of the reciprocal retention analysis and by default also from the second execution on: it takes as input the diamond homology table, it parses it into a "blast parse output" (BPO) format typical of OrthoMCL v1.4 and finally runs MCL. Mode 4 instead accepts directly the parsed table file and then runs MCL; if the parsed table has already been generated in a previous *ksrates* run, the user can provide its filepath through option ``--parsed-homology-table`` when running command ``paralogs-ks``.
 
