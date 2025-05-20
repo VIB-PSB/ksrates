@@ -131,7 +131,7 @@ The order of execution of the single commands to run the whole workflow is the f
 
     The output files are generated in the ``paralog_distributions/wgd_elaies`` directory, i.e. ``/elaeis.ks.tsv`` for whole-paranome, ``elaeis.ks_anchors.tsv`` for anchor pairs and ``elaeis.ks_recret_top2000.tsv`` for reciprocally retained gene families.
 
-    Using multiple threads to parallelize the analysis will reduce the compute time. The ``--n-threads`` option configures the number of threads to use (set this according to your available resources, i.e. CPUs/cores; we recommend a value around 10 and thus the use of a compute cluster).
+    Using multiple threads to parallelize the analysis will reduce the compute time. The ``--n-threads`` option configures the number of threads to use (set this according to your available resources, i.e. CPUs/cores; e.g. 10 or more cores running on a compute cluster).
 
 5.  Launch the *wgd* ortholog *K*:sub:`S` analysis to estimate the ortholog *K*:sub:`S` values *for each required species pair*. These are listed in ``rate_adjustment/elaeis/ortholog_pairs_elaeis.txt``::
 
@@ -141,7 +141,7 @@ The order of execution of the single commands to run the whole workflow is the f
 
     The output files are generated in the ``ortholog_distributions`` directory, e.g. the first command generates file ``wgd_asparagus_elaeis/asparagus_elaeis.ks.tsv``. The two species names are in case-insensitive alphabetical order.
 
-    Using multiple threads to parallelize the analysis will reduce the compute time. The ``--n-threads`` option configures the number of threads to use (set this according to your available resources, i.e. CPUs/cores; we recommend a value around 10 and thus the use of a compute cluster).
+    Using multiple threads to parallelize the analysis will reduce the compute time. The ``--n-threads`` option configures the number of threads to use (set this according to your available resources, i.e. CPUs/cores; e.g. 10 or more cores running on a compute cluster).
 
 6.  Estimate the mode and associated standard deviation for each ortholog *K*:sub:`S` distribution::
     
