@@ -47,8 +47,7 @@ The process of obtaining reciprocally retained gene families for the focal speci
 Runtime, memory and space usage
 ===============================
 
-Compared to the ``paranome`` or ``collinearity`` analyses, the ``reciprocal_retention`` pipeline requires higher runtime (about a day), memory usage during execution (about 40 GB) and writing space for temporary output files (at least 50 GB).
-
+Compared to the ``paranome`` or ``collinearity`` analyses, the ``reciprocal_retention`` pipeline requires longer runtime (about a day), larger memory usage during execution (about 40 GB) and larger writing space for temporary output files (at least 50 GB).
 It is therefore recommended to check the space availability on disk in advance, execute the pipeline on a compute cluster with parallelization and remove heavy temporary files after completion.
 
 .. note::
@@ -57,20 +56,12 @@ It is therefore recommended to check the space availability on disk in advance, 
 diamond
 -------
 
-The diamond step, taking as input tens of angiosperm FASTA files (focal species plus 37 angosperms), generates an output file of 21 GB. This file can be deleted once the reciprocal retention pipeline is completed.
-
-File location for the ``example`` dataset:
-
-- ``example/paralog_distributions/wgd_elaeis/reciprocal_retention/orthomcl/elaeis_original_37.dmd.tsv``
+The diamond step, taking as input tens of angiosperm FASTA files (focal species plus 37 angosperms), generates an output file of 21 GB. This file can be deleted once the reciprocal retention pipeline is completed. The file location for the ``example`` dataset is ``example/paralog_distributions/wgd_elaeis/reciprocal_retention/orthomcl/elaeis_original_37.dmd.tsv``.
 
 OrthoMCL
 --------
 
-The OrthoMCL step, taking as input the diamond table, generates within the ``tmp`` subdirectory the "blast parse output" (BPO) output file, which occupies the same space as the diamond table (e.g. 21 GB). This file can be deleted once the reciprocal retention pipeline is completed.
-
-File location for the ``example`` dataset:
-
-- ``example/paralog_distributions/wgd_elaeis/reciprocal_retention/orthomcl/May_16/tmp/all.bpo``
+The OrthoMCL step, taking as input the diamond table, generates within the ``tmp`` subdirectory the "blast parse output" (BPO) output file, which occupies the same space as the diamond table (e.g. 21 GB). This file can be deleted once the reciprocal retention pipeline is completed. The file location for the ``example`` dataset is ``example/paralog_distributions/wgd_elaeis/reciprocal_retention/orthomcl/May_16/tmp/all.bpo``.
 
 
 Note on OrthoMCL implementation
