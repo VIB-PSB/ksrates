@@ -30,6 +30,9 @@ latex_elements = {
     '''
 }
 
+extensions = [
+    'sphinx_copybutton'
+]
 # For local export to PDF:
 # import rst2pdf
 # extensions = [
