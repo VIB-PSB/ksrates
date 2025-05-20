@@ -95,6 +95,7 @@ When using the *ksrates* Docker container, either to run the *ksrates* CLI or Ne
 
 When using the *ksrates* Nextflow pipeline with the *ksrates* Docker container, the container will be automatically downloaded from the ``vibpsb/ksrates`` repository on Docker Hub on first launch (this may take awhile depending on your Internet connection speed since the container has a size of about 1 GB) and will then be stored and reused for successive runs.
 
+.. _`manual_installation`:
 
 Manual installation
 ===================
