@@ -29,7 +29,7 @@ To position ancient WGD events with respect to speciation events in a phylogeny,
 
 In the following sections we briefly describe how to install, configure and run the Nextflow pipeline and the basic usage of the command-line interface for the Docker or Apptainer containers. For detailed usage information, full tutorial and additional installation options, please refer the [full documentation](https://ksrates.readthedocs.io/).
 
-### Example datasets
+### Example and test datasets
 
 To illustrate how to use *ksrates*, a simple use case is provided for the analysis of WGD signatures in monocot plants, with oil palm (*Elaeis guineensis*) as the focal species:
 
@@ -40,6 +40,8 @@ To illustrate how to use *ksrates*, a simple use case is provided for the analys
 See the *Usage* sections below and the [Tutorial](https://ksrates.readthedocs.io/en/latest/usage.html) for more detail.
 
 ### Nextflow pipeline
+
+Instructions to execute the Nextflow pipeline (recommended).
 
 #### Installation
 
@@ -95,6 +97,8 @@ We briefly illustrate here how to run the *ksrates* Nextflow pipeline on the `te
    > **Note:** To generate a new *ksrates* configuration file template for a new analysis, use the `--config` option to specify its file name or file path. If the specified file does not exist, the command will generate a configuration file template and exit. Edit the template (see the [full documentation](https://ksrates.readthedocs.io/) for more details) and then rerun the same command above to relaunch the pipeline.
 
 ### Command-line interface
+
+Instructions to execute the manual command-line interface.
 
 #### Installation
    
