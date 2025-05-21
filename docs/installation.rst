@@ -166,8 +166,8 @@ Testing your installation
 
     Alternatively to the Nextflow pipeline, test by executing the individual steps of the manual pipeline (with or without container)::
 
-        apptainer exec docker://vibpsb/ksrates ksrates init config_files/config_elaeis.txt
-        apptainer exec docker://vibpsb/ksrates ksrates paralogs-ks --test config_files/config_elaeis.txt --n-threads 4
+        apptainer exec docker://vibpsb/ksrates ksrates init config_files/config_elaeis.txt --expert config_files/config_expert.txt
+        apptainer exec docker://vibpsb/ksrates ksrates paralogs-ks --test config_files/config_elaeis.txt --expert config_files/config_expert.txt --n-threads 4
         ...
 
     Argument ``--test`` is mandatory for ``paralogs-ks`` and ``paralogs_ks_multi`` *ksrates* commands. More details in the :ref:`manual_pipeline` section.
