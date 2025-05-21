@@ -6,44 +6,45 @@ This section illustrates how to run *ksrates* on the use case dataset proposed i
 .. note::
     WSL2 users can enter the Windows file system from the terminal through e.g. ``cd mnt/c/Users/your_username``.
 
-Clone the GitHub repository to get the use case dataset::
 
-    git clone https://github.com/VIB-PSB/ksrates
-
+.. _`nextflow_pipeline`:
 
 Run example case as a Nextflow pipeline (recommended)
 =====================================================
 
 The *ksrates* pipeline can be automatically run through Nextflow with a few preparation steps.
 
-1.  Access in a terminal the directory that will host the rate-adjustment results (assumed here to be ``example``) and unzip the sequence data files in there::
+1.  Clone the GitHub repository to get the ``example`` dataset, access the subdirectory and unzip the sequence data files in there::
 
+        git clone https://github.com/VIB-PSB/ksrates
         cd ksrates/example
-        gunzip elaeis.fasta.gz oryza.fasta.gz asparagus.fasta.gz elaeis.gff3.gz
+        gunzip sequences/*
 
 2.  Prepare the configuration files.
 
-    The directory already contains a pre-filled *ksrates configuration file* (``config_files/config_elaeis.txt``) and a *Nextflow configuration file* template (``nextflow.config``) to be filled in as described in the :ref:`nextflow_config_section` section.
+    The directory already contains a pre-filled *ksrates configuration file* for focal species ``elaeis`` (``config_files/config_elaeis.txt``), a pre-filled *ksrates expert configuration file* (``config_files/config_expert.txt``) and a *Nextflow configuration file* template (``nextflow.config``) to be filled in as described in the :ref:`nextflow_config_section` section. For more details, refer to the  :ref:`config_sections` section.
 
     .. note ::
-        When running *ksrates* on a new dataset, the configuration files still have to be generated.
-        
-        For the *Nextflow configuration file*, please either consult the Nextflow documentation or check the templates available in the *ksrates* GitHub repository under ``doc/source`` (Singularity-targeted, Docker-targeted or container-independent templates).
-
-        To generate a new *ksrates configuration file*, launch the pipeline (step 3 below) specifying a non-existing filename after the ``--config`` option. Not finding the file, the code produces a template to be filled in as described in :ref:`pipeline_config_section` section. After that, repeat step 3 again.
+        To generate a new *ksrates configuration file* for your own analyses, launch the pipeline (step 3 below) specifying the desired non-existing filename after the ``--config`` option. By not finding the file, the code produces a template to be filled in as described in :ref:`pipeline_config_section` section. After that, repeat step 3 again.
 
 3.  Launch *ksrates* through the following command line::
 
-        nextflow run VIB-PSB/ksrates --config config_files/config_elaeis.txt --expert config_files/config_expert.txt
+        nextflow run VIB-PSB/ksrates -profile singularity --config config_files/config_elaeis.txt --expert config_files/config_expert.txt
 
     .. note::
-       As from `ksrates` ``v2.0.0``, the Nextflow pipeline has been ported to DSL2 syntax and requires at least Nextflow version ``22.03.0-edge``. See our :ref:`installation page <install_nextflow>` about how to get the latest Nextflow version. You can also launch a specific (e.g. previous) Nextflow version through the ``NXF_VER`` environmental `variable <https://www.nextflow.io/docs/latest/getstarted.html#updates>`__ in the command line::
+       As from `ksrates` ``v2.0.0``, the Nextflow pipeline has been ported to DSL2 syntax and requires at least Nextflow version ``22.03.0-edge``. Refer to the :ref:`installation page <install_nextflow>` to learn how to get the latest Nextflow version. You can also launch a specific (e.g. previous) Nextflow version through the ``NXF_VER`` environmental variable in the command line::
 
             NXF_VER=24.10.5 nextflow run VIB-PSB/ksrates <args>
-    
-    The *ksrates configuration file* is specified through the ``--config`` parameter. The *Nextflow configuration file* is automatically recognized when it's named with the Nextflow-reserved ``nextflow.config`` file name and located in the launching directory; alternatively, the user can provide a custom file by specifying its name or path using the ``-C`` option (see `Nextflow documentation <https://www.nextflow.io/docs/latest/cli.html#hard-configuration-override>`__).
-    
-    The first time the command is launched it downloads the *ksrates* Nextflow pipeline from the ``VIB-PSB/ksrates`` GitHub repository; from then on it uses the local copy stored in the ``$HOME/.nextflow`` directory. If running a container, the image is pulled from Docker Hub and stored locally for successive usage. The Singularity container is stored by default in the launching folder under ``work/singularity``.
+
+    The first time the command is executed, Nextflow downloads a local copy of the *ksrates* Nextflow pipeline from the ``VIB-PSB/ksrates`` GitHub repository and stores it in the ``$HOME/.nextflow`` directory.
+    Parameter ``-profile`` specifies which container will be pulled from Docker Hub (either Singularity or Docker).
+
+    .. note::
+        Since the Singularity image is by default stored in the *launching folder* under ``work/singularity``, it is recommended to specify a "centralized" destination path through ``singularity.cacheDir`` in the :ref:`Nextflow configuration file <nextflow_config_section>`.
+
+
+    The *ksrates configuration file* is specified through the ``--config`` parameter, while the *ksrates expert configuration file* is specified through the ``--expert`` parameter.
+    The *Nextflow configuration file* is automatically detected when named with the Nextflow-reserved ``nextflow.config`` filename and when located in the launching directory; alternatively, the user can provide a custom file by specifying its name or path using the ``-C`` option (see `Nextflow documentation <https://www.nextflow.io/docs/latest/cli.html#hard-configuration-override>`__).
 
 
 .. _`manual_pipeline`:
@@ -107,27 +108,28 @@ An overview of the commands is available by accessing the package help menu (``k
 
 The order of execution of the single commands to run the whole workflow is the following. We assume here a local installation without the use of a *ksrates* container.
 
-1.  Access in a terminal the directory that will host the rate-adjustment results (assumed here to be ``example``) and unzip the sequence data files in there:: ::
+1.  Clone the GitHub repository to get the ``example`` dataset, access the subdirectory and unzip the sequence data files in there::
 
+        git clone https://github.com/VIB-PSB/ksrates
         cd ksrates/example
-        gunzip elaeis.fasta.gz oryza.fasta.gz asparagus.fasta.gz elaeis.gff3.gz
+        gunzip sequences/*
 
-2.  The ``example`` directory already contains a pre-filled configuration file (``config_files/config_elaeis.txt``).
+2.  The directory already contains a pre-filled configuration file for focal species ``elaeis`` (``config_files/config_elaeis.txt``) and a pre-filled expert configuration file (``config_files/config_expert.txt``).
 
     .. note ::
-        To generate a new configuration file for your own analyses, run the following command and fill in the template as described in :ref:`pipeline_config_section` section::
+        To generate a new configuration file for your own analyses, run the following command to produce a template to be filled in as described in :ref:`pipeline_config_section` section::
 
             ksrates generate-config path/to/config_filename.txt
 
 3.  Run the initialization script to obtain the ortholog trios for the rate-adjustment (``rate_adjustment/elaeis/ortholog_trios_elaeis.tsv``) and to extract the species pairs to be run through the *wgd* ortholog *K*:sub:`S` analysis (``rate_adjustment/elaeis/ortholog_pairs_elaeis.txt``)::
 
-        ksrates init config_files/config_elaeis.txt
+        ksrates init config_files/config_elaeis.txt --expert config_files/config_expert.txt
 
-    This step also generates ``wgd_runs_elaeis.txt`` in the launching directory, which lists all the commands to be run in steps 4 and 5. 
+    This step also generates ``wgd_runs_elaeis.txt`` in the launching directory, which drafts all the commands to be run in steps 4 and 5. 
 
 4.  Launch the *wgd* paralog *K*:sub:`S` analysis to estimate the paralog *K*:sub:`S` values for the focal species::
 
-        ksrates paralogs-ks config_files/config_elaeis.txt --n-threads 4
+        ksrates paralogs-ks config_files/config_elaeis.txt --expert config_files/config_expert.txt --n-threads 4
 
     The output files are generated in the ``paralog_distributions/wgd_elaies`` directory, i.e. ``/elaeis.ks.tsv`` for whole-paranome, ``elaeis.ks_anchors.tsv`` for anchor pairs and ``elaeis.ks_recret_top2000.tsv`` for reciprocally retained gene families.
 
@@ -135,9 +137,9 @@ The order of execution of the single commands to run the whole workflow is the f
 
 5.  Launch the *wgd* ortholog *K*:sub:`S` analysis to estimate the ortholog *K*:sub:`S` values *for each required species pair*. These are listed in ``rate_adjustment/elaeis/ortholog_pairs_elaeis.txt``::
 
-        ksrates orthologs-ks config_files/config_elaeis.txt elaeis asparagus --n-threads 4
-        ksrates orthologs-ks config_files/config_elaeis.txt elaeis oryza --n-threads 4
-        ksrates orthologs-ks config_files/config_elaeis.txt oryza asparagus --n-threads 4
+        ksrates orthologs-ks config_files/config_elaeis.txt --expert config_files/config_expert.txt elaeis asparagus --n-threads 4
+        ksrates orthologs-ks config_files/config_elaeis.txt --expert config_files/config_expert.txt elaeis oryza --n-threads 4
+        ksrates orthologs-ks config_files/config_elaeis.txt --expert config_files/config_expert.txt oryza asparagus --n-threads 4
 
     The output files are generated in the ``ortholog_distributions`` directory, e.g. the first command generates file ``wgd_asparagus_elaeis/asparagus_elaeis.ks.tsv``. The two species names are in case-insensitive alphabetical order.
 
@@ -145,48 +147,48 @@ The order of execution of the single commands to run the whole workflow is the f
 
 6.  Estimate the mode and associated standard deviation for each ortholog *K*:sub:`S` distribution::
     
-        ksrates orthologs-analysis config_files/config_elaeis.txt
+        ksrates orthologs-analysis config_files/config_elaeis.txt --expert config_files/config_expert.txt
 
     The results are stored in a local database, namely a TSV file called by default ``ortholog_peak_db.tsv`` and generated by default in the launching directory (see :ref:`pipeline_config_section`).
 
 7.  Plot the ortholog *K*:sub:`S` distributions for each focal species--other species pair (and each of their trios)::
     
-        ksrates plot-orthologs config_files/config_elaeis.txt
+        ksrates plot-orthologs config_files/config_elaeis.txt --expert config_files/config_expert.txt
 
     The command generates a PDF file for each species pair with the three ortholog *K*:sub:`S` distributions obtained from each of the species trios the species pair is involved in. Note that if multiple trios/outgroups exist, the file is a multi-page PDF showing one trio per page. The two species names are in case-insensitive alphabetical order. In this example case there is only the *E. guineensis*--*O. sativa* species pair, thus the correspondent PDF file generated is ``rate_adjustment/elaeis/orthologs_elaeis_oryza.pdf``.
      
 8.  Perform the rate-adjustment. **Pre-requisite**: all *wgd* paralog and ortholog *K*:sub:`S` analyses (steps 4 and 5) and ortholog *K*:sub:`S` distribution mode estimates (step 6) must be completed. ::
     
-        ksrates orthologs-adjustment config_files/config_elaeis.txt
+        ksrates orthologs-adjustment config_files/config_elaeis.txt --expert config_files/config_expert.txt
 
     The branch-specific *K*:sub:`S` contributions and the rate-adjusted ortholog *K*:sub:`S` mode estimates are collected in ``rate_adjustment/elaeis/adjustment_table_elaeis.tsv``.
 
 9.  Plot the adjusted mixed paralog--ortholog *K*:sub:`S` distribution plot (``rate_adjustment/elaeis/mixed_elaeis_adjusted.pdf``)::
 
-        ksrates plot-paralogs config_files/config_elaeis.txt
+        ksrates plot-paralogs config_files/config_elaeis.txt --expert config_files/config_expert.txt
     
 10. Plot the phylogram based on the input phylogenetic tree with branch lengths equal to the *K*:sub:`S` distances estimated from the ortholog *K*:sub:`S` distirbutions (``rate_adjustment/elaeis/tree_elaeis_distances.pdf``)::
     
-        ksrates plot-tree config_files/config_elaeis.txt
+        ksrates plot-tree config_files/config_elaeis.txt --expert config_files/config_expert.txt
 
 11. Plot the adjusted mixed paralog--ortholog *K*:sub:`S` distribution with inferred WGD components::
     
-        ksrates paralogs-analyses config_files/config_elaeis.txt
+        ksrates paralogs-analyses config_files/config_elaeis.txt --expert config_files/config_expert.txt
     
-    The method(s) used for detecting WGD signatures depends on the paralog analysis settings in the *ksrates* configuration file(s): if ``collinearity`` is turned on, the anchor *K*:sub:`S` clustering is performed (``rate_adjustment/elaeis/mixed_elaeis_anchor_clusters.pdf``), otherwise an exponential-lognormal mixture model is performed (``rate_adjustment/elaeis/mixed_species_elmm.pdf``). Additional methods can be executed upon specification in the *ksrates* expert configuration file (``rate_adjustment/elaeis/mixed_species_lmm_paranome.pdf`` and ``rate_adjustment/elaeis/mixed_species_lmm_colinearity.pdf``) (see :ref:`expert_config_section`).
+    The methods used for detecting WGD signatures depend on the paralog analysis settings in the *ksrates* configuration files. For more details please refer to section :ref:`paralogs_analyses`.
 
 
-The two following commands are not strictly part of the workflow:
+Finally, the two following commands are not strictly part of the workflow:
 
-12. Remove all BLAST TSV files generated by ``orthologs-ks`` in order to free disk space::
+12. Remove all BLAST ``.tsv`` files generated by ``orthologs-ks`` in order to free disk space::
 
-        ksrates orthologs-ks-cleanup path/to/ortholog_distributions
+        ksrates orthologs-ks-cleanup path/to/ortholog_distributions --expert config_files/config_expert.txt
 
     The command only acts within the provided path to the ``ortholog_distributions`` directory, for example removing ``wgd_asparagus_elaeis/asparagus_elaeis.blast.tsv`` and all the other analogous files.
 
-13. Run the *wgd* paralog *K*:sub:`S` analysis for all species provided in the Newick tree, and not only for the focal species::
+13. Run the paralog *K*:sub:`S` analysis for *all* species provided in the Newick tree, and not only for the focal species::
 
-        ksrates paralogs-ks-multi config_files/config_elaeis.txt
+        ksrates paralogs-ks-multi config_files/config_elaeis.txt --expert config_files/config_expert.txt --n-threads 4
     
     For example it will generate ``paralog_distributions/wgd_asparagus`` and ``paralog_distributions/wgd_oryza`` with all related paralog output files.
 

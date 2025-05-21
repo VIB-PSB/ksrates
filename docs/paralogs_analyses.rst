@@ -10,31 +10,33 @@ Three methods are available: anchor *K*:sub:`S` clustering, exponential-lognorma
 .. warning::
     Please be aware that mixture modeling results on *K*:sub:`S` distributions should be interpreted cautiously because mixture models tend to overestimate the number of components present in the target *K*:sub:`S` distribution and hence the number of WGDs.
 
-Depending on the *K*:sub:`S` analysis type(s) selected in the *ksrates* configuration file (see section :ref:`pipeline_config_section`), different methods are made available. Not all of them are necessarily run by default; non-default ones can be activated through the expert configuration file (see section :ref:`expert_config_section`).
+The available methods depend on the *K*:sub:`S` analysis type(s) selected in the *ksrates* :ref:`configuration file <pipeline_config_section>`:
 
-    * When colinearity analysis is requested (``colinearity = yes``), the anchor pair *K*:sub:`S` distribution is analyzed through a clustering based on the anchor pair *K*:sub:`S` values found in colinear segment pairs; lognormal-only mixture modeling is also available.
-    * When paranome analysis is requested (``paranome = yes``), the whole-paranome *K*:sub:`S` distribution is analyzed through exponential-lognormal mixture modeling; lognormal-only mixture modeling is also available.
-    * When reciprocal retention analysis is requested (``reciprocal_retention = yes``) the reciprocally retained *K*:sub:`S` distribution is analyzed through lognormal-only mixture modeling.
+    * When colinearity analysis is requested (``colinearity = yes``), the anchor pair *K*:sub:`S` distribution is analyzed through a clustering based on the anchor pair *K*:sub:`S` values found in colinear segment pairs; lognormal mixture modeling is also optionally available.
+    * When paranome analysis is requested (``paranome = yes``), the whole-paranome *K*:sub:`S` distribution is analyzed through exponential-lognormal mixture modeling; lognormal mixture modeling is also optionally available.
+    * When reciprocal retention analysis is requested (``reciprocal_retention = yes``) the reciprocally retained *K*:sub:`S` distribution is analyzed through lognormal mixture modeling.
 
-
-The execution of non-default methods follows the scheme illustrated in the table below. For example, when colinearity and paranome analyses are requested (fourth row), by default only the anchor *K*:sub:`S` clustering is performed, while three other methods are optional.
+Optional methods are activated through the :ref:`expert configuration file <expert_config_section>` (parameter ``extra_paralogs_analyses_methods``). They follow the scheme illustrated in the table below; for example, when colinearity and paranome analyses are requested (fourth row), by default only the anchor *K*:sub:`S` clustering is performed, while three other methods are optionally available.
 
 .. include:: <isopub.txt>
 .. table:: Default methods are marked by |check|, while optional methods are marked by (|check|).
 
-    ======================================  ==================  ===========  ==========  ===========  ==========
-    Analysis setup                          Anchor *K*:sub:`S`  Exp-log MM   Log MM      Log MM       Log MM     
-                                                                                                                   
-                                            clustering          on paranome  on anchors  on paranome  on rec_ret 
-    ======================================  ==================  ===========  ==========  ===========  ==========
-    Colinearity-only                        |check|                          (|check|)                                               
-    Paranome-only                                               |check|                  (|check|)                           
-    Reciprocal retention-only                                                                          |check|        
-    Colinearity & Paranome                  |check|             (|check|)    (|check|)   (|check|)                           
-    Colinearity & Rec_retention             |check|                          (|check|)                 |check|        
-    Paranome & Rec_retention                                    |check|                  (|check|)     |check|        
-    Colinearity & Paranome & Rec_retention  |check|             (|check|)    (|check|)   (|check|)     |check|        
-    ======================================  ==================  ===========  ==========  ===========  ==========
+    ===========================================  ==================  ===========  ==========  ===========  ==========
+    Analysis setup                               Anchor *K*:sub:`S`  Exp-log MM   Log MM      Log MM       Log MM     
+                                                                                                                        
+                                                 clustering          paranome     anchors     paranome     rec.ret 
+    ===========================================  ==================  ===========  ==========  ===========  ==========
+    Colinearity-only                             |check|                          (|check|)                                               
+    Paranome-only                                                    |check|                  (|check|)                           
+    Reciprocal retention-only                                                                               |check|        
+    Colinearity & Paranome                       |check|             (|check|)    (|check|)   (|check|)                           
+    Colinearity & Rec.retention                  |check|                          (|check|)                 |check|        
+    Paranome & Rec.retention                                         |check|                  (|check|)     |check|        
+    Colinearity & Paranome |br| & Rec.retention  |check|             (|check|)    (|check|)   (|check|)     |check|        
+    ===========================================  ==================  ===========  ==========  ===========  ==========
+.. |br| raw:: html
+
+      <br>
 
 .. _`anchor_ks_clustering`:
 

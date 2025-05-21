@@ -162,7 +162,7 @@ Testing your installation
     Parameter ``-profile`` pulls the Singularity (or Docker) container from Docker Hub.
     
     .. note::
-        Since the Singularity image is by default stored in the *launching folder* under ``work/singularity``, it is recommended to specify a "centralized" destination path through ``singularity.cacheDir`` within the Nextflow configuration file located in the ``test`` directory (``nextflow.config``, automatically detected). See :ref:`nextflow_config_section` section.
+        Since the Singularity image is by default stored in the *launching folder* under ``work/singularity``, it is recommended to specify a "centralized" destination path through ``singularity.cacheDir`` in the Nextflow configuration file located in the ``test`` directory (``nextflow.config``, automatically detected). See :ref:`nextflow_config_section` section.
 
     Alternatively to the Nextflow pipeline, test by executing the individual steps of the manual pipeline (with or without container)::
 
@@ -172,7 +172,7 @@ Testing your installation
 
     Argument ``--test`` is mandatory for ``paralogs-ks`` and ``paralogs_ks_multi`` *ksrates* commands. More details in the :ref:`manual_pipeline` section.
 
-3.  Remove the cloned repository once the test is successful.
+3.  Remove the cloned repository once the test is successful, or keep it if you want to run the example pipeline as well (see :ref:`nextflow_pipeline`).
 
 
 Updating your installation
