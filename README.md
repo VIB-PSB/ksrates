@@ -5,12 +5,12 @@
 
 VIB-UGent Center for Plant Systems Biology&mdash;[Evolutionary Systems Biology Lab](http://www.psb.ugent.be/esb)
 
-# ksrates
+# *ksrates*
 *ksrates* is a tool to position whole-genome duplications\* (WGDs) relative to speciation events using substitution-rate-adjusted mixed paralog&ndash;ortholog distributions of synonymous substitutions per synonymous site (*K*<sub>S</sub>).
 
 *\*or, more generally, whole-genome multiplications (WGMs), but we will simply use the more common WGD to refer to any multiplication*
 
-## Quick overview
+## Overview
 
 To position ancient WGD events with respect to speciation events in a phylogeny, the *K*<sub>S</sub> values of WGD paralog pairs in a species of interest are often compared with the *K*<sub>S</sub> values of ortholog pairs between this species and other species. For example, it is common practice to superimpose ortholog and paralog *K*<sub>S</sub> distributions in a mixed plot. However, if the lineages involved exhibit different substitution rates, such direct naive comparison of paralog and ortholog *K*<sub>S</sub> estimates can be misleading and result in phylogenetic misinterpretation of WGD signatures. 
 
@@ -18,12 +18,10 @@ To position ancient WGD events with respect to speciation events in a phylogeny,
 
 ## Useful links
 
-For more details, see:
-
-[Publication](https://doi.org/10.1093/bioinformatics/btab602)
 [Documentation](https://ksrates.readthedocs.io/)\
 [Tutorial](https://ksrates.readthedocs.io/en/latest/usage.html)\
 [FAQ](https://ksrates.readthedocs.io/en/latest/faqs.html)
+[Publication](https://doi.org/10.1093/bioinformatics/btab602)\
 
 ## Quick start
 
@@ -62,7 +60,7 @@ See the *Usage* sections below and the [Tutorial](https://ksrates.readthedocs.io
 	    
            mv nextflow /usr/local/bin
     
-2. Install either [Apptainer](https://apptainer.org/docs/admin/latest/installation.html) (recommended, but see [here](https://ksrates.readthedocs.io/en/latest/installation.html#container-availability)) or [Docker](https://docs.docker.com/get-docker/). This is needed to run the *ksrates* Apptainer or Docker container which contain all other required software dependencies, so that nothing else needs to be installed.
+2. Install either [Apptainer](https://apptainer.org/docs/admin/latest/installation.html) (recommended, but see [here](https://ksrates.readthedocs.io/en/latest/installation.html#availability-and-dependencies)) or [Docker](https://docs.docker.com/get-docker/). This is needed to run the *ksrates* Apptainer or Docker container which contain all other required software dependencies, so that nothing else needs to be installed.
 
 3. Install *ksrates*: when using Nextflow, *ksrates* and the *ksrates* Apptainer or Docker container will be automatically downloaded simply when you execute the launch of the *ksrates* pipeline for the first time, and they will be stored and reused for any further executions (see [Nextflow pipeline sharing](https://www.nextflow.io/docs/latest/sharing.html)). Therefore, in this case it is not necessary to manually install *ksrates*.
 
@@ -102,15 +100,15 @@ We briefly illustrate here how to run the *ksrates* Nextflow pipeline on the `te
 
 #### Installation
    
-Install either [Apptainer](https://apptainer.org/docs/admin/latest/installation.html) (recommended, but see [here](https://ksrates.readthedocs.io/en/latest/installation.html#container-availability)) or [Docker](https://docs.docker.com/get-docker/). The container contains *ksrates* and all other software dependencies, so that nothing else needs to be installed.
+1. Install either [Apptainer](https://apptainer.org/docs/admin/latest/installation.html) (recommended, but see [here](https://ksrates.readthedocs.io/en/latest/installation.html#availability-and-dependencies)) or [Docker](https://docs.docker.com/get-docker/). The container contains *ksrates* and all other software dependencies, so that nothing else needs to be installed.
 
-Pull the container from the VIB-PSB Docker Hub:
+2. Pull the container from the VIB-PSB Docker Hub:
 
-	For the Apptainer container (recommended): ***TODO:*** check command
+	For the Apptainer container (recommended):
 	    
         apptainer pull docker://vibpsb/ksrates
 	    
-	Or for the Docker container: ***TODO:*** full command
+	Or for the Docker container:
 	    
         docker pull vibpsb/ksrates:latest
 
