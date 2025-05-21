@@ -201,7 +201,7 @@ def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors
                 fcPlot.set_mixed_plot_height(axis_rec_ret, y_lim, hist_rec_ret)
 
             best_model_rec_ret, letter_to_peak_dict_recret = fcLMM.lmm(
-                    fig_rec_ret, x_max_lim, "reciprocally retained", rec_ret_tsv_file, species, axis_rec_ret, (0, max_ks_EM),
+                    fig_rec_ret, x_max_lim, "reciprocally retained", rec_ret_tsv_file, species, axis_rec_ret, (0, max_ks_EM), min_ks_anchors,
                     (1, max_num_comp), arange(-10, max_ks_EM + bin_width_para, bin_width_para), bin_width_para, max_EM_iterations, num_EM_initializations,
                     output_dir, outfile, parameter_table, "recret", peak_stats, correction_table_available, plot_correction_arrows)
         
