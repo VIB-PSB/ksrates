@@ -163,6 +163,7 @@ class Configuration:
             sys.exit(1)
         return tree
 
+
     def check_complete_latin_names_dict(self, dictionary):
         """
         Checks if a dictionary field from latin_names contains all the species present in the Newick tree. 
@@ -372,6 +373,22 @@ class Configuration:
             logging.error('Unrecognized "collinearity" parameter in configuration file; please choose between "yes" and "no"')
             sys.exit(1)
 
+    def get_reciprocal_retention(self):
+        """
+        Gets the config file field specifying if the mixed distribution will show the reciprocally retained gene families of the focal species or not.
+
+        :return boolean: boolean
+        """
+        reciprocal_retention = self.config.get("ANALYSIS SETTING", "reciprocal_retention").lower()
+
+        if reciprocal_retention == "yes":
+            return True
+        elif reciprocal_retention == "no":
+            return False
+        else:
+            logging.error('Unrecognized "reciprocal_retention" parameter in configuration file; please choose between "yes" and "no"')
+            sys.exit(1)
+
     def get_consensus_peak_for_multiple_outgroups(self):
         """
         Gets the config file field of the consensus method for how to deal with multiple adjustments for the same divergence.
@@ -497,7 +514,7 @@ class Configuration:
             logging.error('Field "divergence_colors" in configuration file contains color names not recognized by Matplotlib, please adjust the following:')
             for color in faulty_color_names:
                 logging.error(f"- {color}")
-            sys.exit(1)            
+            sys.exit(1)
         return colors
 
 
@@ -523,6 +540,34 @@ class Configuration:
         else:
                 level = "INFO"
         return level
+
+
+    def get_preserve_ks_tmp_files(self):
+        """
+        Checks whether "preserve" is required or not in the expert configuration file.
+        If set to "yes", temporary files produced during Ks estimate won't be removed.
+        Default is "no", i.e. removing.
+
+        :return preserve: boolean for preserving (True) or not (False) Ks temporary files
+        """
+        if self.expert_config is not None:
+            try:
+                preserve = self.expert_config.get("EXPERT PARAMETERS", "preserve_ks_tmp_files").lower()
+                if preserve not in ["yes", "no"]:
+                    logging.warning(f'Unrecognized field in expert configuration file [preserve = {preserve}]. Please choose between "yes" and "no". Default choice will be applied [no]')
+                    preserve = False
+                else:
+                    if preserve == "yes":
+                        preserve = True
+                    elif preserve == "no":
+                        preserve = False
+            except Exception:
+                logging.warning(f'Missing field [preserve] in expert configuration file. Please choose between "yes" and "no". Default choice will be applied [no]')
+                preserve = False
+        else:
+            preserve = False
+        return preserve
+
     
     def get_peak_stats(self):
         """
@@ -725,12 +770,12 @@ class Configuration:
                     logging.warning(f'Unrecognized field in expert configuration file [max_mixture_model_components = {max_comp}]. Please choose a positive integer >= 2. Default choice will be applied [5]')  
                     max_comp = 5
                 elif max_comp == 1:
-                    logging.warning(f'Field "max_mixture_model_components" has been changed from {max_comp} to the minimum required, 2')
+                    logging.warning(f'Field "max_mixture_model_components" has been changed from {max_comp} to the minimum required, 2.')
                     max_comp = 2 # exponential + buffer
                 elif max_comp <= 3:
-                    logging.warning(f"A low number of mixture model components [max_mixture_model_components = {max_comp}] can produce poor fitting")
+                    logging.warning(f"A low number of mixture model components [max_mixture_model_components = {max_comp}] can produce poor fitting.")
                 elif max_comp >= 7:
-                    logging.warning(f"A high number of mixture model components [max_mixture_model_components = {max_comp}] increases overfitting risk")
+                    logging.warning(f"A high number of mixture model components [max_mixture_model_components = {max_comp}] increases overfitting risk.")
             except Exception:
                 logging.warning(f'Missing field in expert configuration file [max_mixture_model_components]. Please choose a positive integer. Default choice will be applied [5]')
                 max_comp = 5
@@ -825,3 +870,217 @@ class Configuration:
         else:
             max_size = 200
         return max_size
+
+
+    def get_reciprocal_retention_top(self, reciprocal_retention):
+        """
+        Gets the number of top reciprocally retained gene families to be considered out of the total ranked 9178 ones.
+
+        :return top: integer or float
+        """
+        if reciprocal_retention:
+            if self.expert_config is not None:
+                # Get user-defined top value in field "top_reciprocally_retained_gfs"
+                # NOTE: If FIELD "top_reciprocally_retained_gfs" is missing in config file, "top" variable falls back to 2000
+                # NOTE: If instead only the related VALUE is not present, "top" variable is an empty string
+                top = self.expert_config.get("EXPERT PARAMETERS", "top_reciprocally_retained_gfs", fallback="2000")
+                # Convert to integer the user-defined value or the fallback value
+                try:
+                    top = int(top)
+                # If the VALUE was left empty in by user ("top" variable is empty string), assume again 2000
+                except ValueError:
+                    logging.warning("Field [top_reciprocally_retained_gfs] in expert config file was left empty: assuming top 2000 GFs")
+                    top = 2000
+            else:
+                top = 2000
+        else:
+            top = None
+        return top
+
+
+    def get_reciprocal_retention_rank_type(self, reciprocal_retention):
+        """
+        Returns lambda ranking or None if reciprocal retention analysis not requested.
+        
+        Possible integration in the future:
+        Gets the rank type ("lambda" or "combined") for the reciprocally retained gene family list. The lambda rank is based 
+        on the lambda parameter (the lower this is, the more the gene family is duplicated mainly through WGM with no gene loss),
+        while the combined rank takes also into account the block duplicate percentage as 
+        an independent source of evidence for reciprocal retention.
+
+        :return rank_type: string "lambda" or None.
+        """
+        if reciprocal_retention:
+            return "lambda"
+        else:
+            return None
+        # The next block is ignored, as only the lambda ranking is currently supported
+        if self.expert_config is not None:
+            rank_type = self.expert_config.get("EXPERT PARAMETERS", "reciprocal_retention_rank_type", fallback="lambda").lower()
+            if rank_type not in ["lambda", "combined"]:
+                logging.warning(f'Unrecognized field in expert configuration file [reciprocal_retention_rank_type = {rank_type}]. \
+                                  Please choose between "lambda" and "combined". Default choice will be applied ["lambda"]')
+                rank_type = "lambda"
+        else:
+            rank_type = "lambda"
+        return rank_type
+
+
+    def get_orthomcl_inflation(self, reciprocal_retention):
+        """
+        Gets the inflation parameter for OrthoMCL-based orthogroup clustering.
+        It affects cluster granularity (tightness):
+        - low values  --> few large clusters
+        - high values --> many small clusters
+        Default and recommended is 1.5.
+        
+        :return top: inflation, as float
+        """
+        if reciprocal_retention:
+            if self.expert_config is not None:
+                inflation = float(self.expert_config.get("EXPERT PARAMETERS", "orthomcl_inflation", fallback="1.5"))
+            else:
+                inflation = 1.5
+        else:
+            inflation = None
+        return inflation
+    
+    def get_orthomcl_version(self):
+        """
+        A flag to state whether to run the original OrthoMCL v1.4 or the edited version
+        called OrthoMCLight that significantly speeds up the runtime and reduces memory usage.
+        By default, the edited version is used.
+
+        :return use_original_orthomcl_version: boolean
+        """
+        if self.expert_config is not None:
+            try:
+                use_original_orthomcl_version = self.expert_config.get("EXPERT PARAMETERS", "use_original_orthomcl_version").lower()
+                if use_original_orthomcl_version not in ["yes", "no"]:
+                    logging.warning(f'Unrecognized field in expert configuration file [use_original_orthomcl_version = {use_original_orthomcl_version}]. Please choose between "yes" and "no". Default choice will be applied [no]')
+                    use_original_orthomcl_version = False
+                else:
+                    if use_original_orthomcl_version == "yes":
+                        use_original_orthomcl_version = True
+                    elif use_original_orthomcl_version == "no":
+                        use_original_orthomcl_version = False
+            except Exception:
+                logging.warning(f'Missing field in expert configuration file [use_original_orthomcl_version]. Please choose between "yes" and "no". Default choice will be applied [no]')
+                use_original_orthomcl_version = False
+        else:
+            use_original_orthomcl_version = False
+        return use_original_orthomcl_version
+
+
+    def get_max_extra_original_genes_in_new_gfs(self, reciprocal_retention):
+        """
+        In the context of reconstructing the original rec.ret. GFs for the focal species,
+        the genes of an original top GF ("original genes") are compared to the 
+        genes of a newly obtained OrthoMCL GF ("new GF").
+        Some of the original genes are shared with the new GF, while other genes are not ("extra"). 
+        This function gets the maximum allowed number of extra original genes
+        ("max_extra_original_genes_in_new_gfs") [Default: 15].
+        
+        E.g. There are 50 genes in the original GF, and 45 of them are in common with 
+        a certain new GF. There are therefore only 5 original genes not shared (extra)
+        with the new GF ("extra"). This is an acceptable number, according to 
+        the default threshold (15).
+        
+        :return top: inflation, as float
+        """
+        if reciprocal_retention:
+            if self.expert_config is not None:
+                max_extra_original_genes_in_new_gfs = int(self.expert_config.get("EXPERT PARAMETERS", "max_extra_original_genes_in_new_gfs", fallback="15"))
+            else:
+                max_extra_original_genes_in_new_gfs = 15
+        else:
+            max_extra_original_genes_in_new_gfs = None
+        return max_extra_original_genes_in_new_gfs
+
+
+    def min_common_old_genes_in_new_gfs(self):
+        """
+        This is current not effectively used.        
+        :return top: inflation, as float
+        """
+        if self.expert_config is not None:
+            min_common_old_genes_in_new_gfs = int(self.expert_config.get("EXPERT PARAMETERS", "min_common_old_genes_in_new_gfs", fallback="3"))
+        else:
+            min_common_old_genes_in_new_gfs = 3
+        return min_common_old_genes_in_new_gfs
+
+
+    # NOTE: The following getters are unused (diamond-based reciprocally retained pipeline not implemented)
+    # TODO: To be removed
+    
+    # def get_reciprocal_retention_pident_threshold(self):
+    #     """
+    #     Gets the minimum identity percentage required in the local alignment between a main species sequence and 
+    #     the top reciprocally retained sequences from the top orthogroups. This number is given to diamond "blastx"
+    #     command as the "-id" argument. Diamond hits with less than e.g. 40 won't be part of the diamond output table.
+
+    #     :return pident_threshold: integer or float. Default is 40
+    #     """
+    #     if self.expert_config is not None:
+    #         pident_threshold = int(self.expert_config.get("EXPERT PARAMETERS", "pident_threshold", fallback="40"))
+    #     else:
+    #         pident_threshold = 40
+    #     return pident_threshold
+
+    # def get_reciprocal_retention_min_qcov_threshold(self):
+    #     """
+    #     Gets the minimum coverage percentage in the main species sequence that is required in the alignment between 
+    #     the main species sequence and the top reciprocally retained sequences from the top orthogroups. Diamond hits
+    #     with less than e.g. 50 will be removed from the diamond output table, so to remove the hits with bad coverage.
+
+    #     :return top: integer or float
+    #     """
+    #     if self.expert_config is not None:
+    #         min_qcov_threshold = int(self.expert_config.get("EXPERT PARAMETERS", "min_qcov_threshold", fallback="50"))
+    #     else:
+    #         min_qcov_threshold = 50
+    #     return min_qcov_threshold
+
+    # def get_filter_by_false_predictions(self):
+    #     """
+    #     Gets whether to use all the top gene families (set to "no") or a subset of gene families (set to "yes") which for the three test species
+    #     (A. thaliana, P. dactylifera and V. vinifera) had few false predictions in the confusion matrix (the total amount of false positives 
+    #     and negatives was less than half of the total amount of true positives).
+
+    #     :return boolean: boolean
+    #     """
+    #     if self.expert_config is not None:
+    #         filter_false_predictions = self.expert_config.get("EXPERT PARAMETERS", "filter_by_false_predictions", fallback="no").lower()
+
+    #         if filter_false_predictions == "yes":
+    #             return True
+    #         elif filter_false_predictions == "no":
+    #             return False
+    #         else:
+    #             logging.warning(f'Unrecognized field in expert configuration file [filter_by_false_predictions = {filter_false_predictions}]. \
+    #                                 Please choose between "yes" and "no". Default choice will be applied ["no"]')
+    #             return False
+    #     else:
+    #         return False
+        
+
+    # def get_filter_by_zero_false_predictions(self):
+    #     """
+    #     Gets whether to use all the top gene families (set to "no") or a subset of gene families (set to "yes") which for the three test species
+    #     (A. thaliana, P. dactylifera and V. vinifera) had no false positives or negatives.
+
+    #     :return boolean: boolean
+    #     """
+    #     if self.expert_config is not None:
+    #         filter_zero_false_predictions = self.expert_config.get("EXPERT PARAMETERS", "filter_by_zero_false_predictions", fallback="no").lower()
+
+    #         if filter_zero_false_predictions == "yes":
+    #             return True
+    #         elif filter_zero_false_predictions == "no":
+    #             return False
+    #         else:
+    #             logging.warning(f'Unrecognized field in expert configuration file [filter_by_zero_false_predictions = {filter_zero_false_predictions}]. \
+    #                                 Please choose between "yes" and "no". Default choice will be applied ["no"]')
+    #             return False
+    #     else:
+    #         return False

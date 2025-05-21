@@ -5,11 +5,15 @@ focal_species = elaeis
 newick_tree = ((elaeis, oryza), asparagus);
 # input phylogenetic tree in newick format; use the informal names
 
-latin_names = elaeis: Elaeis guineensis, oryza: Oryza sativa, asparagus: Asparagus officinalis
+latin_names =       elaeis    : Elaeis guineensis, 
+                    oryza     : Oryza sativa,
+                    asparagus : Asparagus officinalis
 # informal names associated to their latin name through a colon and separated by comma
 
-fasta_filenames =  elaeis:elaeis.fasta, oryza: oryza.fasta, asparagus: asparagus.fasta
-gff_filename = elaeis.gff3
+fasta_filenames =   elaeis    : sequences/elaeis.fasta, 
+                    oryza     : sequences/oryza.fasta, 
+                    asparagus : sequences/asparagus.fasta
+gff_filename = sequences/elaeis.gff3
 # informal names associated to their filename/path through a colon and separated by comma
 
 peak_database_path = ortholog_peak_db.tsv
@@ -20,6 +24,7 @@ ks_list_database_path = ortholog_ks_list_db.tsv
 [ANALYSIS SETTING]
 paranome = yes
 collinearity = yes
+reciprocal_retention = no
 # analysis type for paralog data; allowed values: 'yes' or 'no'
 
 gff_feature = mrna

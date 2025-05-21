@@ -1,12 +1,14 @@
 [EXPERT PARAMETERS]
 
 logging_level = info
+preserve_ks_tmp_files = no
 kde_bandwidth_modifier = 0.4
 plot_adjustment_arrows = yes
-max_mixture_model_iterations = 300
-num_mixture_model_initializations = 1
+max_mixture_model_iterations = 10
+num_mixture_model_initializations = 2
 extra_paralogs_analyses_methods = yes
 max_mixture_model_components = 3
 max_mixture_model_ks = 5
 max_gene_family_size = 200
-min_ks_anchor_pairs = 0
+top_reciprocally_retained_gfs = 2000
+use_original_orthomcl_version = no

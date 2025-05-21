@@ -5,14 +5,19 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import ksrates.fc_plotting as fcPlot
 from ksrates.fc_exp_log_mixture import deconvolute_data
-from numpy import exp, sqrt, linspace, arange, log, argmin, mean, around, array
-from wgd_ksrates.modeling import mixture
+from numpy import exp, sqrt, linspace, arange, log, argmin, around, array
+from sklearn import mixture
 import scipy.stats as ss
-from wgd_ksrates.modeling import plot_aic_bic
 from wgd_ksrates.modeling import plot_mixture, plot_probs
 import ksrates.fc_exp_log_mixture as fcEM
 from matplotlib.patches import Patch
 from ksrates.fc_cluster_anchors import subfolder
+
+# Template filenames
+_LMM_MIXED_ADJUSTED_PLOT_FILENAME = "mixed_{}_lmm_{}.pdf"
+_LMM_ALL_MODELS_FILENAME = "lmm_{}_all_models_{}.pdf"
+_LMM_PARAMETERS_FILENAME_TSV = "lmm_{}_parameters_{}.tsv"
+_LMM_PARAMETERS_FILENAME_TXT = "lmm_{}_parameters_{}.txt"
 
 def plot_all_models_gmm(models, data, l, u, bins, out_file):
     """
@@ -100,6 +105,7 @@ def log_components(X, model_id, m, outfile, parameter_table, max_iter):
     :param m: model
     :param outfile: output file listing the component parameters
     :param parameter_table: list collecting the component parameters
+    :param max_iter: maximum number of iterations allowed to reach convergence
     """
     outfile.write(f"Model {model_id}\n")
     outfile.write(f"Number of components: {len(m.means_)}\n")
@@ -166,8 +172,9 @@ def fit_gmm(X, n1, n2, outfile, parameter_table, max_iter=600, n_init=1, **kwarg
     return models, bic, aic, best
 
 
-def plot_mixture_model(model, data, max_x_axis_lim, ax, bin_width, scaling, peak_stats, correction_table_available, plot_correction_arrows, l=0, u=5, color='black', alpha=0.2,
-                 log=False, bins=25):
+def plot_mixture_model(model, data, max_x_axis_lim, ax, bin_width, scaling, peak_stats, 
+                       correction_table_available, plot_correction_arrows, l=0, u=5, 
+                       color='black', alpha=0.2, log=False, bins=25):
     """
     Plot a mixture model. Assumes a log-transformed model and data
     and will back-transform.
@@ -222,8 +229,14 @@ def plot_mixture_model(model, data, max_x_axis_lim, ax, bin_width, scaling, peak
     lognormals_sorted_by_peak = sorted(lognormal_peaks, key=lognormal_peaks.get) # sort by values (peaks)
     letter_dict = dict(zip(lognormals_sorted_by_peak, [ "a", "b", "c", "d", "e", "f", "g"][:len(lognormals_sorted_by_peak)])) # assign progressive letter
 
+    letter_to_peak_dict = {}
+
     for comp in lognormals_sorted_by_peak:
-        fcEM.plot_marker(ax, lognormal_peaks[comp], scaling * weights[comp] * ss.lognorm.pdf(lognormal_peaks[comp], scale=exp(means[comp][0]), s=sqrt(varcs[comp][0][0])), "k", letter_dict[comp], correction_table_available, plot_correction_arrows)
+        fcEM.plot_marker(ax, lognormal_peaks[comp], scaling * weights[comp] * ss.lognorm.pdf(lognormal_peaks[comp], 
+                         scale=exp(means[comp][0]), s=sqrt(varcs[comp][0][0])), "k", letter_dict[comp], 
+                         correction_table_available, plot_correction_arrows)
+        # Fill in the dictionary with all peak names and their x-coordinate
+        letter_to_peak_dict[letter_dict[comp]] = lognormal_peaks[comp]
 
     for comp in lognormals_sorted_by_peak:
         curve = scaling * weights[comp] * ss.lognorm.pdf(x, scale=exp(means[comp]), s=sqrt(varcs[comp]))
@@ -235,7 +248,7 @@ def plot_mixture_model(model, data, max_x_axis_lim, ax, bin_width, scaling, peak
         else:
             total_pdf += curve
     ax.plot(x, total_pdf, '-k', lw=1.5, label="Lognormal mixture model")
-    return ax
+    return ax, letter_to_peak_dict
 
 
 def lmm(
@@ -251,8 +264,8 @@ def lmm(
     histograms. Please interpret mixture model results with caution.
     :param fig: figure object
     :param max_x_axis_lim: upper limit in the x-axis 
-    :param data_type: strings stating whether the data are "paralogs" or "anchor pairs"
-    :param tsv_file: wgd output file containing either paranome or anchor pairs Ks values (suffix formats: ".ks.tsv", "ks_anchors.tsv")
+    :param data_type: strings stating whether the data are "paralogs" or "anchor pairs" or "reciprocally retained"
+    :param tsv_file: wgd output file containing either paranome, anchor pairs or recret Ks values (suffix formats: ".ks.tsv", "ks_anchors.tsv" or "ks_recret_topX.tsv)
     :param species: informal name of the focal species
     :param axis: axis object
     :param ks_range: Ks range used for models
@@ -265,7 +278,7 @@ def lmm(
     :param output_dir: output folder
     :param outfile: output file for logging details
     :param parameter_table: list collecting the component parameters
-    :param datatype_tag: string for figure title stating if data is paranome or anchors
+    :param datatype_tag: string for figure title stating if data is paranome or anchors or reciprocally retained ("recret")
     :param peak_stats: states whether the cluster peak is intended as median or mode
     :param correction_table_available: boolean stating whether the adjustment results are available or not
     :param plot_correction_arrows: boolean stating whether there will be plotted adjustment arrows or not
@@ -287,17 +300,18 @@ def lmm(
 
     logging.info("Plotting mixtures")
     plot_all_models_gmm(models, deconvoluted_data, ks_range[0], ks_range[1], bins=bins,
-                        out_file=os.path.join(output_dir, f"lmm_{species}_all_models_{datatype_tag}.pdf"))
+                        out_file=os.path.join(output_dir, _LMM_ALL_MODELS_FILENAME.format(species, datatype_tag)))
     
     # Plotting the components of the best model on the final picture;
     # Components are scaled up to the size of actual count data and not to density histogram
     scaling = bin_width_para * len(deconvoluted_data)
-    plot_mixture_model(best, deconvoluted_data, max_x_axis_lim, axis, bin_width_para, scaling, peak_stats,
+    ax, letter_to_peak_dict = plot_mixture_model(best, deconvoluted_data, max_x_axis_lim, axis, bin_width_para, scaling, peak_stats,
                        correction_table_available, plot_correction_arrows, ks_range[0], ks_range[1], bins=bins)
-    return best
+
+    return best, letter_to_peak_dict
 
 
-def create_legend_mixture_model(axis, legend_size, num_mixture_model_lines, datatype):
+def create_legend_lmm_plot(axis, legend_size, num_mixture_model_lines, datatype):
     """
     Places the legend elements associated to the histograms at the beginning of the legend,\\
     while by default they are placed at the end.
@@ -305,21 +319,44 @@ def create_legend_mixture_model(axis, legend_size, num_mixture_model_lines, data
     :param axis: matplotlib axis object from which the legend is taken
     :param legend_size: size of the legend box as a tuple of format "(x, y, width, height)"
     :param num_mixture_model_lines: number of lines generated by mixture models (components + total PDF)
-    :param datatype: string for figure title stating if data is "paranome" or comes from "colinearity" analysis
+    :param datatype: string for figure title stating if data is "paranome", "anchors" or reciprocally retained gene families ("recret")
     :return: the updated legend object
     """
+    # Get current handles
     handles, labels = axis.get_legend_handles_labels()
-    sorted_handles, sorted_labels = handles.copy(), labels.copy()
+    # E.g. of labels:
+    # ['Whole-paranome', first_lognorm_comp, second_lognorm_comp, 'Lognormal mixture model', first_divergence_age, second_divergence_age]
+    
+    sorted_handles, sorted_labels = [], []
+    # Add rectangle as histogram handle; its correspondent label is always the first entry
     if datatype == "paranome":
         paralog_rect = Patch(facecolor=fcPlot.COLOR_PARANOME_HISTOGRAM, edgecolor="w")
     elif datatype == "anchors":
         paralog_rect = Patch(facecolor=fcPlot.COLOR_ANCHOR_HISTOGRAM, edgecolor="w")
-    # empty patch used as spacer between histograms and divergence line legend entries
-    empty_rect = Patch(fill=False, edgecolor='none', visible=False)
+    elif datatype == "recret" or datatype == "recret_lambda" or datatype == "recret_combined":
+        paralog_rect = Patch(facecolor=fcPlot.COLOR_REC_RET_HISTOGRAM, edgecolor="w")
+    sorted_handles.append(paralog_rect)
+    sorted_labels.append(labels[0])
+    # Add transparent rectangle handle with empty string label as spacer between histogram and component entries
+    transparent_rect = Patch(fill=False, edgecolor='none', visible=False)
+    sorted_handles.append(transparent_rect)
+    sorted_labels.append("")
+    
+    # Add all entries related to components, starting from second element (index 1) and until text "Lognormal mixture model" included
+    index_of_log_mixture_model = labels.index("Lognormal mixture model")
+    sorted_handles.extend(handles[1:index_of_log_mixture_model+1])
+    sorted_labels.extend(labels[1:index_of_log_mixture_model+1])
+    # Add transparent rectangle handle with empty string label as spacer between components and divergence entries
+    sorted_handles.append(transparent_rect)
+    sorted_labels.append("")
 
-    sorted_handles = [paralog_rect, empty_rect, sorted_handles[num_mixture_model_lines-1]] + sorted_handles[:num_mixture_model_lines-1] + [empty_rect, "Divergence with:"] + sorted_handles[num_mixture_model_lines:-1]
-    sorted_labels = [sorted_labels[-1], "", sorted_labels[num_mixture_model_lines-1]] + sorted_labels[:num_mixture_model_lines-1] + ["", ""] + sorted_labels[num_mixture_model_lines:-1]
-
+    # Add text "Divergence with:" as handle and an empty string as label
+    sorted_handles.append("Divergence with:")
+    sorted_labels.append("")
+    # Add all entries related to divergences, starting from after "Lognormal mixture model" until the end of list
+    sorted_handles.extend(handles[index_of_log_mixture_model+1:])
+    sorted_labels.extend(labels[index_of_log_mixture_model+1:])
+    
     lgd = axis.legend(sorted_handles, sorted_labels, handlelength=1.5, mode="expand", loc="upper left",
                         bbox_to_anchor=legend_size)
     return lgd
@@ -334,7 +371,7 @@ def save_lmm(fig, axis, species, best_model, datatype, correction_table_availabl
     :param fig: figure object of the adjusted mixed distribution
     :param axis: axis object of the adjusted mixed distribution
     :param species: focal species
-    :param datatype: string for figure title stating whether data is paranome or comes from "colinearity" analysis
+    :param datatype: string for figure title stating whether data is "paranome", "anchors" or reciprocally retained gene families ("recret")
     """
     if correction_table_available:
         num_mixture_model_lines = len(best_model.means_) + 1 # components + total PDF
@@ -343,15 +380,15 @@ def save_lmm(fig, axis, species, best_model, datatype, correction_table_availabl
         chart_box = axis.get_position()
 
         axis.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
-        lgd = create_legend_mixture_model(axis, legend_size, num_mixture_model_lines, datatype)
+        lgd = create_legend_lmm_plot(axis, legend_size, num_mixture_model_lines, datatype)
 
-        fig.savefig(os.path.join("rate_adjustment", f"{species}", f"mixed_{species}_lmm_{datatype}.pdf"),
+        fig.savefig(os.path.join("rate_adjustment", f"{species}", _LMM_MIXED_ADJUSTED_PLOT_FILENAME.format(species, datatype)),
                     bbox_extra_artists=(axis, lgd, fig._suptitle), bbox_inches="tight", transparent=True, format="pdf")
     else:
         # if not correction_table_available use a simpler layout with the legend
         # inside the plot and no right margin
         lgd = axis.legend(handlelength=1.5, loc="upper right")
-        fig.savefig(os.path.join("rate_adjustment", f"{species}", f"mixed_{species}_lmm_{datatype}.pdf"),
+        fig.savefig(os.path.join("rate_adjustment", f"{species}", _LMM_MIXED_ADJUSTED_PLOT_FILENAME.format(species, datatype)),
                     transparent=True, format="pdf")
 
 
@@ -361,11 +398,11 @@ def make_parameter_table_file(parameter_table, species, datatype):
 
   :param parameter_table: list collecting the component parameters
   :param species: informal name of the focal species
-  :param datatype: string for figure title stating whether data is paranome or comes from "colinearity" analysis
+  :param datatype: string for figure title stating whether data is "paranome", "anchors" or reciprocally retained gene families ("recret")
   """
   #headers = ["Model", "Iteration", "BIC", "Loglikelihood", "Convergence", 
   #          "Exponential_Rate", "Exponential_Weight", "Normal_Mean", "Normal_SD", "Normal_Weight"]
   headers = ["Model", "BIC", "Loglikelihood", "Convergence", "Normal_Mean", "Normal_SD", "Normal_Weight"]
   parameter_df = DataFrame.from_records(array(parameter_table), columns=headers)
-  with open (os.path.join("rate_adjustment", f"{species}", subfolder, f"lmm_{species}_parameters_{datatype}.tsv"), "w+") as outfile:
+  with open(os.path.join("rate_adjustment", f"{species}", subfolder, _LMM_PARAMETERS_FILENAME_TSV.format(species, datatype)), "w+") as outfile:
     outfile.write(parameter_df.to_csv(sep="\t", index=False))

@@ -1,5 +1,4 @@
 import os
-import pandas
 from pandas import DataFrame
 import random
 import logging

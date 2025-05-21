@@ -24,10 +24,16 @@ The analysis configuration file is composed of a first section defining the spec
     [SPECIES]
     focal_species = elaeis
     newick_tree = ((elaeis, oryza), asparagus);
-    latin_names = elaeis:Elaeis guineensis, oryza:Oryza sativa, asparagus:Asparagus officinalis
 
-    fasta_filenames = elaeis:elaeis.fasta, oryza:oryza.fasta, asparagus:asparagus.fasta
-    gff_filename = elaeis.gff3
+    latin_names =       elaeis    : Elaeis guineensis, 
+                        oryza     : Oryza sativa,
+                        asparagus : Asparagus officinalis
+
+    fasta_filenames =   elaeis    : sequences/elaeis.fasta, 
+                        oryza     : sequences/oryza.fasta, 
+                        asparagus : sequences/asparagus.fasta
+
+    gff_filename = sequences/elaeis.gff3
 
     peak_database_path = ortholog_peak_db.tsv
     ks_list_database_path = ortholog_ks_list_db.tsv
@@ -36,6 +42,7 @@ The analysis configuration file is composed of a first section defining the spec
     [ANALYSIS SETTING]
     paranome = yes
     collinearity = yes
+    reciprocal_retention = no
 
     gff_feature = mrna
     gff_attribute = id
@@ -72,6 +79,7 @@ The [ANALYSIS SETTING] section includes:
 
 * **paranome**: whether to build/plot the whole-paranome *K*:sub:`S` distribution of the focal species (options: "yes" and "no"). [Default: "yes"]
 * **collinearity**: whether to build/plot the anchor pair *K*:sub:`S` distribution of the focal species (options: "yes" and "no"). A GFF file for the focal species is required, see parameter `gff_filename` above. [Default: "no"]
+* **reciprocal_retention**: whether to build/plot the reciprocally retained *K*:sub:`S` distribution of the focal species (options: "yes" and "no"). [Default: "no"]
 * **gff_feature**: parsing keyword from the third column of the GFF file (e.g. gene, mrna...). Case insensitive.
 * **gff_attribute**: parsing keyword from the ninth column of the GFF file (e.g. id, name...). Case insensitive. 
 * **max_number_outgroups**: maximum number of trios/outspecies allowed to adjust a divergent pair; if None, all possible outspecies obtained from the phylogenetic tree will be used to form trios and adjust the pair. For more details see below. [Default: 4]
@@ -104,7 +112,7 @@ The [PARAMETERS] section includes:
 Guidelines to set the maximum number of outgroups per rate-adjustment
 ---------------------------------------------------------------------
 
-``max_number_outgroups`` is a parameter used to limit the amount of outgroup species used to adjust a species pair; without that, all possible outgroups would be taken. Having multiple rate-adjustments on the same divergence can provide stronger support for the rate-adjusted plot and is therefore advised to adjust with at least 3 or 4 outgroups to have more reliable results.
+Parameter ``max_number_outgroups`` limits the number of outgroup species used to adjust a species pair; without that, all possible outgroups would be taken. Having multiple rate-adjustments on the same divergence can provide stronger support for the rate-adjusted plot and is therefore advised to adjust with at least 3 or 4 outgroups to have more reliable results.
 
 However, the more the outgroups, the more the number of ortholog distributions that will have to be computed by the `wgd` ortholog pipeline, which is a quite computationally demanding step. Setting a maximum amount of outgroups lowers the number of rate-adjustments and can therefore save time and resources. It is a good option in case the tree has a complex structure that would collect an unnecessary large number of outgroups or in case the user wants to have a quicker, although somewhat less reliable, result. Note that another option to lower the number of ortholog distributions is to start with a simpler tree structure.
 
@@ -125,15 +133,18 @@ A consensus value for the rate-adjustment is needed when multiple rate-adjustmen
 Nextflow configuration file
 ===========================
 
-The Nextflow configuration file is used to configure various settings for the *ksrates* Nextflow pipeline, such as the executor (e.g. computing cluster, local computer) and its resources (e.g. number of CPUs/cores and memory to use, cluster queues, walltimes etc.) and use of the *ksrates* Singularity or Docker container. We provide a few general template Nextflow configuration files for the *ksrates* Nextflow pipeline in the `doc <https://github.com/VIB-PSB/ksrates/blob/master/doc/source>`_ directory in the GitHub repository. These can be adapted to a user's specific resources and requirements. Below, we briefly explain some of the basic key settings. For a more complete description please refer to the `Nextflow documentation <https://www.nextflow.io/docs/latest/config.html#configuration>`__. ::
+The Nextflow configuration file is used to configure various settings for the *ksrates* Nextflow pipeline, such as the executor (e.g. computing cluster, local computer) and its resources (e.g. number of CPUs/cores and memory to use, cluster queues, walltimes etc.) and use of the *ksrates* Apptainer (formerly Singularity) or Docker container. We provide a template Nextflow configuration file for the *ksrates* Nextflow pipeline in the `docs <https://github.com/VIB-PSB/ksrates/blob/master/doc/source>`_ subdirectory of the GitHub repository, which can be copied and adapted to the user's specific resources and requirements. Below, we briefly explain some of the basic key settings. For a more complete description please refer to `Nextflow documentation <https://www.nextflow.io/docs/latest/config.html#configuration>`__. ::
 
-    singularity {
-        enabled = true
-        cacheDir = ''
-        autoMounts = true
-    }
-    docker {
-        enabled = false
+    profiles {
+        docker {
+            docker.enabled = true
+            docker.runOptions = "-v $PWD:$PWD"
+        }
+        apptainer {
+            apptainer.enabled = true
+            apptainer.cacheDir = ''
+            apptainer.autoMounts = true
+        }
     }
 
     executor {
@@ -149,6 +160,7 @@ The Nextflow configuration file is used to configure various settings for the *k
             cpus = 
             penv = ''
             memory = ''
+            time = ''
             clusterOptions = ''
             beforeScript = ''
         }
@@ -158,21 +170,22 @@ The Nextflow configuration file is used to configure various settings for the *k
     	SOME_ENV_VARIABLE = ''
     }
 
-* The **singularity** and **docker** scopes configure container type usage and execution:
+* The **profiles** scope configures the **apptainer** and **docker** container settings:
 
-    * **enable** enables or disables the use of the respective container
-    * **cacheDir** (only for Singularity) the directory where remote the Singularity image from Docker Hub is stored. When using a computing cluster it must be a shared folder accessible to all computing nodes.
-    * **autoMounts** (only for Singularity) automatically mounts host paths in the executed container and allows the user to run the pipeline from any directory in a cluster [Default: true]. It requires the `user bind control <https://sylabs.io/guides/3.7/admin-guide/configfiles.html?highlight=user%20bind%20control#bind-mount-management>`__ feature in Singularity installation, which is active by default.
+    * **enable** enables or disables the use of the respective container.
+    * **runOptions** (only for Docker) mounts the host’s current directory into the container at the same path.
+    * **cacheDir** (only for Apptainer) the directory where remote the Apptainer image from Docker Hub is stored. When using a computing cluster it must be a shared folder accessible to all computing nodes.
+    * **autoMounts** (only for Apptainer) automatically mounts host paths in the executed container and allows the user to run the pipeline from any directory in a cluster [Default: true]. It requires the `user bind control <https://sylabs.io/guides/3.7/admin-guide/configfiles.html?highlight=user%20bind%20control#bind-mount-management>`__ feature in Apptainer installation, which is active by default.
 
 * The **executor** scope configures the underlying system where processes are executed and its overall resources to use:
 
-    * **name** specifies the system type or HPC scheduler to be used (e.g. ``sge``, ``slurm``, ``local``; for more detail see the `Nextflow documentation <https://www.nextflow.io/docs/latest/executor.html>`__).
+    * **name** specifies the system type or HPC scheduler to be used (e.g. ``sge``, ``slurm``, ``pbs``, ``local``; for more details see the `Nextflow documentation <https://www.nextflow.io/docs/latest/executor.html>`__).
     * **queueSize** sets the maximum number of tasks/Nextflow processes handled in parallel by the executor, i.e. for example the number jobs submitted simultaneously on a computer cluster) [Default: 100]. Useful in case of CPU/core/slot usage restriction policies. Set to a value of 1 to configure a fully sequential workflow where no processes are run in parallel.
     * **cpus** sets the maximum number of CPUs/cores made available by the underlying system to the Nextflow pipeline when using a ``local`` executor (and only available for the ``local`` executor setting). Useful to limit CPU/core usage since by default all available CPUs/cores will be used by the ``local`` executor, i.e. when running the whole pipeline on the computer where Nextflow is launched.
 
 * The **process** scope defines the configuration for the processes of the *ksrates* pipeline:
 
-    * **container** defines the Singularity or Docker *ksrates* container image to be used, ``vibpsb/ksrates:latest``. A local copy is pulled from Docker Hub and stored for successive usage.
+    * **container** defines the Apptainer or Docker *ksrates* container image to be used, ``vibpsb/ksrates:latest``. A local copy is pulled from Docker Hub and stored for successive usage.
 
     * **withName** defines settings for individual processes in the *ksrates* Nextflow pipeline.
     
@@ -180,21 +193,22 @@ The Nextflow configuration file is used to configure various settings for the *k
     
       Settings can be tailored to your configured executor (see above) through the use of Nextflow process directives (for a complete list and detailed descriptions see the `Nextflow documentation <https://www.nextflow.io/docs/latest/process.html#process-directives>`__), such as:
     
-        * **cpus** sets the number of CPUs/cores/slots/threads, e.g. ``8``. It is recommended to set multiple cores for ``wgdParalogs`` and ``wgdOrthologs`` processes [Default if not set: 1]
+        * **cpus** sets the number of CPUs/cores/slots/threads, e.g. ``8``. It is recommended to set multiple cores for ``wgdParalogs`` and ``wgdOrthologs`` processes [Default if not set: 1].
     	* **penv** when using an SGE executor defines the parallel environment to be used when submitting a parallel task.
         * **memory** sets how much memory the process is allowed to use, e.g. ``16GB``.
+        * **time** defines how long a process is allowed to run.
         * **clusterOptions** any native configuration option accepted by your cluster submit command, such as options specific to your cluster and not supported out of the box by Nextflow (e.g. if your cluster doesn't accept the ``memory`` directive because it expects defining the amount of memory per CPU).
-        * **beforeScript** allows you to execute a custom (Bash) snippet before the main process script is run. This may be useful to initialise the underlying compute cluster environment or for other custom initialisation, for example it can be used to load required dependencies if one of the *ksrates* containers is not used, provided that the cluster has those dependencies installed. In that case, the required external dependencies (see also the `wgd Documentation <https://wgd.readthedocs.io/en/latest/index.html#external-software>`__) for the *ksrates* Nextflow processes are:
+        * **beforeScript** allows you to execute a custom (Bash) snippet before the main process script is run. This may be useful to initialize the underlying computer cluster environment or for other custom initialisation, for example it can be used to load required dependencies if one of the *ksrates* containers is not used, provided that the cluster has those dependencies installed. In that case, the required external dependencies (see also the `wgd Documentation <https://wgd.readthedocs.io/en/latest/index.html#external-software>`__) for the *ksrates* Nextflow processes are:
 
-            * ``wgdParalogs``: Python dependencies listed in requirements.txt, plus BLAST, MUSCLE, MCL, PAML, FastTree and i-ADHoRe (if collinearity analysis is configured).
-            * ``wgdOrthologs``: Python dependencies listed in requirements.txt, plus BLAST, MUSCLE and PAML.
-            * All other processes: Python dependencies listed in requirements.txt.
+            * ``wgdParalogs``: Python dependencies listed in ``requirements.txt``, plus BLAST, MUSCLE, MCL, PAML, FastTree and i-ADHoRe (if collinearity analysis is configured).
+            * ``wgdOrthologs``: Python dependencies listed in ``requirements.txt``, plus BLAST, MUSCLE and PAML.
+            * All other processes: Python dependencies listed in ``requirements.txt``.
 
 * The **env** scope allows the definition one or more variable that will be exported in the environment where the workflow tasks will be executed.
 
 * The **params** scope accepts the ``preserve`` parameter to keep leftover temporay folders and incomplete files when the pipeline is prematurely interrupted due to an error [Default: false]. Alternatively, ``--preserve`` can be provided directly in the Nextflow launching command line::
 
-    nextflow run VIB-PSB/ksrates --config ./config_elaeis.txt --preserve
+    nextflow run VIB-PSB/ksrates --config config_files/config_elaeis.txt --preserve
 
 .. _`expert_config_section`:
 
@@ -205,28 +219,32 @@ This is an optional configuration file that contains several \"expert\" paramete
     
 Syntax for the Nextflow pipeline::
 
-        nextflow run VIB-PSB/ksrates --config config_elaeis.txt --expert path/to/my_expert_config.txt
+        nextflow run VIB-PSB/ksrates --config config_files/config_elaeis.txt --expert path/to/my_expert_config.txt
     
 Syntax for single `ksrates` commands::
 
-        ksrates init config_elaeis.txt --expert path/to/my_expert_config.txt 
+        ksrates <command> config_files/config_elaeis.txt --expert path/to/my_expert_config.txt
 
 The following can be used as a template::
 
     [EXPERT PARAMETERS]
     
     logging_level = info
+    preserve_ks_tmp_files = no
     max_gene_family_size = 200
-    distribution_peak_estimate = mode
-    kde_bandwidth_modifier = 0.4
     plot_adjustment_arrows = no
+    kde_bandwidth_modifier = 0.4
+    distribution_peak_estimate = mode
     num_mixture_model_initializations = 10
     max_mixture_model_iterations = 600
     max_mixture_model_components = 5
     max_mixture_model_ks = 5
     extra_paralogs_analyses_methods = no
+    top_reciprocally_retained_gfs = 2000
+    use_original_orthomcl_version = no
 
 * **logging_level**: the lowest logging/verbosity level of messages printed to the console/logs (increasing severity levels: *notset*, *debug*, *info*, *warning*, *error*, *critical*). Messages less severe than *level* will be ignored; *notset* causes all messages to be processed. [Default: "info"]
+* **preserve_ks_tmp_files**: whether to preserve or not the intermediate files generated during the paralogs *K*:sub:`S` and ortholog *K*:sub:`S` pipelines (options: "yes" and "no"). [Default: "no"]
 * **max_gene_family_size**: maximum number of members that any paralog gene family can have to be included in *K*:sub:`S` estimation. Large gene families increase the run time and are often composed of unrelated sequences grouped together by shared protein domains or repetitive sequences. But this is not always the case, so one may want to check manually the gene families in file ``paralog_distributions/wgd_species/species.mcl.tsv`` and increase (or even decrease) this number. [Default: 200]
 * **distribution_peak_estimate**: the statistical method used to obtain a single ortholog *K*:sub:`S` estimate for the divergence time of a species pair from its ortholog distribution or to obtain a single paralog *K*:sub:`S` estimate from an anchor *K*:sub:`S` cluster or from lognormal components in mixture models (options: "mode" or "median"). [Default: "mode"]
 * **kde_bandwidth_modifier**: modifier to adjust the fitting of the KDE curve on the underlying whole-paranome or anchor *K*:sub:`S` distribution. The KDE Scott's factor internally computed by SciPy tends to produce an overly smooth KDE curve, especially with steep WGD peaks, and therefore it is reduced by multiplying it by a modifier. Decreasing the modifier leads to tighter fits, increasing it leads to smoother fits, and setting it to 1 gives the default KDE factor. Note that a too small factor is likely to take into account data noise. [Default: 0.4]
@@ -236,3 +254,5 @@ The following can be used as a template::
 * **max_mixture_model_components**: maximum number of components considered during execution of the mixture models. [Default: 5]
 * **max_mixture_model_ks**: upper limit for the *K*:sub:`S` range in which the exponential-lognormal and lognormal-only mixture models are performed. [Default: 5]
 * **extra_paralogs_analyses_methods**: flag to toggle the optional analysis of the paralog *K*:sub:`S` distribution with non default mixture model methods (see section :ref:`paralogs_analyses` and Supplementary Materials) [Default: "no"]
+* **top_reciprocally_retained_gfs**: number of gene families at the top of the reciprocal retention ranking that will be used to build the related *K*:sub:`S` distribution. [Default: 2000]
+* **use_original_orthomcl_version**: allows compatibility with the original OrthoMCL v1.4 version; by default it is used a modified faster version called OrthoMCLight. [Default: "no"]

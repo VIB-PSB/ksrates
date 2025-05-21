@@ -3,33 +3,40 @@
 Mixture modeling of paralog *K*:sub:`S` distributions
 *****************************************************
 
-The interpretation of mixed paralog–ortholog *K*:sub:`S` distributions is sometimes challenging due to the fact that paralog WGD peaks are often not clearly distinguishable because of progressive WGD signal erosion over time and potential overlapping of multiple peaks from successive WGDs. In order to more objectively define the *K*:sub:`S` age of potential WGD peaks, a clustering feature based on mixture modeling has been implemented in *ksrates*.
+The interpretation of mixed paralog–ortholog *K*:sub:`S` distributions can be challenged by the fact that paralog WGD peaks are often not clearly distinguishable due to the progressive WGD signal erosion over time and potential overlapping of multiple peaks from successive WGDs. In order to more objectively define the *K*:sub:`S` age of potential WGD peaks, a clustering feature based on mixture modeling has been implemented in *ksrates*.
 
 Three methods are available: anchor *K*:sub:`S` clustering, exponential-lognormal mixture modeling and lognormal-only mixture modeling. A short overview can be found below. For an extended description of these methods, please refer to the `Supplementary Materials <https://www.biorxiv.org/content/10.1101/2021.02.28.433234v1.supplementary-material>`__ of the preprint.
 
 .. warning::
     Please be aware that mixture modeling results on *K*:sub:`S` distributions should be interpreted cautiously because mixture models tend to overestimate the number of components present in the target *K*:sub:`S` distribution and hence the number of WGDs.
 
-Settings in the *ksrates* configuration files determine which methods are applied and which are not (see also sections :ref:`pipeline_config_section` and :ref:`expert_config_section`):
+The available methods depend on the *K*:sub:`S` analysis type(s) selected in the *ksrates* :ref:`configuration file <pipeline_config_section>`:
 
-    * If collinearity analysis is selected in the *ksrates* configuration file (``collinearity = yes``), the default method performed is a clustering based on the anchor pair *K*:sub:`S` values in collinear segment pairs. 
-    * Otherwise (``collinearity = no`` and ``paranome = yes``), the default method performed is exponential-lognormal mixture modeling of the whole-paranome *K*:sub:`S` distribution.
-    * Lognormal-only mixture modeling can be turned on for comparison. It is never applied by default, since it is more prone to produce spurious peaks.
+    * When colinearity analysis is requested (``colinearity = yes``), the anchor pair *K*:sub:`S` distribution is analyzed through a clustering based on the anchor pair *K*:sub:`S` values found in colinear segment pairs; lognormal mixture modeling is also optionally available.
+    * When paranome analysis is requested (``paranome = yes``), the whole-paranome *K*:sub:`S` distribution is analyzed through exponential-lognormal mixture modeling; lognormal mixture modeling is also optionally available.
+    * When reciprocal retention analysis is requested (``reciprocal_retention = yes``) the reciprocally retained *K*:sub:`S` distribution is analyzed through lognormal mixture modeling.
 
-The execution of non-default methods according to the scheme in the table below  can be turned on with a setting in the expert configuration file. For example, when both collinearity and paranome analyses are selected (last column), only the anchor *K*:sub:`S` clustering is perfomed by default and all the other methods can be turned on optionally.
+Optional methods are activated through the :ref:`expert configuration file <expert_config_section>` (parameter ``extra_paralogs_analyses_methods``). They follow the scheme illustrated in the table below; for example, when colinearity and paranome analyses are requested (fourth row), by default only the anchor *K*:sub:`S` clustering is performed, while three other methods are optionally available.
 
 .. include:: <isopub.txt>
 .. table:: Default methods are marked by |check|, while optional methods are marked by (|check|).
 
-    =======================================  =================  =============  =========================
-    Method                                   Collinearity-only  Paranome-only  Collinearity and paranome
-    =======================================  =================  =============  =========================
-    Anchor *K*:sub:`S` clustering            |check|                           |check|
-    Exponential-lognormal mixture model                         |check|        (|check|)
-    Lognormal mixture model on anchor pairs  (|check|)                         (|check|)
-    Lognormal mixture model on paranome                         (|check|)      (|check|)
-    =======================================  =================  =============  =========================
+    ===========================================  ==================  ===========  ==========  ===========  ==========
+    Analysis setup                               Anchor *K*:sub:`S`  Exp-log MM   Log MM      Log MM       Log MM     
+                                                                                                                        
+                                                 clustering          paranome     anchors     paranome     rec.ret 
+    ===========================================  ==================  ===========  ==========  ===========  ==========
+    Colinearity-only                             |check|                          (|check|)                                               
+    Paranome-only                                                    |check|                  (|check|)                           
+    Reciprocal retention-only                                                                               |check|        
+    Colinearity & Paranome                       |check|             (|check|)    (|check|)   (|check|)                           
+    Colinearity & Rec.retention                  |check|                          (|check|)                 |check|        
+    Paranome & Rec.retention                                         |check|                  (|check|)     |check|        
+    Colinearity & Paranome |br| & Rec.retention  |check|             (|check|)    (|check|)   (|check|)     |check|        
+    ===========================================  ==================  ===========  ==========  ===========  ==========
+.. |br| raw:: html
 
+      <br>
 
 .. _`anchor_ks_clustering`:
 
@@ -89,7 +96,7 @@ Among its outputs (for a complete list see section :ref:`output_files`), the ELM
 Lognormal mixture model
 +++++++++++++++++++++++
 
-Logormal mixture modeling (LMM) makes use of only lognormal components and is optionally available both for whole-paranome and anchor pair *K*:sub:`S` distributions using a setting in the expert configuration file.
+Logormal mixture modeling (LMM) makes use of only lognormal components and is available for whole-paranome, anchor pair and reciprocally retained *K*:sub:`S` distributions.
 
 The lognormal components are initialized through k-means and fitted by default with two to five components. For each number of components the mixture model is initialized multiple times and the best fit is chosen according to the largest log-likelihood. Among the resulting four models (one for each number of components), the best fitting model is taken to be the one with the lowest BIC score.
 
@@ -102,7 +109,7 @@ Data output file format
 
 Among its outputs (for a complete list see section :ref:`output_files`), the LMM produces tabular (TSV) files and text files where parameters and fitting results are stored:
 
-* ``lmm_species_parameters_paranome.tsv`` and ``lmm_species_parameters_anchors.tsv``:
+* ``lmm_species_parameters.tsv`` for whole-paranome, anchor pairs and/or reciprocally retained paralogs:
 
     * The model type is stored in column 1 ``Model`` according to a numerical code (1: one lognormal component, 2: two lognormal components, 3: three lognormal components; and so on).
     * The BIC and loglikelihood scores for the fitted model are stored in columns 2 ``BIC`` and 3 ``Loglikelihood``
@@ -116,4 +123,4 @@ Among its outputs (for a complete list see section :ref:`output_files`), the LMM
 
     This file section shows the result for model 5: each row stores the data for one of the five lognormal components.
 
-* ``lmm_species_parameters_paranome.txt`` and ``lmm_species_parameters_anchors.txt`` collect the model results in a more descriptive and easy-to-read logging format.
+* ``lmm_species_parameters.txt`` collects the model results in a more descriptive and easy-to-read TXT logging format; it is generated for whole-paranome, anchor pairs and/or reciprocally retained paralogs.

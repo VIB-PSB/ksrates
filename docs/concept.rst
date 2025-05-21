@@ -44,7 +44,7 @@ Using methodology similar to relative rate testing the ortholog *K*:sub:`S` mode
 The ortholog *K*:sub:`S` mode estimate of palm--rice is then rate adjusted by rescaling it to twice the contribution of the palm branch (*K*:sub:`S` --> 2 * 0.365 = 0.73). The position of the (mode) divergence line thus largely shifts towards the left from *K*:sub:`S`\=\1.53 to *K*:sub:`S`\=\0.73 (Figure 2)---it is now rate-adjusted to the *K*:sub:`S` scale of the paralog *K*:sub:`S` distribution of oil palm and shifted to the other side of the second visible WGD peak.
 The rate-adjusted mixed plot offers a different interpretation for the phylogenetic placement of the older WGD signature (located at a *K*:sub:`S` of around 0.9) than a naive mixed plot would: instead of suggesting the WGD to be a palm-specific event it is now suggested to be an event shared by both rice and palm. This would be consistent with the previously proposed monocot *tau* WGD event.
 
-.. figure:: _images/mixed_palm_corrected.svg
+.. figure:: _images/mixed_palm_adjusted.svg
     :align: center
     :width: 800
 

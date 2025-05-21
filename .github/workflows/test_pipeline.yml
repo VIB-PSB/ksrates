@@ -15,30 +15,41 @@ on:
 jobs:
   build:
     # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       
       # Runs commands using the runners shell
       - name: Building dependency Docker container
         # Builds here the Docker container
         run: docker build . --file Dockerfile --tag ksrates
 
+      - name: Set Java 17 Environment
+        run: |
+          echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
+          echo "/usr/lib/jvm/java-17-openjdk-amd64/bin" >> $GITHUB_PATH
+
       - name: Installing Nextflow
         run: |
           sudo apt-get update
-          sudo apt-get install wget default-jdk
+          sudo apt-get install wget openjdk-17-jdk
           sudo wget -qO- https://get.nextflow.io | bash
           sudo mv nextflow /usr/bin
             
       - name: Running ksrates Nextflow pipeline
         run: |
           cd test
-          mv nextflow.config custom_nextflow.config
-          NXF_VER=21.10.6 nextflow run ../main.nf --config config_elaeis.txt -with-docker ksrates
+          NXF_VER=24.10.5 nextflow run ../main.nf --test -profile docker --config config_files/config_elaeis.txt --expert config_files/config_expert.txt -with-docker ksrates
         
       - name: Visualize output files
         if: ${{ always() }}
         run: ls -l test/rate_adjustment/elaeis
+
+      - uses: actions/upload-artifact@v4
+        name: Test output files
+        if: ${{ always() }}
+        with:
+          name: ksrates_test_pipeline_output
+          path: test/rate_adjustment/elaeis/

@@ -9,10 +9,9 @@ import ksrates.fc_configfile as fcConf
 import ksrates.fc_check_input as fcCheck
 import ksrates.fc_plotting as fcPlot
 import ksrates.fc_extract_ks_list as fc_extract_ks_list
-from ksrates.fc_plotting import COLOR_ANCHOR_HISTOGRAM
 import ksrates.fc_exp_log_mixture as fcEM
 from ksrates.fc_cluster_anchors import subfolder
-from ksrates.fc_rrt_correction import _ADJUSTMENT_TABLE
+from ksrates.fc_rrt_correction import _ADJUSTMENT_TABLE, interpretation_adjusted_plot
 
 
 def exp_log_mixture(config_file, expert_config_file, paralog_tsv_file, correction_table_file):
@@ -77,8 +76,9 @@ def exp_log_mixture(config_file, expert_config_file, paralog_tsv_file, correctio
   correction_table_file = fcCheck.get_argument_path(correction_table_file, default_path_correction_table_file, "Rate-adjustment table file")
   if correction_table_file == "":
       logging.warning("Rate-adjustment data are not available yet, only Ks paranome distribution will be plotted.")
-      correction_table = None
+      logging.info("")
       correction_table_available = False
+      correction_table = None
   else:
       with open(correction_table_file, "r") as f:
           correction_table = read_csv(f, sep="\t")
@@ -136,7 +136,8 @@ def exp_log_mixture(config_file, expert_config_file, paralog_tsv_file, correctio
                                                                                 reduced_gaussians_flag=reduced_gaussians, EM_data=True)
     all_models_fitted_parameters[model_id] = [means_peaks, stdevs_peaks, lambd_peaks, weights_peaks]
     bic_dict[model_id] = bic_peaks
-    fcEM.plot_fitted_comp(ax_peaks_ks, ax_peaks_logks, means_peaks, stdevs_peaks, lambd_peaks, weights_peaks, x_max_lim, peak_stats, correction_table_available, plot_correction_arrows)
+    fcEM.plot_fitted_comp(ax_peaks_ks, ax_peaks_logks, means_peaks, stdevs_peaks, lambd_peaks, 
+                          weights_peaks, x_max_lim, peak_stats, correction_table_available, plot_correction_arrows)
 
     # -----------------------------------------------------------------
 
@@ -190,9 +191,9 @@ def exp_log_mixture(config_file, expert_config_file, paralog_tsv_file, correctio
     parameters_list[model_id] = final_parameters[argmin(bic_from_same_num_comp)]
 
     plt.close()
+    logging.info(f"Saving PDF figure of mixture models [{species}/{output}/elmm_{species}_models_data_driven.pdf]")
     fig_peaks.savefig(os.path.join("rate_adjustment", f"{species}", output, f"elmm_{species}_models_data_driven.pdf"),
                       bbox_inches="tight", bbox_extra_artists=(sup_peaks,), format="pdf")
-    logging.info(f"Saving PDF figure of mixture models [{species}/{output}/elmm_{species}_models_data_driven.pdf]")
     logging.info("")
 
   # -----------------------------------------------------------------------------
@@ -236,9 +237,9 @@ def exp_log_mixture(config_file, expert_config_file, paralog_tsv_file, correctio
       parameters_list[model_id] = final_parameters[argmin(bic_from_same_num_comp)]
         
     plt.close()
+    logging.info(f"Saving PDF figure of mixture models [{species}/{output}/elmm_{species}_models_random.pdf]")
     fig_random.savefig(os.path.join("rate_adjustment", f"{species}", output, f"elmm_{species}_models_random.pdf"), bbox_inches="tight",
                                     bbox_extra_artists=(sup_random,), format="pdf")
-    logging.info(f"Saving PDF figure of mixture models [{species}/{output}/elmm_{species}_models_random.pdf]")
     logging.info("")
 
     # Generating tabular text file with all model parameters 
@@ -248,10 +249,17 @@ def exp_log_mixture(config_file, expert_config_file, paralog_tsv_file, correctio
     logging.info("Models are evaluated according to their BIC score.")
     # Get best model by lowest BIC score and plot it; print comparison with the other models
     best_model_id = fcEM.eval_best_model(bic_dict, outfile)
-    fcEM.plot_best_model(fig_best_model, ax_best_ks, species, ks_data, ks_weights, bin_list, bin_width, x_max_lim,
+    
+    logging.info(f"Saving PDF figure of best mixture model [mixed_{species}_elmm.pdf]")
+    letter_to_peak_dict = fcEM.plot_best_model(fig_best_model, ax_best_ks, species, ks_data, ks_weights, bin_list, bin_width, x_max_lim,
                         y_max_lim, best_model_id, all_models_init_parameters, all_models_fitted_parameters, 
                         correction_table, correction_table_available, consensus_peak_for_multiple_outgroups,
                         peak_stats, color_list, plot_correction_arrows, deconvoluted_data, max_ks_EM)
-  logging.info(f"Saving PDF figure of best mixture model [mixed_{species}_elmm.pdf]")
+  
+  if correction_table_available:
+    # Printing the automatic interpretation of the rate-adjusted mixed plot according to inferred (putative) WGD peaks
+    interpretation_adjusted_plot(latinSpecies, consensus_peak_for_multiple_outgroups, 
+                                letter_to_peak_dict, correction_table)
+  
   logging.info("")
   logging.info("All done")

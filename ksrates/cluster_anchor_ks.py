@@ -2,10 +2,9 @@ import os
 import sys
 import copy
 import logging
-import matplotlib.pyplot as plt
-from numpy import array, arange
+from numpy import array
 from pandas import read_csv
-from statistics import mean, median
+from statistics import median
 from scipy import stats
 import ksrates.fc_cluster_anchors as fcCluster
 import ksrates.fc_configfile as fcConf
@@ -14,7 +13,8 @@ import ksrates.fc_check_input as fcCheck
 import ksrates.fc_extract_ks_list as fc_extract_ks_list
 from ksrates.utils import init_logging
 from ksrates.fc_cluster_anchors import subfolder
-from ksrates.fc_rrt_correction import _ADJUSTMENT_TABLE
+from ksrates.fc_rrt_correction import _ADJUSTMENT_TABLE, interpretation_adjusted_plot
+from ksrates.fc_wgd import _OUTPUT_KS_FILE_PATTERN_ANCHORS
 
 def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, path_anchorpoints_txt, path_multiplicons_txt, path_segments_txt, path_list_elements_txt, path_ks_anchor_file, path_multiplicon_pair_txt):
     config = fcConf.Configuration(config_file, expert_config_file)
@@ -42,7 +42,7 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
     num_EM_initializations = config.get_num_EM_initializations() # how many times the fitting with N given components is initialized 
     logging.info(f" - maximum EM iterations: {max_EM_iterations}")
     logging.info(f" - number of EM initializations: {num_EM_initializations}")
-
+    logging.info("")
     # Getting the statistical measure for how to determine the representative value of an ortholog distribution
     peak_stats = config.get_peak_stats() # default is mode (other option, median)
 
@@ -54,6 +54,7 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
     correction_table_file = fcCheck.get_argument_path(correction_table_file, default_path_correction_table_file, "Rate-adjustment table file")
     if correction_table_file == "":
         logging.warning("Rate-adjustment data are not available yet, only anchor pair distribution will be plotted.")
+        logging.info("")
         correction_table_available = False
     else:
         with open(correction_table_file, "r") as f:
@@ -85,10 +86,10 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
     if path_list_elements_txt == "":
         logging.error(f"list_elements.txt file not found at default position [{default_path_list_elements_txt}].")
 
-    default_path_ks_anchor_file = os.path.join("paralog_distributions", f"wgd_{species}", f"{species}.ks_anchors.tsv")
-    path_ks_anchor_file = fcCheck.get_argument_path(path_ks_anchor_file, default_path_ks_anchor_file, f"{species}.ks_anchors.tsv file")
+    default_path_ks_anchor_file = os.path.join("paralog_distributions", f"wgd_{species}", _OUTPUT_KS_FILE_PATTERN_ANCHORS.format(species))
+    path_ks_anchor_file = fcCheck.get_argument_path(path_ks_anchor_file, default_path_ks_anchor_file, "Anchor pair Ks TSV file")
     if path_ks_anchor_file == "":
-        logging.error(f"{species}.ks_anchors.tsv file not found at default position [{default_path_ks_anchor_file}].")
+        logging.error(f"Anchor pair Ks TSV file not found at default position [{default_path_ks_anchor_file}].")
 
     if path_anchorpoints_txt == "" or path_multiplicons_txt == "" or path_segments_txt == "" or path_multiplicon_pair_txt == "" or path_list_elements_txt == "" or path_ks_anchor_file == "":
         logging.error("Exiting")
@@ -119,7 +120,6 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
 
     # Getting non-redundant segment pairs based on group of anchorpoints
     # Filtering away segment pairs whose anchorpoints list is a subset of another segment pair Ks list
-    logging.info("")
     logging.info(f"Obtaining a non-redundant list of anchorpoints Ks values")
     logging.info("")
 
@@ -214,7 +214,7 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
                 nonred_segment_pairs_segment_based_no_outliers[segment_pair] = anchorpoints_ks_list_current_segment
             else: # if 6 or more: remove outliers
                 median_ks = median(anchorpoints_ks_list_current_segment)
-                mad = stats.median_absolute_deviation(anchorpoints_ks_list_current_segment)
+                mad = stats.median_abs_deviation(anchorpoints_ks_list_current_segment)
                 lower_bound, upper_bound = median_ks - mad, median_ks + mad
                 ks_list_without_outliers = []
                 for ks in anchorpoints_ks_list_current_segment:
@@ -275,7 +275,7 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
         # Temporary not available because pomegranate is not on midas:
         #lognormal_clustered_medians = fcCluster.lognormalmm(all_medians_list, n_clusters)
 
-    # TODO: Decide whether to ignore Ks outliers in the segment pair Ks lists or decide instead to consider the complete Ks lists:
+    # todo: Decide whether to ignore Ks outliers in the segment pair Ks lists or decide instead to consider the complete Ks lists:
     ###chosen_nonred_segment_pair_ks_list = nonred_segment_pairs_segment_based
     chosen_nonred_segment_pair_ks_list = nonred_segment_pairs_segment_based_no_outliers
 
@@ -291,17 +291,18 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
     # Generate the plot for the mixed distribution with clusters of Ks
     fig_corr_first, ax_corr_first = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim,
                                     y_max_lim, "corrected", correction_table_available, plot_correction_arrows,
-                                    paranome_data=False, colinearity_data=True)
+                                    colinearity_data=True)
     fig_uncorr_first, ax_uncorr_first = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim,
                                     y_max_lim, "un-corrected", correction_table_available, plot_correction_arrows,
-                                    paranome_data=False, colinearity_data=True)
+                                    colinearity_data=True)
 
     # Plot the original complete anchor distribution in the background
     fcPlot.plot_histogram_for_anchor_clustering(ax_corr_first, anchor_ks_list, anchors_weights, bin_list, y_max_lim)
     fcPlot.plot_histogram_for_anchor_clustering(ax_uncorr_first, anchor_ks_list, anchors_weights, bin_list, y_max_lim)
 
     # Plot the clusters of anchor Ks and on top of them their KDEs
-    clusters_sorted_by_median, cluster_color_letter_list = fcCluster.plot_clusters(ax_corr_first, cluster_of_ks, bin_width, max_ks_para, peak_stats, correction_table_available, plot_correction_arrows)
+    clusters_sorted_by_median, cluster_color_letter_list, letter_to_x_coord_dict, cluster_peak_heights = fcCluster.plot_clusters(ax_corr_first, cluster_of_ks, 
+                                                         bin_width, max_ks_para, peak_stats, correction_table_available, plot_correction_arrows)
     fcCluster.plot_clusters(ax_uncorr_first, cluster_of_ks, bin_width, max_ks_para, peak_stats, correction_table_available, plot_correction_arrows)
 
     # Plotting the ortholog peaks coming from the adjustment, if available
@@ -315,7 +316,8 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
     # Removing the clusters that are poorly populated (Ks content <= 10%), very old (cluster median >= 3 Ks) or quite horizontally spread (IQR > 1.1 Ks)
     logging.info("")
     logging.info(f"Filtering away Ks clusters with unclear signal (poor Ks content, old Ks age or flat peak)...")
-    clean_clusters_of_ks = fcCluster.filter_degenerated_clusters(cluster_of_ks, clusters_sorted_by_median, cluster_color_letter_list)
+    clean_clusters_of_ks = fcCluster.filter_degenerated_clusters(cluster_of_ks, clusters_sorted_by_median, 
+                                                cluster_color_letter_list, cluster_peak_heights)
 
     # -----------------------------------------------------------------------------
 
@@ -324,9 +326,14 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
     if updated_n_clusters == n_clusters:
         logging.info("All clusters were retained")
 
+        if correction_table_available:
+            interpretation_adjusted_plot(latin_names[species], consensus_peak_for_multiple_outgroups, 
+                                letter_to_x_coord_dict, correction_table)
+
         # Saving the first plot with the final name (leaving away "unfiltered")
         logging.info(f"Saving mixed Ks plot with anchor Ks clusters [{fcCluster._ANCHOR_CLUSTERS_FILTERED.format(species)}]")
-        fcCluster.save_anchor_cluster_plot(fig_corr_first, fig_uncorr_first, ax_corr_first, ax_uncorr_first, species, latin_names, correction_table_available, cluster_of_ks, output, "second")
+        fcCluster.save_anchor_cluster_plot(fig_corr_first, fig_uncorr_first, ax_corr_first, ax_uncorr_first, species, 
+                                           latin_names, correction_table_available, cluster_of_ks, output, "second")
         logging.info("")
 
     elif updated_n_clusters == 0:
@@ -335,7 +342,8 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
 
     else: # if one ore more clusters were removed
         logging.info(f"Saving mixed Ks plot with unfiltered anchor Ks clusters [{fcCluster._ANCHOR_CLUSTERS_UNFILTERED.format(species)}]")
-        fcCluster.save_anchor_cluster_plot(fig_corr_first, fig_uncorr_first, ax_corr_first, ax_uncorr_first, species, latin_names, correction_table_available, cluster_of_ks, output, "first")
+        fcCluster.save_anchor_cluster_plot(fig_corr_first, fig_uncorr_first, ax_corr_first, ax_uncorr_first, species, 
+                                           latin_names, correction_table_available, cluster_of_ks, output, "first")
         logging.info("")
 
 
@@ -349,7 +357,6 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
         clean_medians_list = array(clean_medians_list)
         
         # Clustering with GaussianMixtureModel, k-means or lognormal mixture modeling
-        logging.info("")
         logging.info(f"Performing a second Ks clustering round with {updated_n_clusters} clusters through {clustering_method} for the remaining Ks values")
         if clustering_method == "Gaussian mixture modeling":
             gmm_clustered_medians2 = fcCluster.gmm(clean_medians_list, updated_n_clusters, max_EM_iterations, num_EM_initializations)
@@ -359,7 +366,8 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
             # Temporary not available because pomegranate is not on midas:
             #lognormal_clustered_medians2 = fcCluster.lognormalmm(clean_medians_list, updated_n_clusters)
 
-        filtered_cluster_of_ks, __, __, filtered_cluster_color_list = fcCluster.get_clusters_of_ks(gmm_clustered_medians2, clean_medians_list, clean_segment_medians_list, chosen_nonred_segment_pair_ks_list, "second")
+        filtered_cluster_of_ks, __, __, filtered_cluster_color_list = fcCluster.get_clusters_of_ks(gmm_clustered_medians2, clean_medians_list, 
+                                                                     clean_segment_medians_list, chosen_nonred_segment_pair_ks_list, "second")
 
         # Generate the plot for the mixed distribution with clusters of Ks
         fig_corr_second, ax_corr_second = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim,
@@ -379,18 +387,26 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
         fcPlot.plot_histogram_for_anchor_clustering(ax_uncorr_second, anchors_list_filtered, anchors_weights_filtered, bin_list, y_max_lim)
 
         # Plot the clusters of anchor Ks and on top of them their KDEs
-        fcCluster.plot_clusters(ax_corr_second, filtered_cluster_of_ks, bin_width, max_ks_para, peak_stats, correction_table_available, plot_correction_arrows)
-        fcCluster.plot_clusters(ax_uncorr_second, filtered_cluster_of_ks, bin_width, max_ks_para, peak_stats, correction_table_available, plot_correction_arrows)
+        __, __, letter_to_x_coord_dict, __ = fcCluster.plot_clusters(ax_corr_second, 
+                                       filtered_cluster_of_ks, bin_width, max_ks_para, peak_stats, 
+                                       correction_table_available, plot_correction_arrows)
+        fcCluster.plot_clusters(ax_uncorr_second, filtered_cluster_of_ks, bin_width, max_ks_para, peak_stats, 
+                                correction_table_available, plot_correction_arrows)
 
         # Plotting the ortholog peaks coming from the adjustment, if available
         if correction_table_available:
             logging.info("Plotting divergence lines")
             fcPlot.plot_divergences(correction_table, peak_stats, consensus_peak_for_multiple_outgroups, ax_uncorr_second,
                                     ax_corr_second, color_list, plot_correction_arrows)
+            
+            # Printing the automatic interpretation of the rate-adjusted mixed plot according to inferred (putative) WGD peaks
+            interpretation_adjusted_plot(latin_names[species], consensus_peak_for_multiple_outgroups, 
+                                        letter_to_x_coord_dict, correction_table)
 
         logging.info(f"Saving mixed Ks plot with filtered anchor Ks clusters [{fcCluster._ANCHOR_CLUSTERS_FILTERED.format(species)}]")
         logging.info("")
-        fcCluster.save_anchor_cluster_plot(fig_corr_second, fig_uncorr_second, ax_corr_second, ax_uncorr_second, species, latin_names, correction_table_available, filtered_cluster_of_ks, output, "second")
+        fcCluster.save_anchor_cluster_plot(fig_corr_second, fig_uncorr_second, ax_corr_second, ax_uncorr_second, species, 
+                                           latin_names, correction_table_available, filtered_cluster_of_ks, output, "second")
 
     logging.info("All done")
 

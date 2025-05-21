@@ -1,9 +1,11 @@
 __pycache__
 .vscode
 .nextflow
+.nextflow.log*
 docs/outdir
-test/work
-test/.nextflow*
-test/ortholog_distributions
-test/.nextflow
 test/rate_adjustment
+test/ortholog_distributions
+test/work
+example/rate_adjustment
+example/ortholog_distributions
+example/work

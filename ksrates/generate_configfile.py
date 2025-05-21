@@ -1,7 +1,6 @@
 import sys
 import configparser
 import logging
-from ksrates.utils import init_logging
 
 
 def generate_configfile(configfile_name):
@@ -32,6 +31,7 @@ def generate_configfile(configfile_name):
 
     Config.set("ANALYSIS SETTING", "paranome", "yes")
     Config.set("ANALYSIS SETTING", "collinearity", "no")
+    Config.set("ANALYSIS SETTING", "reciprocal_retention", "no")
     Config.set("ANALYSIS SETTING", "# analysis type for paralog data; allowed values: 'yes' and 'no'\n")
 
     Config.set("ANALYSIS SETTING", "gff_feature", "")

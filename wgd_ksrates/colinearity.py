@@ -25,8 +25,6 @@ The co-linearity analysis functions currently only support intragenomic
 analyses. It can be a bit finicky, but that's mainly due to I-ADHoRe and people
 messing up the GFF format, not me! (definitely also me)
 """
-# TODO: multiple genomes
-
 import os
 import subprocess
 import logging
@@ -46,8 +44,8 @@ def gff_parser(gff_file, feature='mRNA', gene_attribute='Parent'):
     with open(gff_file, 'r') as f:
         for i, line in enumerate(f):
 
-            # ignore comments
-            if line.startswith('#'):
+            # Ignore comments and empty lines
+            if line.startswith('#') or line == "\n":
                 continue
             line = line.strip().split('\t')
 
@@ -253,7 +251,7 @@ def segments_to_chords_table(segments_file, genome, output_file='chords.tsv'):
     and a target chromosome and begin and end coordinates for each chromosome
     respectively.
 
-    TODO: the length of each syntenic block should be included in the table as
+    todo: the length of each syntenic block should be included in the table as
     well with length defined as number of genes, not physical length.
 
     :param segments_file: pat to the I-ADHoRe segments.txt output file

@@ -1,6 +1,5 @@
 import sys
 import os
-import numpy as np
 import logging
 
 def check_IDs(fasta, species, gff=None):
@@ -84,15 +83,16 @@ def check_file_nonexistent_or_empty(filename, msg_prefix=""):
     if not os.path.exists(filename):
         # print error message separate to ensure print out
         logging.error(f"{msg_prefix} [{filename}] not found. Will exit.")
-        return True
+        trigger_exit = True
     else:
-        return False
+        trigger_exit = False
     if os.path.getsize(filename) == 0:
         # print error message separate to ensure print out
         logging.error(f"{msg_prefix} [{filename}] is empty. Will exit.")
-        return True
+        trigger_exit = True
     else:
-        return False
+        trigger_exit = False
+    return trigger_exit
 
 
 def get_possible_subpaths_for_file(path):
@@ -156,3 +156,28 @@ def get_argument_path(argument_path, default_path, message_prefix):
     else: # search in default path
         argument_path = check_file_existence_and_content_in_default_paths(default_path, message_prefix)
         return argument_path
+
+
+def check_recret_table_format(custom_recret_gfs_filepath):
+    """
+    Checks that the user-defined reciprocally retained gene family file
+    has a correct MCL-like format, namely it contains in each row at least
+    two elements (gene IDs). It also checks that the elements are space-
+    or tab-separated. It also skips any empty row.
+    
+    :param custom_recret_gfs_filepath: user-defined reciprocally retained GF file (MCL-like format)
+    :return: a boolean stating whether the file contains formatting errors (True) or it passed the check (False)
+    """
+    trigger_exit = False
+    with open(custom_recret_gfs_filepath, 'r') as custom_recret_gfs_file:
+        for row_number, row in enumerate(custom_recret_gfs_file):
+            if row.strip() == "": # Skip empty lines
+                continue
+            ids = row.split()
+            if len(ids) < 2:
+                logging.error(f"User-defined reciprocally retained gene family file must be space- or tab-separated and contain at least two gene IDs per family!")
+                logging.error(f"Error detected at row with index {row_number} in [{os.path.basename(custom_recret_gfs_file)}]. Fix and rerun the analysis.")
+                logging.error("Exiting.")
+                trigger_exit = True
+    return trigger_exit
+            

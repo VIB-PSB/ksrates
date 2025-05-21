@@ -1,12 +1,11 @@
 import os
-from numpy import arange, percentile, where, linspace, log
+from numpy import percentile, where, log
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import logging
 import seaborn
 from statistics import median
 from math import ceil
-from scipy import stats
 from sklearn.cluster import KMeans
 # NOT USED, THE FUNCTION IS COMMENTED from scipy.cluster.vq import kmeans2
 import ksrates.fc_kde_bootstrap as fcPeak
@@ -335,7 +334,8 @@ def get_clusters_of_ks(labels_of_clustered_medians, all_medians_list, all_segmen
     return cluster_of_ks, medians_per_cluster, segments_medians_per_cluster, cluster_color_letter_list
 
 
-def plot_clusters_of_medians(medians_per_cluster, cluster_color_letter_list, x_axis_max_limit_mixed_plot, bin_list, species, latin_name, output):
+def plot_clusters_of_medians(medians_per_cluster, cluster_color_letter_list, x_axis_max_limit_mixed_plot,
+                             bin_list, species, latin_name, output):
     """
     Generates a figure showing the clusters of segment pair medians. 
 
@@ -389,7 +389,8 @@ def assign_cluster_colors(cluster_of_ks):
     return clusters_sorted_by_median, cluster_color_letter_list
 
 
-def plot_clusters(axis, cluster_of_ks, bin_width, max_ks_para, peak_stats, correction_table_available, plot_correction_arrows):
+def plot_clusters(axis, cluster_of_ks, bin_width, max_ks_para, peak_stats, 
+                  correction_table_available, plot_correction_arrows):
     """
     Plots the anchor Ks clusters, their KDE lines a marker to show their median and . 
 
@@ -402,8 +403,12 @@ def plot_clusters(axis, cluster_of_ks, bin_width, max_ks_para, peak_stats, corre
     :param plot_correction_arrows: boolean tag to state whether to plot the adjustment arrows at the bottom of the adjusted plot (default: False)
     :return clusters_sorted_by_median: list of cluster IDs sorted according to their age
     :return cluster_color_letter_list: dictionary assigning to each cluster the right color and letter according to age
+    :return letter_to_x_coord_dict: dictionary associating cluster names (letters) to their peak x-coord (e.g. mode)
     """
     clusters_sorted_by_median, cluster_color_letter_list = assign_cluster_colors(cluster_of_ks)
+
+    letter_to_x_coord_dict = {}
+    cluster_peak_heights = {}
 
     zorder_ID = 50
     for cluster_id in clusters_sorted_by_median:
@@ -411,7 +416,9 @@ def plot_clusters(axis, cluster_of_ks, bin_width, max_ks_para, peak_stats, corre
         median_of_the_cluster = median(cluster_of_ks[cluster_id])
         
         __, kde_x, kde_y = fcPeak.compute_kde(cluster_of_ks[cluster_id], max_ks_para, bin_width)
-        mode_of_the_cluster_KDE, __ = fcPeak.get_mode_from_kde(kde_x, kde_y)
+        mode_of_the_cluster_KDE, peak_height_of_the_cluster_KDE = fcPeak.get_mode_from_kde(kde_x, kde_y)
+
+        cluster_peak_heights[cluster_id] = peak_height_of_the_cluster_KDE
 
         # transparently color the area under the KDE curve
         kde_area_xy = [(kde_x[0], 0), *zip(kde_x, kde_y), (kde_x[-1], 0)]
@@ -430,11 +437,14 @@ def plot_clusters(axis, cluster_of_ks, bin_width, max_ks_para, peak_stats, corre
         axis.plot(kde_x, kde_y, color=cluster_color_letter_list[cluster_id][0], zorder=zorder_ID + 1)
         
         # plot a marker to highlight the median of each cluster
-        plot_cluster_marker(axis, median_of_the_cluster, kde_x, kde_y, cluster_color_letter_list[cluster_id][0],
+        x_coord_cluster_peak = plot_cluster_marker(axis, median_of_the_cluster, kde_x, kde_y, cluster_color_letter_list[cluster_id][0],
                                    cluster_color_letter_list[cluster_id][1], zorder_ID + 2, peak_stats, correction_table_available, plot_correction_arrows)
+        
+        # Assign to the cluster letter its peak (e.g. mode) x-coordinate
+        letter_to_x_coord_dict[cluster_color_letter_list[cluster_id][1]] = x_coord_cluster_peak
 
         zorder_ID += 10
-    return clusters_sorted_by_median, cluster_color_letter_list
+    return clusters_sorted_by_median, cluster_color_letter_list, letter_to_x_coord_dict, cluster_peak_heights
 
 
 def plot_cluster_marker(axis, median_of_the_cluster, kde_x, kde_y, color, letter, zorder_ID, peak_stats, correction_table_available, plot_correction_arrows):
@@ -456,6 +466,7 @@ def plot_cluster_marker(axis, median_of_the_cluster, kde_x, kde_y, color, letter
     :param peak_stats: states whether the cluster peak is intended as median or mode
     :param correction_table_available: boolean tag to state if the adjustment table data are available or not
     :param plot_correction_arrows: boolean tag to state whether to plot the adjustment arrows at the bottom of the adjusted plot (default: False)
+    :return: the x-coordinate of the mode/median of the current anchor cluster
     """
     if peak_stats == "median":
         # Get the point of the KDE line that is as closest as possible to the median of the raw data
@@ -496,8 +507,9 @@ def plot_cluster_marker(axis, median_of_the_cluster, kde_x, kde_y, color, letter
     axis.text(x=x_value, y=y_value + (y_height * marker_y_height_fraction), s=letter, fontsize=10,
               horizontalalignment='center', verticalalignment='center', clip_on=True, zorder=zorder_ID + 5, color='w')
 
+    return x_value
 
-def filter_degenerated_clusters(cluster_of_ks, clusters_sorted_by_median, cluster_color_letter_list):
+def filter_degenerated_clusters(cluster_of_ks, clusters_sorted_by_median, cluster_color_letter_list, cluster_peak_heights):
     """
     Removes the clusters that are likely to be just noise or that are too degenerated for the visualization.
     Criteria for degenerated clusters are: Ks content less than 10% of the total (poorly populated),
@@ -506,6 +518,7 @@ def filter_degenerated_clusters(cluster_of_ks, clusters_sorted_by_median, cluste
     :param cluster_of_ks: dictionary that associates to each cluster its anchor Ks list
     :param clusters_sorted_by_median: list of cluster IDs sorted according to their age
     :param cluster_color_letter_list: dictionary assigning to each cluster the right color and letter according to age
+    :param cluster_peak_heights: dictionary storing the peak height (value) of each cluster (key)
     :return clean_clusters_of_ks: clusters_of_ks without the clusters with bad signal 
     """
     tot_ks_in_clusters = 0
@@ -515,22 +528,41 @@ def filter_degenerated_clusters(cluster_of_ks, clusters_sorted_by_median, cluste
         tot_ks_list_in_clusters.extend(cluster_of_ks[cluster])
 
     clean_clusters_of_ks = {}
-    for cluster in clusters_sorted_by_median:
+    for i in range(len(clusters_sorted_by_median)):
+        cluster = clusters_sorted_by_median[i]
         ks_list = cluster_of_ks[cluster]
-        # Get median, first quartile range, third quartile and interquartile range
+        # Get median, first quartile range, third quartile, interquartile range and height
         median_ks = percentile(ks_list, 50, interpolation="midpoint")
         q1 = percentile(ks_list, 25, interpolation="midpoint") 
         q3 = percentile(ks_list, 75, interpolation="midpoint") 
         iqr = q3 - q1
+        height = cluster_peak_heights[cluster]
 
         evaluation = []
         percentage_ks_content = len(ks_list) / tot_ks_in_clusters
-        if percentage_ks_content <= 0.10: # Discard clusters that are poorly populated ( less than 10% of the total Ks)
+
+        # Discard if it looks like a small spurious peak close to 0 Ks
+        # If the current cluster is NOT the "oldest/last" cluster, compare its height with the successive cluster
+        j = i+1
+        if j < len(clusters_sorted_by_median): 
+            successive_cluster_id = clusters_sorted_by_median[j]
+            height_successive_peaks = cluster_peak_heights[successive_cluster_id]
+            # If it's lower than the successive (and older) peak, then it's very likely spurious,
+            # because younger peaks are (always) higher than older ones
+            if height < height_successive_peaks:
+                evaluation.append(f"smaller height than the successive WGD peak")
+
+
+        if percentage_ks_content <= 0.10:
+            # Discard clusters that are poorly populated ( less than 10% of the total Ks)
             evaluation.append(f"neglectable Ks content (< {round(10)}% of data)")
-        if median_ks >= 3: # Discard clusters whose median is very old
-            evaluation.append("high median (> 3 Ks)")
-        if iqr >= 1.1: # Discard clusters that tend to be flat, with no clear peak
-            evaluation.append("highly spread data (IQR > 1.1)")
+        if median_ks >= 3:
+            # Discard clusters whose median is very old (not reliable due to saturation and stochasticity)
+            evaluation.append("high median (>= 3 Ks)")
+        if median_ks >= 2.6 and iqr >= 1.1:
+            # Discard clusters that are widely spread with no clear peak because they make interpretation tricky;
+            # retain however those with young mode (< 2.6) because their large width could be just due to a long right tail up to e.g. 5 Ks
+            evaluation.append("highly spread data (IQR >= 1.1)")
         
         # If the clusters has no negative features, let's add it in the "cleaned list", otherwise just explain why is discarded
         cluster_letter = cluster_color_letter_list[cluster][1]
@@ -543,31 +575,48 @@ def filter_degenerated_clusters(cluster_of_ks, clusters_sorted_by_median, cluste
             logging.info(f"- Cluster {cluster_letter}: Ks content {round(percentage_ks_content * 100, 2)}%, median {round(median_ks, 2)}, IQR {round(iqr, 2)} --> Discarded due to {evaluation[0]} and {evaluation[1]}")   
         elif len(evaluation) == 3:
             logging.info(f"- Cluster {cluster_letter}: Ks content {round(percentage_ks_content * 100, 2)}%, median {round(median_ks, 2)}, IQR {round(iqr, 2)} --> Discarded due to {evaluation[0]}, {evaluation[1]} and {evaluation[2]}")   
+        elif len(evaluation) == 4:
+            logging.info(f"- Cluster {cluster_letter}: Ks content {round(percentage_ks_content * 100, 2)}%, median {round(median_ks, 2)}, IQR {round(iqr, 2)} --> Discarded due to {evaluation[0]}, {evaluation[1]}, {evaluation[2]} and {evaluation[3]}")
     return clean_clusters_of_ks
 
 
-def create_legend(axis, legend_size):
+def create_legend_anchors(axis, cluster_of_ks, legend_size):
     """
-    Places the legend elements associated to the total anchor Ks histogram and to the clusters 
-    at the beginning of the legend (by default they are placed at the end of the legend)
+    Sort the legend items in the following order: all anchor pairs, plotted clusters 
+    of anchor pairs, spacing line, list of divergences.
 
     :param axis: the axis object from which the legend is taken
+    :param cluster_of_ks: number of plotted clusters
     :param legend_size: size of the legend box as a tuple of format "(x, y, width, height)"
     :return: the updated legend object
     """
-    handles, labels = axis.get_legend_handles_labels()
-    # empty patch used as spacer between histograms and divergence line legend entries
-    empty_rect = mpatches.Patch(fill=False, edgecolor='none', visible=False)
+    # Get number of plotted clusters
+    num_of_clusters = len(cluster_of_ks.keys())
     
-    background_distr_label_index = labels.index("All anchor pairs")
-    total_anchors_and_clusters_labels = labels[background_distr_label_index:]
-    del labels[background_distr_label_index:]
-    total_anchors_and_clusters_handles = handles[background_distr_label_index:]
-    del handles[background_distr_label_index:]
+    # Get current handles
+    handles, labels = axis.get_legend_handles_labels()
+    # Example of labels:
+    # ['All anchor pairs', first_anchor_cluster, second_anchor_cluster, first_divergence_age, second_divergence_age]
+    
+    sorted_handles, sorted_labels = [], []
+    # First add the anchor rectangular handle and text "All anchor pairs"
+    sorted_handles.append(handles[0])
+    sorted_labels.append(labels[0])
+    # Then add all entries related to plotted anchor clusters, which start from second element (index 1) until index 1+num_of_clusters
+    sorted_handles.extend(handles[1:num_of_clusters+1])
+    sorted_labels.extend(labels[1:num_of_clusters+1])
+    # Add transparent rectangle handle with empty string label as spacer between clusters and divergence entries
+    transparent_rect = mpatches.Patch(fill=False, edgecolor='none', visible=False)
+    sorted_handles.append(transparent_rect)
+    sorted_labels.append("")
 
-    sorted_handles = total_anchors_and_clusters_handles + [empty_rect, "Divergence with:"] + handles
-    sorted_labels = total_anchors_and_clusters_labels + ["", ""] + labels
-
+    # Add text "Divergence with:" as handle and an empty string as label
+    sorted_handles.append("Divergence with:")
+    sorted_labels.append("")
+    # Add all entries related to divergences, starting from the second element until before "Exponential"
+    sorted_handles.extend(handles[num_of_clusters+1:])
+    sorted_labels.extend(labels[num_of_clusters+1:])
+    
     lgd = axis.legend(sorted_handles, sorted_labels, handlelength=1.5, mode="expand", loc="upper left",
                       bbox_to_anchor=legend_size)
     return lgd
@@ -600,7 +649,7 @@ def save_anchor_cluster_plot(fig_corr, fig_uncorr, ax_corr, ax_uncorr, species, 
         legend_size = fcPlot.define_legend_size(ax_corr)
         chart_box = ax_corr.get_position()
         ax_corr.set_position([chart_box.x0, chart_box.y0, chart_box.width*0.65, chart_box.height])
-        lgd = create_legend(ax_corr, legend_size)
+        lgd = create_legend_anchors(ax_corr, cluster_of_ks, legend_size)
     
         fig_corr.savefig(figure_file_path, bbox_extra_artists=(ax_corr, lgd, fig_corr._suptitle), bbox_inches="tight",
                      transparent=True, format="pdf")

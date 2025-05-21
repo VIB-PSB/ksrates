@@ -45,11 +45,11 @@ import logging
 import subprocess as sp
 import glob
 import traceback
+from datetime import datetime
 
-
-# maximum 1% of the paralog gene families can fail, e.g. 30 out of 3000
+# Maximum 1% of the paralog gene families can fail, e.g. 30 out of 3000
 _THRESHOLD_FAILED_PARALOG_GF = 0.01
-# maximum 5% of the ortholog gene families can fail, e.g. 400 out of 8000
+# Maximum 5% of the ortholog gene families can fail, e.g. 400 out of 8000
 _THRESHOLD_FAILED_ORTHOLOG_GF = 0.05
 
 
@@ -209,6 +209,7 @@ def _calculate_weighted_ks(clustering, pairwise_estimates,
                     pairwise_estimates['Ks'].iloc[i, j],
                     pairwise_estimates['Ka'].iloc[i, j],
                     pairwise_estimates['Omega'].iloc[i, j],
+                    pairwise_estimates['t'].iloc[i, j],
                     distance, grouping_node
                 ]
 
@@ -217,7 +218,7 @@ def _calculate_weighted_ks(clustering, pairwise_estimates,
 
     df = pd.DataFrame.from_dict(weights, orient='index')
     df.columns = ['Paralog1', 'Paralog2', 'Family',
-                  'Ks', 'Ka', 'Omega', 'Distance', 'Node']
+                  'Ks', 'Ka', 'Omega', 't', 'Distance', 'Node']
 
     return df
 
@@ -258,7 +259,7 @@ def analyse_family_try_except(analysis_function, threshold_failed,
                               codeml='codeml', preserve=False, times=1,
                               min_length=100, method='alc', aligner='muscle',
                               output_dir='./out', n_families=-1,
-                              last_family_id=None):
+                              last_family_id=None, logging_level="INFO"):
     """
     Wrapping the analysis in a try/except checkpoint, so that if one family has
     a problem the whole loop is not interrupted and only that family will be
@@ -268,6 +269,7 @@ def analyse_family_try_except(analysis_function, threshold_failed,
         wrapped. It can be analyse_family or analyse_family_pairwise; they both
         accept the same argument list.
     """
+    
     if len(glob.glob("*.exception")) / n_families > threshold_failed:
         logging.error(f"Too many gene family analyses failed, "
                       f"terminating threads...")
@@ -277,7 +279,7 @@ def analyse_family_try_except(analysis_function, threshold_failed,
     try:
         analysis_function(family_id, family, nucleotide, tmp, codeml, preserve,
                           times, min_length, method, aligner, output_dir,
-                          n_families, is_last_family)
+                          n_families, is_last_family, logging_level)
     except Exception:
         # this also prints the exception:
         logging.exception(f"Unexpected internal error during analysis of gene "
@@ -316,7 +318,7 @@ def analyse_family_try_except(analysis_function, threshold_failed,
 def analyse_family(
         family_id, family, nucleotide, tmp='./', codeml='codeml',
         preserve=False, times=1, min_length=100, method='alc', aligner='muscle',
-        output_dir='./out', n_families=-1, is_last_family=False
+        output_dir='./out', n_families=-1, is_last_family=False, logging_level=None
 ):
     """
     Wrapper function for the analysis of one paralog family. Performs alignment
@@ -339,6 +341,7 @@ def analyse_family(
     :param output_dir: output directory
     :return: ``csv`` file with results for the paralog family of interest
     """
+    
     # pre-processing -----------------------------------------------------------
     if os.path.isfile(os.path.join(tmp, family_id + '.Ks')):
         logging.info('Found {}.Ks in tmp, will use this'.format(family_id))
@@ -372,7 +375,7 @@ def analyse_family(
     if not successful:
         logging.warning("Failed to obtain codon alignment for gene family "
                         "{}".format(family_id))
-        # TODO: why is the rest of the analysis not skipped in this case??
+        # todo: why is the rest of the analysis not skipped in this case??
 
     # Calculate Ks values (codeml) ---------------------------------------------
     codeml = Codeml(codeml=codeml, tmp=tmp, id=family_id)
@@ -414,31 +417,13 @@ def analyse_family(
             o.write('No clustering/weighting results')
         return
 
-    # preserve or remove data --------------------------------------------------
-    if preserve:
-        shutil.move(msa_path, os.path.join(output_dir, 'msa'))
-        ### sp.run(['mv', msa_path, os.path.join(output_dir, 'msa')])
-        shutil.move(codeml_out, os.path.join(output_dir, 'codeml'))
-        ### sp.run(['mv', codeml_out, os.path.join(output_dir, 'codeml')])
-        if tree_path:
-            shutil.move(tree_path, os.path.join(output_dir, 'trees'))
-            ### sp.run(['mv', tree_path, os.path.join(output_dir, 'trees')])
-    else:
-        os.remove(msa_path)
-        ### sp.run(['rm', msa_path])
-        os.remove(codeml_out)
-        ### sp.run(['rm', codeml_out])
-        if tree_path:
-            os.remove(tree_path)
-            ### sp.run(['rm', tree_path])
-
 
 # PAIRWISE ANALYSIS ------------------------------------------------------------
 def analyse_family_pairwise(
         family_id, family, nucleotide, tmp='./', codeml='codeml',
         preserve=False, times=1, min_length=100, method='alc',
         aligner='muscle', output_dir='./out', n_families=-1,
-        is_last_family=False
+        is_last_family=False, logging_level=None
 ):
     """
     Perform Ks analysis for one gene family using teh pairwise approach. The
@@ -496,6 +481,7 @@ def analyse_family_pairwise(
     :param output_dir: output directory
     :return: nada
     """
+
     # pre-processing -----------------------------------------------------------
     if os.path.isfile(os.path.join(tmp, family_id + '.Ks')):
         logging.info('Found {}.Ks in tmp, will use this'.format(family_id))
@@ -619,7 +605,7 @@ def analyse_family_pairwise(
 def ks_analysis_one_vs_one(
         nucleotide_sequences, protein_sequences, orthologs, tmp_dir='./tmp',
         output_dir='./ks.out', codeml_path='codeml', aligner='muscle',
-        preserve=True, times=1, n_threads=4
+        preserve=False, times=1, n_threads=1, logging_level="INFO"
 ):
     """
     Calculate a Ks distribution for one vs. one orthologs.
@@ -640,14 +626,6 @@ def ks_analysis_one_vs_one(
     orthologs = process_gene_families(orthologs, ignore_prefix=False)
     protein = get_sequences(orthologs, protein_sequences)
 
-    # preserve intermediate data if asked --------------------------------------
-    if preserve:
-        # msa and codeml results
-        if not os.path.isdir(os.path.join(output_dir, 'msa')):
-            os.mkdir(os.path.join(output_dir, 'msa'))
-        if not os.path.isdir(os.path.join(output_dir, 'codeml')):
-            os.mkdir(os.path.join(output_dir, 'codeml'))
-
     n_families = len(protein.keys())
 
     # start analysis -----------------------------------------------------------
@@ -658,11 +636,11 @@ def ks_analysis_one_vs_one(
     try:
         # if a gene family analysis fails with an error it will be skipped
         # if too many analyses fail the loop exits with a GeneFamiliesError
-        Parallel(n_jobs=n_threads)(delayed(analyse_family_try_except)(
+        Parallel(n_jobs=n_threads, backend="multiprocessing")(delayed(analyse_family_try_except)(
             analyse_family, _THRESHOLD_FAILED_ORTHOLOG_GF,
             family, protein[family], nucleotide_sequences, tmp_dir,
             codeml_path, preserve, times, 0, 'alc', aligner,
-            output_dir, n_families, last_family
+            output_dir, n_families, last_family, logging_level
         ) for family in protein.keys())
     except GeneFamiliesError:
         _log_failed_families_threshold(_THRESHOLD_FAILED_ORTHOLOG_GF,
@@ -695,8 +673,14 @@ def ks_analysis_one_vs_one(
     # adding weights for completeness
     results_frame = compute_weights(results_frame)
 
-    logging.info('Removing tmp directory')
-    shutil.rmtree(tmp_dir)
+    if preserve:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        tmp_dir_preserved = os.path.join(os.path.dirname(tmp_dir), f"{os.path.basename(tmp_dir)}_{timestamp}")
+        os.rename(tmp_dir, tmp_dir_preserved)
+        logging.info(f"Intermediate files for ortholog Ks estimate are preserved in {tmp_dir_preserved}")
+    else:
+        logging.info('Removing tmp directory')
+        shutil.rmtree(tmp_dir)
 
     return results_frame
 
@@ -704,9 +688,9 @@ def ks_analysis_one_vs_one(
 def ks_analysis_paranome(
         nucleotide_sequences, protein_sequences, paralogs,
         tmp_dir='./tmp', output_dir='./ks.out', codeml_path='codeml',
-        preserve=True, times=1, ignore_prefixes=False, n_threads=4,
+        preserve=False, times=1, ignore_prefixes=False, n_threads=1,
         min_length=100, method='alc', aligner='muscle',
-        pairwise=False, max_gene_family_size=142
+        pairwise=False, max_gene_family_size=142, logging_level="INFO"
 ):
     """
     Calculate a Ks distribution for a whole paranome.
@@ -734,18 +718,7 @@ def ks_analysis_paranome(
     # ignore prefixes in gene families, since only one species -----------------
     paralogs = process_gene_families(paralogs, ignore_prefix=ignore_prefixes)
     protein = get_sequences(paralogs, protein_sequences)
-
-    # preserve intermediate data if asked --------------------------------------
-    if preserve:
-        # msa and codeml results
-        if not os.path.isdir(os.path.join(output_dir, 'msa')):
-            os.mkdir(os.path.join(output_dir, 'msa'))
-        if not os.path.isdir(os.path.join(output_dir, 'codeml')):
-            os.mkdir(os.path.join(output_dir, 'codeml'))
-        if method in ['fasttree', 'phyml']:
-            if not os.path.isdir(os.path.join(output_dir, 'trees')):
-                os.mkdir(os.path.join(output_dir, 'trees'))
-
+    
     # sort family ids by family size -------------------------------------------
     # NOTE: I changed this so that filtering is also performed in the
     # non-pairwise analysis.
@@ -753,8 +726,9 @@ def ks_analysis_paranome(
                                             max_gene_family_size)
     n_families = len(sorted_families)
     if n_families == 0:
-        logging.error("No non-singleton gene families provided.")
-        exit()
+        logging.error("No gene families were found including at least two member genes. Can't estimate Ks!")
+        logging.error("Exiting.")
+        sys.exit(1)
 
     # start analysis -----------------------------------------------------------
     logging.info('Started analysis of {} gene families in parallel using '
@@ -767,11 +741,11 @@ def ks_analysis_paranome(
     try:
         # if a gene family analysis fails with an error it will be skipped
         # if too many analyses fail the loop exits with a GeneFamiliesError
-        Parallel(n_jobs=n_threads)(delayed(analyse_family_try_except)(
+        Parallel(n_jobs=n_threads, backend="multiprocessing")(delayed(analyse_family_try_except)(
             analysis_function, _THRESHOLD_FAILED_PARALOG_GF,
             family[0], protein[family[0]], nucleotide_sequences, tmp_dir,
             codeml_path, preserve, times, min_length, method, aligner,
-            output_dir, n_families, sorted_families[n_families-1][0]
+            output_dir, n_families, sorted_families[n_families-1][0], logging_level,
         ) for family in sorted_families)
     except GeneFamiliesError:
         _log_failed_families_threshold(_THRESHOLD_FAILED_PARALOG_GF,
@@ -804,8 +778,14 @@ def ks_analysis_paranome(
     logging.info("Computing weights, outlier cut-off at Ks > 20")
     results_frame = compute_weights(results_frame)
 
-    logging.info('Removing tmp directory')
-    shutil.rmtree(tmp_dir)
+    if preserve:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        tmp_dir_preserved = os.path.join(os.path.dirname(tmp_dir), f"{os.path.basename(tmp_dir)}_{timestamp}")
+        os.rename(tmp_dir, tmp_dir_preserved)
+        logging.info(f"Intermediate files for paralog Ks estimate were preserved in {tmp_dir_preserved}")
+    else:
+        logging.info('Removing tmp directory')
+        shutil.rmtree(tmp_dir)
 
     return results_frame
 

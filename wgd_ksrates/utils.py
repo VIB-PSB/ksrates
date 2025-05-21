@@ -35,6 +35,7 @@ import subprocess
 from progressbar import ProgressBar
 from numpy import mean, std
 from scipy.spatial.distance import cdist
+from pandas import read_csv
 
 
 def can_i_run_software(software):
@@ -142,7 +143,7 @@ def process_gene_families(gene_family_file, ignore_prefix=False):
     """
     Processes a raw gene family file as e.g. from MCL output into a generic
     dictionary structure. MCL raw file consists of one gene family per line,
-    including tab separated gene IDs, (without gene family ID !).
+    including tab separated gene IDs, (without gene family ID!).
 
     Example::
 
@@ -164,15 +165,55 @@ def process_gene_families(gene_family_file, ignore_prefix=False):
     ID = 1
 
     with open(gene_family_file, 'r') as f:
-        for line in f:
-            genes = line.strip().split("\t")
-            if ignore_prefix:
-                if '|' in genes[0]:
-                    genes = [gene.split('|')[1] for gene in genes]
-            gene_family_dict["GF_{:06d}".format(ID)] = genes
-            ID += 1
+        genes_per_family = f.readlines()
+
+    # if top == None:  # No top reciprocally retained gene families are asked
+    for line in genes_per_family:
+        genes = line.strip().split("\t")
+        if ignore_prefix:
+            if '|' in genes[0]:
+                genes = [gene.split('|')[1] for gene in genes]
+        gene_family_dict["GF_{:06d}".format(ID)] = genes
+        ID += 1
 
     return gene_family_dict
+
+    # Note: process_gene_families() used to have a diamond-related "else"-block.
+    
+    # First ks_analysis_paranome() was provided with "top" and "top_gfs_filtered_with_rank", defined as follows:
+        # if not filter_false_predictions and not filter_zero_false_predictions:
+        #     top_gfs_filtered_with_rank = os.path.join(ksrates_rec_ret_dir, f"gf_list_top_{top}_{rank_type}.tsv")
+        # elif filter_false_predictions:
+        #     top_gfs_filtered_with_rank = os.path.join(ksrates_rec_ret_dir, f"gf_list_top_{top}_{rank_type}_filtered_false_predictions.tsv")
+        # elif filter_zero_false_predictions:
+        #     top_gfs_filtered_with_rank = os.path.join(ksrates_rec_ret_dir, f"gf_list_top_{top}_{rank_type}_filtered_zero_false_predictions.tsv")
+
+    # :param top: (only for diamond - not used) number of top reciprocally retained GFs from the core-angiosperm 9178 ranking
+    # :param top_gfs_filtered_with_rank: (only for diamond - not used) list of gene families along the 'top' ranking
+
+    # Then process_gene_families(gene_family_file, top=None, top_gfs_filtered_with_rank=None, ignore_prefix=False) would continue with:
+    # else:
+        #     # Get a subset of such top 2000 according to a previous filtering step (i.e. few or zero false predictions)
+        #     # The file lists the GFs IDs in the first column and the ranks in the second column
+        #     top_gfs = read_csv(top_gfs_filtered_with_rank, sep="\t", header=None)
+        #     if len(top_gfs.columns) == 1:  # This is the file coming from the top 2000 GFs, without second column for the rank
+        #         rank_of_filtered_gfs = range(1, top+1)
+        #     elif len(top_gfs.columns) == 2:  # This is the file coming from the filtered top 2000 GFs, with the rank as second column   
+        #         rank_of_filtered_gfs = list(read_csv(top_gfs_filtered_with_rank, sep="\t", header=None)[1])
+
+        #     for rank in range(1, top+1):
+        #         # Take into account only the GFs that belong to the filtered subset
+        #         if rank in rank_of_filtered_gfs:
+        #             line = genes_per_family[rank-1]  # rank is 1, but first row index is 0
+
+        #             genes = line.strip().split("\t")
+        #             if len(genes) <= 1: # Either single member or zero members
+        #                 continue
+        #             if ignore_prefix:
+        #                 if '|' in genes[0]:
+        #                     genes = [gene.split('|')[1] for gene in genes]
+        #             gene_family_dict["GF_{:06d}".format(ID)] = genes
+        #             ID += 1
 
 
 def uniq_id():
@@ -344,7 +385,7 @@ def translate_cds(sequence_dict, skip_invalid=False):
         stop codon or end)
     :return: dictionary with gene IDs and proteins sequences
     """
-    # TODO I should just use the Biopython translator
+    # todo: I should just use the Biopython translator
     aa_dict = {
         'ATA': 'I', 'ATC': 'I', 'ATT': 'I', 'ATG': 'M',
         'ACA': 'T', 'ACC': 'T', 'ACG': 'T', 'ACT': 'T',

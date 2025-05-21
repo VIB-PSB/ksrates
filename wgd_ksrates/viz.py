@@ -24,7 +24,7 @@ The ``viz`` module collects several common visualization functions for ``wgd``
 as well as the interactive boke application for plotting multiple Ks
 distributions with kernel density estimates interactively.
 """
-# TODO redundant code for the color vs. non-colored dotplot
+# todo: redundant code for the color vs. non-colored dotplot
 from .modeling import filter_group_data
 import plumbum as pb
 import matplotlib

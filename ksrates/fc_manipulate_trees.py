@@ -1,7 +1,7 @@
 import os
 os.environ['QT_QPA_PLATFORM']='offscreen'
 import sys
-from ete3 import Tree, TreeStyle, NodeStyle, Face, RectFace, TextFace, StaticItemFace
+from ete3 import Tree, TreeStyle, NodeStyle, Face, TextFace, StaticItemFace
 from ete3.treeview.qt4_face_render import _TextFaceItem
 from PyQt5.QtCore import QRectF
 from PyQt5.QtWidgets import QGraphicsRectItem
