@@ -103,8 +103,12 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
     if colinearity:
         logging.info('---')
         logging.info("Running wgd colinearity Ks pipeline...")
+
+        min_ks_anchors = config.get_min_ks_anchors()
+        logging.info(f" - minimum anchor pair Ks value accepted: {min_ks_anchors}")
+
         fc_wgd.ks_colinearity(species, gff, base_dir=paralog_dists_dir, gff_feature=gff_feature,
-                            gff_gene_attribute=gff_gene_attribute, n_threads=n_threads)
+                            gff_gene_attribute=gff_gene_attribute, n_threads=n_threads, min_ks_anchors=min_ks_anchors)
         logging.info(datetime.datetime.today().ctime())
         logging.info("")
 

@@ -12,3 +12,4 @@ max_mixture_model_ks = 5
 max_gene_family_size = 200
 top_reciprocally_retained_gfs = 2000
 use_original_orthomcl_version = no
+min_ks_anchor_pairs = 0.05

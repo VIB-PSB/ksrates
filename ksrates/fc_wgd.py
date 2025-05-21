@@ -878,7 +878,7 @@ def all_v_all_blast(query, db, output_directory='./', output_file='blast.tsv', e
 
 
 def ks_colinearity(species_name, gff_file, base_dir='.', gff_feature='mRNA', gff_gene_attribute='Parent', n_threads=1,
-                   overwrite=False):
+                   overwrite=False, min_ks_anchors=0.05):
     """
     Modified from wgd_cli.py
 
@@ -893,6 +893,9 @@ def ks_colinearity(species_name, gff_file, base_dir='.', gff_feature='mRNA', gff
         column), e.g. 'ID' or 'Parent'
     :param n_threads: number of threads to use
     :param overwrite: overwrite existing results
+    :param: minimum Ks for anchor pairs for which we assign a non-0 weight, i.e.
+             it gets plotted in the anchor Ks distribution; e.g. by default,
+             Ks smaller than 0.05 are assigned weight 0 and are not plotted.
     :return: nothing
     """
 
@@ -985,7 +988,7 @@ def ks_colinearity(species_name, gff_file, base_dir='.', gff_feature='mRNA', gff
     # Ks distribution for anchors
     logging.info("Constructing Ks distribution for anchors")
     anchor_points_file = os.path.join(tmp_ks_anchors, 'i-adhore_out', 'anchorpoints.txt')
-    _write_anchor_pairs_ks(anchor_points_file, ks_file, os.path.join(output_dir, output_file))
+    _write_anchor_pairs_ks(anchor_points_file, ks_file, os.path.join(output_dir, output_file), min_ks_anchors)
 
     logging.info('Removing i-ADHoRe tmp directory')
     subfolder = os.path.join(output_dir, f"{species_name}_i-adhore")
@@ -1153,13 +1156,13 @@ def _run_iadhore(config_file):
 
     return
 
-def compute_weights_anchor_pairs(df, min_ks=0.05, max_ks=20, aln_id=0, aln_len=300,
+def compute_weights_anchor_pairs(df, min_ks_anchors=0.05, max_ks=20, aln_id=0, aln_len=300,
         aln_cov=0):
     """
     Modified from wgd.
     Computes the weights of anchor pair Ks estimates.
     
-    :param min_ks: minimum Ks value considered (default 0.05 Ks)
+    :param min_ks_anchors: minimum Ks value considered (default 0.05 Ks)
     :param max_ks: maximum Ks value considered (default 20 Ks)
     :param aln_id: minimum alignment identity considered (default 0)
     :param aln_len: minimum alignment length (with gaps) considered (default 300)
@@ -1167,12 +1170,12 @@ def compute_weights_anchor_pairs(df, min_ks=0.05, max_ks=20, aln_id=0, aln_len=3
     :return: dataframe with updated weights ("outliers excluded", i.e.
              weights are set only for pairs which have alignment identity, length 
              and coverage greater than or equal to aln_id, aln_len and all_cov, 
-             respectively, and have a Ks value between min_ks inclusive and
+             respectively, and have a Ks value between min_ks_anchors inclusive and
              max_ks inclusive; all other pairs will have the weight set to zero.)
     """
     df = df[~df.index.duplicated()]  # for safety
     df_ = df[df["Ks"] <= max_ks]
-    df_ = df_[df_["Ks"] >= min_ks]
+    df_ = df_[df_["Ks"] >= min_ks_anchors]
     df_ = df_[df_["AlignmentCoverage"] >= aln_cov]
     df_ = df_[df_["AlignmentIdentity"] >= aln_id]
     df_ = df_[df_["AlignmentLength"] >= aln_len]
@@ -1184,14 +1187,17 @@ def compute_weights_anchor_pairs(df, min_ks=0.05, max_ks=20, aln_id=0, aln_len=3
 
     return df
 
-def _write_anchor_pairs_ks(anchor_points_file, ks_file, out_file='ks_anchors.tsv'):
+def _write_anchor_pairs_ks(anchor_points_file, ks_file, out_file='ks_anchors.tsv', min_ks_anchors=0.05):
     """
     Modified from wgd/colinearity.py
 
     Get anchor pairs and their corresponding Ks values and write to file
     :param anchor_points_file: anchorpoints.txt file from i-ADHoRe 3.0
     :param ks_file: Ks data file
-    :param out_file: output file name
+    :param out_file: output file nameù
+    :param: minimum Ks for anchor pairs for which we assign a non-0 weight, i.e.
+             it gets plotted in the anchor Ks distribution; e.g. by default,
+             Ks smaller than 0.05 are assigned weight 0 and are not plotted.
     :return: nothing
     """
     # anchor_points = read_table(anchor_points_file)
@@ -1248,7 +1254,7 @@ def _write_anchor_pairs_ks(anchor_points_file, ks_file, out_file='ks_anchors.tsv
         ks_anchors = ks.loc[ks.index.intersection(Series(anchor_points_id_list))]
 
         # (Re)calculate and update weights of anchor pairs
-        ks_anchors_weighted = compute_weights_anchor_pairs(ks_anchors)
+        ks_anchors_weighted = compute_weights_anchor_pairs(ks_anchors, min_ks_anchors)
 
         if out_file:
             with open(out_file, "w+") as of:

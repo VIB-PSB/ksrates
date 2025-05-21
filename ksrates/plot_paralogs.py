@@ -87,6 +87,7 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
 
     # Get other parameters
     max_ks_para = config.get_max_ks_para()
+    min_ks_anchors = config.get_min_ks_anchors()
     bin_width_para = config.get_bin_width_para()
     bin_list = fcPlot.get_bins(max_ks_para, bin_width_para)
     x_max_lim = config.get_x_max_lim()
@@ -229,16 +230,22 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
 
     if colinearity_analysis:
         anchors_list, anchors_weights = fc_extract_ks_list.ks_list_from_tsv(anchors_ks_tsv_file, max_ks_para, "anchor pairs")
+
+        # Remove anchor Ks values that are smaller than min_ks_anchors
+        min_ks_anchors = config.get_min_ks_anchors()
+        anchors_list_filtered = [val for val in anchors_list if val >= min_ks_anchors]
+        anchors_weights_filtered = [w for val, w in zip(anchors_list, anchors_weights) if val >= min_ks_anchors]
+
         if len(anchors_list) == 0:
             logging.warning(f"No anchor pairs found! Maybe check your (gene) IDs between "
                             f"anchor pairs file [{_OUTPUT_KS_FILE_PATTERN_ANCHORS.format(species)}] and"
                             f"whole-paranome file [{_OUTPUT_KS_FILE_PATTERN_PARA.format(species)}]")
         for ax_uncorr in ax_uncorr_include_col:
-            hist_anchors = fcPlot.plot_histogram("Anchor pairs", ax_uncorr, anchors_list, bin_list, bin_width_para, max_ks_para,
-                                kde_bandwidth_modifier, color=fcPlot.COLOR_ANCHOR_HISTOGRAM, weight_list=anchors_weights)
+            hist_anchors = fcPlot.plot_histogram("Anchor pairs", ax_uncorr, anchors_list_filtered, bin_list, bin_width_para, max_ks_para,
+                                kde_bandwidth_modifier, color=fcPlot.COLOR_ANCHOR_HISTOGRAM, weight_list=anchors_weights_filtered)
         for ax_corr in ax_corr_include_col:
-            fcPlot.plot_histogram("Anchor pairs", ax_corr, anchors_list, bin_list, bin_width_para, max_ks_para,
-                                kde_bandwidth_modifier, color=fcPlot.COLOR_ANCHOR_HISTOGRAM, weight_list=anchors_weights)
+            fcPlot.plot_histogram("Anchor pairs", ax_corr, anchors_list_filtered, bin_list, bin_width_para, max_ks_para,
+                                kde_bandwidth_modifier, color=fcPlot.COLOR_ANCHOR_HISTOGRAM, weight_list=anchors_weights_filtered)
 
     if reciprocal_retention_analysis:
         rec_ret_list, rec_ret_weights = fc_extract_ks_list.ks_list_from_tsv(rec_ret_tsv_file, max_ks_para, "reciprocally retained")
