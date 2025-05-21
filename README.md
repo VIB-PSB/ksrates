@@ -20,7 +20,7 @@ To position ancient WGD events with respect to speciation events in a phylogeny,
 
 [Documentation](https://ksrates.readthedocs.io/)\
 [Tutorial](https://ksrates.readthedocs.io/en/latest/usage.html)\
-[FAQ](https://ksrates.readthedocs.io/en/latest/faqs.html)
+[FAQ](https://ksrates.readthedocs.io/en/latest/faqs.html)\
 [Publication](https://doi.org/10.1093/bioinformatics/btab602)\
 
 ## Quick start
