@@ -86,14 +86,14 @@ For up-to-date and version-specific instructions, please refer to this `page <ht
 .. note::
    To allow users to run the pipeline from any directory in a cluster (i.e. not necessarily from their home directory), the `user bind control <https://singularity.hpcng.org/admin-docs/master/configfiles.html?highlight=user%20bind%20control#bind-mount-management>`__ feature needs to be left active during Singularity installation [Default: "YES"].
 
-When using the *ksrates* Nextflow pipeline with the *ksrates* Singularity container, the container will be automatically downloaded from the ``vibpsb/ksrates`` repository on Docker Hub on first launch (this may take awhile depending on your Internet connection speed since the container has a size of about 1 GB) and will then be stored and reused for successive runs.
+When using the *ksrates* Nextflow pipeline with the *ksrates* Singularity container, the container will be automatically downloaded from the ``vibpsb/ksrates`` repository on Docker Hub on first launch (this may take a while depending on your Internet connection speed since the container has a size of about 1 GB) and will then be stored and reused for successive runs.
 
 Docker
 ------
 
 When using the *ksrates* Docker container, either to run the *ksrates* CLI or Nextflow pipeline, the machine (i.e. a local computer or a remote computer cluster or cloud node) needs to have Docker installed. More information can be found on the Docker installation `page <https://docs.docker.com/get-docker/>`__.
 
-When using the *ksrates* Nextflow pipeline with the *ksrates* Docker container, the container will be automatically downloaded from the ``vibpsb/ksrates`` repository on Docker Hub on first launch (this may take awhile depending on your Internet connection speed since the container has a size of about 1 GB) and will then be stored and reused for successive runs.
+When using the *ksrates* Nextflow pipeline with the *ksrates* Docker container, the container will be automatically downloaded from the ``vibpsb/ksrates`` repository on Docker Hub on first launch (this may take a while depending on your Internet connection speed since the container has a size of about 1 GB) and will then be stored and reused for successive runs.
 
 .. _`manual_installation`:
 
@@ -135,7 +135,7 @@ When not using or not being able to use one of the *ksrates* containers, for exa
 4.  Clone the *ksrates* repository from `GitHub <https://github.com/VIB-PSB/ksrates>`__ and install the package and its Python dependencies::
 
         git clone https://github.com/VIB-PSB/ksrates
-        # Starting from v2.0.0, download also this compressed file:
+        # Starting from v2.0.0, when running outside a container, download also this compressed file:
         wget https://zenodo.org/records/15225340/files/original_angiosperm_sequences.tar.gz -P ksrates/ksrates/reciprocal_retention
     	# Move to the ksrates subdirectory and install the package with ``pip``
         cd ksrates
@@ -148,22 +148,31 @@ Testing your installation
 .. note::
     WSL2 users can enter the Windows file system from the terminal through e.g. ``cd mnt/c/Users/your_username``.
 
-1.  Clone the *ksrates* repository from `GitHub <https://github.com/VIB-PSB/ksrates>`__ to get the use case dataset::
+1.  Clone the *ksrates* repository from `GitHub <https://github.com/VIB-PSB/ksrates>`__ in order to access the ``test`` dataset::
 
         git clone https://github.com/VIB-PSB/ksrates
-        # Starting from v2.0.0, download also this compressed file:
-        wget https://zenodo.org/records/15225340/files/original_angiosperm_sequences.tar.gz -P ksrates/ksrates/reciprocal_retention
-
-
-2.  Access the ``test`` directory in a terminal::
-
         cd ksrates/test
 
-3.  Launch *ksrates* (the execution will take few minutes)::
+2.  Launch the Nextflow *ksrates* pipeline with Singularity (the execution will take few minutes)::
      
-        nextflow run VIB-PSB/ksrates --config ./config_elaeis.txt
+        nextflow run VIB-PSB/ksrates --test -profile singularity --config config_files/config_elaeis.txt --expert config_files/config_expert.txt
 
-    Nextflow will download *ksrates* and will by default run the test pipeline on the ``local`` executor using the *ksrates* Singularity container, as configured in the included ``nextflow.config`` Nextflow configuration file (automatically detected). If needed, please adapt the configuration to the available resources (e.g. available CPUs/cores or switching to a Docker container or no container at all for a local installation) as described in the :ref:`nextflow_config_section` section.
+    The first time the command is executed, Nextflow downloads a local copy of the *ksrates* Nextflow pipeline from the ``VIB-PSB/ksrates`` GitHub repository and stores it in the ``$HOME/.nextflow`` directory.
+    Parameter ``--test`` is mandatory when running the test dataset.
+    Parameter ``-profile`` pulls the Singularity (or Docker) container from Docker Hub.
+    
+    .. note::
+        Since the Singularity image is by default stored in the *launching folder* under ``work/singularity``, it is recommended to specify a "centralized" destination path through ``singularity.cacheDir`` within the Nextflow configuration file located in the ``test`` directory (``nextflow.config``, automatically detected). See :ref:`nextflow_config_section` section.
+
+    Alternatively to the Nextflow pipeline, test by executing the individual steps of the manual pipeline (with or without container)::
+
+        singularity exec docker://vibpsb/ksrates ksrates init config_files/config_elaeis.txt
+        singularity exec docker://vibpsb/ksrates ksrates paralogs-ks --test config_files/config_elaeis.txt --n-threads 4
+        ...
+
+    Argument ``--test`` is mandatory for ``paralogs-ks`` and ``paralogs_ks_multi`` *ksrates* commands. More details in the :ref:`manual_pipeline` section.
+
+3.  Remove the cloned repository once the test is successful.
 
 
 Updating your installation
@@ -191,7 +200,7 @@ Updating your installation
 
     pip3 uninstall ksrates
     git clone https://github.com/VIB-PSB/ksrates
-    # Starting from v2.0.0, download also this compressed file:
+    # Starting from v2.0.0, when running outside a container, download also this compressed file:
     wget https://zenodo.org/records/15225340/files/original_angiosperm_sequences.tar.gz -P ksrates/ksrates/reciprocal_retention
     # Move to the ksrates subdirectory and install the package with ``pip``
     cd ksrates
