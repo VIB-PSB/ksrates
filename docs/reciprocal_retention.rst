@@ -37,14 +37,14 @@ In *ksrates*, we utilize the set of gene families spanning up to the top 2000th 
 The process of obtaining reciprocally retained gene families for the focal species involves reconstructing them from scratch using a clustering algorithm, encompassing the following steps (for comprehensive details, please consult our preprint's Methods section):
 
 .. note ::
-    If running the pipeline *outside* the container, make sure your :ref:`manual *ksrates* installation <manual_installation>` included the step downloading file ``original_angiosperm_sequences.tar.gz``.
+    If running the pipeline *outside* the container, make sure your *ksrates* :ref:`manual installation <manual_installation>` included the step downloading file ``original_angiosperm_sequences.tar.gz``.
 
-#. Homology search: execute diamond on the merged sequences from the focal species' FASTA file and the FASTA files originally used for the 37 angiosperms in Li et al. (2016)
-#. Gene family clustering: execute OrthoMCL on the generated diamond table
-#. Matching gene families: match the original top 2000 gene families in the ranking to the newly generated OrthoMCL families, based on shared gene IDs from the 37 angiosperms. Note that an original gene family may match multiple new gene families.
-#. Retaining good matches: keep only the well-matched gene families, i.e. those introducing zero or few extra genes belonging to the 37 angiosperms;
-#. Reconstructing gene families: in case of multiple well-matched gene families, merge them to reconstruct the top gene family
-#. Extracting focal species' genes: discard all but the focal species' genes and retain only gene families including at least two focal genes, which is the minimum required for *K*:sub:`S` estimate
+#. **Homology search**: execute diamond on the merged sequences from the focal species' FASTA file and the FASTA files originally used for the 37 angiosperms in Li et al. (2016)
+#. **Gene family clustering**: execute OrthoMCL on the generated diamond table
+#. **Matching gene families**: match the original top 2000 gene families in the ranking to the newly generated OrthoMCL families, based on shared gene IDs from the 37 angiosperms. Note that an original gene family may match multiple new gene families.
+#. **Retaining good matches**: keep only the well-matched gene families, i.e. those introducing zero or few extra genes belonging to the 37 angiosperms;
+#. **Reconstructing gene families**: in case of multiple well-matched gene families, merge them to reconstruct the top gene family
+#. **Extracting focal species' genes**: discard all but the focal species' genes and retain only gene families including at least two focal genes, which is the minimum required for *K*:sub:`S` estimate
 
 
 Runtime, memory and space usage
@@ -56,9 +56,9 @@ It is therefore recommended to check the space availability on disk in advance, 
 .. note::
     Users may want to initially run only the whole-paranome and anchor pairs analyses in order to obtain prompter results; the reciprocal retention analysis can be activated in a subsequent run by setting ``reciprocal_retention = yes`` in the *ksrates* configuration file.
 
-The diamond step, taking as input tens of angiosperm FASTA files (focal species plus 37 angosperms), generates an output file of 21 GB. This file can be deleted once the reciprocal retention pipeline is completed. The file location for the ``example`` dataset is ``example/paralog_distributions/wgd_elaeis/reciprocal_retention/orthomcl/elaeis_original_37.dmd.tsv``.
+The diamond step, taking as input tens of angiosperm FASTA files (focal species plus 37 angosperms), generates an output file of 21 GB. This file can be deleted once the reciprocal retention pipeline is completed. The file location for the ``example`` dataset is ``paralog_distributions/wgd_elaeis/reciprocal_retention/orthomcl/elaeis_original_37.dmd.tsv``.
 
-The OrthoMCL step, taking as input the diamond table, generates within the ``tmp`` subdirectory the "blast parse output" (BPO) output file, which occupies the same space as the diamond table (i.e. 21 GB). This file can be deleted once the reciprocal retention pipeline is completed. The file location for the ``example`` dataset is ``example/paralog_distributions/wgd_elaeis/reciprocal_retention/orthomcl/May_16/tmp/all.bpo``.
+The OrthoMCL step, taking as input the diamond table, generates within the ``tmp`` subdirectory the "blast parse output" (BPO) output file, which occupies the same space as the diamond table (i.e. 21 GB). This file can be deleted once the reciprocal retention pipeline is completed. The file location for the ``example`` dataset is ``paralog_distributions/wgd_elaeis/reciprocal_retention/orthomcl/May_16/tmp/all.bpo``.
 
 
 Note on OrthoMCL implementation
