@@ -1,7 +1,12 @@
-/* 
+/* Customize width of ksrates logo
 `width:auto` was rendering 0px wide for .svg files
 https://stackoverflow.com/questions/59215996/how-to-add-a-logo-to-my-readthedocs-logo-rendering-at-0px-wide
 */
 .wy-side-nav-search .wy-dropdown > a img.logo, .wy-side-nav-search > a img.logo {
     width: 200px;
+}
+
+/* Make the sphinx copy button slightly transparent */
+.highlight:hover button.copybtn, button.copybtn.success {
+	opacity: 0.7;
 }
