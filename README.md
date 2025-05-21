@@ -90,9 +90,9 @@ We briefly illustrate here how to run the *ksrates* Nextflow pipeline on the `te
        
 	      nextflow run VIB-PSB/ksrates --test -profile apptainer --config config_files/config_elaeis.txt --expert config_files/config_expert.txt
 
-   The *ksrates* configuration file is specified through the `--config` parameter, while the *ksrates* expert configuration file is specified through the `--expert` parameter. A Nextflow configuration file named `nextflow.config` and located in the launching folder is automatically detected.
+   The *ksrates* configuration file is specified through the `--config` parameter, while the *ksrates* expert configuration file is specified through the `--expert` parameter. A Nextflow configuration file named `nextflow.config` and located in the launching folder is automatically detected. The `--test` parameter is mandatory for the test dataset.
 
-   > **Note:** To generate a new *ksrates* configuration file template for a new analysis, use the `--config` option to specify its file name or file path. If the specified file does not exist, the pipeline will generate a configuration file template and exit. Edit and fill the template (see the [full documentation](https://ksrates.readthedocs.io/) for more detail) and then rerun the same command above to relaunch the pipeline.
+   > **Note:** To generate a new *ksrates* configuration file template for a new analysis, use the `--config` option to specify its file name or file path. If the specified file does not exist, the command will generate a configuration file template and exit. Edit the template (see the [full documentation](https://ksrates.readthedocs.io/) for more details) and then rerun the same command above to relaunch the pipeline.
 
 ### Command-line interface
 
@@ -131,15 +131,15 @@ Example *ksrates* commands with basic syntax:
 
 * Show help menu for usage and all available `COMMAND`s and `OPTIONS`:
 
-	ksrates -h
+      ksrates -h
 
 * Generate a template configuration file for the focal species:
 
-	ksrates generate-config config_files/config_elaeis.txt
+      ksrates generate-config config_files/config_elaeis.txt
 
-* Show help menu for usage and `ARGS` for a specific `COMMAND`:
+* Show help menu for usage and `ARGS` of a specific `COMMAND`:
 
-	ksrates orthologs-ks -h
+      ksrates orthologs-ks -h
 
 * Run the ortholog *K*<sub>S</sub> analysis between two species specifying the number of CPUs:
 
