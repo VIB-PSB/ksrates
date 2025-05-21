@@ -41,7 +41,7 @@ See the *Usage* sections below and the [Tutorial](https://ksrates.readthedocs.io
 
 ### Nextflow pipeline
 
-Instructions to execute the Nextflow pipeline (recommended).
+Instructions to execute the Nextflow pipeline.
 
 #### Installation
 
@@ -62,7 +62,7 @@ Instructions to execute the Nextflow pipeline (recommended).
 	    
            mv nextflow /usr/local/bin
     
-2. Install either [Apptainer](https://apptainer.org/docs/admin/latest/installation.html) (recommended, but see [here](https://ksrates.readthedocs.io/en/latest/installation.html#availability-and-dependencies)) or [Docker](https://docs.docker.com/get-docker/).
+2. Install either [Apptainer](https://apptainer.org/docs/admin/latest/installation.html) (recommended, but check [availability](https://ksrates.readthedocs.io/en/latest/installation.html#availability-and-dependencies)) or [Docker](https://docs.docker.com/get-docker/).
 
 3. The *ksrates* Apptainer or Docker container will be automatically downloaded when you execute the *ksrates* Nextflow pipeline for the first time, and it will be stored and reused for any further executions (see [Nextflow pipeline sharing](https://www.nextflow.io/docs/latest/sharing.html)). *ksrates* and its dependencies are already installed within the container.
 
@@ -102,9 +102,9 @@ Instructions to execute the manual command-line interface.
 
 #### Installation
    
-1. Install either [Apptainer](https://apptainer.org/docs/admin/latest/installation.html) (recommended, but see [here](https://ksrates.readthedocs.io/en/latest/installation.html#availability-and-dependencies)) or [Docker](https://docs.docker.com/get-docker/), then pull the container from VIB-PSB Docker Hub. The container contains *ksrates* and all other software dependencies, so that nothing else needs to be installed.
+1. Install either [Apptainer](https://apptainer.org/docs/admin/latest/installation.html) (recommended, but check [availability](https://ksrates.readthedocs.io/en/latest/installation.html#availability-and-dependencies)) or [Docker](https://docs.docker.com/get-docker/), then pull the container from VIB-PSB Docker Hub. The container contains *ksrates* and all other software dependencies, so that nothing else needs to be installed.
 
-	For the Apptainer container (recommended):
+	For the Apptainer container:
 	    
         apptainer pull docker://vibpsb/ksrates
 	    
