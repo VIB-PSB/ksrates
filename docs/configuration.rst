@@ -133,7 +133,7 @@ A consensus value for the rate-adjustment is needed when multiple rate-adjustmen
 Nextflow configuration file
 ===========================
 
-The Nextflow configuration file is used to configure various settings for the *ksrates* Nextflow pipeline, such as the executor (e.g. computing cluster, local computer) and its resources (e.g. number of CPUs/cores and memory to use, cluster queues, walltimes etc.) and use of the *ksrates* Singularity or Docker container. We provide a few general template Nextflow configuration files for the *ksrates* Nextflow pipeline in the `doc <https://github.com/VIB-PSB/ksrates/blob/master/doc/source>`_ directory in the GitHub repository. These can be adapted to a user's specific resources and requirements. Below, we briefly explain some of the basic key settings. For a more complete description please refer to the `Nextflow documentation <https://www.nextflow.io/docs/latest/config.html#configuration>`__. ::
+The Nextflow configuration file is used to configure various settings for the *ksrates* Nextflow pipeline, such as the executor (e.g. computing cluster, local computer) and its resources (e.g. number of CPUs/cores and memory to use, cluster queues, walltimes etc.) and use of the *ksrates* Singularity or Docker container. We provide a template Nextflow configuration file for the *ksrates* Nextflow pipeline in the `docs <https://github.com/VIB-PSB/ksrates/blob/master/doc/source>`_ subdirectory of the GitHub repository, which can be copied and adapted to the user's specific resources and requirements. Below, we briefly explain some of the basic key settings. For a more complete description please refer to `Nextflow documentation <https://www.nextflow.io/docs/latest/config.html#configuration>`__. ::
 
     profiles {
         docker {
@@ -160,6 +160,7 @@ The Nextflow configuration file is used to configure various settings for the *k
             cpus = 
             penv = ''
             memory = ''
+            time = ''
             clusterOptions = ''
             beforeScript = ''
         }
@@ -195,6 +196,7 @@ The Nextflow configuration file is used to configure various settings for the *k
         * **cpus** sets the number of CPUs/cores/slots/threads, e.g. ``8``. It is recommended to set multiple cores for ``wgdParalogs`` and ``wgdOrthologs`` processes [Default if not set: 1].
     	* **penv** when using an SGE executor defines the parallel environment to be used when submitting a parallel task.
         * **memory** sets how much memory the process is allowed to use, e.g. ``16GB``.
+        * **time** defines how long a process is allowed to run.
         * **clusterOptions** any native configuration option accepted by your cluster submit command, such as options specific to your cluster and not supported out of the box by Nextflow (e.g. if your cluster doesn't accept the ``memory`` directive because it expects defining the amount of memory per CPU).
         * **beforeScript** allows you to execute a custom (Bash) snippet before the main process script is run. This may be useful to initialise the underlying compute cluster environment or for other custom initialisation, for example it can be used to load required dependencies if one of the *ksrates* containers is not used, provided that the cluster has those dependencies installed. In that case, the required external dependencies (see also the `wgd Documentation <https://wgd.readthedocs.io/en/latest/index.html#external-software>`__) for the *ksrates* Nextflow processes are:
 
