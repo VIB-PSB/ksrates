@@ -133,17 +133,17 @@ A consensus value for the rate-adjustment is needed when multiple rate-adjustmen
 Nextflow configuration file
 ===========================
 
-The Nextflow configuration file is used to configure various settings for the *ksrates* Nextflow pipeline, such as the executor (e.g. computing cluster, local computer) and its resources (e.g. number of CPUs/cores and memory to use, cluster queues, walltimes etc.) and use of the *ksrates* Singularity or Docker container. We provide a template Nextflow configuration file for the *ksrates* Nextflow pipeline in the `docs <https://github.com/VIB-PSB/ksrates/blob/master/doc/source>`_ subdirectory of the GitHub repository, which can be copied and adapted to the user's specific resources and requirements. Below, we briefly explain some of the basic key settings. For a more complete description please refer to `Nextflow documentation <https://www.nextflow.io/docs/latest/config.html#configuration>`__. ::
+The Nextflow configuration file is used to configure various settings for the *ksrates* Nextflow pipeline, such as the executor (e.g. computing cluster, local computer) and its resources (e.g. number of CPUs/cores and memory to use, cluster queues, walltimes etc.) and use of the *ksrates* Apptainer (formerly Singularity) or Docker container. We provide a template Nextflow configuration file for the *ksrates* Nextflow pipeline in the `docs <https://github.com/VIB-PSB/ksrates/blob/master/doc/source>`_ subdirectory of the GitHub repository, which can be copied and adapted to the user's specific resources and requirements. Below, we briefly explain some of the basic key settings. For a more complete description please refer to `Nextflow documentation <https://www.nextflow.io/docs/latest/config.html#configuration>`__. ::
 
     profiles {
         docker {
             docker.enabled = true
             docker.runOptions = "-v $PWD:$PWD"
         }
-        singularity {
-            singularity.enabled = true
-            singularity.cacheDir = ''
-            singularity.autoMounts = true
+        apptainer {
+            apptainer.enabled = true
+            apptainer.cacheDir = ''
+            apptainer.autoMounts = true
         }
     }
 
@@ -170,12 +170,12 @@ The Nextflow configuration file is used to configure various settings for the *k
     	SOME_ENV_VARIABLE = ''
     }
 
-* The **profiles** scope configures the **singularity** and **docker** container settings:
+* The **profiles** scope configures the **apptainer** and **docker** container settings:
 
     * **enable** enables or disables the use of the respective container.
     * **runOptions** (only for Docker) mounts the host’s current directory into the container at the same path.
-    * **cacheDir** (only for Singularity) the directory where remote the Singularity image from Docker Hub is stored. When using a computing cluster it must be a shared folder accessible to all computing nodes.
-    * **autoMounts** (only for Singularity) automatically mounts host paths in the executed container and allows the user to run the pipeline from any directory in a cluster [Default: true]. It requires the `user bind control <https://sylabs.io/guides/3.7/admin-guide/configfiles.html?highlight=user%20bind%20control#bind-mount-management>`__ feature in Singularity installation, which is active by default.
+    * **cacheDir** (only for Apptainer) the directory where remote the Apptainer image from Docker Hub is stored. When using a computing cluster it must be a shared folder accessible to all computing nodes.
+    * **autoMounts** (only for Apptainer) automatically mounts host paths in the executed container and allows the user to run the pipeline from any directory in a cluster [Default: true]. It requires the `user bind control <https://sylabs.io/guides/3.7/admin-guide/configfiles.html?highlight=user%20bind%20control#bind-mount-management>`__ feature in Apptainer installation, which is active by default.
 
 * The **executor** scope configures the underlying system where processes are executed and its overall resources to use:
 
@@ -185,7 +185,7 @@ The Nextflow configuration file is used to configure various settings for the *k
 
 * The **process** scope defines the configuration for the processes of the *ksrates* pipeline:
 
-    * **container** defines the Singularity or Docker *ksrates* container image to be used, ``vibpsb/ksrates:latest``. A local copy is pulled from Docker Hub and stored for successive usage.
+    * **container** defines the Apptainer or Docker *ksrates* container image to be used, ``vibpsb/ksrates:latest``. A local copy is pulled from Docker Hub and stored for successive usage.
 
     * **withName** defines settings for individual processes in the *ksrates* Nextflow pipeline.
     

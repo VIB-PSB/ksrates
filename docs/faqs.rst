@@ -62,9 +62,9 @@ To keep Docker images, containers and volumes under control, you can delete the 
 .. TODO: what are networks? is this important here?
 
 
-To remove a Singularity container, remove its ``.img`` file. You can also check and clean the Singularity cache with::
+To remove an Apptainer container, remove its ``.img`` file. You can also check and clean the Apptainer cache with::
 
-    singularity cache clean [--dry-run]
+    apptainer cache clean [--dry-run]
 
 
 .. TODO

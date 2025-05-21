@@ -1,7 +1,7 @@
 Installation
 ************
 
-*ksrates* is available as a `Singularity <https://singularity.hpcng.org>`__ or `Docker <https://www.docker.com>`__ container, which bundle *ksrates* and all required external software dependencies, and as a Python package, which requires manual installation of the package and its dependencies but allows for more flexibility in integrating it into existing bioinformatics environments and toolchains. In addition to a simple and easy to use command-line interface (CLI), we also provide a user-friendly `Nextflow <https://www.nextflow.io>`__ pipeline that allows to run a complete *ksrates* analysis fully automated.
+*ksrates* is available as `Apptainer <https://apptainer.org/>`__ (formerly Singularity) or `Docker <https://www.docker.com>`__ container, which bundle *ksrates* and all required external software dependencies, and as a Python package, which requires manual installation of the package and its dependencies but allows for more flexibility in integrating it into existing bioinformatics environments and toolchains. In addition to a simple and easy to use command-line interface (CLI), we also provide a user-friendly `Nextflow <https://www.nextflow.io>`__ pipeline that allows to run a complete *ksrates* analysis fully automated.
 
 *ksrates* runs on any Linux or macOS system or on Windows with Windows Subsystem for Linux 2 (WSL2) or a virtual machine installed. However, *ksrates* analyses are computationally demanding, and therefore we recommend the use of a computer cluster (or cloud platform) for any but the simplest data sets.
 
@@ -42,19 +42,19 @@ To install `Nextflow <https://www.nextflow.io>`__ and its dependencies, follow t
         sudo mv nextflow /usr/local/bin 
 
 
-The *ksrates* Nextflow pipeline itself does not need to be installed and will be automatically downloaded and set up simply when you execute the launch of the *ksrates* Nextflow pipeline for the first time. The same applies to the *ksrates* package and its dependencies when using the *ksrates* Singularity or Docker container (see below). In other words, if you plan on only using the *ksrates* Nextflow pipeline with a container it is not necessary to manually download or install *ksrates* itself, the only other software you may need to install is the Singularity or Docker software itself (next section). (Note that the *ksrates* Nextflow pipeline code is however also included in the *ksrates* GitHub repository and can thus also be executed from a manually installed *ksrates* package (see the Manual installation section below).)
+The *ksrates* Nextflow pipeline itself does not need to be installed and will be automatically downloaded and set up simply when you execute the launch of the *ksrates* Nextflow pipeline for the first time. The same applies to the *ksrates* package and its dependencies when using the *ksrates* Apptainer or Docker container (see below). In other words, if you plan on only using the *ksrates* Nextflow pipeline with a container it is not necessary to manually download or install *ksrates* itself, the only other software you may need to install is the Apptainer or Docker software itself (next section). (Note that the *ksrates* Nextflow pipeline code is however also included in the *ksrates* GitHub repository and can thus also be executed from a manually installed *ksrates* package (see the Manual installation section below).)
 
 
-Singularity and Docker containers
+Apptainer and Docker containers
 =================================
 
-Containers are standalone portable runtime environments that package everything needed to run a software, including application code, external software dependencies and operating system libraries and runtime, and are thus executable in any computing environment for which Singularity and Docker container engines are available. This comes in handy, for example, when local installation of *ksrates* and its software dependencies are not possible, for instance due to permission issues, or for deploying *ksrates* to a computer cluster or cloud.
+Containers are standalone portable runtime environments that package everything needed to run a software, including application code, external software dependencies and operating system libraries and runtime, and are thus executable in any computing environment for which Apptainer and Docker container engines are available. This comes in handy, for example, when local installation of *ksrates* and its software dependencies are not possible, for instance due to permission issues, or for deploying *ksrates* to a computer cluster or cloud.
 
 Availability and dependencies
 -----------------------------
 
-`Singularity <https://singularity.hpcng.org>`__ runs natively only on Linux. On Windows it requires either WSL2 (recommended; see Note below) or a virtual machine (VM). On macOS it is available as a beta version or it also requires a VM.
-Singularity has the advantage over Docker of always producing output files with non-root permissions.
+Apptainer runs natively only on Linux. On Windows it requires either WSL2 (recommended; see Note below) or a virtual machine (VM). On macOS it is available as a beta version or it also requires a VM.
+Apptainer has the advantage over Docker of always producing output files with non-root permissions.
 
 .. note::
    WSL2 (Windows Subsystem for Linux 2) is a native Windows 10 feature that allows to run a GNU/Linux terminal without the use of a VM. It can be installed following the official `documentation <https://docs.microsoft.com/en-us/windows/wsl/install-win10#requirements>`__.
@@ -62,13 +62,13 @@ Singularity has the advantage over Docker of always producing output files with 
 `Docker <https://www.docker.com>`__ runs natively on both Linux and Windows, while on macOS it can be installed as an application that makes use of a VM under the hood.
 When working on Linux machines, Docker produces output files that require root permissions to be handled (e.g. to delete them), which is an issue for users who don't have root permissions. Running Docker on Windows and macOS does not have such problems because the user has more control on output file permissions.
 
-The table below summarizes relevant differences between Singularity and Docker containers/engines:
+The table below summarizes relevant differences between Apptainer and Docker containers/engines:
 
 .. include:: <isopub.txt>
 .. table:: Supported (|check|) and unsupported (|cross|) features.
 
     ======================  ====================  ============
-    Feature                 Singularity           Docker
+    Feature                 Apptainer           Docker
     ======================  ====================  ============
     Runs on Linux           |check|               |check|
     Runs on Windows         |check| (WSL2 or VM)  |check|
@@ -77,16 +77,16 @@ The table below summarizes relevant differences between Singularity and Docker c
     ======================  ====================  ============
 
 
-Singularity (recommended)
+Apptainer (recommended)
 -------------------------
-When using the *ksrates* Singularity container, either to run the *ksrates* CLI or Nextflow pipeline, the machine (i.e. a local computer or a remote computer cluster or cloud node) needs to have `Singularity <https://singularity.hpcng.org>`__ installed (*ksrates* has been tested with version 3.7). More information can be found on the `Singularity Quick Start page <https://singularity.hpcng.org/user-docs/master/quick_start.html>`__.
-For a Linux installation we suggest to follow the `Install from Source section <https://singularity.hpcng.org/admin-docs/master/installation.html#before-you-begin>`__ (*Install Dependencies*, *Install Go*, *Download Singularity from a release* and *Compile Singularity*).
-For up-to-date and version-specific instructions, please refer to this `page <https://singularity.hpcng.org/docs/>`__.
+When using the *ksrates* Apptainer container, either to run the *ksrates* CLI or Nextflow pipeline, the machine (i.e. a local computer or a remote computer cluster or cloud node) needs to have `Apptainer <https://apptainer.org/>`__ installed (*ksrates* has been tested with version 1.4.0). More information can be found on the `Apptainer Quick Start page <https://apptainer.org/docs/user/latest/quick_start.html>`__.
+For a Linux installation we suggest to follow the `Install from Source section <https://apptainer.org/docs/admin/latest/installation.html#install-from-source>`__.
+For up-to-date and version-specific instructions, please refer to the official documentation.
 
 .. note::
-   To allow users to run the pipeline from any directory in a cluster (i.e. not necessarily from their home directory), the `user bind control <https://singularity.hpcng.org/admin-docs/master/configfiles.html?highlight=user%20bind%20control#bind-mount-management>`__ feature needs to be left active during Singularity installation [Default: "YES"].
+   To allow users to run the pipeline from any directory in a cluster (i.e. not necessarily from their home directory), the `bind path <https://apptainer.org/docs/user/main/bind_paths_and_mounts.html#user-defined-bind-paths>`__ feature needs to be left active during Apptainer installation [Default: "YES"].
 
-When using the *ksrates* Nextflow pipeline with the *ksrates* Singularity container, the container will be automatically downloaded from the ``vibpsb/ksrates`` repository on Docker Hub on first launch (this may take a while depending on your Internet connection speed since the container has a size of about 1 GB) and will then be stored and reused for successive runs.
+When using the *ksrates* Nextflow pipeline with the *ksrates* Apptainer container, the container will be automatically downloaded from the ``vibpsb/ksrates`` repository on Docker Hub on first launch (this may take a while depending on your Internet connection speed since the container has a size of about 1 GB) and will then be stored and reused for successive runs.
 
 Docker
 ------
@@ -153,21 +153,21 @@ Testing your installation
         git clone https://github.com/VIB-PSB/ksrates
         cd ksrates/test
 
-2.  Launch the Nextflow *ksrates* pipeline with Singularity (the execution will take few minutes)::
+2.  Launch the Nextflow *ksrates* pipeline with Apptainer (the execution will take few minutes)::
      
-        nextflow run VIB-PSB/ksrates --test -profile singularity --config config_files/config_elaeis.txt --expert config_files/config_expert.txt
+        nextflow run VIB-PSB/ksrates --test -profile apptainer --config config_files/config_elaeis.txt --expert config_files/config_expert.txt
 
     The first time the command is executed, Nextflow downloads a local copy of the *ksrates* Nextflow pipeline from the ``VIB-PSB/ksrates`` GitHub repository and stores it in the ``$HOME/.nextflow`` directory.
     Parameter ``--test`` is mandatory when running the test dataset.
-    Parameter ``-profile`` pulls the Singularity (or Docker) container from Docker Hub.
+    Parameter ``-profile`` pulls the Apptainer (or Docker) container from Docker Hub.
     
     .. note::
-        Since the Singularity image is by default stored in the *launching folder* under ``work/singularity``, it is recommended to specify a "centralized" destination path through ``singularity.cacheDir`` in the Nextflow configuration file located in the ``test`` directory (``nextflow.config``, automatically detected). See :ref:`nextflow_config_section` section.
+        Since the Apptainer image is by default stored in the *launching folder* under ``work/singularity``, it is recommended to specify a "centralized" destination path through ``apptainer.cacheDir`` in the Nextflow configuration file located in the ``test`` directory (``nextflow.config``, automatically detected). See :ref:`nextflow_config_section` section.
 
     Alternatively to the Nextflow pipeline, test by executing the individual steps of the manual pipeline (with or without container)::
 
-        singularity exec docker://vibpsb/ksrates ksrates init config_files/config_elaeis.txt
-        singularity exec docker://vibpsb/ksrates ksrates paralogs-ks --test config_files/config_elaeis.txt --n-threads 4
+        apptainer exec docker://vibpsb/ksrates ksrates init config_files/config_elaeis.txt
+        apptainer exec docker://vibpsb/ksrates ksrates paralogs-ks --test config_files/config_elaeis.txt --n-threads 4
         ...
 
     Argument ``--test`` is mandatory for ``paralogs-ks`` and ``paralogs_ks_multi`` *ksrates* commands. More details in the :ref:`manual_pipeline` section.
@@ -186,7 +186,7 @@ Updating your installation
 
         docker pull vibpsb/ksrates:latest
 
-* To update the Singularity container image, first remove the old image (when using the *ksrates* Nextflow pipeline the image is stored in the ``cacheDir`` directory set in the ``nextflow.config`` or, if not set, by default in ``work/singularity`` in the project folder)::
+* To update the Apptainer container image, first remove the old image (when using the *ksrates* Nextflow pipeline the image is stored in the ``cacheDir`` directory set in the ``nextflow.config`` or, if not set, by default in ``work/singularity`` in the project folder)::
 
         rm vibpsb-ksrates-latest.img
 
@@ -194,7 +194,7 @@ Updating your installation
 
  Alternatively, run the following command in the same directory of the old image to manually pull the new image from Docker Hub::
         
-        singularity pull vibpsb-ksrates-latest.img docker://vibpsb/ksrates:latest
+        apptainer pull vibpsb-ksrates-latest.img docker://vibpsb/ksrates:latest
 
 * To update your manual installation, uninstall the old version of *ksrates* package, clone the *ksrates* repository from `GitHub <https://github.com/VIB-PSB/ksrates>`__ and re-install the package::
 

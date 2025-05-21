@@ -29,7 +29,7 @@ The *ksrates* pipeline can be automatically run through Nextflow with a few prep
 
 3.  Launch *ksrates* through the following command line::
 
-        nextflow run VIB-PSB/ksrates -profile singularity --config config_files/config_elaeis.txt --expert config_files/config_expert.txt
+        nextflow run VIB-PSB/ksrates -profile apptainer --config config_files/config_elaeis.txt --expert config_files/config_expert.txt
 
     .. note::
        As from `ksrates` ``v2.0.0``, the Nextflow pipeline has been ported to DSL2 syntax and requires at least Nextflow version ``22.03.0-edge``. Refer to the :ref:`installation page <install_nextflow>` to learn how to get the latest Nextflow version. You can also launch a specific (e.g. previous) Nextflow version through the ``NXF_VER`` environmental variable in the command line::
@@ -37,10 +37,10 @@ The *ksrates* pipeline can be automatically run through Nextflow with a few prep
             NXF_VER=24.10.5 nextflow run VIB-PSB/ksrates <args>
 
     The first time the command is executed, Nextflow downloads a local copy of the *ksrates* Nextflow pipeline from the ``VIB-PSB/ksrates`` GitHub repository and stores it in the ``$HOME/.nextflow`` directory.
-    Parameter ``-profile`` specifies which container will be pulled from Docker Hub (either Singularity or Docker).
+    Parameter ``-profile`` specifies which container will be pulled from Docker Hub (either Apptainer or Docker).
 
     .. note::
-        Since the Singularity image is by default stored in the *launching folder* under ``work/singularity``, it is recommended to specify a "centralized" destination path through ``singularity.cacheDir`` in the :ref:`Nextflow configuration file <nextflow_config_section>`.
+        Since the Apptainer image is by default stored in the *launching folder* under ``work/singularity``, it is recommended to specify a "centralized" destination path through ``apptainer.cacheDir`` in the :ref:`Nextflow configuration file <nextflow_config_section>`.
 
 
     The *ksrates configuration file* is specified through the ``--config`` parameter, while the *ksrates expert configuration file* is specified through the ``--expert`` parameter.
@@ -60,20 +60,20 @@ The syntax to run a command depends on how the package is installed:
 
         ksrates [OPTIONS] COMMAND [ARGS]
 
-*   Singularity container:
+*   Apptainer container:
 
         Open an interactive container where to launch commands with the syntax indicated in the local installation above::
 
-            singularity shell docker://vibpsb/ksrates
+            apptainer shell docker://vibpsb/ksrates
 
         Or launch a single command through the container::
 
-            singularity exec docker://vibpsb/ksrates ksrates [OPTIONS] COMMAND [ARGS]
+            apptainer exec docker://vibpsb/ksrates ksrates [OPTIONS] COMMAND [ARGS]
 
         .. note::
             WSL2 users need option ``-B`` to mount the Windows file system in the container (e.g. ``-B /mnt/c/Users/your_username``).
 
-    Singularity downloads the container image from Docker Hub in ``$HOME/.singularity/cache`` and from then on makes use of the local copy.
+    Apptainer downloads the container image from Docker Hub in ``$HOME/.apptainer/cache`` and from then on makes use of the local copy.
 
 *   Docker container:
 

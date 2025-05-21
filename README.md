@@ -26,9 +26,9 @@ For more details, see the related [publication](https://doi.org/10.1093/bioinfor
 
 ## Quick start
 
-*ksrates* can be executed using either a [Nextflow](https://github.com/nextflow-io/nextflow) pipeline (recommended) or a manual command-line interface. The latter is available via Docker and Singularity containers, and as a Python package to integrate into existing genomics toolsets and workflows. 
+*ksrates* can be executed using either a [Nextflow](https://github.com/nextflow-io/nextflow) pipeline (recommended) or a manual command-line interface. The latter is available via Docker and Apptainer containers, and as a Python package to integrate into existing genomics toolsets and workflows. 
 
-In the following sections we briefly describe how to install, configure and run the Nextflow pipeline and the basic usage of the command-line interface for the Docker or Singularity containers. For detailed usage information, a full tutorial and additional installation options, please see the [full documentation](https://ksrates.readthedocs.io/).
+In the following sections we briefly describe how to install, configure and run the Nextflow pipeline and the basic usage of the command-line interface for the Docker or Apptainer containers. For detailed usage information, a full tutorial and additional installation options, please see the [full documentation](https://ksrates.readthedocs.io/).
 
 ### Example datasets
 
@@ -61,9 +61,9 @@ See the Usage sections below and the [Tutorial](https://ksrates.readthedocs.io/e
 	    
            mv nextflow /usr/local/bin
     
-2. Install either [Singularity](https://singularity.hpcng.org/admin-docs/master/installation.html) (recommended, but see [here](https://ksrates.readthedocs.io/en/latest/installation.html#container-availability)) or [Docker](https://docs.docker.com/get-docker/). This is needed to run the *ksrates* Singularity or Docker container which contain all other required software dependencies, so nothing else needs to be installed.
+2. Install either [Apptainer](https://apptainer.org/docs/admin/latest/installation.html) (recommended, but see [here](https://ksrates.readthedocs.io/en/latest/installation.html#container-availability)) or [Docker](https://docs.docker.com/get-docker/). This is needed to run the *ksrates* Apptainer or Docker container which contain all other required software dependencies, so nothing else needs to be installed.
 
-3. Install *ksrates*: When using Nextflow, *ksrates* and the *ksrates* Singularity or Docker container will be automatically downloaded simply when you execute the launch of the *ksrates* pipeline for the first time, and they will be stored and reused for any further executions (see [Nextflow pipeline sharing](https://www.nextflow.io/docs/latest/sharing.html)). Therefore, in this case it is not necessary to manually install *ksrates*, simply continue with the Usage section below.
+3. Install *ksrates*: When using Nextflow, *ksrates* and the *ksrates* Apptainer or Docker container will be automatically downloaded simply when you execute the launch of the *ksrates* pipeline for the first time, and they will be stored and reused for any further executions (see [Nextflow pipeline sharing](https://www.nextflow.io/docs/latest/sharing.html)). Therefore, in this case it is not necessary to manually install *ksrates*, simply continue with the Usage section below.
 
 #### Usage
 
@@ -85,14 +85,14 @@ We briefly illustrate here how to run the *ksrates* Nextflow pipeline on the `te
       
       * A pre-filled *ksrates* configuration file (`config_files/config_elaeis.txt`) for the oil palm use case.
 
-      * A Nextflow configuration file template (`nextflow.config`) to configure the executor to be used (i.e., a local computer or a compute cluster) and its resources made available to Nextflow such as the number of CPUs. It also configures whether to use the *ksrates* Singularity or Docker container. The configuration file may need to be adapted to your available resources.
+      * A Nextflow configuration file template (`nextflow.config`) to configure the executor to be used (i.e., a local computer or a compute cluster) and its resources made available to Nextflow such as the number of CPUs. It also configures whether to use the *ksrates* Apptainer or Docker container. The configuration file may need to be adapted to your available resources.
 
         See the [full documentation](https://ksrates.readthedocs.io/) and the [Nextflow documentation](https://www.nextflow.io/docs/latest/config.html) for more detail on Nextflow configuration, e.g. for different HPC schedulers. We also provide additional, more general template Nextflow configuration files in the [doc](doc/source) directory in the repository.
 
 
 3. Launch the *ksrates* Nextflow pipeline.
 
-   > **Note:** If this is the first time you launch the pipeline, Nextflow will first download *ksrates* Nextflow pipeline and the *ksrates* Singularity or Docker container.
+   > **Note:** If this is the first time you launch the pipeline, Nextflow will first download *ksrates* Nextflow pipeline and the *ksrates* Apptainer or Docker container.
        
        nextflow run VIB-PSB/ksrates --config ./config_elaeis.txt
 	   
@@ -104,15 +104,15 @@ We briefly illustrate here how to run the *ksrates* Nextflow pipeline on the `te
 
 #### Installation
    
-Install either [Singularity](https://singularity.hpcng.org/admin-docs/master/installation.html) (recommended, but see [here](https://ksrates.readthedocs.io/en/latest/installation.html#container-availability)) or [Docker](https://docs.docker.com/get-docker/). This is needed to run the *ksrates* Singularity or Docker container which contain *ksrates* and all other required software dependencies, so nothing else needs to be installed.
-The *ksrates* Singularity or Docker container will be automatically downloaded simply when you execute a *ksrates* command on the publicly accessible container for the first time, and they will be stored and reused for any further command executions.
+Install either [Apptainer](https://apptainer.org/docs/admin/latest/installation.html) (recommended, but see [here](https://ksrates.readthedocs.io/en/latest/installation.html#container-availability)) or [Docker](https://docs.docker.com/get-docker/). This is needed to run the *ksrates* Apptainer or Docker container which contain *ksrates* and all other required software dependencies, so nothing else needs to be installed.
+The *ksrates* Apptainer or Docker container will be automatically downloaded simply when you execute a *ksrates* command on the publicly accessible container for the first time, and they will be stored and reused for any further command executions.
 
 <!--
 2. Download a *ksrates* container from the VIB-PSB Docker Hub:
 
-	For the Singularity container (recommended): ***TODO:*** check command
+	For the Apptainer container (recommended): ***TODO:*** check command
 	    
-        singularity pull docker://vibpsb/ksrates
+        apptainer pull docker://vibpsb/ksrates
 	    
 	Or for the Docker container: ***TODO:*** full command
 	    
@@ -121,7 +121,7 @@ The *ksrates* Singularity or Docker container will be automatically downloaded s
 
 #### Usage
 
-We briefly illustrate here how to run *ksrates* using the Singularity or Docker container.
+We briefly illustrate here how to run *ksrates* using the Apptainer or Docker container.
 
 <!--
 1. Get the example datasets.
@@ -136,9 +136,9 @@ We briefly illustrate here how to run *ksrates* using the Singularity or Docker 
 
       ksrates [OPTIONS] COMMAND [ARGS]...
 
-* To execute a *ksrates* command using the Singularity container the syntax is:
+* To execute a *ksrates* command using the Apptainer container the syntax is:
 
-      singularity exec docker://vibpsb/ksrates ksrates [OPTIONS] COMMAND [ARGS]...
+      apptainer exec docker://vibpsb/ksrates ksrates [OPTIONS] COMMAND [ARGS]...
 
 * Or to execute a *ksrates* command using the Docker container the syntax is:
 
