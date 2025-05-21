@@ -68,7 +68,7 @@ The table below summarizes relevant differences between Apptainer and Docker con
 .. table:: Supported (|check|) and unsupported (|cross|) features.
 
     ======================  ====================  ============
-    Feature                 Apptainer           Docker
+    Feature                 Apptainer             Docker
     ======================  ====================  ============
     Runs on Linux           |check|               |check|
     Runs on Windows         |check| (WSL2 or VM)  |check|
