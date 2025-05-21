@@ -89,7 +89,7 @@ The syntax to run a command depends on how the package is installed:
 
     Docker pulls the container image from Docker Hub and from then on makes use of the local copy.
 
-In order to submit the command as a job on a compute cluster, wrap the command in the appropriate syntax for the cluster executor system/HPC scheduler (e.g. ``qsub`` for a Sun Grid Engine (SGE) or compatible cluster or a PBS/Torque family scheduler). It is strongly recommended to run the *K*:sub:`S` paralog and orthologs estimation steps (see commands below) on a compute cluster.
+In order to submit the command as a job on a computer cluster, wrap the command in the appropriate syntax for the cluster executor system/HPC scheduler (e.g. ``qsub`` for a Sun Grid Engine (SGE) or compatible cluster or a PBS/Torque family scheduler). It is strongly recommended to run the *K*:sub:`S` paralog and orthologs estimation steps (see commands below) on a computer cluster.
 
 An overview of the commands is available by accessing the package help menu (``ksrates -h``)::
 
@@ -133,7 +133,7 @@ The order of execution of the single commands to run the whole workflow is the f
 
     The output files are generated in the ``paralog_distributions/wgd_elaies`` directory, i.e. ``/elaeis.ks.tsv`` for whole-paranome, ``elaeis.ks_anchors.tsv`` for anchor pairs and ``elaeis.ks_recret_top2000.tsv`` for reciprocally retained gene families.
 
-    Using multiple threads to parallelize the analysis will reduce the compute time. The ``--n-threads`` option configures the number of threads to use (set this according to your available resources, i.e. CPUs/cores; e.g. 10 or more cores running on a compute cluster).
+    Using multiple threads to parallelize the analysis will reduce the compute time. The ``--n-threads`` option configures the number of threads to use (set this according to your available resources, i.e. CPUs/cores; e.g. 10 or more cores running on a computer cluster).
 
 5.  Launch the *wgd* ortholog *K*:sub:`S` analysis to estimate the ortholog *K*:sub:`S` values *for each required species pair*. These are listed in ``rate_adjustment/elaeis/ortholog_pairs_elaeis.txt``::
 
@@ -143,7 +143,7 @@ The order of execution of the single commands to run the whole workflow is the f
 
     The output files are generated in the ``ortholog_distributions`` directory, e.g. the first command generates file ``wgd_asparagus_elaeis/asparagus_elaeis.ks.tsv``. The two species names are in case-insensitive alphabetical order.
 
-    Using multiple threads to parallelize the analysis will reduce the compute time. The ``--n-threads`` option configures the number of threads to use (set this according to your available resources, i.e. CPUs/cores; e.g. 10 or more cores running on a compute cluster).
+    Using multiple threads to parallelize the analysis will reduce the compute time. The ``--n-threads`` option configures the number of threads to use (set this according to your available resources, i.e. CPUs/cores; e.g. 10 or more cores running on a computer cluster).
 
 6.  Estimate the mode and associated standard deviation for each ortholog *K*:sub:`S` distribution::
     

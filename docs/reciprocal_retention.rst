@@ -51,7 +51,7 @@ Runtime, memory and space usage
 ===============================
 
 Compared to the ``paranome`` or ``collinearity`` analyses, the ``reciprocal_retention`` pipeline requires longer runtime (about a day), larger memory usage during execution (about 40 GB) and larger writing space for temporary output files (at least 50 GB).
-It is therefore recommended to check the space availability on disk in advance, execute the pipeline on a compute cluster with parallelization and remove heavy temporary files after completion.
+It is therefore recommended to check the space availability on disk in advance, execute the pipeline on a computer cluster with parallelization and remove heavy temporary files after completion.
 
 .. note::
     Users may want to initially run only the whole-paranome and anchor pairs analyses in order to obtain prompter results; the reciprocal retention analysis can be activated in a subsequent run by setting ``reciprocal_retention = yes`` in the *ksrates* configuration file.
