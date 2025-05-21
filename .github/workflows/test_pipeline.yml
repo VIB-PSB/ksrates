@@ -46,3 +46,9 @@ jobs:
       - name: Visualize output files
         if: ${{ always() }}
         run: ls -l test/rate_adjustment/elaeis
+
+      - uses: actions/upload-artifact@v4
+        name: Test output files
+        with:
+          name: ksrates_test_pipeline_output
+          path: test/rate_adjustment/elaeis/
