@@ -86,9 +86,9 @@ We briefly illustrate here how to run the *ksrates* Nextflow pipeline on the `te
 
 3. Launch the *ksrates* Nextflow pipeline.
 
-   > **Note:** If this is the first time you launch the pipeline, Nextflow will first download the *ksrates* Nextflow pipeline and the *ksrates* Apptainer or Docker container::
+   > **Note:** If this is the first time you launch the pipeline, Nextflow will first download the *ksrates* Nextflow pipeline and the *ksrates* Apptainer or Docker container.
        
-	 nextflow run VIB-PSB/ksrates --test -profile apptainer --config config_files/config_elaeis.txt --expert config_files/config_expert.txt
+	      nextflow run VIB-PSB/ksrates --test -profile apptainer --config config_files/config_elaeis.txt --expert config_files/config_expert.txt
 
    The *ksrates* configuration file is specified through the `--config` parameter, while the *ksrates* expert configuration file is specified through the `--expert` parameter. A Nextflow configuration file named `nextflow.config` and located in the launching folder is automatically detected.
 
