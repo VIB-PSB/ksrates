@@ -24,10 +24,16 @@ The analysis configuration file is composed of a first section defining the spec
     [SPECIES]
     focal_species = elaeis
     newick_tree = ((elaeis, oryza), asparagus);
-    latin_names = elaeis:Elaeis guineensis, oryza:Oryza sativa, asparagus:Asparagus officinalis
 
-    fasta_filenames = elaeis:elaeis.fasta, oryza:oryza.fasta, asparagus:asparagus.fasta
-    gff_filename = elaeis.gff3
+    latin_names =       elaeis    : Elaeis guineensis, 
+                        oryza     : Oryza sativa,
+                        asparagus : Asparagus officinalis
+
+    fasta_filenames =   elaeis    : sequences/elaeis.fasta, 
+                        oryza     : sequences/oryza.fasta, 
+                        asparagus : sequences/asparagus.fasta
+
+    gff_filename = sequences/elaeis.gff3
 
     peak_database_path = ortholog_peak_db.tsv
     ks_list_database_path = ortholog_ks_list_db.tsv
@@ -129,13 +135,16 @@ Nextflow configuration file
 
 The Nextflow configuration file is used to configure various settings for the *ksrates* Nextflow pipeline, such as the executor (e.g. computing cluster, local computer) and its resources (e.g. number of CPUs/cores and memory to use, cluster queues, walltimes etc.) and use of the *ksrates* Singularity or Docker container. We provide a few general template Nextflow configuration files for the *ksrates* Nextflow pipeline in the `doc <https://github.com/VIB-PSB/ksrates/blob/master/doc/source>`_ directory in the GitHub repository. These can be adapted to a user's specific resources and requirements. Below, we briefly explain some of the basic key settings. For a more complete description please refer to the `Nextflow documentation <https://www.nextflow.io/docs/latest/config.html#configuration>`__. ::
 
-    singularity {
-        enabled = true
-        cacheDir = ''
-        autoMounts = true
-    }
-    docker {
-        enabled = false
+    profiles {
+        docker {
+            docker.enabled = true
+            docker.runOptions = "-v $PWD:$PWD"
+        }
+        singularity {
+            singularity.enabled = true
+            singularity.cacheDir = ''
+            singularity.autoMounts = true
+        }
     }
 
     executor {
@@ -160,15 +169,16 @@ The Nextflow configuration file is used to configure various settings for the *k
     	SOME_ENV_VARIABLE = ''
     }
 
-* The **singularity** and **docker** scopes configure container type usage and execution:
+* The **profiles** scope configures the **singularity** and **docker** container settings:
 
-    * **enable** enables or disables the use of the respective container
+    * **enable** enables or disables the use of the respective container.
+    * **runOptions** (only for Docker) mounts the host’s current directory into the container at the same path.
     * **cacheDir** (only for Singularity) the directory where remote the Singularity image from Docker Hub is stored. When using a computing cluster it must be a shared folder accessible to all computing nodes.
     * **autoMounts** (only for Singularity) automatically mounts host paths in the executed container and allows the user to run the pipeline from any directory in a cluster [Default: true]. It requires the `user bind control <https://sylabs.io/guides/3.7/admin-guide/configfiles.html?highlight=user%20bind%20control#bind-mount-management>`__ feature in Singularity installation, which is active by default.
 
 * The **executor** scope configures the underlying system where processes are executed and its overall resources to use:
 
-    * **name** specifies the system type or HPC scheduler to be used (e.g. ``sge``, ``slurm``, ``local``; for more detail see the `Nextflow documentation <https://www.nextflow.io/docs/latest/executor.html>`__).
+    * **name** specifies the system type or HPC scheduler to be used (e.g. ``sge``, ``slurm``, ``pbs``, ``local``; for more details see the `Nextflow documentation <https://www.nextflow.io/docs/latest/executor.html>`__).
     * **queueSize** sets the maximum number of tasks/Nextflow processes handled in parallel by the executor, i.e. for example the number jobs submitted simultaneously on a computer cluster) [Default: 100]. Useful in case of CPU/core/slot usage restriction policies. Set to a value of 1 to configure a fully sequential workflow where no processes are run in parallel.
     * **cpus** sets the maximum number of CPUs/cores made available by the underlying system to the Nextflow pipeline when using a ``local`` executor (and only available for the ``local`` executor setting). Useful to limit CPU/core usage since by default all available CPUs/cores will be used by the ``local`` executor, i.e. when running the whole pipeline on the computer where Nextflow is launched.
 
@@ -182,15 +192,15 @@ The Nextflow configuration file is used to configure various settings for the *k
     
       Settings can be tailored to your configured executor (see above) through the use of Nextflow process directives (for a complete list and detailed descriptions see the `Nextflow documentation <https://www.nextflow.io/docs/latest/process.html#process-directives>`__), such as:
     
-        * **cpus** sets the number of CPUs/cores/slots/threads, e.g. ``8``. It is recommended to set multiple cores for ``wgdParalogs`` and ``wgdOrthologs`` processes [Default if not set: 1]
+        * **cpus** sets the number of CPUs/cores/slots/threads, e.g. ``8``. It is recommended to set multiple cores for ``wgdParalogs`` and ``wgdOrthologs`` processes [Default if not set: 1].
     	* **penv** when using an SGE executor defines the parallel environment to be used when submitting a parallel task.
         * **memory** sets how much memory the process is allowed to use, e.g. ``16GB``.
         * **clusterOptions** any native configuration option accepted by your cluster submit command, such as options specific to your cluster and not supported out of the box by Nextflow (e.g. if your cluster doesn't accept the ``memory`` directive because it expects defining the amount of memory per CPU).
         * **beforeScript** allows you to execute a custom (Bash) snippet before the main process script is run. This may be useful to initialise the underlying compute cluster environment or for other custom initialisation, for example it can be used to load required dependencies if one of the *ksrates* containers is not used, provided that the cluster has those dependencies installed. In that case, the required external dependencies (see also the `wgd Documentation <https://wgd.readthedocs.io/en/latest/index.html#external-software>`__) for the *ksrates* Nextflow processes are:
 
-            * ``wgdParalogs``: Python dependencies listed in requirements.txt, plus BLAST, MUSCLE, MCL, PAML, FastTree and i-ADHoRe (if collinearity analysis is configured).
-            * ``wgdOrthologs``: Python dependencies listed in requirements.txt, plus BLAST, MUSCLE and PAML.
-            * All other processes: Python dependencies listed in requirements.txt.
+            * ``wgdParalogs``: Python dependencies listed in ``requirements.txt``, plus BLAST, MUSCLE, MCL, PAML, FastTree and i-ADHoRe (if collinearity analysis is configured).
+            * ``wgdOrthologs``: Python dependencies listed in ``requirements.txt``, plus BLAST, MUSCLE and PAML.
+            * All other processes: Python dependencies listed in ``requirements.txt``.
 
 * The **env** scope allows the definition one or more variable that will be exported in the environment where the workflow tasks will be executed.
 
