@@ -3,5 +3,9 @@ __pycache__
 .nextflow
 .nextflow.log*
 docs/outdir
-test
-example
+test/rate_adjustment
+test/ortholog_distributions
+test/work
+example/rate_adjustment
+example/ortholog_distributions
+example/work
