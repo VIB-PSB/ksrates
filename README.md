@@ -62,7 +62,7 @@ See the *Usage* sections below and the [Tutorial](https://ksrates.readthedocs.io
     
 2. Install either [Apptainer](https://apptainer.org/docs/admin/latest/installation.html) (recommended, but see [here](https://ksrates.readthedocs.io/en/latest/installation.html#availability-and-dependencies)) or [Docker](https://docs.docker.com/get-docker/). This is needed to run the *ksrates* Apptainer or Docker container which contain all other required software dependencies, so that nothing else needs to be installed.
 
-3. Install *ksrates*: when using Nextflow, *ksrates* and the *ksrates* Apptainer or Docker container will be automatically downloaded simply when you execute the launch of the *ksrates* pipeline for the first time, and they will be stored and reused for any further executions (see [Nextflow pipeline sharing](https://www.nextflow.io/docs/latest/sharing.html)). Therefore, in this case it is not necessary to manually install *ksrates*.
+3. The *ksrates* Apptainer or Docker container will be automatically downloaded when you execute the *ksrates* pipeline for the first time, and it will be stored and reused for any further executions (see [Nextflow pipeline sharing](https://www.nextflow.io/docs/latest/sharing.html)). *ksrates* and its dependencies are already installed within the container.
 
 #### Usage
 
@@ -73,9 +73,7 @@ We briefly illustrate here how to run the *ksrates* Nextflow pipeline on the `te
            git clone https://github.com/VIB-PSB/ksrates
            cd ksrates/test
 
-2. Prepare the configuration files.
-
-      The `test` directory already contains:
+2. Inspect and possibly adapt the configuration files. The `test` directory contains:
       
       * A pre-filled *ksrates* configuration file (`config_files/config_elaeis.txt`) for the oil palm use case.
 
@@ -100,9 +98,7 @@ We briefly illustrate here how to run the *ksrates* Nextflow pipeline on the `te
 
 #### Installation
    
-1. Install either [Apptainer](https://apptainer.org/docs/admin/latest/installation.html) (recommended, but see [here](https://ksrates.readthedocs.io/en/latest/installation.html#availability-and-dependencies)) or [Docker](https://docs.docker.com/get-docker/). The container contains *ksrates* and all other software dependencies, so that nothing else needs to be installed.
-
-2. Pull the container from the VIB-PSB Docker Hub:
+1. Install either [Apptainer](https://apptainer.org/docs/admin/latest/installation.html) (recommended, but see [here](https://ksrates.readthedocs.io/en/latest/installation.html#availability-and-dependencies)) or [Docker](https://docs.docker.com/get-docker/), then pull the container from VIB-PSB Docker Hub. The container contains *ksrates* and all other software dependencies, so that nothing else needs to be installed.
 
 	For the Apptainer container (recommended):
 	    
@@ -112,35 +108,28 @@ We briefly illustrate here how to run the *ksrates* Nextflow pipeline on the `te
 	    
         docker pull vibpsb/ksrates:latest
 
+2. *ksrates* and its dependencies are already installed within the container.
+
 #### Usage
 
-We briefly illustrate here how to run *ksrates* using the Apptainer or Docker container.
+Syntax to execute an individual command with command-line interface:
 
-<!--
-1. Get the example datasets.
-(See Usage Nextflow pipeline above)
+* Basic *ksrates* syntax:
 
-2. Execute individual *ksrates* commands.
--->
+      ksrates [OPTIONS] COMMAND [ARGS]
 
-<!-- ***TODO:*** double-check this -->
+* Execute a *ksrates* command using the Apptainer container:
 
-* *ksrates* comes with a command-line interface. Its basic syntax is:
+      apptainer exec docker://vibpsb/ksrates ksrates [OPTIONS] COMMAND [ARGS]
 
-      ksrates [OPTIONS] COMMAND [ARGS]...
+* Execute a *ksrates* command using the Docker container:
 
-* To execute a *ksrates* command using the Apptainer container the syntax is:
-
-      apptainer exec docker://vibpsb/ksrates ksrates [OPTIONS] COMMAND [ARGS]...
-
-* Or to execute a *ksrates* command using the Docker container the syntax is:
-
-      docker run --rm -v $PWD:/temp -w /temp vibpsb/ksrates ksrates [OPTIONS] COMMAND [ARGS]...
+      docker run --rm -v $PWD:/temp -w /temp vibpsb/ksrates ksrates [OPTIONS] COMMAND [ARGS]
 	
 
-Some example *ksrates* commands:
+Example *ksrates* commands with basic syntax:
 
-* Show usage and all available `COMMAND`s and `OPTIONS`:
+* Show help menu for usage and all available `COMMAND`s and `OPTIONS`:
 
 	ksrates -h
 
@@ -148,20 +137,20 @@ Some example *ksrates* commands:
 
 	ksrates generate-config config_files/config_elaeis.txt
 
-* Show usage and `ARGS` for a specific `COMMAND`:
+* Show help menu for usage and `ARGS` for a specific `COMMAND`:
 
 	ksrates orthologs-ks -h
 
-* Run the ortholog *K*<sub>S</sub> analysis between two species using four threads/CPU cores:
+* Run the ortholog *K*<sub>S</sub> analysis between two species specifying the number of CPUs:
 
       ksrates orthologs-ks config_files/config_elaeis.txt --expert config_files/config_expert.txt elaeis oryza --n-threads 4
 
-Please see the [full documentation](https://ksrates.readthedocs.io/) for more details and the complete pipeline steps.
+Please see the [full documentation](https://ksrates.readthedocs.io/) for more details and for the complete pipeline.
 
 
 ## Support
 
-If you come across a bug or have any question or suggestion, feel free to reach out and open an issue on our [GitHub](https://github.com/VIB-PSB/ksrates) page.
+If you come across a bug or have any question or suggestion, feel free to reach out on our GitHub [issue](https://github.com/VIB-PSB/ksrates/issues) page.
 
 
 ## Citation
