@@ -37,9 +37,9 @@ The *ksrates* pipeline can be automatically run through Nextflow with a few prep
         nextflow run VIB-PSB/ksrates --config config_files/config_elaeis.txt --expert config_files/config_expert.txt
 
     .. note::
-       Please update `ksrates` to version ``v1.1.3`` or later when launching it with Nextflow versions ``22.03.0-edge`` or later to prevent compatibility issues. See our :ref:`installation page <install_nextflow>` about how to get the latest Nextflow version. You can also launch a specific (e.g. previous) Nextflow version through the ``NXF_VER`` environmental `variable <https://www.nextflow.io/docs/latest/getstarted.html#updates>`__ in the command line::
+       As from `ksrates` ``v2.0.0``, the Nextflow pipeline has been ported to DSL2 syntax and requires at least Nextflow version ``22.03.0-edge``. See our :ref:`installation page <install_nextflow>` about how to get the latest Nextflow version. You can also launch a specific (e.g. previous) Nextflow version through the ``NXF_VER`` environmental `variable <https://www.nextflow.io/docs/latest/getstarted.html#updates>`__ in the command line::
 
-            NXF_VER=21.10.6 nextflow run VIB-PSB/ksrates --config config_files/config_elaeis.txt --expert config_files/config_expert.txt
+            NXF_VER=24.10.5 nextflow run VIB-PSB/ksrates <args>
     
     The *ksrates configuration file* is specified through the ``--config`` parameter. The *Nextflow configuration file* is automatically recognized when it's named with the Nextflow-reserved ``nextflow.config`` file name and located in the launching directory; alternatively, the user can provide a custom file by specifying its name or path using the ``-C`` option (see `Nextflow documentation <https://www.nextflow.io/docs/latest/cli.html#hard-configuration-override>`__).
     
