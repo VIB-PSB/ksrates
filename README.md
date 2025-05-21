@@ -60,9 +60,9 @@ See the *Usage* sections below and the [Tutorial](https://ksrates.readthedocs.io
 	    
            mv nextflow /usr/local/bin
     
-2. Install either [Apptainer](https://apptainer.org/docs/admin/latest/installation.html) (recommended, but see [here](https://ksrates.readthedocs.io/en/latest/installation.html#availability-and-dependencies)) or [Docker](https://docs.docker.com/get-docker/). This is needed to run the *ksrates* Apptainer or Docker container which contain all other required software dependencies, so that nothing else needs to be installed.
+2. Install either [Apptainer](https://apptainer.org/docs/admin/latest/installation.html) (recommended, but see [here](https://ksrates.readthedocs.io/en/latest/installation.html#availability-and-dependencies)) or [Docker](https://docs.docker.com/get-docker/).
 
-3. The *ksrates* Apptainer or Docker container will be automatically downloaded when you execute the *ksrates* pipeline for the first time, and it will be stored and reused for any further executions (see [Nextflow pipeline sharing](https://www.nextflow.io/docs/latest/sharing.html)). *ksrates* and its dependencies are already installed within the container.
+3. The *ksrates* Apptainer or Docker container will be automatically downloaded when you execute the *ksrates* Nextflow pipeline for the first time, and it will be stored and reused for any further executions (see [Nextflow pipeline sharing](https://www.nextflow.io/docs/latest/sharing.html)). *ksrates* and its dependencies are already installed within the container.
 
 #### Usage
 
@@ -75,18 +75,18 @@ We briefly illustrate here how to run the *ksrates* Nextflow pipeline on the `te
 
 2. Inspect and possibly adapt the configuration files. The `test` directory contains:
       
-      * A pre-filled *ksrates* configuration file (`config_files/config_elaeis.txt`) for the oil palm use case.
+      * A pre-filled *ksrates* configuration file (`config_files/config_elaeis.txt`).
 
       * A pre-filled *ksrates* expert configuration file (`config_files/config_expert.txt`).
 
-      * A Nextflow configuration file template (`nextflow.config`). While the `test` dataset is very lightweight, real-case scenarios require configuration of this file: pipeline executor (i.e. local computer or computer cluster), allocated resources (e.g. number of CPUs) and *ksrates* Apptainer or Docker container.
+      * A Nextflow configuration file template (`nextflow.config`). While the test dataset is very lightweight, real-case scenarios require configuration of this file: pipeline executor (i.e. local computer or computer cluster), allocated resources (e.g. number of CPUs) and *ksrates* Apptainer or Docker container.
 
-        See the [full documentation](https://ksrates.readthedocs.io/) and the [Nextflow documentation](https://www.nextflow.io/docs/latest/config.html) for more details. A general Nextflow configuration template is provided in the [doc](docs) directory on the GitHub repository.
+        See the [full documentation](https://ksrates.readthedocs.io/) and the [Nextflow documentation](https://www.nextflow.io/docs/latest/config.html) for more details. A general Nextflow configuration template is provided in the [docs](docs) directory on the GitHub repository.
 
 
 3. Launch the *ksrates* Nextflow pipeline.
 
-   > **Note:** If this is the first time you launch the pipeline, Nextflow will first download *ksrates* Nextflow pipeline and the *ksrates* Apptainer or Docker container.
+   > **Note:** If this is the first time you launch the pipeline, Nextflow will first download the *ksrates* Nextflow pipeline and the *ksrates* Apptainer or Docker container::
        
 	 nextflow run VIB-PSB/ksrates --test -profile apptainer --config config_files/config_elaeis.txt --expert config_files/config_expert.txt
 
