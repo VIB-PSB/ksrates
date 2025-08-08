@@ -43,10 +43,10 @@ Optional methods are activated through the :ref:`expert configuration file <expe
 Anchor *K*:sub:`S` clustering
 +++++++++++++++++++++++++++++
 
-A clustering approach is used in order to classify anchor pair *K*:sub:`S` values into groups that potentially stem from different WGDs in the ancestry of the focal species. The approach does not cluster the anchor pair *K*:sub:`S` values directly, but instead uses lognormal mixture modeling to cluster median *K*:sub:`S` values for the collinear segment pairs, i.e. pairs of sequence regions with conserved gene content and order, that the anchor pairs reside on. Segment pairs originated by the same WGD are likely to share a similar *K*:sub:`S` age and to fall into the same cluster.
+A clustering approach is used in order to classify anchor pair *K*:sub:`S` values into groups that potentially stem from different WGDs in the ancestry of the focal species. The approach does not fit the anchor pair *K*:sub:`S` values directly, but instead uses lognormal mixture modeling to cluster *median* *K*:sub:`S` values calculated for the collinear segment pairs (pairs of sequence regions with conserved gene content and order) that the anchor pairs reside on. Segment pairs originated by the same WGD are likely to share a similar median *K*:sub:`S` age and to fall into the same cluster.
 
-Such segment-pair medians are then clustered through lognormal mixture modeling. In order to obtain the clusters of the original anchor *K*:sub:`S` data, each median *K*:sub:`S` value is replaced by the *K*:sub:`S` list of the segment pair.
-Anchor *K*:sub:`S` clusters for which a link to a real WGD event is ambiguous or unlikely are removed from the dataset (i.e. small, flat or old clusters).
+Then, in order to show the original anchor pair *K*:sub:`S` data, each median *K*:sub:`S` value is replaced by the *K*:sub:`S` list of the segment pair it derives from.
+Small, flat or too old anchor pair *K*:sub:`S` clusters are finally removed from the dataset because their link to a real WGD event is ambiguous or unlikely.
 
 
 .. _`elmm`:
