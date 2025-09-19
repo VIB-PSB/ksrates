@@ -244,7 +244,7 @@ def ks_paralogs(species_name, cds_fasta, base_dir='.', eval_cutoff=1e-10, inflat
 
 
 def ks_paralogs_rec_ret(species_name, cds_fasta, latin_name, custom_recret_gfs, parsed_homology_table,
-                        top=2000, rank_type="lambda", orthomcl_inflation=1.5, use_original_orthomcl_version=False,
+                        top=2000, bottom=False, rank_type="lambda", orthomcl_inflation=1.5, use_original_orthomcl_version=False,
                         max_extra_original_genes_in_new_gfs=15, min_common_old_genes_in_new_gfs=3,
                         base_dir='.', aligner='muscle', min_msa_length=100, codeml='codeml', codeml_times=1, pairwise=False,
                         max_gene_family_size=200, weighting_method='fasttree', n_threads=1, overwrite=False, preserve=False,
@@ -258,7 +258,8 @@ def ks_paralogs_rec_ret(species_name, cds_fasta, latin_name, custom_recret_gfs, 
     
     :param species_name: name or ID of the species, used in output file names
     :param cds_fasta: CDS fasta file of the focal species
-    :param top : 
+    :param top : number of top GFs to be reconstructed
+    :param bottom : boolean that makes the code actually use the BOTTOM GFs instead of the TOP GFs (for comparison purposes)
     :param rank_type: 
     :param orthomcl_inflation: 
     :param use_original_orthomcl_version: by default, code uses the edited OrthoMCLight version (Default: False)
@@ -395,6 +396,13 @@ def ks_paralogs_rec_ret(species_name, cds_fasta, latin_name, custom_recret_gfs, 
                         
             # Log setup related to reciprocal retention analysis
             logging.info(f"Reciprocal retention pipeline setup:")
+            # NOTE: if "bottom" is set to True, then use the BOTTOM rec.ret. GFs instead of the TOP ones
+            #       (done for comparison purposes)
+            if bottom == True:
+                logging.warning(f"====================================================================")
+                logging.warning(f">>>>>>>  NOTE: USING THE BOTTOM GFs INSTEAD OF THE TOP GFs!  <<<<<<<")
+                logging.warning(f"====================================================================")
+            # Other normal settings:
             logging.info(f"- Number of top reciprocally retained GF to consider: {top}")
             logging.info(f"- The 9178 core-angiosperm GFs are ranked according to: {rank_type} ranking.")
             logging.info(f"- OrthoMCL will be used to reconstruct the top {top} GFs for focal species [{species_name}]")
@@ -469,7 +477,15 @@ def ks_paralogs_rec_ret(species_name, cds_fasta, latin_name, custom_recret_gfs, 
             logging.info("")
             original_top_gfs_raw_path = os.path.join(ksrates_rec_ret_dir, "gene_families_new_lambda_ranking.xlsx")
             original_top_gfs_ranking = read_excel(original_top_gfs_raw_path, sheet_name="gene family rankings", header=None)
-            gf_ids_ranked_to_top = original_top_gfs_ranking.iloc[:top, 0]
+            
+            # Get GF IDs of the top GFs (or of the bottom GFs, for comparison purposes)
+            # - Normal route: use the TOP GFs
+            if bottom == False:
+                gf_ids_ranked_to_top = original_top_gfs_ranking.iloc[:top, 0]
+            # - Alternative route: BOTTOM GFs (for comparison purposes)
+            else:
+                gf_ids_ranked_to_top = original_top_gfs_ranking.iloc[-top:, 0]
+            # Get gene members of all orthogroups
             original_top_gf_genes_raw = read_excel(original_top_gfs_raw_path, sheet_name="orthogroup member genes", header=None)
 
             logging.debug(f"Getting genes from the original top GFs and from the new OrthoMCL GFs")
@@ -477,7 +493,7 @@ def ks_paralogs_rec_ret(species_name, cds_fasta, latin_name, custom_recret_gfs, 
             original_and_focal_genes_in_orthomcl_gfs = fcRecRet_OMCL.count_original_and_focal_genes_in_orthomcl_gfs(orthomcl_output_renamed_path)
 
             # Match original top GFs from 37 species with new GFs expanded with focal species
-            matched_orthomcl_gfs_path = os.path.join(orthomcl_outdir_focal, f"{species_name}_matched_gfs_max_{max_extra_original_genes_in_new_gfs}_extra.tsv")
+            matched_orthomcl_gfs_path = os.path.join(orthomcl_outdir_focal, f"{species_name}_matched_top_{top}_gfs_max_{max_extra_original_genes_in_new_gfs}_extra.tsv")
             if os.path.exists(matched_orthomcl_gfs_path):                
                 logging.info(f"The original top {top} GFs have already been matched to the new OrthoMCL GFs [{os.path.basename(matched_orthomcl_gfs_path)}]")
             else:

@@ -897,6 +897,40 @@ class Configuration:
             top = None
         return top
 
+    def use_bottom_gfs_instead_of_top(self, reciprocal_retention):
+        """
+        Checks whether the BOTTOM rec.ret. GFs should be used instead of the TOP rec.ret. GFs, as per expert configuration file.
+        If set to "yes", BOTTOM reciprocally retained gene families will be used, with number decided by "top_reciprocally_retained_gfs" (default 2000)
+        Default is "no", i.e. using TOP rec.ret.
+
+        This parameter builds Ks distributions from the BOTTOM GFs instead of from the TOP GFs (default bottom 2000 in ranking)
+        The is done to test whether bottom-derived Ks distributions are less informative about WGD peaks than top-derived Ks distributions.
+
+        :return boolean: boolean deciding whether to use the BOTTOM rec.ret GFs (True), or to use the standard TOP rec.ret. GFs (False); default: False
+        """
+        if reciprocal_retention:
+            if self.expert_config is not None:
+                try:
+                    bottom = self.expert_config.get("EXPERT PARAMETERS", "use_bottom_gfs_instead_of_top").lower()
+                    if bottom not in ["yes", "no"]:
+                        logging.warning(f'Unrecognized field in expert configuration file [bottom = {bottom}]. Please choose between "yes" and "no". Default choice will be applied [no]')
+                        bottom = False
+                    else:
+                        if bottom == "yes":
+                            bottom = True
+                        elif bottom == "no":
+                            bottom = False
+                except Exception:
+                    logging.warning(f'Missing field [bottom] in expert configuration file. Please choose between "yes" and "no". Default choice will be applied [no]')
+                    bottom = False
+            else:
+                # Default: DOESN'T use bottom (False) -> so uses TOP
+                bottom = False
+        else:
+            # If rec.ret. pipeline is not required, then this bottom parameter is not needed (None)
+            bottom = None
+        return bottom
+
 
     def get_reciprocal_retention_rank_type(self, reciprocal_retention):
         """
