@@ -54,7 +54,7 @@ _OTHER_MIXED_PLOTS_SUBDIR = "other_mixed_plots"
 
 def generate_mixed_plot_figure(species, x_max_lim, y_max_lim, corrected_or_not, correction_table_available, 
                                plot_correction_arrows, paranome_data=False, colinearity_data=False, 
-                               reciprocal_retention_data=False, top=None, rank_type=None):
+                               reciprocal_retention_data=False, num_gfs=None, rank_type=None):
     """
     Initializes a figure with a single empty plot for the mixed distribution.
 

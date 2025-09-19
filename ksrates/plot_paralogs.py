@@ -25,8 +25,16 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
     colinearity_analysis = config.get_colinearity()
     reciprocal_retention_analysis = config.get_reciprocal_retention()
     # Get parameters related to reciprocal retention pipeline
-    top = config.get_reciprocal_retention_top(reciprocal_retention_analysis) # Number of top gene families
+    num_gfs = config.get_num_reciprocal_retention_gfs(reciprocal_retention_analysis) # Number of top gene families
+    bottom = config.use_bottom_gfs_instead_of_top(reciprocal_retention_analysis) # Use actually the BOTTOM GFs instead of the top ones (number of bottom GFs remains defined by "top" variable)
     rank_type = config.get_reciprocal_retention_rank_type(reciprocal_retention_analysis) # Rank type (only "lambda" supported)  
+
+    # By default the pipeline uses the TOP-ranked reciprocally retained GFs.
+    # However, for comparison purposes, the user might want to use the BOTTOM GFs (e.g. the bottom 2000 ones)
+    if bottom == False:
+        top_or_bottom = "top"
+    else:
+        top_or_bottom = "bottom"
 
     if not colinearity_analysis and not paranome_analysis and not reciprocal_retention_analysis:
         logging.error('At least one of the "paranome" or "collinearity" or "reciprocal_retention" parameters in the configuration file needs to be set to "yes".')
@@ -47,7 +55,7 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
         if anchors_ks_tsv_file == "":
             logging.error(f"Anchor pair Ks TSV file not found at default position [{default_path_anchors_tsv_file}].")
     if reciprocal_retention_analysis:
-        default_path_rec_ret_tsv_file = os.path.join("paralog_distributions", f"wgd_{species}", _OUTPUT_KS_FILE_PATTERN_RR_OMCL.format(species, top))
+        default_path_rec_ret_tsv_file = os.path.join("paralog_distributions", f"wgd_{species}", _OUTPUT_KS_FILE_PATTERN_RR_OMCL.format(species, top_or_bottom, num_gfs))
         rec_ret_tsv_file = fcCheck.get_argument_path(rec_ret_tsv_file, default_path_rec_ret_tsv_file, "Reciprocally retained paralog Ks TSV file")
         if rec_ret_tsv_file == "":
             logging.error(f"Reciprocally retained paralog Ks TSV file not found at default position [{default_path_rec_ret_tsv_file}].")
@@ -111,10 +119,10 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
         logging.info(f"Plotting paranome Ks distribution for species [{species}]")
         fig_uncorr_para, ax_uncorr_para = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
                                     "un-corrected", correction_table_available, plot_correction_arrows,
-                                    paranome_data=paranome_analysis, top=top, rank_type=rank_type)
+                                    paranome_data=paranome_analysis, num_gfs=num_gfs, rank_type=rank_type)
         fig_corr_para, ax_corr_para = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
                                     "corrected", correction_table_available, plot_correction_arrows,
-                                    paranome_data=paranome_analysis, top=top, rank_type=rank_type)
+                                    paranome_data=paranome_analysis, num_gfs=num_gfs, rank_type=rank_type)
         ax_uncorr_include_para.append(ax_uncorr_para)
         ax_corr_include_para.append(ax_corr_para)
         ax_uncorr_list.append(ax_uncorr_para)
@@ -124,10 +132,10 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
         logging.info(f"Plotting anchor pair Ks distribution for species [{species}]")
         fig_uncorr_col, ax_uncorr_col = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
                                     "un-corrected", correction_table_available, plot_correction_arrows,
-                                    colinearity_data=colinearity_analysis, top=top, rank_type=rank_type)
+                                    colinearity_data=colinearity_analysis, num_gfs=num_gfs, rank_type=rank_type)
         fig_corr_col, ax_corr_col = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
                                     "corrected", correction_table_available, plot_correction_arrows,
-                                    colinearity_data=colinearity_analysis, top=top, rank_type=rank_type)
+                                    colinearity_data=colinearity_analysis, num_gfs=num_gfs, rank_type=rank_type)
         ax_uncorr_include_col.append(ax_uncorr_col)
         ax_corr_include_col.append(ax_corr_col)
         ax_uncorr_list.append(ax_uncorr_col)
@@ -137,10 +145,10 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
         logging.info(f"Plotting reciprocally retained paralog Ks distribution for species [{species}]")
         fig_uncorr_rr, ax_uncorr_rr = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
                                     "un-corrected", correction_table_available, plot_correction_arrows,
-                                    reciprocal_retention_data=reciprocal_retention_analysis, top=top, rank_type=rank_type)
+                                    reciprocal_retention_data=reciprocal_retention_analysis, num_gfs=num_gfs, rank_type=rank_type)
         fig_corr_rr, ax_corr_rr = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
                                     "corrected", correction_table_available, plot_correction_arrows,
-                                    reciprocal_retention_data=reciprocal_retention_analysis, top=top, rank_type=rank_type)
+                                    reciprocal_retention_data=reciprocal_retention_analysis, num_gfs=num_gfs, rank_type=rank_type)
         ax_uncorr_include_rr.append(ax_uncorr_rr)
         ax_corr_include_rr.append(ax_corr_rr)
         ax_uncorr_list.append(ax_uncorr_rr)
@@ -152,11 +160,11 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
         fig_uncorr_para_col, ax_uncorr_para_col = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
                                     "un-corrected", correction_table_available, plot_correction_arrows,
                                     paranome_data=paranome_analysis, colinearity_data=colinearity_analysis,
-                                    top=top, rank_type=rank_type)
+                                    num_gfs=num_gfs, rank_type=rank_type)
         fig_corr_para_col, ax_corr_para_col = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
                                     "corrected", correction_table_available, plot_correction_arrows,
                                     paranome_data=paranome_analysis, colinearity_data=colinearity_analysis,
-                                    top=top, rank_type=rank_type)
+                                    num_gfs=num_gfs, rank_type=rank_type)
         ax_uncorr_include_para.append(ax_uncorr_para_col)
         ax_corr_include_para.append(ax_corr_para_col)
         ax_uncorr_include_col.append(ax_uncorr_para_col)
@@ -169,11 +177,11 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
         fig_uncorr_para_rr, ax_uncorr_para_rr = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
                                     "un-corrected", correction_table_available, plot_correction_arrows,
                                     paranome_data=paranome_analysis, reciprocal_retention_data=reciprocal_retention_analysis,
-                                    top=top, rank_type=rank_type)
+                                    num_gfs=num_gfs, rank_type=rank_type)
         fig_corr_para_rr, ax_corr_para_rr = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
                                     "corrected", correction_table_available, plot_correction_arrows,
                                     paranome_data=paranome_analysis, reciprocal_retention_data=reciprocal_retention_analysis,
-                                    top=top, rank_type=rank_type)
+                                    num_gfs=num_gfs, rank_type=rank_type)
         ax_uncorr_include_para.append(ax_uncorr_para_rr)
         ax_corr_include_para.append(ax_corr_para_rr)
         ax_uncorr_include_rr.append(ax_uncorr_para_rr)
@@ -186,11 +194,11 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
         fig_uncorr_col_rr, ax_uncorr_col_rr = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
                                     "un-corrected", correction_table_available, plot_correction_arrows,
                                     colinearity_data=colinearity_analysis, reciprocal_retention_data=reciprocal_retention_analysis,
-                                    top=top, rank_type=rank_type)
+                                    num_gfs=num_gfs, rank_type=rank_type)
         fig_corr_col_rr, ax_corr_col_rr = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
                                     "corrected", correction_table_available, plot_correction_arrows,
                                     colinearity_data=colinearity_analysis, reciprocal_retention_data=reciprocal_retention_analysis,
-                                    top=top, rank_type=rank_type)
+                                    num_gfs=num_gfs, rank_type=rank_type)
         ax_uncorr_include_col.append(ax_uncorr_col_rr)
         ax_corr_include_col.append(ax_corr_col_rr)
         ax_uncorr_include_rr.append(ax_uncorr_col_rr)
@@ -204,11 +212,11 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
         fig_uncorr_para_col_rr, ax_uncorr_para_col_rr = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
                                     "un-corrected", correction_table_available, plot_correction_arrows,
                                     paranome_data=paranome_analysis, colinearity_data=colinearity_analysis,
-                                    reciprocal_retention_data=reciprocal_retention_analysis, top=top, rank_type=rank_type)
+                                    reciprocal_retention_data=reciprocal_retention_analysis, num_gfs=num_gfs, rank_type=rank_type)
         fig_corr_para_col_rr, ax_corr_para_col_rr = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
                                     "corrected", correction_table_available, plot_correction_arrows,
                                     paranome_data=paranome_analysis, colinearity_data=colinearity_analysis,
-                                    reciprocal_retention_data=reciprocal_retention_analysis, top=top, rank_type=rank_type)
+                                    reciprocal_retention_data=reciprocal_retention_analysis, num_gfs=num_gfs, rank_type=rank_type)
         ax_uncorr_include_para.append(ax_uncorr_para_col_rr)
         ax_corr_include_para.append(ax_corr_para_col_rr)
         ax_uncorr_include_col.append(ax_uncorr_para_col_rr)

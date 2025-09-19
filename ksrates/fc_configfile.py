@@ -872,9 +872,14 @@ class Configuration:
         return max_size
 
 
-    def get_reciprocal_retention_top(self, reciprocal_retention):
+    def get_num_reciprocal_retention_gfs(self, reciprocal_retention):
         """
-        Gets the number of top reciprocally retained gene families to be considered out of the total ranked 9178 ones.
+        Gets the number of ranked reciprocally retained gene families to be considered out of the total ranked 9178 ones.
+        Default: 2000 GFs are used.
+
+        Note: The normal use-case scenario gets the *TOP*-ranked GFs, e.g. from 1 to 2000.
+              However, the user can also get the *BOTTOM*-ranked GFs (toggling "use_bottom_gfs_instead_of_top"), for comparison purposes.
+              In this case, "get_num_reciprocal_retention_gfs" will get instead e.g. from 7178 to 9178.
 
         :return top: integer or float
         """

@@ -27,8 +27,16 @@ def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors
     colinearity_analysis = config.get_colinearity()
     reciprocal_retention_analysis = config.get_reciprocal_retention()
 
-    top = config.get_reciprocal_retention_top(reciprocal_retention_analysis)
+    num_gfs = config.get_num_reciprocal_retention_gfs(reciprocal_retention_analysis)
+    bottom = config.use_bottom_gfs_instead_of_top(reciprocal_retention_analysis) # Use actually the BOTTOM GFs instead of the top ones (number of bottom GFs remains defined by "top" variable)
     rank_type = config.get_reciprocal_retention_rank_type(reciprocal_retention_analysis)
+
+    # By default the pipeline uses the TOP-ranked reciprocally retained GFs.
+    # However, for comparison purposes, the user might want to use the BOTTOM GFs (e.g. the bottom 2000 ones)
+    if bottom == False:
+        top_or_bottom = "top"
+    else:
+        top_or_bottom = "bottom"
 
     # Use these optional arguments to avoid performing LMM on a certain data type, overwriting what written in the config file;
     # This is used in paralogs_analysis.py when LMM is called as extra method and allows to fine tune what is activated and what not
@@ -105,7 +113,7 @@ def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors
         if anchors_ks_tsv_file == "":
             logging.error(f"Anchor pair Ks TSV file not found at default position [{default_path_anchors_tsv_file}].")
     if reciprocal_retention_analysis:
-        default_path_rec_ret_tsv_file = os.path.join("paralog_distributions", f"wgd_{species}", _OUTPUT_KS_FILE_PATTERN_RR_OMCL.format(species, top))
+        default_path_rec_ret_tsv_file = os.path.join("paralog_distributions", f"wgd_{species}", _OUTPUT_KS_FILE_PATTERN_RR_OMCL.format(species, top_or_bottom, num_gfs))
         rec_ret_tsv_file = fcCheck.get_argument_path(rec_ret_tsv_file, default_path_rec_ret_tsv_file, "Reciprocally retained paralog Ks TSV file")
         if rec_ret_tsv_file == "":
             logging.error(f"Reciprocally retained paralog Ks TSV file not found at default position [{default_path_rec_ret_tsv_file}].")
@@ -119,7 +127,7 @@ def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors
     fig_colin, axis_colin = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, "corrected",
                     correction_table_available, plot_correction_arrows, colinearity_data=True)
     fig_rec_ret, axis_rec_ret = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, "corrected",
-                    correction_table_available, plot_correction_arrows, reciprocal_retention_data=True, top=top, rank_type=rank_type)
+                    correction_table_available, plot_correction_arrows, reciprocal_retention_data=True, num_gfs=num_gfs, rank_type=rank_type)
 
     if paranome_analysis:
         parameter_table = []
