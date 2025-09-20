@@ -885,16 +885,16 @@ class Configuration:
         """
         if reciprocal_retention:
             if self.expert_config is not None:
-                # Get user-defined top value in field "top_reciprocally_retained_gfs"
-                # NOTE: If FIELD "top_reciprocally_retained_gfs" is missing in config file, "top" variable falls back to 2000
+                # Get user-defined top value in field "num_reciprocally_retained_gfs"
+                # NOTE: If FIELD "num_reciprocally_retained_gfs" is missing in config file, "top" variable falls back to 2000
                 # NOTE: If instead only the related VALUE is not present, "top" variable is an empty string
-                top = self.expert_config.get("EXPERT PARAMETERS", "top_reciprocally_retained_gfs", fallback="2000")
+                top = self.expert_config.get("EXPERT PARAMETERS", "num_reciprocally_retained_gfs", fallback="2000")
                 # Convert to integer the user-defined value or the fallback value
                 try:
                     top = int(top)
                 # If the VALUE was left empty in by user ("top" variable is empty string), assume again 2000
                 except ValueError:
-                    logging.warning("Field [top_reciprocally_retained_gfs] in expert config file was left empty: assuming top 2000 GFs")
+                    logging.warning("Field [num_reciprocally_retained_gfs] in expert config file was left empty: assuming top 2000 GFs")
                     top = 2000
             else:
                 top = 2000
@@ -905,7 +905,7 @@ class Configuration:
     def use_bottom_gfs_instead_of_top(self, reciprocal_retention):
         """
         Checks whether the BOTTOM rec.ret. GFs should be used instead of the TOP rec.ret. GFs, as per expert configuration file.
-        If set to "yes", BOTTOM reciprocally retained gene families will be used, with number decided by "top_reciprocally_retained_gfs" (default 2000)
+        If set to "yes", BOTTOM reciprocally retained gene families will be used, with number decided by "num_reciprocally_retained_gfs" (default 2000)
         Default is "no", i.e. using TOP rec.ret.
 
         This parameter builds Ks distributions from the BOTTOM GFs instead of from the TOP GFs (default bottom 2000 in ranking)

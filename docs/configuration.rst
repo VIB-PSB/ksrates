@@ -241,7 +241,8 @@ The following can be used as a template (default values)::
     max_gene_family_size = 200
     distribution_peak_estimate = mode
     min_ks_anchor_pairs = 0.05
-    top_reciprocally_retained_gfs = 2000
+    num_reciprocally_retained_gfs = 2000
+    use_bottom_gfs_instead_of_top = no
     use_original_orthomcl_version = no
 
 * **logging_level**: the lowest logging/verbosity level of messages printed to the console/logs (increasing severity levels: *notset*, *debug*, *info*, *warning*, *error*, *critical*). Messages less severe than *level* will be ignored; *notset* causes all messages to be processed. [Default: "info"]
@@ -256,5 +257,6 @@ The following can be used as a template (default values)::
 * **max_gene_family_size**: maximum number of members that any paralog gene family can have to be included in *K*:sub:`S` estimation. Large gene families increase the run time and are often composed of unrelated sequences grouped together by shared protein domains or repetitive sequences. But this is not always the case, so one may want to check manually the gene families in file ``paralog_distributions/wgd_species/species.mcl.tsv`` and increase (or even decrease) this number. [Default: 200]
 * **distribution_peak_estimate**: the statistical method used to obtain a single ortholog *K*:sub:`S` estimate for the divergence time of a species pair from its ortholog distribution or to obtain a single paralog *K*:sub:`S` estimate from an anchor *K*:sub:`S` cluster or from lognormal components in mixture models (options: "mode" or "median"). [Default: "mode"]
 * **min_ks_anchor_pairs**: lower limit for the *K*:sub:`S` range used to build the anchor pair *K*:sub:`S` distribution. By default, *K*:sub:`S` values smaller than 0.05 in the anchor distribition are ignored (weighted as 0), in order to remove noise at recent *K*:sub:`S` age that could be mistakenly interpreted as a very recent WGM. Set this value to 0 to instead keep all *K*:sub:`S` values when you are actually interested in WGMs with very young age. [Default: 0.05]
-* **top_reciprocally_retained_gfs**: number of gene families at the top of the reciprocal retention ranking that will be used to build the related *K*:sub:`S` distribution. [Default: 2000]
+* **num_reciprocally_retained_gfs**: number of gene families at the top of the reciprocal retention ranking that will be used to build the related *K*:sub:`S` distribution. [Default: 2000]
+* **use_bottom_gfs_instead_of_top**: use the bottom-ranked reciprocally retained GFs instead of the top-ranked ones (not recommended; only meant for comparison purposes with top-ranked GFs) 
 * **use_original_orthomcl_version**: allows compatibility with the original OrthoMCL v1.4 version; by default it is used a modified faster version called OrthoMCLight. [Default: "no"]

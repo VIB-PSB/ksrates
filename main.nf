@@ -456,7 +456,7 @@ process checkConfig {
         
         # If expert config file was provided or found at default location (non-empty string)... get the "top" field
         if [ ! -z ${expert_configfile} ]; then
-            recret_top=`grep "^[[:space:]]*top_reciprocally_retained_gfs[[:space:]]*=" ${expert_configfile} | cut -d "=" -f 2 | xargs`
+            recret_top=`grep "^[[:space:]]*num_reciprocally_retained_gfs[[:space:]]*=" ${expert_configfile} | cut -d "=" -f 2 | xargs`
             
             # If recret_top field is present (non-empty string)... use it
             if [ ! -z \${recret_top} ]; then
