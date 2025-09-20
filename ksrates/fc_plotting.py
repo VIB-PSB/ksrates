@@ -67,7 +67,7 @@ def generate_mixed_plot_figure(species, x_max_lim, y_max_lim, corrected_or_not, 
     :param paranome_data: boolean to include or not whole-paranome Ks values
     :param colinearity_data: boolean to include or not anchor pair Ks values
     :param reciprocal_retention_data: boolean to include or not reciprocal retention Ks values
-    :param top: cut-off for the reciprocal retention ranking of the 9178 core-angiosperm gene families
+    :param num_gfs: cut-off for the reciprocal retention ranking of the 9178 core-angiosperm gene families
     :param rank_type: Type of reciprocal retention ranking ('lambda' by default or 'combined')
     :return: figure and axis objects
     """
@@ -96,7 +96,7 @@ def generate_mixed_plot_figure(species, x_max_lim, y_max_lim, corrected_or_not, 
 
     # TODO: will this subtitle stay in the final version of the Ks plot?
     # if reciprocal_retention_data:
-    #     ax.set_title(f"Top {top} GFs from {rank_type} ranking")
+    #     ax.set_title(f"Top {num_gfs} GFs from {rank_type} ranking")
 
     seaborn.despine(offset=10)
     ax.set_xlabel("$K_\mathregular{S}$")
