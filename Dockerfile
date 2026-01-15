@@ -28,8 +28,8 @@ RUN apt-get update && apt-get install -yq \
     fasttree
 
 # Install PAML from source
-RUN wget http://abacus.gene.ucl.ac.uk/software/paml4.9j.tgz && \
-    tar -xzf paml4.9j.tgz && cd paml4.9j/src && make -f Makefile && \
+ADD /vendor/paml4.9j.tgz /paml4.9j.tgz
+RUN tar -xzf paml4.9j.tgz && cd paml4.9j/src && make -f Makefile && \
     mv codeml /bin && cd /
 
 # Install DIAMOND
