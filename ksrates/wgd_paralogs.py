@@ -22,7 +22,8 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
     colinearity = config.get_colinearity()
     reciprocal_retention = config.get_reciprocal_retention()
 
-    top = config.get_reciprocal_retention_top(reciprocal_retention) # Number of top gene families
+    num_gfs = config.get_num_reciprocal_retention_gfs(reciprocal_retention) # Number of top GFs to be used
+    bottom = config.use_bottom_gfs_instead_of_top(reciprocal_retention) # Use actually the BOTTOM GFs instead of the top ones (number of bottom GFs remains defined by "top" variable)
     rank_type = config.get_reciprocal_retention_rank_type(reciprocal_retention) # Rank type (only "lambda" supported)  
     orthomcl_inflation = config.get_orthomcl_inflation(reciprocal_retention)
     max_extra_original_genes_in_new_gfs = config.get_max_extra_original_genes_in_new_gfs(reciprocal_retention)
@@ -117,7 +118,7 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
         logging.info('---')
         logging.info(f"Running wgd reciprocal retention Ks pipeline...")
         fc_wgd.ks_paralogs_rec_ret(species, species_fasta_file, latin_name, custom_recret_gfs, parsed_homology_table,
-                                   top=top, rank_type=rank_type,
+                                   num_gfs=num_gfs, bottom=bottom, rank_type=rank_type,
                                    orthomcl_inflation=orthomcl_inflation, use_original_orthomcl_version=use_original_orthomcl_version,
                                    max_extra_original_genes_in_new_gfs=max_extra_original_genes_in_new_gfs,
                                    min_common_old_genes_in_new_gfs=min_common_old_genes_in_new_gfs,

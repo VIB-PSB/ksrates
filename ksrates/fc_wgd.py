@@ -24,10 +24,10 @@ _OUTPUT_BLAST_FILE_PATTERN_ORTHO = '{}_{}.blast.tsv'
 _OUTPUT_RBH_FILE_PATTERN_ORTHO = '{}_{}.orthologs.tsv'
 _OUTPUT_KS_FILE_PATTERN_ORTHO = '{}_{}.ks.tsv'
 # For OrthoMCL-based reciprocal retention (default)
-_OUTPUT_MCL_FILE_PATTERN_RR_OMCL = '{}_rec_ret_top_{}.mcl.tsv'
-_OUTPUT_MCL_FILE_PATTERN_RR_OMCL_IDs = '{}_rec_ret_top_{}_ids.mcl.tsv'
-_OUTPUT_KS_FILE_PATTERN_RR_OMCL = '{}.ks_recret_top{}.tsv'
-# For OrthoFinder-based reciprocal retention
+_OUTPUT_MCL_FILE_PATTERN_RR_OMCL = '{}_rec_ret_{}_{}.mcl.tsv'
+_OUTPUT_MCL_FILE_PATTERN_RR_OMCL_IDs = '{}_rec_ret_{}_{}_ids.mcl.tsv'
+_OUTPUT_KS_FILE_PATTERN_RR_OMCL = '{}.ks_recret_{}{}.tsv'
+# For OrthoFinder-based reciprocal retention [CURRENTLY NOT USED!]
 _OUTPUT_MCL_FILE_PATTERN_RR_OF = '{}_rec_ret_top_{}_{}_orthofinder.mcl.tsv'
 _OUTPUT_KS_FILE_PATTERN_RR_OF = '{}.ks_recret_top{}_{}.tsv'
 # For output directories
@@ -37,8 +37,8 @@ _ORTHOLOGS_OUTPUT_DIR_PATTERN = 'wgd_{}_{}'
 _TMP_BLAST = '{}.blast_tmp'
 _TMP_KS = '{}.ks_tmp'
 _TMP_KS_ANCHORS = '{}.ks_anchors_tmp'
-_TMP_KS_RR_OMCL = '{}.ks_recret_top{}_tmp' # OrthoFinder-based reciprocal retention (NOT AVAILABLE)
-_TMP_KS_RR_OF = '{}.ks_recret_top{}_tmp' # OrthoMCL-based reciprocal retention (default)
+_TMP_KS_RR_OMCL = '{}.ks_recret_{}{}_tmp' # OrthoFinder-based reciprocal retention (NOT AVAILABLE)
+_TMP_KS_RR_OF = '{}.ks_recret_{}{}_tmp' # OrthoMCL-based reciprocal retention (default)
 _TMP_OF = '{}.of_tmp'
 
 
@@ -244,7 +244,7 @@ def ks_paralogs(species_name, cds_fasta, base_dir='.', eval_cutoff=1e-10, inflat
 
 
 def ks_paralogs_rec_ret(species_name, cds_fasta, latin_name, custom_recret_gfs, parsed_homology_table,
-                        top=2000, rank_type="lambda", orthomcl_inflation=1.5, use_original_orthomcl_version=False,
+                        num_gfs=2000, bottom=False, rank_type="lambda", orthomcl_inflation=1.5, use_original_orthomcl_version=False,
                         max_extra_original_genes_in_new_gfs=15, min_common_old_genes_in_new_gfs=3,
                         base_dir='.', aligner='muscle', min_msa_length=100, codeml='codeml', codeml_times=1, pairwise=False,
                         max_gene_family_size=200, weighting_method='fasttree', n_threads=1, overwrite=False, preserve=False,
@@ -256,9 +256,12 @@ def ks_paralogs_rec_ret(species_name, cds_fasta, latin_name, custom_recret_gfs, 
     All vs. all diamond; orthogroup formation with OrthoMCL or OrthoFinder;
     filtering for top reciprocally retained GFs; Ks value estimate.
     
+    Note: alternatively, the pipeline can reconstruct the BOTTOM GFs, for comparison purposes with the TOP GFs!
+    
     :param species_name: name or ID of the species, used in output file names
     :param cds_fasta: CDS fasta file of the focal species
-    :param top : 
+    :param num_gfs : number of top GFs to be reconstructed (note: can also be the number of bottom GFs, for comparison purposes)
+    :param bottom : boolean that makes the code actually use the BOTTOM GFs instead of the TOP GFs (for comparison purposes)
     :param rank_type: 
     :param orthomcl_inflation: 
     :param use_original_orthomcl_version: by default, code uses the edited OrthoMCLight version (Default: False)
@@ -283,6 +286,13 @@ def ks_paralogs_rec_ret(species_name, cds_fasta, latin_name, custom_recret_gfs, 
         logging.error('No species name provided. Exiting.')
         sys.exit(1)
 
+    # By default the pipeline uses the TOP-ranked reciprocally retained GFs.
+    # However, for comparison purposes, the user might want to use the BOTTOM GFs (e.g. the bottom 2000 ones)
+    if bottom == False:
+        top_or_bottom = "top"
+    else:
+        top_or_bottom = "bottom"
+
     # If OrthoFinder will be integrated as alternative to OrthoMCL, check here
     # which program the user has requested to generate the reciprocally retained GFs for focal species.
     # Currently only OrthoMCL is implemented
@@ -293,14 +303,14 @@ def ks_paralogs_rec_ret(species_name, cds_fasta, latin_name, custom_recret_gfs, 
     output_dir = os.path.abspath(os.path.join(base_dir, _PARALOGS_OUTPUT_DIR_PATTERN.format(species_name)))
     
     if use_orthomcl and not use_orthofinder:
-        output_mcl_rec_ret_file = _OUTPUT_MCL_FILE_PATTERN_RR_OMCL.format(species_name, top, rank_type)
-        output_mcl_rec_ret_file_with_gfs_id = _OUTPUT_MCL_FILE_PATTERN_RR_OMCL_IDs.format(species_name, top, rank_type)
-        output_ks_file = _OUTPUT_KS_FILE_PATTERN_RR_OMCL.format(species_name, top, rank_type)
-        tmp_ks_paralogs = os.path.join(output_dir, _TMP_KS_RR_OMCL.format(species_name, top, rank_type))
+        output_mcl_rec_ret_file = _OUTPUT_MCL_FILE_PATTERN_RR_OMCL.format(species_name, top_or_bottom, num_gfs, rank_type)
+        output_mcl_rec_ret_file_with_gfs_id = _OUTPUT_MCL_FILE_PATTERN_RR_OMCL_IDs.format(species_name, top_or_bottom, num_gfs, rank_type)
+        output_ks_file = _OUTPUT_KS_FILE_PATTERN_RR_OMCL.format(species_name, top_or_bottom, num_gfs, rank_type)
+        tmp_ks_paralogs = os.path.join(output_dir, _TMP_KS_RR_OMCL.format(species_name, top_or_bottom, num_gfs, rank_type))
     elif use_orthofinder and not use_orthomcl:
-        output_mcl_rec_ret_file = _OUTPUT_MCL_FILE_PATTERN_RR_OF.format(species_name, top, rank_type)
-        output_ks_file = _OUTPUT_KS_FILE_PATTERN_RR_OF.format(species_name, top, rank_type)
-        tmp_ks_paralogs = os.path.join(output_dir, _TMP_KS_RR_OF.format(species_name, top, rank_type))
+        output_mcl_rec_ret_file = _OUTPUT_MCL_FILE_PATTERN_RR_OF.format(species_name, num_gfs, rank_type)
+        output_ks_file = _OUTPUT_KS_FILE_PATTERN_RR_OF.format(species_name, num_gfs, rank_type)
+        tmp_ks_paralogs = os.path.join(output_dir, _TMP_KS_RR_OF.format(species_name, top_or_bottom, num_gfs, rank_type))
     else:
         logging.error("Please either select OrthoFinder or OrthoMCL to generate the reciprocally retained GFs.")
         sys.exit("Exiting.")
@@ -395,9 +405,16 @@ def ks_paralogs_rec_ret(species_name, cds_fasta, latin_name, custom_recret_gfs, 
                         
             # Log setup related to reciprocal retention analysis
             logging.info(f"Reciprocal retention pipeline setup:")
-            logging.info(f"- Number of top reciprocally retained GF to consider: {top}")
+            # NOTE: if "bottom" is set to True, then use the BOTTOM rec.ret. GFs instead of the TOP ones
+            #       (done for comparison purposes)
+            if bottom == True:
+                logging.warning(f"====================================================================")
+                logging.warning(f">>>>>>>  NOTE: USING THE BOTTOM GFs INSTEAD OF THE TOP GFs!  <<<<<<<")
+                logging.warning(f"====================================================================")
+            # Other normal settings:
+            logging.info(f"- Number of {top_or_bottom} reciprocally retained GF to consider: {num_gfs}")
             logging.info(f"- The 9178 core-angiosperm GFs are ranked according to: {rank_type} ranking.")
-            logging.info(f"- OrthoMCL will be used to reconstruct the top {top} GFs for focal species [{species_name}]")
+            logging.info(f"- OrthoMCL will be used to reconstruct the {top_or_bottom} {num_gfs} GFs for focal species [{species_name}]")
             logging.info(f"- OrthoMCL inflation: {orthomcl_inflation}")
             logging.info(f"- Maximum allowed number of extra original genes for accepting a matched new GF: {max_extra_original_genes_in_new_gfs}")
             logging.info("")                
@@ -465,37 +482,45 @@ def ks_paralogs_rec_ret(species_name, cds_fasta, latin_name, custom_recret_gfs, 
             # --------------------------------------------------------
 
             # Get the top X GFs of the original lambda ranking
-            logging.info(f"Importing the original top {top} GFs from the reciprocal retention {rank_type} ranking")
+            logging.info(f"Importing the original {top_or_bottom} {num_gfs} GFs from the reciprocal retention {rank_type} ranking")
             logging.info("")
             original_top_gfs_raw_path = os.path.join(ksrates_rec_ret_dir, "gene_families_new_lambda_ranking.xlsx")
             original_top_gfs_ranking = read_excel(original_top_gfs_raw_path, sheet_name="gene family rankings", header=None)
-            gf_ids_ranked_to_top = original_top_gfs_ranking.iloc[:top, 0]
+            
+            # Get GF IDs of the top GFs (or of the bottom GFs, for comparison purposes)
+            # - Normal route: use the TOP GFs
+            if bottom == False:
+                gf_ids_ranked_to_top = original_top_gfs_ranking.iloc[:num_gfs, 0]
+            # - Alternative route: BOTTOM GFs (for comparison purposes)
+            else:
+                gf_ids_ranked_to_top = original_top_gfs_ranking.iloc[-num_gfs:, 0]
+            # Get gene members of all orthogroups
             original_top_gf_genes_raw = read_excel(original_top_gfs_raw_path, sheet_name="orthogroup member genes", header=None)
 
-            logging.debug(f"Getting genes from the original top GFs and from the new OrthoMCL GFs")
+            logging.debug(f"Getting genes from the original {top_or_bottom} GFs and from the new OrthoMCL GFs")
             # Count the number of original 37 species' genes and focal species' genes in each newly generated GF
             original_and_focal_genes_in_orthomcl_gfs = fcRecRet_OMCL.count_original_and_focal_genes_in_orthomcl_gfs(orthomcl_output_renamed_path)
 
             # Match original top GFs from 37 species with new GFs expanded with focal species
-            matched_orthomcl_gfs_path = os.path.join(orthomcl_outdir_focal, f"{species_name}_matched_gfs_max_{max_extra_original_genes_in_new_gfs}_extra.tsv")
+            matched_orthomcl_gfs_path = os.path.join(orthomcl_outdir_focal, f"{species_name}_matched_{top_or_bottom}_{num_gfs}_gfs_max_{max_extra_original_genes_in_new_gfs}_extra.tsv")
             if os.path.exists(matched_orthomcl_gfs_path):                
-                logging.info(f"The original top {top} GFs have already been matched to the new OrthoMCL GFs [{os.path.basename(matched_orthomcl_gfs_path)}]")
+                logging.info(f"The original {top_or_bottom} {num_gfs} GFs have already been matched to the new OrthoMCL GFs [{os.path.basename(matched_orthomcl_gfs_path)}]")
             else:
-                logging.info(f"Matching the original top {top} GFs to the newly obtained OrthoMCL GFs...")
-                fcRecRet_OMCL.match_and_reconstruct_gfs(top, gf_ids_ranked_to_top, original_and_focal_genes_in_orthomcl_gfs, 
+                logging.info(f"Matching the original {top_or_bottom} {num_gfs} GFs to the newly obtained OrthoMCL GFs...")
+                fcRecRet_OMCL.match_and_reconstruct_gfs(top_or_bottom, gf_ids_ranked_to_top, original_and_focal_genes_in_orthomcl_gfs, 
                                              original_top_gf_genes_raw, matched_orthomcl_gfs_path, 
                                              max_extra_original_genes_in_new_gfs, min_common_old_genes_in_new_gfs)
             matched_orthomcl_gfs = read_table(matched_orthomcl_gfs_path, index_col=0)
             
             # Log how many original GFs shared some genes with the new OrthoMCL GFs, and how well they match
-            fcRecRet_OMCL.log_match_quality(top, matched_orthomcl_gfs)
+            fcRecRet_OMCL.log_match_quality(num_gfs, top_or_bottom, matched_orthomcl_gfs)
             logging.info("")
             
             # 3) Reconstruct top GFs that were well-matched to the new OrthoMCL GFs
             # ---------------------------------------------------------------------
             
-            logging.info(f"Reconstructing top reciprocally retained GFs for focal species [{species_name}]...")
-            fcRecRet_OMCL.reconstruct_top_gfs(species_name, output_mcl_path, output_mcl_path_with_gf_ids, 
+            logging.info(f"Reconstructing {top_or_bottom} reciprocally retained GFs for focal species [{species_name}]...")
+            fcRecRet_OMCL.reconstruct_top_gfs(top_or_bottom, species_name, output_mcl_path, output_mcl_path_with_gf_ids, 
                                             original_and_focal_genes_in_orthomcl_gfs, matched_orthomcl_gfs)
             logging.info("")
 

@@ -872,30 +872,69 @@ class Configuration:
         return max_size
 
 
-    def get_reciprocal_retention_top(self, reciprocal_retention):
+    def get_num_reciprocal_retention_gfs(self, reciprocal_retention):
         """
-        Gets the number of top reciprocally retained gene families to be considered out of the total ranked 9178 ones.
+        Gets the number of ranked reciprocally retained gene families to be considered out of the total ranked 9178 ones.
+        Default: 2000 GFs are used.
+
+        Note: The normal use-case scenario gets the *TOP*-ranked GFs, e.g. from 1 to 2000.
+              However, the user can also get the *BOTTOM*-ranked GFs (toggling "use_bottom_gfs_instead_of_top"), for comparison purposes.
+              In this case, "get_num_reciprocal_retention_gfs" will get instead e.g. from 7178 to 9178.
 
         :return top: integer or float
         """
         if reciprocal_retention:
             if self.expert_config is not None:
-                # Get user-defined top value in field "top_reciprocally_retained_gfs"
-                # NOTE: If FIELD "top_reciprocally_retained_gfs" is missing in config file, "top" variable falls back to 2000
+                # Get user-defined top value in field "num_reciprocally_retained_gfs"
+                # NOTE: If FIELD "num_reciprocally_retained_gfs" is missing in config file, "top" variable falls back to 2000
                 # NOTE: If instead only the related VALUE is not present, "top" variable is an empty string
-                top = self.expert_config.get("EXPERT PARAMETERS", "top_reciprocally_retained_gfs", fallback="2000")
+                top = self.expert_config.get("EXPERT PARAMETERS", "num_reciprocally_retained_gfs", fallback="2000")
                 # Convert to integer the user-defined value or the fallback value
                 try:
                     top = int(top)
                 # If the VALUE was left empty in by user ("top" variable is empty string), assume again 2000
                 except ValueError:
-                    logging.warning("Field [top_reciprocally_retained_gfs] in expert config file was left empty: assuming top 2000 GFs")
+                    logging.warning("Field [num_reciprocally_retained_gfs] in expert config file was left empty: assuming top 2000 GFs")
                     top = 2000
             else:
                 top = 2000
         else:
             top = None
         return top
+
+    def use_bottom_gfs_instead_of_top(self, reciprocal_retention):
+        """
+        Checks whether the BOTTOM rec.ret. GFs should be used instead of the TOP rec.ret. GFs, as per expert configuration file.
+        If set to "yes", BOTTOM reciprocally retained gene families will be used, with number decided by "num_reciprocally_retained_gfs" (default 2000)
+        Default is "no", i.e. using TOP rec.ret.
+
+        This parameter builds Ks distributions from the BOTTOM GFs instead of from the TOP GFs (default bottom 2000 in ranking)
+        The is done to test whether bottom-derived Ks distributions are less informative about WGD peaks than top-derived Ks distributions.
+
+        :return boolean: boolean deciding whether to use the BOTTOM rec.ret GFs (True), or to use the standard TOP rec.ret. GFs (False); default: False
+        """
+        if reciprocal_retention:
+            if self.expert_config is not None:
+                try:
+                    bottom = self.expert_config.get("EXPERT PARAMETERS", "use_bottom_gfs_instead_of_top").lower()
+                    if bottom not in ["yes", "no"]:
+                        logging.warning(f'Unrecognized field in expert configuration file [bottom = {bottom}]. Please choose between "yes" and "no". Default choice will be applied [no]')
+                        bottom = False
+                    else:
+                        if bottom == "yes":
+                            bottom = True
+                        elif bottom == "no":
+                            bottom = False
+                except Exception:
+                    logging.warning(f'Missing field [bottom] in expert configuration file. Please choose between "yes" and "no". Default choice will be applied [no]')
+                    bottom = False
+            else:
+                # Default: DOESN'T use bottom (False) -> so uses TOP
+                bottom = False
+        else:
+            # If rec.ret. pipeline is not required, then this bottom parameter is not needed (None)
+            bottom = None
+        return bottom
 
 
     def get_reciprocal_retention_rank_type(self, reciprocal_retention):

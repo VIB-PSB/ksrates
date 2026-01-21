@@ -512,7 +512,7 @@ def count_original_and_focal_genes_in_orthomcl_gfs(orthomcl_output_renamed_path)
     return clean_orthomcl_gfs
 
 
-def match_and_reconstruct_gfs(top, gf_ids_ranked_to_top, original_and_focal_genes_in_orthomcl_gfs, original_top_gf_genes_raw,
+def match_and_reconstruct_gfs(top_or_bottom, gf_ids_ranked_to_top, original_and_focal_genes_in_orthomcl_gfs, original_top_gf_genes_raw,
                         matched_orthomcl_gfs_path, max_extra_original_genes_in_new_gfs, min_common_old_genes_in_clade_gfs):
     """
     Matches the original GFs to the new GFs and select the good matches for GF reconstruction.
@@ -553,13 +553,14 @@ def match_and_reconstruct_gfs(top, gf_ids_ranked_to_top, original_and_focal_gene
     5) Evaluate GF reconstruction quality:
     - Assigns quality score to reconstructed GF: good if there are only few missing original genes. Col_17 [Coverage score].
 
-    :param top: number of original top GFs requested, e.g. 2000
-    :param gf_ids_ranked_to_top: IDs of the original top GFs
+    :param top_or_bottom: normally, we are interested in the TOP GFs; but for comparison purposes, we might be reconstructing BOTTOM GFs.
+    :param gf_ids_ranked_to_top: IDs of the original top GFs (note: it can also be the number of bottom GFs, for comparison purposes)
     :param original_and_focal_genes_in_orthomcl_gfs: OrthoMCL table plus analysis of 37 species' and focal species' genes. 
     :param original_top_gfs_raw_path: DataFrame with member genes of all 9178 core-angiosperm GFs used in from Tasdighian (2017)
     :param matched_orthomcl_gfs_path: path to table containing the matching between original top GFs and new OrthoMCL GFs
+    (note: it can also be the number of bottom GFs, for comparison purposes)
     :param max_extra_original_genes_in_new_gfs: max number of original genes not shared between the original 
-    top GF and the matched GFs for this match to be accepted
+    top GF and the matched GFs for this match to be accepted (note: it can also be the number of bottom GFs, for comparison purposes)
     :param min_common_old_genes_in_clade_gfs: NOTE [not used] minimum required number of original genes shared
     :return: table listing the original GFs sharing genes with the new OrthoMCL GFs, plus...
     """
@@ -572,13 +573,13 @@ def match_and_reconstruct_gfs(top, gf_ids_ranked_to_top, original_and_focal_gene
     #   Gene family ID    Number of species    Genes
     #   ORTHO002222                      36    {Cotton_D_gene_10033278, ... }
     
-    # Select only the top X GFs
+    # Select only the top X GFs (or bottom X GF)
     original_top_gfs_genes = original_top_gfs.loc[original_top_gfs["Gene family ID"].isin(gf_ids_ranked_to_top)]
 
     # Initialize DataFrame of reconstructed gene families
     top_gf_matched_to_orthomcl_gfs = DataFrame()
     
-    # Loop through the original top X GFs
+    # Loop through the original top X GFs (or bottom X GF)
     for gf_index, gf in gf_ids_ranked_to_top.iteritems():
         
         # 1) Match original GF to any new GF sharing at least one original gene
@@ -633,7 +634,7 @@ def match_and_reconstruct_gfs(top, gf_ids_ranked_to_top, original_and_focal_gene
         # I use Python sets() to be sure I don't retain duplicates, but actually OrthoMCL doesn't assign a gene to more than one GF...
         for row in list_common_genes:
             if merged_common_old_genes_ids.intersection(row) != set():
-                logging.error("Gene redundancy during top GF reconstruction. Shouldn't happen! Needs debugging.")
+                logging.error(f"Gene redundancy during {top_or_bottom} GF reconstruction. Shouldn't happen! Needs debugging.")
                 logging.error("Exiting.")
                 sys.exit(1)
             merged_common_old_genes_ids = merged_common_old_genes_ids.union(row)
@@ -848,7 +849,7 @@ def run_additional_checks(gf, gf_index, accept_reject_matched_clade_gf, num_comm
     # OLD VERSION ONLY COUNTING ON max_extra_old: accept_reject_matched_clade_gf = num_extra_old_genes_clade_gfs <= conf.max_extra_original_genes_in_new_gfs
 
 
-def log_match_quality(top, matched_orthomcl_gfs):
+def log_match_quality(num_gfs, top_or_bottom, matched_orthomcl_gfs):
     """
     Reads the number of original top GFs sharing some genes with the new OrthoMCL GFs
     (i.e. have at least one matched new GF).
@@ -868,8 +869,9 @@ def log_match_quality(top, matched_orthomcl_gfs):
     (Accept/Reject = True) and rejected matches (False); they were rejected
     when containing too many extra original genes.
     
-    :param top: top requested GFs from the reciprocal retention ranking
-    :param matched_orthomcl_gfs: table with matches between original top GF and new OrthoMCL GFs
+    :param num_gfs: num_gfs requested GFs from the reciprocal retention ranking
+    :param top_or_bottom: normally, we are interested in the TOP GFs; but for comparison purposes, we might be reconstructing BOTTOM GFs.
+    :param matched_orthomcl_gfs: table with matches between original top GF and new OrthoMCL GFs; (or between original bottom...)
     """
     # Get reconstruction table with an "absolute index" (i.e. [0, 1, ..., len(table)] instead of the OrthoMCL GF indeces (e.g. [566, 1407, ...])
     matched_orthomcl_gfs_absolute_index = matched_orthomcl_gfs.copy()
@@ -880,11 +882,11 @@ def log_match_quality(top, matched_orthomcl_gfs):
 
     # State how many original GFs are sharing some genes with the new OrthoMCL GFs
     # This means that they have the potential to be reconstructed!
-    if num_covered_top_gfs == top:
-        logging.info(f"All top {top} GFs share some genes with the new OrthoMCL GFs")
+    if num_covered_top_gfs == num_gfs:
+        logging.info(f"All {top_or_bottom} {num_gfs} GFs share some genes with the new OrthoMCL GFs")
     else:
-        logging.warning(f"Only {num_covered_top_gfs}/{top} top GFs share some genes with the new OrthoMCL GFs (i.e. they have matches); all the remaining top GFs will be discarded")
-        logging.warning(f"Note: a lower number than the requested {top} can be expected to a certain extent;")
+        logging.warning(f"Only {num_covered_top_gfs}/{num_gfs} {top_or_bottom} GFs share some genes with the new OrthoMCL GFs (i.e. they have matches); all the remaining {top_or_bottom} GFs will be discarded")
+        logging.warning(f"Note: a lower number than the requested {num_gfs} can be expected to a certain extent;")
         logging.warning(f"however keep in mind that too low numbers can generate poor Ks distributions!")
     # - Use the indexes of the non-redundant GF ID list to filter a non-redundant set of lines from the full table
     matched_orthomcl_gfs_absolute_index_top = matched_orthomcl_gfs_absolute_index.iloc[all_covered_top_gfs_ids.index]
@@ -915,10 +917,10 @@ def log_match_quality(top, matched_orthomcl_gfs):
     return
 
 
-def reconstruct_top_gfs(species_name, output_mcl_path, output_mcl_path_with_gf_ids, 
+def reconstruct_top_gfs(top_or_bottom, species_name, output_mcl_path, output_mcl_path_with_gf_ids, 
                         original_and_focal_genes_in_orthomcl_gfs, matched_orthomcl_gfs):
     """
-    Reconstructs the original top GFs by merging their accepted matched new GFs.
+    Reconstructs the original top GFs by merging their accepted matched new GFs (note: it can also be the number of bottom GFs, for comparison purposes)
     Then it kicks out the 37 angiosperms' genes in each reconstructed GF 
     to finally get the focal species' reconstructed top GFs.
     Outputs as a MCL-like gene family file, with one GF per row.
@@ -929,6 +931,7 @@ def reconstruct_top_gfs(species_name, output_mcl_path, output_mcl_path_with_gf_i
     2) Some of the GFs that did share some genes were however introducing too many 
        extra original genes, unexpectadly inflating the counts (Accept/Reject = False)
 
+    :param top_or_bottom: normally, we are interested in the TOP GFs; but for comparison purposes, we might be reconstructing BOTTOM GFs.
     :param species_name: focal species' informal name
     :param output_mcl_path: path to output file with reconstructed GF (MCL-like format)
     :param output_mcl_path_with_gf_ids: path to output file with reconstructed GF (MCL-like format with original top GF ID)
@@ -958,7 +961,7 @@ def reconstruct_top_gfs(species_name, output_mcl_path, output_mcl_path_with_gf_i
     # Log if some original GFs had exclusively poor matches with the new OrthoMCL GFs 
     # (i.e. too many extra original genes!) and therefore will be ignored 
     if num_matched_orthomcl_gfs_accepted != num_matched_orthomcl_gfs:
-        logging.warning(f"Only {num_matched_orthomcl_gfs_accepted}/{num_matched_orthomcl_gfs} top GFs have at least one accepted match within the new OrthoMCL GFs and can thus be reconstructed; the remaining ones will be discarded")
+        logging.warning(f"Only {num_matched_orthomcl_gfs_accepted}/{num_matched_orthomcl_gfs} {top_or_bottom} GFs have at least one accepted match within the new OrthoMCL GFs and can thus be reconstructed; the remaining ones will be discarded")
         logging.warning(f"Note: a lower number than {num_matched_orthomcl_gfs} can be expected to a certain extent;")
         logging.warning(f"however, keep in mind that too low numbers may generate poor Ks distributions!")
     logging.info("")
@@ -1031,9 +1034,9 @@ def reconstruct_top_gfs(species_name, output_mcl_path, output_mcl_path_with_gf_i
     ratio_one_gene = round(singletons_gfs_to_be_ignored/num_matched_orthomcl_gfs_accepted*100, 2)
     ratio_two_genes = round(gfs_with_two_or_more_genes_focal/num_matched_orthomcl_gfs_accepted*100, 2)
     logging.info(f"Filtering for reconstructed GFs including at least 2 focal species' paralogs (minimum required to calculate Ks values):")
-    logging.info(f"- {gfs_with_two_or_more_genes_focal}/{num_matched_orthomcl_gfs_accepted} ({ratio_two_genes}%) top GFs have 2 or more genes for focal species and can be used to calculate Ks values")
-    logging.info(f"- {singletons_gfs_to_be_ignored}/{num_matched_orthomcl_gfs_accepted} ({ratio_one_gene}%) top GFs have only 1 gene for focal species; will be ignored")
-    logging.info(f"- {gfs_with_no_gene_of_focal}/{num_matched_orthomcl_gfs_accepted} ({ratio_no_genes}%) top GFs have 0 genes for focal species; will be ignored") 
+    logging.info(f"- {gfs_with_two_or_more_genes_focal}/{num_matched_orthomcl_gfs_accepted} ({ratio_two_genes}%) {top_or_bottom} GFs have 2 or more genes for focal species and can be used to calculate Ks values")
+    logging.info(f"- {singletons_gfs_to_be_ignored}/{num_matched_orthomcl_gfs_accepted} ({ratio_one_gene}%) {top_or_bottom} GFs have only 1 gene for focal species; will be ignored")
+    logging.info(f"- {gfs_with_no_gene_of_focal}/{num_matched_orthomcl_gfs_accepted} ({ratio_no_genes}%) {top_or_bottom} GFs have 0 genes for focal species; will be ignored") 
     if gfs_with_two_or_more_genes_focal == 0:
         logging.warning("No gene families were found with at least two focal genes")
         logging.warning("Will skip Ks estimate and construction of reciprocally retained Ks distribution!")
