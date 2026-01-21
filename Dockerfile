@@ -28,7 +28,7 @@ RUN apt-get update && apt-get install -yq \
     fasttree
 
 # Install PAML from source
-ADD /vendor/paml4.9j.tgz /paml4.9j.tgz
+COPY /vendor/paml4.9j.tgz /paml4.9j.tgz
 RUN tar -xzf paml4.9j.tgz && cd paml4.9j/src && make -f Makefile && \
     mv codeml /bin && cd /
 
