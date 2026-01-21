@@ -38,7 +38,7 @@ jobs:
           sudo wget -qO- https://get.nextflow.io | bash
           sudo mv nextflow /usr/bin
             
-      - name: Running ksrates Nextflow pipeline with TOP GFs
+      - name: Running ksrates Nextflow pipeline
         run: |
           cd test
           NXF_VER=24.10.5 nextflow run ../main.nf --test -profile docker --config config_files/config_elaeis.txt --expert config_files/config_expert.txt -with-docker ksrates
