@@ -38,16 +38,9 @@ jobs:
           sudo wget -qO- https://get.nextflow.io | bash
           sudo mv nextflow /usr/bin
             
-#      - name: Running ksrates Nextflow pipeline with TOP GFs
-#        run: |
-#          cd test
-#          NXF_VER=24.10.5 nextflow run ../main.nf --test -profile docker --config config_files/config_elaeis.txt --expert config_files/config_expert.txt -with-docker ksrates
-
-      - name: Running ksrates Nextflow pipeline with BOTTOM GFs (TMP)
+      - name: Running ksrates Nextflow pipeline with TOP GFs
         run: |
           cd test
-          sed -i 's/use_bottom_gfs_instead_of_top = no/use_bottom_gfs_instead_of_top = yes/g' config_files/config_expert.txt
-          cat config_files/config_expert.txt
           NXF_VER=24.10.5 nextflow run ../main.nf --test -profile docker --config config_files/config_elaeis.txt --expert config_files/config_expert.txt -with-docker ksrates
 
       - name: Visualize output files
