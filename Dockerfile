@@ -6,14 +6,22 @@ ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install Python 3.9
+# Install Python 3.9 and the last pip release line that supports it.
 RUN apt-get update && \
-    apt-get install -y software-properties-common && \
-    add-apt-repository ppa:deadsnakes/ppa && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        software-properties-common && \
+    add-apt-repository -y ppa:deadsnakes/ppa && \
     apt-get update && \
-    apt-get install -y python3.9 python3.9-distutils && \
-	curl -sS https://bootstrap.pypa.io/get-pip.py | python3.9 && \
-	python3.9 -m pip install --upgrade pip
+    apt-get install -y --no-install-recommends python3.9 python3.9-distutils && \
+    curl --fail --location --silent --show-error \
+        https://bootstrap.pypa.io/pip/3.9/get-pip.py \
+        --output /tmp/get-pip.py && \
+    python3.9 /tmp/get-pip.py && \
+    python3.9 -m pip --version && \
+    rm /tmp/get-pip.py && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install non-python wgd dependencies
 RUN apt-get update && apt-get install -yq \
