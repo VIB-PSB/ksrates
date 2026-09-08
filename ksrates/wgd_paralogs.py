@@ -5,6 +5,7 @@ import datetime
 import ksrates.fc_configfile as fcConf
 import ksrates.fc_check_input as fcCheck
 import ksrates.fc_wgd as fc_wgd
+import ksrates.fc_consolidate_paralog_ks as fc_consolidate_paralog_ks
 from ksrates.utils import init_logging
 
 def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, parsed_homology_table, test):
@@ -21,6 +22,7 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
     paranome = config.get_paranome()
     colinearity = config.get_colinearity()
     reciprocal_retention = config.get_reciprocal_retention()
+    ks_list_paralog_db_path = config.get_paralog_ks_db()
 
     num_gfs = config.get_num_reciprocal_retention_gfs(reciprocal_retention) # Number of top GFs to be used
     bottom = config.use_bottom_gfs_instead_of_top(reciprocal_retention) # Use actually the BOTTOM GFs instead of the top ones (number of bottom GFs remains defined by "top" variable)
@@ -122,11 +124,22 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
                                    orthomcl_inflation=orthomcl_inflation, use_original_orthomcl_version=use_original_orthomcl_version,
                                    max_extra_original_genes_in_new_gfs=max_extra_original_genes_in_new_gfs,
                                    min_common_old_genes_in_new_gfs=min_common_old_genes_in_new_gfs,
-                                   base_dir=paralog_dists_dir, 
-                                   max_gene_family_size=max_gene_family_size, 
+                                   base_dir=paralog_dists_dir,
+                                   max_gene_family_size=max_gene_family_size,
                                    n_threads=n_threads, overwrite=False, preserve=preserve,
                                    is_test_run=test, logging_level=logging_level)
         logging.info(datetime.datetime.today().ctime())
         logging.info("")
-        
+
+    # CONSOLIDATING PARALOG Ks VALUES INTO DATABASE
+    logging.info("---")
+    logging.info("Consolidating paralog Ks lists into database")
+
+    fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path)
+    fc_consolidate_paralog_ks.consolidate_paralog_ks_lists(species, ks_list_paralog_db_path,
+                                                            paranome_enabled=paranome,
+                                                            anchors_enabled=colinearity,
+                                                            reciprocal_retention_enabled=reciprocal_retention,
+                                                            num_gfs=num_gfs, rank_type=rank_type, bottom=bottom)
+    logging.info("")
     logging.info("Done")
