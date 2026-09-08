@@ -2,6 +2,7 @@ import pandas
 import sys
 import os
 import logging
+from ast import literal_eval
 from ksrates.utils import init_logging
 import ksrates.fc_plotting as fcPlot
 import ksrates.fc_extract_ks_list as fc_extract_ks_list
@@ -28,6 +29,7 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
     num_gfs = config.get_num_reciprocal_retention_gfs(reciprocal_retention_analysis) # Number of top gene families
     bottom = config.use_bottom_gfs_instead_of_top(reciprocal_retention_analysis) # Use actually the BOTTOM GFs instead of the top ones (number of bottom GFs remains defined by "top" variable)
     rank_type = config.get_reciprocal_retention_rank_type(reciprocal_retention_analysis) # Rank type (only "lambda" supported)  
+    ks_list_paralog_db_path = config.get_paralog_ks_db() # TSV file listing paralog Ks values
 
     # By default the pipeline uses the TOP-ranked reciprocally retained GFs.
     # However, for comparison purposes, the user might want to use the BOTTOM GFs (e.g. the bottom 2000 ones)
@@ -41,26 +43,67 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
         logging.error("Exiting.")
         sys.exit(1)
 
-    # Get paralog and anchors TSV files
-    # If a Ks file is not required, it will be equal to "None"
-    # If the required input Ks file (paranome or anchor pairs or both) is missing, its path will be qual to an empty string ("") and the script will exit
-    if paranome_analysis:
+    # GET PARALOG KS DATA, EITHER FROM DATABASE OF FROM ORIGINAL KS TSV FILES
+
+    # First try to load paralog Ks lists from consolidated database (optional, for backward compatibility with TSV files)
+    paralog_db_available = False
+    paranome_ks_list_db = None
+    try:
+        with open(ks_list_paralog_db_path, "r") as f:
+            paranome_ks_list_db = pandas.read_csv(f, sep="\t", index_col=0)
+            # When imported from csv format, all the Ks lists in the df are read as
+            # plain text (strings) and must be converted back to value lists
+            if 'Ks_paranome' in paranome_ks_list_db.columns:
+                paranome_ks_list_db.loc[:, 'Ks_paranome'] = paranome_ks_list_db.loc[:, 'Ks_paranome'].apply(lambda x: literal_eval(x) if x is not None and x != 'None' else None)
+            if 'Ks_paranome_weights' in paranome_ks_list_db.columns:
+                paranome_ks_list_db.loc[:, 'Ks_paranome_weights'] = paranome_ks_list_db.loc[:, 'Ks_paranome_weights'].apply(lambda x: literal_eval(x) if x is not None and x != 'None' else None)
+            
+            if 'Ks_anchors' in paranome_ks_list_db.columns:
+                paranome_ks_list_db.loc[:, 'Ks_anchors'] = paranome_ks_list_db.loc[:, 'Ks_anchors'].apply(lambda x: literal_eval(x) if x is not None and x != 'None' else None)
+            if 'Ks_anchors_weights' in paranome_ks_list_db.columns:
+                paranome_ks_list_db.loc[:, 'Ks_anchors_weights'] = paranome_ks_list_db.loc[:, 'Ks_anchors_weights'].apply(lambda x: literal_eval(x) if x is not None and x != 'None' else None)
+            
+            if 'Ks_reciprocally_retained' in paranome_ks_list_db.columns:
+                paranome_ks_list_db.loc[:, 'Ks_reciprocally_retained'] = paranome_ks_list_db.loc[:, 'Ks_reciprocally_retained'].apply(lambda x: literal_eval(x) if x is not None and x != 'None' else None)
+            if 'Ks_reciprocally_retained_weights' in paranome_ks_list_db.columns:
+                paranome_ks_list_db.loc[:, 'Ks_reciprocally_retained_weights'] = paranome_ks_list_db.loc[:, 'Ks_reciprocally_retained_weights'].apply(lambda x: literal_eval(x) if x is not None and x != 'None' else None)
+            
+            paralog_db_available = True
+            logging.info(f"Loaded paralog Ks list database from [{ks_list_paralog_db_path}]")
+    except Exception:
+        logging.info(f"Paralog Ks list database [{ks_list_paralog_db_path}] not found or empty. Will read from TSV files instead.")
+        paralog_db_available = False
+    # Select Ks values 
+
+
+    # Paralog TSV files are only required as fallback if their data is not available in the database
+    # Determine which TSV files are needed based on:
+    #   1. Whether the analysis type is enabled AND
+    #   2. Whether data for that type is missing from the database
+    # Example: TSV file IS required if the analysis type is enabled BUT its data is missing from database
+    # Example: paralog_tsv_file is NOT required if paranome_analysis=True AND database contains valid Ks_paranome data
+    paralog_tsv_file_required = paranome_analysis and not (paralog_db_available and paranome_ks_list_db is not None and species in paranome_ks_list_db.index and paranome_ks_list_db.loc[species, 'Ks_paranome'] is not None)
+    anchors_tsv_file_required = colinearity_analysis and not (paralog_db_available and paranome_ks_list_db is not None and species in paranome_ks_list_db.index and paranome_ks_list_db.loc[species, 'Ks_anchors'] is not None)
+    recret_tsv_file_required = reciprocal_retention_analysis and not (paralog_db_available and paranome_ks_list_db is not None and species in paranome_ks_list_db.index and paranome_ks_list_db.loc[species, 'Ks_reciprocally_retained'] is not None)
+
+    if paralog_tsv_file_required:
         default_path_paralog_tsv_file = os.path.join("paralog_distributions", f"wgd_{species}", _OUTPUT_KS_FILE_PATTERN_PARA.format(species))
         paralog_tsv_file = fcCheck.get_argument_path(paralog_tsv_file, default_path_paralog_tsv_file, "Paralog Ks TSV file")
         if paralog_tsv_file == "":
             logging.error(f"Paralog Ks TSV file not found at default position [{default_path_paralog_tsv_file}].")
-    if colinearity_analysis:
+    if anchors_tsv_file_required:
         default_path_anchors_tsv_file = os.path.join("paralog_distributions", f"wgd_{species}", _OUTPUT_KS_FILE_PATTERN_ANCHORS.format(species))
         anchors_ks_tsv_file = fcCheck.get_argument_path(anchors_ks_tsv_file, default_path_anchors_tsv_file, "Anchor pair Ks TSV file")
         if anchors_ks_tsv_file == "":
             logging.error(f"Anchor pair Ks TSV file not found at default position [{default_path_anchors_tsv_file}].")
-    if reciprocal_retention_analysis:
+    if recret_tsv_file_required:
         default_path_rec_ret_tsv_file = os.path.join("paralog_distributions", f"wgd_{species}", _OUTPUT_KS_FILE_PATTERN_RR_OMCL.format(species, top_or_bottom, num_gfs))
         rec_ret_tsv_file = fcCheck.get_argument_path(rec_ret_tsv_file, default_path_rec_ret_tsv_file, "Reciprocally retained paralog Ks TSV file")
         if rec_ret_tsv_file == "":
             logging.error(f"Reciprocally retained paralog Ks TSV file not found at default position [{default_path_rec_ret_tsv_file}].")
-       
-    if paralog_tsv_file == "" or anchors_ks_tsv_file == "" or rec_ret_tsv_file == "":
+
+    # Exit if both the database source and the original Ks TSV source have failed
+    if (paralog_tsv_file_required and paralog_tsv_file == "") or (anchors_tsv_file_required and anchors_ks_tsv_file == "") or (recret_tsv_file_required and rec_ret_tsv_file == ""):
         logging.error("Exiting")
         sys.exit(1)
 
@@ -228,8 +271,25 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
 
     # PLOTTING THE BACKGROUND PARALOG DISTRIBUTION(S)
     if paranome_analysis:
-        # Get paranome Ks values within the requested range and recalculate their associated weight
-        paranome_list, paranome_weights = fc_extract_ks_list.ks_list_from_tsv(paralog_tsv_file, max_ks_para, "paralogs")
+        paranome_list = None
+        paranome_weights = None
+        # Try database first if available
+        if paralog_db_available and paranome_ks_list_db is not None and species in paranome_ks_list_db.index:
+            db_paranome = paranome_ks_list_db.loc[species, 'Ks_paranome']
+            if db_paranome is not None:
+                db_paranome_weights = paranome_ks_list_db.loc[species, 'Ks_paranome_weights']
+                # Filter by max_ks_para and align weights with filtered values
+                filtered_pairs = [(val, w) for val, w in zip(db_paranome, db_paranome_weights) if val <= max_ks_para]
+                if filtered_pairs:
+                    paranome_list, paranome_weights = zip(*filtered_pairs)
+                    paranome_list = list(paranome_list)
+                    paranome_weights = list(paranome_weights)
+                    logging.info(f"Using paranome Ks list from database for [{species}] (filtered to Ks <= {max_ks_para})")
+        # Fall back to TSV file if database not available or empty
+        if paranome_list is None:
+            # Get paranome Ks values within the requested range and recalculate their associated weight
+            paranome_list, paranome_weights = fc_extract_ks_list.ks_list_from_tsv(paralog_tsv_file, max_ks_para, "paralogs")
+        
         for ax_uncorr in ax_uncorr_include_para:
             hist_paranome = fcPlot.plot_histogram("Whole-paranome", ax_uncorr, paranome_list, bin_list, bin_width_para,
                                 max_ks_para, kde_bandwidth_modifier, weight_list=paranome_weights)
@@ -238,11 +298,24 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
                             max_ks_para, kde_bandwidth_modifier, weight_list=paranome_weights)
 
     if colinearity_analysis:
-        # Remove anchor Ks values that are smaller than min_ks_anchors
-        min_ks_anchors = config.get_min_ks_anchors()
-        
-        # Get anchor pair Ks values within the requested range and recalculate their associated weight
-        anchors_list_filtered, anchors_weights_filtered = fc_extract_ks_list.ks_list_from_tsv(anchors_ks_tsv_file, max_ks_para, "anchor pairs", min_ks=min_ks_anchors)
+        anchors_list = None
+        anchors_weights = None
+        # Try database first if available
+        if paralog_db_available and paranome_ks_list_db is not None and species in paranome_ks_list_db.index:
+            db_anchors = paranome_ks_list_db.loc[species, 'Ks_anchors']
+            if db_anchors is not None:
+                db_anchors_weights = paranome_ks_list_db.loc[species, 'Ks_anchors_weights']
+                # Filter by max_ks_para and align weights with filtered values
+                filtered_pairs = [(val, w) for val, w in zip(db_anchors, db_anchors_weights) if val <= max_ks_para]
+                if filtered_pairs:
+                    anchors_list, anchors_weights = zip(*filtered_pairs)
+                    anchors_list = list(anchors_list)
+                    anchors_weights = list(anchors_weights)
+                    logging.info(f"Using anchor Ks list from database for [{species}] (filtered to Ks <= {max_ks_para})")
+        # Fall back to TSV file if database not available or empty
+        if anchors_list is None:
+            # Get anchor pair Ks values within the requested range (using min_ks_anchors) and recalculate their associated weight
+            anchors_list_filtered, anchors_weights_filtered = fc_extract_ks_list.ks_list_from_tsv(anchors_ks_tsv_file, max_ks_para, "anchor pairs", min_ks=min_ks_anchors)
 
         if len(anchors_list_filtered) == 0:
             logging.warning(f"No anchor pairs found! Maybe check your (gene) IDs between "
@@ -256,8 +329,25 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
                                 kde_bandwidth_modifier, color=fcPlot.COLOR_ANCHOR_HISTOGRAM, weight_list=anchors_weights_filtered)
 
     if reciprocal_retention_analysis:
-        # Get recret Ks values within the requested range and recalculate their associated weight
-        rec_ret_list, rec_ret_weights = fc_extract_ks_list.ks_list_from_tsv(rec_ret_tsv_file, max_ks_para, "reciprocally retained")
+        rec_ret_list = None
+        rec_ret_weights = None
+        # Try database first if available
+        if paralog_db_available and paranome_ks_list_db is not None and species in paranome_ks_list_db.index:
+            db_recret = paranome_ks_list_db.loc[species, 'Ks_reciprocally_retained']
+            if db_recret is not None:
+                db_recret_weights = paranome_ks_list_db.loc[species, 'Ks_reciprocally_retained_weights']
+                # Filter by max_ks_para and align weights with filtered values
+                filtered_pairs = [(val, w) for val, w in zip(db_recret, db_recret_weights) if val <= max_ks_para]
+                if filtered_pairs:
+                    rec_ret_list, rec_ret_weights = zip(*filtered_pairs)
+                    rec_ret_list = list(rec_ret_list)
+                    rec_ret_weights = list(rec_ret_weights)
+                    logging.info(f"Using reciprocally retained Ks list from database for [{species}] (filtered to Ks <= {max_ks_para})")
+        # Fall back to TSV file if database not available or empty
+        if rec_ret_list is None:
+            # Get recret Ks values within the requested range and recalculate their associated weight
+            rec_ret_list, rec_ret_weights = fc_extract_ks_list.ks_list_from_tsv(rec_ret_tsv_file, max_ks_para, "reciprocally retained")
+        
         for ax_uncorr in ax_uncorr_include_rr:
             hist_rec_ret = fcPlot.plot_histogram("Reciprocally retained paralogs", ax_uncorr, rec_ret_list, bin_list, bin_width_para,
                                 max_ks_para, kde_bandwidth_modifier, color=fcPlot.COLOR_REC_RET_HISTOGRAM, weight_list=rec_ret_weights)
