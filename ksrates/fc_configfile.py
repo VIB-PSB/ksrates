@@ -226,6 +226,17 @@ class Configuration:
             ks_list_db_path = "ortholog_ks_db.tsv"
         return ks_list_db_path
 
+    def get_paralog_ks_db(self):
+        """
+        Gets the config file field of the paralog Ks list database path.  
+
+        :return ks_list_paralog_db_path: path to the paralog Ks list database
+        """
+        ks_list_paralog_db_path = self.config.get("SPECIES", "ks_list_paralog_database_path", fallback="paralog_ks_list_db.tsv")
+        if not ks_list_paralog_db_path:
+            ks_list_paralog_db_path = "paralog_ks_list_db.tsv"
+        return ks_list_paralog_db_path
+    
     def get_fasta_dict(self):
         """
         Gets the config file field of the dictionary that associates the informal species names to the their FASTA files.
