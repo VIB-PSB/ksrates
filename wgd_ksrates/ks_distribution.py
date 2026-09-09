@@ -894,22 +894,34 @@ def sort_families_by_size(families, pairwise=False, max_gene_family_size=142):
     return sorted_families
 
 
-def compute_weights(df, min_ks=0.005, max_ks=20, aln_id=0, aln_len=300,
+def compute_weights(df, min_ks=0.005, max_ks=5, aln_id=0, aln_len=300,
         aln_cov=0):
     """
-    Modified from wgd.
-    max_ks changed from 5 to 20 so to have weights computed also for Ks greater
-    than 5 in the WeightOutliersExcluded column.
+    Computes weights for redundant Ks values, i.e. estimates coming from the 
+    same duplication event.
+    - WeightOutliersIncluded are calculated by including all redundant Ks values. 
+    - WeightOutliersExcluded are calculated by excluding the redundant Ks values 
+      that are greater than a threshold (max_ks) and other filtering criteria.
+    Default max Ks accepted is 5Ks, i.e. the standard Ks range for paralog visualization.
+
+    NOTE:
+    When the Ks distribution will be plotted, this might be with a different Ks range,
+    e.g. up to 3Ks. The plotting step will use filter_compute_weights() to recalculate
+    the WeightOutliersExcluded accordingly, i.e. taking into account the desired range.
     """
+    # Calculate the weights including the outlier Ks values (using all Ks values)
     df = df[~df.index.duplicated()]  # for safety
     df["WeightOutliersIncluded"] = 1 / df.groupby(['Family', 'Node'])[
         'Ks'].transform('count')
+    # Make new tmp dataframe and retain only rows matching filtering criteria
     df_ = df[df["Ks"] <= max_ks]
     df_ = df_[df_["Ks"] >= min_ks]
     df_ = df_[df_["AlignmentCoverage"] >= aln_cov]
     df_ = df_[df_["AlignmentIdentity"] >= aln_id]
     df_ = df_[df_["AlignmentLength"] >= aln_len]
+    # Initialize new column in original database for filtered weights
     df["WeightOutliersExcluded"] = np.zeros(len(df.index))
+    # Populate the original database with the filtered weights in the appropriate rows
     df.loc[df_.index, "WeightOutliersExcluded"] = 1 / df_.groupby(
             ['Family', 'Node'])['Ks'].transform('count')
     return df
