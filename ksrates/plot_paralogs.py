@@ -237,14 +237,13 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
                             max_ks_para, kde_bandwidth_modifier, weight_list=paranome_weights)
 
     if colinearity_analysis:
-        anchors_list, anchors_weights = fc_extract_ks_list.ks_list_from_tsv(anchors_ks_tsv_file, max_ks_para, "anchor pairs")
-
         # Remove anchor Ks values that are smaller than min_ks_anchors
         min_ks_anchors = config.get_min_ks_anchors()
-        anchors_list_filtered = [val for val in anchors_list if val >= min_ks_anchors]
-        anchors_weights_filtered = [w for val, w in zip(anchors_list, anchors_weights) if val >= min_ks_anchors]
+        
+        # Recalculate anchor pair weights so that they use min_ks_anchors as minimum accepted Ks value
+        anchors_list_filtered, anchors_weights_filtered = fc_extract_ks_list.ks_list_from_tsv(anchors_ks_tsv_file, max_ks_para, "anchor pairs", min_ks=min_ks_anchors)
 
-        if len(anchors_list) == 0:
+        if len(anchors_list_filtered) == 0:
             logging.warning(f"No anchor pairs found! Maybe check your (gene) IDs between "
                             f"anchor pairs file [{_OUTPUT_KS_FILE_PATTERN_ANCHORS.format(species)}] and"
                             f"whole-paranome file [{_OUTPUT_KS_FILE_PATTERN_PARA.format(species)}]")
