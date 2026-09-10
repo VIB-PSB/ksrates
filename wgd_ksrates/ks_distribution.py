@@ -775,7 +775,7 @@ def ks_analysis_paranome(
     new_index = results_frame[['Paralog1', 'Paralog2']].apply(
             lambda x: '__'.join(sorted([str(y) for y in x])), axis=1)
     results_frame.index = new_index
-    logging.info("Computing weights, outlier cut-off at Ks > 20")
+    logging.info("Computing weights, outlier cut-off at Ks > 5")
     results_frame = compute_weights(results_frame)
 
     if preserve:
