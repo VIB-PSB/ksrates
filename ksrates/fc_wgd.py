@@ -1188,7 +1188,7 @@ def compute_weights_anchor_pairs(df, min_ks_anchors=0.05, max_ks=5, aln_id=0, al
     for paralog visualization.
     
     :param min_ks_anchors: minimum Ks value considered (default 0.05 Ks)
-    :param max_ks: maximum Ks value considered (default 20 Ks)
+    :param max_ks: maximum Ks value considered (default 5 Ks)
     :param aln_id: minimum alignment identity considered (default 0)
     :param aln_len: minimum alignment length (with gaps) considered (default 300)
     :param aln_cov: minimum alignment coverage considered (default 0)
