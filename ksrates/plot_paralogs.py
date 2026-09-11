@@ -228,6 +228,7 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
 
     # PLOTTING THE BACKGROUND PARALOG DISTRIBUTION(S)
     if paranome_analysis:
+        # Get paranome Ks values within the requested range and recalculate their associated weight
         paranome_list, paranome_weights = fc_extract_ks_list.ks_list_from_tsv(paralog_tsv_file, max_ks_para, "paralogs")
         for ax_uncorr in ax_uncorr_include_para:
             hist_paranome = fcPlot.plot_histogram("Whole-paranome", ax_uncorr, paranome_list, bin_list, bin_width_para,
@@ -240,7 +241,7 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
         # Remove anchor Ks values that are smaller than min_ks_anchors
         min_ks_anchors = config.get_min_ks_anchors()
         
-        # Recalculate anchor pair weights so that they use min_ks_anchors as minimum accepted Ks value
+        # Get anchor pair Ks values within the requested range and recalculate their associated weight
         anchors_list_filtered, anchors_weights_filtered = fc_extract_ks_list.ks_list_from_tsv(anchors_ks_tsv_file, max_ks_para, "anchor pairs", min_ks=min_ks_anchors)
 
         if len(anchors_list_filtered) == 0:
@@ -255,6 +256,7 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
                                 kde_bandwidth_modifier, color=fcPlot.COLOR_ANCHOR_HISTOGRAM, weight_list=anchors_weights_filtered)
 
     if reciprocal_retention_analysis:
+        # Get recret Ks values within the requested range and recalculate their associated weight
         rec_ret_list, rec_ret_weights = fc_extract_ks_list.ks_list_from_tsv(rec_ret_tsv_file, max_ks_para, "reciprocally retained")
         for ax_uncorr in ax_uncorr_include_rr:
             hist_rec_ret = fcPlot.plot_histogram("Reciprocally retained paralogs", ax_uncorr, rec_ret_list, bin_list, bin_width_para,
