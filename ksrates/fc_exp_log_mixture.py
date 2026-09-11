@@ -440,18 +440,13 @@ def deconvolute_data(tsv_file, max_ks, data_type, min_ks_anchors=0.05):
   """
   tail_length = 0.5 # tail spans for 0.5 extra Ks range
 
-  if data_type == "paralogs" or data_type == "anchor pairs" or data_type == "reciprocally retained":
+  if data_type == "paralogs" or data_type == "reciprocally retained":
     ks_data, ks_weights = fc_extract_ks_list.ks_list_from_tsv(tsv_file, max_ks, data_type)
+  elif data_type == "anchor pairs":
+    ks_data, ks_weights = fc_extract_ks_list.ks_list_from_tsv(tsv_file, max_ks, data_type, min_ks=min_ks_anchors)
   elif data_type == "orthologs":
     ks_data = fc_extract_ks_list.ks_list_from_tsv(tsv_file, max_ks, data_type)
     ks_weights = [1] * len(ks_data) # dummy weights all equal to 1
-
-  if data_type == "anchor pairs":
-    # Remove anchor Ks values that are smaller than min_ks_anchors
-    ks_data_filtered = [val for val in ks_data if val >= min_ks_anchors]
-    ks_weights_filtered = [w for val, w in zip(ks_data, ks_weights) if val >= min_ks_anchors]
-    # Rename with default name
-    ks_data, ks_weights = ks_data_filtered, ks_weights_filtered
 
   if max_ks <= 4.5:
     # Avoid having a truncated distribution for the EM fitting in the exp-log mixture model
