@@ -133,6 +133,7 @@ def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors
         parameter_table = []
         with open (os.path.join("rate_adjustment", f"{species}", subfolder, _LMM_PARAMETERS_FILENAME_TXT.format(species, "paranome")), "w+") as outfile:
             logging.info("Performing lognormal mixture model on whole-paranome Ks distribution")
+            # Get paranome Ks values within the requested range and recalculate their associated weight
             paranome_list, paranome_weights = fc_extract_ks_list.ks_list_from_tsv(paralog_tsv_file, max_ks_para, "paralogs")
             hist_paranome = fcPlot.plot_histogram("Whole-paranome", axis_para, paranome_list, bin_list, 
                                         bin_width_para, max_ks_para, kde_bandwidth_modifier, paranome_weights, plot_kde=False)
@@ -163,13 +164,10 @@ def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors
         with open (os.path.join("rate_adjustment", f"{species}", subfolder, _LMM_PARAMETERS_FILENAME_TXT.format(species, "anchors")), "w+") as outfile:
             logging.info("Performing lognormal mixture model on anchor pair Ks distribution")
 
-            anchors_list, anchors_weights = fc_extract_ks_list.ks_list_from_tsv(anchors_ks_tsv_file, max_ks_para, "anchor pairs")
-            
-            # Remove anchor Ks values that are smaller than min_ks_anchors
-            anchors_list_filtered = [val for val in anchors_list if val >= min_ks_anchors]
-            anchors_weights_filtered = [w for val, w in zip(anchors_list, anchors_weights) if val >= min_ks_anchors]
+            # Get anchor pair Ks values within the requested range and recalculate their associated weight
+            anchors_list_filtered, anchors_weights_filtered = fc_extract_ks_list.ks_list_from_tsv(anchors_ks_tsv_file, max_ks_para, "anchor pairs", min_ks=min_ks_anchors)
 
-            if len(anchors_list) == 0:
+            if len(anchors_list_filtered) == 0:
                 logging.warning(f"No anchor pairs found! Maybe check your (gene) IDs between "
                                 f"anchor pairs file [{_OUTPUT_KS_FILE_PATTERN_ANCHORS.format(species)}] and"
                                 f"whole-paranome file [{_OUTPUT_KS_FILE_PATTERN_PARA.format(species)}]")
@@ -201,6 +199,7 @@ def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors
         parameter_table = []
         with open (os.path.join("rate_adjustment", f"{species}", subfolder, _LMM_PARAMETERS_FILENAME_TXT.format(species, "recret")), "w+") as outfile:
             logging.info("Performing lognormal mixture model on reciprocally retained paralog Ks distribution")
+            # Get recret Ks values within the requested range and recalculate their associated weight
             rec_ret_list, rec_ret_weights = fc_extract_ks_list.ks_list_from_tsv(rec_ret_tsv_file, max_ks_para, "reciprocally retained")
             hist_rec_ret = fcPlot.plot_histogram("Reciprocally retained paralogs", axis_rec_ret, rec_ret_list, bin_list, 
                            bin_width_para, max_ks_para, kde_bandwidth_modifier, rec_ret_weights, color=COLOR_REC_RET_HISTOGRAM, plot_kde=False)

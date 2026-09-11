@@ -160,13 +160,21 @@ def plot_selection(
 
 
 def filter_compute_weights(df, min_ks, max_ks, aln_id=0, aln_len=300, aln_cov=0):
+    """
+    Returns a filtered Ks TSV table including only Ks values up to the max value
+    defined in the configuration file and updating the Ks weights according to this
+    newly filtered dataset.
+    """
+    # Recalculate the weights including the outlier Ks values (using all Ks values)
     df["WeightOutliersIncluded"] = 1 / df.groupby(['Family', 'Node'])[
         'Ks'].transform('count')
+    # Make new dataframe and retain only rows with Ks values matching filtering criteria
     df_ = df[df["Ks"] <= max_ks]
     df_ = df_[df_["Ks"] >= min_ks]
     df_ = df_[df_["AlignmentCoverage"] >= aln_cov]
     df_ = df_[df_["AlignmentIdentity"] >= aln_id]
     df_ = df_[df_["AlignmentLength"] >= aln_len]
+    # Update the weights in the new dataframe, and return it
     df_["WeightOutliersExcluded"] = 1 / df_.groupby(
             ['Family', 'Node'])['Ks'].transform('count')
     return df_

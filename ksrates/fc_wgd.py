@@ -1181,14 +1181,14 @@ def _run_iadhore(config_file):
 
     return
 
-def compute_weights_anchor_pairs(df, min_ks_anchors=0.05, max_ks=20, aln_id=0, aln_len=300,
+def compute_weights_anchor_pairs(df, min_ks_anchors=0.05, max_ks=5, aln_id=0, aln_len=300,
         aln_cov=0):
     """
-    Modified from wgd.
-    Computes the weights of anchor pair Ks estimates.
+    Computes the weights of anchor pair Ks estimates based on the standard 5 Ks range
+    for paralog visualization, with default min_ks_anchors pof 0.05.
     
     :param min_ks_anchors: minimum Ks value considered (default 0.05 Ks)
-    :param max_ks: maximum Ks value considered (default 20 Ks)
+    :param max_ks: maximum Ks value considered (default 5 Ks)
     :param aln_id: minimum alignment identity considered (default 0)
     :param aln_len: minimum alignment length (with gaps) considered (default 300)
     :param aln_cov: minimum alignment coverage considered (default 0)
@@ -1199,12 +1199,15 @@ def compute_weights_anchor_pairs(df, min_ks_anchors=0.05, max_ks=20, aln_id=0, a
              max_ks inclusive; all other pairs will have the weight set to zero.)
     """
     df = df[~df.index.duplicated()]  # for safety
+    # Make new tmp dataframe and retain only rows matching filtering criteria
     df_ = df[df["Ks"] <= max_ks]
     df_ = df_[df_["Ks"] >= min_ks_anchors]
     df_ = df_[df_["AlignmentCoverage"] >= aln_cov]
     df_ = df_[df_["AlignmentIdentity"] >= aln_id]
     df_ = df_[df_["AlignmentLength"] >= aln_len]
+    # Initialize new column in original database for filtered weights
     df["WeightOutliersExcluded"] = zeros(len(df.index))
+    # Populate the original database with the filtered weights in the appropriate rows
     df.loc[df_.index, "WeightOutliersExcluded"] = 1 / df_.groupby(
             ['Family', 'Node'])['Ks'].transform('count')
     
