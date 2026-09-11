@@ -1184,8 +1184,8 @@ def _run_iadhore(config_file):
 def compute_weights_anchor_pairs(df, min_ks_anchors=0.05, max_ks=5, aln_id=0, aln_len=300,
         aln_cov=0):
     """
-    Computes the weights of anchor pair Ks estimates based on the standard 0-5 Ks range
-    for paralog visualization.
+    Computes the weights of anchor pair Ks estimates based on the standard 5 Ks range
+    for paralog visualization, with default min_ks_anchors pof 0.05.
     
     :param min_ks_anchors: minimum Ks value considered (default 0.05 Ks)
     :param max_ks: maximum Ks value considered (default 5 Ks)
