@@ -68,6 +68,7 @@ def exp_log_mixture(config_file, expert_config_file, paralog_tsv_file, correctio
     logging.error("Exiting")
     sys.exit(0) # exit code 0 because no actual errors were thrown
 
+  # Get paranome Ks values within the requested range and recalculate their associated weight
   ks_data, ks_weights = fc_extract_ks_list.ks_list_from_tsv(paralog_tsv_file, max_ks_para, "paralogs")
 
   # Get adjustment results TSV file
