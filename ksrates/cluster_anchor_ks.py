@@ -114,6 +114,8 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
 
     anchorpoints_per_multipl, multipl_per_anchorpoint, levels_of_anchorpoints = fcCluster.parse_anchorpoints_file(path_anchorpoints_txt, level_of_each_multipl)
 
+    # Get anchor pair Ks values within the requested range (custom max value, but down to default min_ks=0.005),
+    # and recalculate their associated weight
     anchor_ks_list, anchors_weights = fc_extract_ks_list.ks_list_from_tsv(path_ks_anchor_file, max_ks_para, "anchor pairs") # Get complete anchor Ks list to be plotted in the background
 
     # -----------------------------------------------------------------------------
@@ -379,9 +381,8 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
         
         # Plot the original complete anchor distribution in the background
         # (First remove anchor Ks values that are smaller than min_ks_anchors)
-        min_ks_anchors = config.get_min_ks_anchors()
-        anchors_list_filtered = [val for val in anchor_ks_list if val >= min_ks_anchors]
-        anchors_weights_filtered = [w for val, w in zip(anchor_ks_list, anchors_weights) if val >= min_ks_anchors]
+        anchors_list_filtered, anchors_weights_filtered = fc_extract_ks_list.ks_list_from_tsv(path_ks_anchor_file,
+                                                          ax_ks_para, "anchor pairs", min_ks=min_ks_anchors)
 
         fcPlot.plot_histogram_for_anchor_clustering(ax_corr_second, anchors_list_filtered, anchors_weights_filtered, bin_list, y_max_lim)
         fcPlot.plot_histogram_for_anchor_clustering(ax_uncorr_second, anchors_list_filtered, anchors_weights_filtered, bin_list, y_max_lim)
