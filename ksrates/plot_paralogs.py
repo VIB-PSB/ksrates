@@ -11,6 +11,7 @@ import ksrates.fc_configfile as fcConf
 from ksrates.fc_rrt_correction import _ADJUSTMENT_TABLE
 from ksrates.fc_plotting import _MIXED_ADJUSTED_PLOT_FILENAME, _MIXED_UNADJUSTED_PLOT_FILENAME, _OTHER_MIXED_PLOTS_SUBDIR
 from ksrates.fc_wgd import _OUTPUT_KS_FILE_PATTERN_PARA, _OUTPUT_KS_FILE_PATTERN_ANCHORS, _OUTPUT_KS_FILE_PATTERN_RR_OMCL
+from wgd_ksrates.viz import filter_compute_weights
 
 def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, paralog_tsv_file, anchors_ks_tsv_file, rec_ret_tsv_file):
     # INPUT
@@ -277,14 +278,12 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
         if paralog_db_available and paranome_ks_list_db is not None and species in paranome_ks_list_db.index:
             db_paranome = paranome_ks_list_db.loc[species, 'Ks_paranome']
             if db_paranome is not None:
-                db_paranome_weights = paranome_ks_list_db.loc[species, 'Ks_paranome_weights']
-                # Filter by max_ks_para and align weights with filtered values
-                filtered_pairs = [(val, w) for val, w in zip(db_paranome, db_paranome_weights) if val <= max_ks_para]
-                if filtered_pairs:
-                    paranome_list, paranome_weights = zip(*filtered_pairs)
-                    paranome_list = list(paranome_list)
-                    paranome_weights = list(paranome_weights)
-                    logging.info(f"Using paranome Ks list from database for [{species}] (filtered to Ks <= {max_ks_para})")
+                # Reconstruct dataframe from database and recalculate weights
+                paranome_df = pandas.DataFrame(db_paranome)
+                paranome_df_recalc = filter_compute_weights(paranome_df, min_ks=0.005, max_ks=max_ks_para)
+                paranome_list = paranome_df_recalc["Ks"].to_list()
+                paranome_weights = paranome_df_recalc["WeightOutliersExcluded"].to_list()
+                logging.info(f"Using paranome Ks list from database for [{species}] (weights recalculated for Ks <= {max_ks_para})")
         # Fall back to TSV file if database not available or empty
         if paranome_list is None:
             # Get paranome Ks values within the requested range and recalculate their associated weight
@@ -304,29 +303,27 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
         if paralog_db_available and paranome_ks_list_db is not None and species in paranome_ks_list_db.index:
             db_anchors = paranome_ks_list_db.loc[species, 'Ks_anchors']
             if db_anchors is not None:
-                db_anchors_weights = paranome_ks_list_db.loc[species, 'Ks_anchors_weights']
-                # Filter by max_ks_para and align weights with filtered values
-                filtered_pairs = [(val, w) for val, w in zip(db_anchors, db_anchors_weights) if val <= max_ks_para]
-                if filtered_pairs:
-                    anchors_list, anchors_weights = zip(*filtered_pairs)
-                    anchors_list = list(anchors_list)
-                    anchors_weights = list(anchors_weights)
-                    logging.info(f"Using anchor Ks list from database for [{species}] (filtered to Ks <= {max_ks_para})")
+                # Reconstruct dataframe from database and recalculate weights
+                anchors_df = pandas.DataFrame(db_anchors)
+                anchors_df_recalc = filter_compute_weights(anchors_df, min_ks=min_ks_anchors, max_ks=max_ks_para)
+                anchors_list = anchors_df_recalc["Ks"].to_list()
+                anchors_weights = anchors_df_recalc["WeightOutliersExcluded"].to_list()
+                logging.info(f"Using anchor Ks list from database for [{species}] (weights recalculated for {min_ks_anchors} <= Ks <= {max_ks_para})")
         # Fall back to TSV file if database not available or empty
         if anchors_list is None:
             # Get anchor pair Ks values within the requested range (using min_ks_anchors) and recalculate their associated weight
-            anchors_list_filtered, anchors_weights_filtered = fc_extract_ks_list.ks_list_from_tsv(anchors_ks_tsv_file, max_ks_para, "anchor pairs", min_ks=min_ks_anchors)
+            anchors_list, anchors_weights = fc_extract_ks_list.ks_list_from_tsv(anchors_ks_tsv_file, max_ks_para, "anchor pairs", min_ks=min_ks_anchors)
 
-        if len(anchors_list_filtered) == 0:
+        if len(anchors_list) == 0:
             logging.warning(f"No anchor pairs found! Maybe check your (gene) IDs between "
                             f"anchor pairs file [{_OUTPUT_KS_FILE_PATTERN_ANCHORS.format(species)}] and"
                             f"whole-paranome file [{_OUTPUT_KS_FILE_PATTERN_PARA.format(species)}]")
         for ax_uncorr in ax_uncorr_include_col:
-            hist_anchors = fcPlot.plot_histogram("Anchor pairs", ax_uncorr, anchors_list_filtered, bin_list, bin_width_para, max_ks_para,
-                                kde_bandwidth_modifier, color=fcPlot.COLOR_ANCHOR_HISTOGRAM, weight_list=anchors_weights_filtered)
+            hist_anchors = fcPlot.plot_histogram("Anchor pairs", ax_uncorr, anchors_list, bin_list, bin_width_para, max_ks_para,
+                                kde_bandwidth_modifier, color=fcPlot.COLOR_ANCHOR_HISTOGRAM, weight_list=anchors_weights)
         for ax_corr in ax_corr_include_col:
-            fcPlot.plot_histogram("Anchor pairs", ax_corr, anchors_list_filtered, bin_list, bin_width_para, max_ks_para,
-                                kde_bandwidth_modifier, color=fcPlot.COLOR_ANCHOR_HISTOGRAM, weight_list=anchors_weights_filtered)
+            fcPlot.plot_histogram("Anchor pairs", ax_corr, anchors_list, bin_list, bin_width_para, max_ks_para,
+                                kde_bandwidth_modifier, color=fcPlot.COLOR_ANCHOR_HISTOGRAM, weight_list=anchors_weights)
 
     if reciprocal_retention_analysis:
         rec_ret_list = None
@@ -335,14 +332,12 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
         if paralog_db_available and paranome_ks_list_db is not None and species in paranome_ks_list_db.index:
             db_recret = paranome_ks_list_db.loc[species, 'Ks_reciprocally_retained']
             if db_recret is not None:
-                db_recret_weights = paranome_ks_list_db.loc[species, 'Ks_reciprocally_retained_weights']
-                # Filter by max_ks_para and align weights with filtered values
-                filtered_pairs = [(val, w) for val, w in zip(db_recret, db_recret_weights) if val <= max_ks_para]
-                if filtered_pairs:
-                    rec_ret_list, rec_ret_weights = zip(*filtered_pairs)
-                    rec_ret_list = list(rec_ret_list)
-                    rec_ret_weights = list(rec_ret_weights)
-                    logging.info(f"Using reciprocally retained Ks list from database for [{species}] (filtered to Ks <= {max_ks_para})")
+                # Reconstruct dataframe from database and recalculate weights
+                recret_df = pandas.DataFrame(db_recret)
+                recret_df_recalc = filter_compute_weights(recret_df, min_ks=0.005, max_ks=max_ks_para)
+                rec_ret_list = recret_df_recalc["Ks"].to_list()
+                rec_ret_weights = recret_df_recalc["WeightOutliersExcluded"].to_list()
+                logging.info(f"Using reciprocally retained Ks list from database for [{species}] (weights recalculated for 0.005 <= Ks <= {max_ks_para})")
         # Fall back to TSV file if database not available or empty
         if rec_ret_list is None:
             # Get recret Ks values within the requested range and recalculate their associated weight
