@@ -14,6 +14,8 @@ def populate_paralog_ks_db_batch(config_dir_path, paralog_distributions_path, db
 
 	Reads all config files in config_dir_path to extract species information (informal and latin names),
 	then consolidates paralog Ks data from matching directories in paralog_distributions_path.
+	Attempts to consolidate all types of paralog Ks data (paranome, anchors and reciprocally retained),
+	throwing warnings if any of these files are not found (NOTE: possibly they were just never generated).
 	Uses latin names as database keys for consistency across analyses.
 
 	:param config_dir_path: path to directory containing config files for species to consolidate
@@ -125,32 +127,32 @@ def populate_paralog_ks_db_batch(config_dir_path, paralog_distributions_path, db
 		if will_overwrite and force_overwrite:
 			logging.info(f"Overwriting [{informal_name}] ({latin_name}):")
 		else:
-			logging.info(f"Adding [{informal_name}] ({latin_name}):")
+			logging.info(f"Adding [{informal_name}] ({latin_name})")
 
 		try:
-			# Get config parameters
+			# Get config parameters. Note: we don't trust the config's current paranome/colinearity/
+			# reciprocal_retention yes/no toggles, since they may have changed since the TSV files were
+			# generated (e.g. a species run with recret=yes in the past, but config now set to recret=no).
+			# Instead, we always search for all three output file types and use whichever actually exist.
 			config_file = species_configs[informal_name]
 			config = fcConf.Configuration(config_file, "")
-			paranome = config.get_paranome()
-			colinearity = config.get_colinearity()
-			reciprocal_retention = config.get_reciprocal_retention()
-			bottom = config.use_bottom_gfs_instead_of_top(reciprocal_retention)
-			rank_type = config.get_reciprocal_retention_rank_type(reciprocal_retention)
+			bottom = config.use_bottom_gfs_instead_of_top(True)
+			rank_type = config.get_reciprocal_retention_rank_type(True)
 
 			# Temporarily change to parent directory for extraction
 			original_cwd = os.getcwd()
 			parent_dir = os.path.dirname(paralog_distributions_path)
 			os.chdir(parent_dir)
 
-			# Extract Ks data from TSV files
+			# Extract Ks data from TSV files: search for all three types regardless of config toggles
 			ks_data = fc_consolidate_paralog_ks.extract_paralog_ks_from_tsv(
-				informal_name, paranome, colinearity, reciprocal_retention,
+				informal_name, paranome_enabled=True, anchors_enabled=True, reciprocal_retention_enabled=True,
 				num_gfs=num_gfs, rank_type=rank_type, bottom=bottom
 			)
 
 			# Check for alternative recret files
 			wgd_dir = os.path.join(os.path.dirname(paralog_distributions_path), os.path.basename(paralog_distributions_path), f"wgd_{informal_name}")
-			if reciprocal_retention and os.path.isdir(wgd_dir):
+			if os.path.isdir(wgd_dir):
 				all_recret_files = glob.glob(os.path.join(wgd_dir, f"{informal_name}.ks_recret_top*.tsv"))
 				if all_recret_files:
 					used_file = os.path.basename([f for f in all_recret_files if f"{num_gfs}" in f][0]) if any(f"{num_gfs}" in f for f in all_recret_files) else None
@@ -198,29 +200,32 @@ def populate_paralog_ks_db_batch(config_dir_path, paralog_distributions_path, db
 	logging.info("=" * 70)
 	logging.info(f"Processed: {len(successful)} new, {len(overwritten)} overwritten, {len(skipped)} skipped, {len(failed)} failed, out of {len(species_info)} species")
 
+	spacer_informal_names = max(len(s) for s in species_info.keys()) + 5
+	spacer_latin_names = max(len(s) for s in species_info.values()) + 3
+
 	if successful:
 		logging.info("")
 		logging.info("Successfully added new species:")
-		logging.info("  Species                Paranome  Anchors   RecRet")
+		logging.info(f"  {'Species':{spacer_informal_names}} {'Latin name':{spacer_latin_names}} {'Paranome':9} {'Anchors':9} {'RecRet':9}")
 		logging.info("  " + "-" * 64)
 		for informal_name in successful:
 			types_found = data_types_found.get(informal_name, [])
 			paranome_status = "[YES]" if 'paranome' in types_found else "[NO]"
 			anchors_status = "[YES]" if 'anchors' in types_found else "[NO]"
 			recret_status = "[YES]" if 'recret' in types_found else "[NO]"
-			logging.info(f"  {informal_name:20}  {paranome_status:8}  {anchors_status:8}  {recret_status:8}")
+			logging.info(f"  {informal_name:{spacer_informal_names}} {species_info[informal_name]:{spacer_latin_names}} {paranome_status:9}  {anchors_status:9}  {recret_status:9}")
 
 	if overwritten:
 		logging.info("")
 		logging.info("Successfully overwritten existing species:")
-		logging.info("  Species                Paranome  Anchors   RecRet")
+		logging.info(f"  {'Species':{spacer_informal_names}} {'Latin name':{spacer_latin_names}} {'Paranome':9} {'Anchors':9} {'RecRet':9}")
 		logging.info("  " + "-" * 64)
 		for informal_name in overwritten:
 			types_found = data_types_found.get(informal_name, [])
 			paranome_status = "[YES]" if 'paranome' in types_found else "[NO]"
 			anchors_status = "[YES]" if 'anchors' in types_found else "[NO]"
 			recret_status = "[YES]" if 'recret' in types_found else "[NO]"
-			logging.info(f"  {informal_name:20}  {paranome_status:8}  {anchors_status:8}  {recret_status:8}")
+			logging.info(f"  {informal_name:{spacer_informal_names}} {species_info[informal_name]:{spacer_latin_names}} {paranome_status:9}  {anchors_status:9}  {recret_status:9}")
 
 	if skipped:
 		logging.info("")
