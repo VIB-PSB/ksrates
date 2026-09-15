@@ -419,44 +419,42 @@ def orthologs_ks_cleanup(orthologs_dir_path, dry_run):
                 print('Please choose between "y" or "n". Cancelled.')
 
 
-@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Populates paralog Ks database from directory with wgd_* subdirectories.")
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Populates paralog Ks database from config files and paralog distributions.")
+@click.argument('config_dir', type=click.Path(exists=True))
 @click.argument('paralog_distributions_dir', type=click.Path(exists=True))
-@click.argument('species_names', nargs=-1, required=False)
 @click.option('-d', '--database', type=click.Path(), required=True, help="Database output file path")
 @click.option('--force', is_flag=True, help="Overwrite species that already exist in database")
 @click.option('--num-gfs', type=int, default=2000, help="Number of gene families for reciprocally retained (default: 2000)")
-def populate_paralog_ks_db(paralog_distributions_dir, species_names, database, force, num_gfs):
+def populate_paralog_ks_db(config_dir, paralog_distributions_dir, database, force, num_gfs):
 	"""
-	Populates the paralog Ks database from existing TSV files in a paralog_distributions directory.
-	Accepts optional species names to process specific species, or processes all if none specified.
+	Populates the paralog Ks database from config files and existing paralog TSV files.
+
+	Reads config files in CONFIG_DIR to extract species information (informal and latin names),
+	then consolidates paralog Ks data from matching directories in PARALOG_DISTRIBUTIONS_DIR.
 
 	\b
+	CONFIG_DIR: path to directory containing config files for species to consolidate
 	PARALOG_DISTRIBUTIONS_DIR: path to directory containing wgd_* subdirectories
-	SPECIES_NAMES: optional species names to process (if not provided, processes all found in directory)
 
 	\b
-	Process all species in directory (uses top 2000 recret by default):
-	  ksrates populate-paralog-ks-db paralog_distributions/ --database paralog_ks_db.tsv
+	Example (process all species with configs in configs/ directory):
+	  ksrates populate-paralog-ks-db configs/ paralog_distributions/ --database paralog_ks_db.tsv
 
 	\b
-	Process specific species:
-	  ksrates populate-paralog-ks-db paralog_distributions/ species1 species2 --database paralog_ks_db.tsv
+	Overwrite existing entries:
+	  ksrates populate-paralog-ks-db configs/ paralog_distributions/ --database paralog_ks_db.tsv --force
 
 	\b
 	Use different recret GF number:
-	  ksrates populate-paralog-ks-db paralog_distributions/ --database paralog_ks_db.tsv --num-gfs 4000
-
-	\b
-	Overwrite existing species:
-	  ksrates populate-paralog-ks-db paralog_distributions/ species1 --database paralog_ks_db.tsv --force
+	  ksrates populate-paralog-ks-db configs/ paralog_distributions/ --database paralog_ks_db.tsv --num-gfs 4000
 	"""
 	from ksrates.populate_paralog_ks_db import populate_paralog_ks_db_batch as populate_batch
 
+	click.format_filename(config_dir)
 	click.format_filename(paralog_distributions_dir)
 	click.format_filename(database)
 
-	species_list = list(species_names) if species_names else None
-	populate_batch(paralog_distributions_dir, database, species_list=species_list, force_overwrite=force, num_gfs=num_gfs)
+	populate_batch(config_dir, paralog_distributions_dir, database, force_overwrite=force, num_gfs=num_gfs)
 
 
 # For debugging

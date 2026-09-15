@@ -113,6 +113,18 @@ def write_to_paralog_db(latin_name, ks_data_dict, db_path):
 
 	if ks_paranome is not None or ks_anchors is not None or ks_recret is not None:
 		logging.info("  - Writing consolidated Ks lists to database")
+
+		# Remove any existing row for this species to avoid duplicates (e.g. from a re-run)
+		try:
+			with open(db_path, "r") as f:
+				db_df = read_csv(f, sep="\t", index_col=0)
+			if latin_name in db_df.index:
+				db_df = db_df.drop(latin_name)
+				with open(db_path, "w") as fw:
+					fw.write(db_df.to_csv(sep="\t"))
+		except Exception:
+			pass
+
 		ks_list_new_row = DataFrame([[ks_paranome, weights_paranome, ks_anchors, weights_anchors, ks_recret, weights_recret]],
 		                             columns=['Ks_paranome', 'Ks_paranome_weights', 'Ks_anchors', 'Ks_anchors_weights',
 		                                      'Ks_reciprocally_retained', 'Ks_reciprocally_retained_weights'],
