@@ -11,7 +11,8 @@ def populate_paralog_ks_db(config_file, expert_config_file):
 	"""
 	Populates the paralog Ks database from existing TSV files.
 	This utility allows users to consolidate previously generated paralog Ks TSV files
-	into the new unified database format.
+	into the new unified database format. Database population is performed only if 
+	such database is requested in the expert configuration file.
 
 	:param config_file: configuration file
 	:param expert_config_file: expert configuration file (can be empty string)
@@ -24,7 +25,7 @@ def populate_paralog_ks_db(config_file, expert_config_file):
 	paranome = config.get_paranome()
 	colinearity = config.get_colinearity()
 	reciprocal_retention = config.get_reciprocal_retention()
-	ks_list_paralog_db_path = config.get_paralog_ks_db()
+	ks_list_paralog_db_path = config.get_paralog_ks_database()
 
 	num_gfs = config.get_num_reciprocal_retention_gfs(reciprocal_retention)
 	bottom = config.use_bottom_gfs_instead_of_top(reciprocal_retention)
@@ -39,7 +40,10 @@ def populate_paralog_ks_db(config_file, expert_config_file):
 	logging.info(f"Populating paralog Ks database for species [{species}]")
 
 	# Initialize database file if it doesn't exist
-	fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path)
+	paralog_db_ready = fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path)
+	if not paralog_db_ready:
+		logging.error("Exiting.")
+		sys.exit(1)
 
 	# Extract Ks data from TSV files
 	logging.info("- Extracting paralog Ks data from TSV files")
@@ -119,7 +123,10 @@ def populate_paralog_ks_db_batch(paralog_distributions_path, db_path, species_li
 	logging.info("")
 
 	# Initialize database
-	fc_consolidate_paralog_ks.initialize_paralog_db(db_path)
+	paralog_db_ready = fc_consolidate_paralog_ks.initialize_paralog_db(db_path)
+	if not paralog_db_ready:
+		logging.error("Exiting.")
+		sys.exit(1)
 
 	# Read existing database to check which species are already present
 	import pandas
