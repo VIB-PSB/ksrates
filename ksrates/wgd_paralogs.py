@@ -22,7 +22,7 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
     paranome = config.get_paranome()
     colinearity = config.get_colinearity()
     reciprocal_retention = config.get_reciprocal_retention()
-    ks_list_paralog_db_path = config.get_paralog_ks_db()
+    ks_list_paralog_db_path = config.get_paralog_ks_database()
 
     num_gfs = config.get_num_reciprocal_retention_gfs(reciprocal_retention) # Number of top GFs to be used
     bottom = config.use_bottom_gfs_instead_of_top(reciprocal_retention) # Use actually the BOTTOM GFs instead of the top ones (number of bottom GFs remains defined by "top" variable)
@@ -31,6 +31,7 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
     max_extra_original_genes_in_new_gfs = config.get_max_extra_original_genes_in_new_gfs(reciprocal_retention)
     min_common_old_genes_in_new_gfs = 3 # TODO: check its use!
     use_original_orthomcl_version = config.get_orthomcl_version() # Whether to use the original or edited OrthoMCL version (default: edited)
+    use_paralog_ks_database = config.use_paralog_ks_database() # Whether to also copy the Ks data into a collective TSV database (default: no)
 
     if not paranome and not colinearity and not reciprocal_retention:
         logging.error('At least one of the "paranome", "collinearity" or "reciprocal retention" parameters in the configuration file needs to be set to "yes".')
@@ -132,15 +133,20 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
         logging.info("")
 
     # CONSOLIDATING PARALOG Ks VALUES INTO DATABASE (if database is configured)
-    if ks_list_paralog_db_path:
+    if use_paralog_ks_database:
         logging.info("---")
         logging.info("Consolidating paralog Ks lists into database")
 
-        fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path)
-        fc_consolidate_paralog_ks.consolidate_paralog_ks_lists(species, ks_list_paralog_db_path,
-                                                                paranome_enabled=paranome,
-                                                                anchors_enabled=colinearity,
-                                                                reciprocal_retention_enabled=reciprocal_retention,
-                                                                num_gfs=num_gfs, rank_type=rank_type, bottom=bottom)
+        paralog_db_ready = fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path)
+        if paralog_db_ready:
+            fc_consolidate_paralog_ks.consolidate_paralog_ks_lists(species, ks_list_paralog_db_path,
+                                                                    paranome_enabled=paranome,
+                                                                    anchors_enabled=colinearity,
+                                                                    reciprocal_retention_enabled=reciprocal_retention,
+                                                                    num_gfs=num_gfs, rank_type=rank_type, bottom=bottom)
+        else:
+            logging.warning(f"Could not use paralog Ks database [{ks_list_paralog_db_path}].")
+            logging.warning("Skipping.")
+    
     logging.info("")
     logging.info("Done")
