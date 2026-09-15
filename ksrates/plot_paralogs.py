@@ -31,7 +31,7 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
     num_gfs = config.get_num_reciprocal_retention_gfs(reciprocal_retention_analysis) # Number of top gene families
     bottom = config.use_bottom_gfs_instead_of_top(reciprocal_retention_analysis) # Use actually the BOTTOM GFs instead of the top ones (number of bottom GFs remains defined by "top" variable)
     rank_type = config.get_reciprocal_retention_rank_type(reciprocal_retention_analysis) # Rank type (only "lambda" supported)  
-    ks_list_paralog_db_path = config.get_paralog_ks_db() # TSV file listing paralog Ks values
+    ks_list_paralog_db_path = config.get_paralog_ks_database() # TSV file listing paralog Ks values
 
     # By default the pipeline uses the TOP-ranked reciprocally retained GFs.
     # However, for comparison purposes, the user might want to use the BOTTOM GFs (e.g. the bottom 2000 ones)
