@@ -57,7 +57,7 @@ def extract_paralog_ks_from_tsv(species_name, paranome_enabled=False, anchors_en
 			ks_paranome, weights_paranome = fc_extract_ks_list.ks_list_from_tsv(paranome_path, float('inf'), "paralogs")
 			ks_data['paranome'] = (ks_paranome, weights_paranome)
 		else:
-			logging.warning(f"  Paranome Ks TSV file not found [{_OUTPUT_KS_FILE_PATTERN_PARA.format(species_name)}].")
+			logging.warning(f"  - Paranome Ks TSV file not found [{_OUTPUT_KS_FILE_PATTERN_PARA.format(species_name)}].")
 
 	# Extract anchor pairs Ks list and weights
 	if anchors_enabled:
@@ -68,7 +68,7 @@ def extract_paralog_ks_from_tsv(species_name, paranome_enabled=False, anchors_en
 			ks_anchors, weights_anchors = fc_extract_ks_list.ks_list_from_tsv(anchors_path, float('inf'), "anchor pairs")
 			ks_data['anchors'] = (ks_anchors, weights_anchors)
 		else:
-			logging.warning(f"  Anchor Ks TSV file not found [{_OUTPUT_KS_FILE_PATTERN_ANCHORS.format(species_name)}].")
+			logging.warning(f"  - Anchor Ks TSV file not found [{_OUTPUT_KS_FILE_PATTERN_ANCHORS.format(species_name)}].")
 
 	# Extract reciprocally retained Ks list and weights
 	if reciprocal_retention_enabled:
@@ -82,7 +82,7 @@ def extract_paralog_ks_from_tsv(species_name, paranome_enabled=False, anchors_en
 			ks_recret, weights_recret = fc_extract_ks_list.ks_list_from_tsv(recret_path, float('inf'), "reciprocally retained")
 			ks_data['recret'] = (ks_recret, weights_recret)
 		else:
-			logging.warning(f"  Reciprocally retained Ks TSV file not found [{_OUTPUT_KS_FILE_PATTERN_RR_OMCL.format(species_name, top_or_bottom, num_gfs)}].")
+			logging.warning(f"  - Reciprocally retained Ks TSV file not found [{_OUTPUT_KS_FILE_PATTERN_RR_OMCL.format(species_name, top_or_bottom, num_gfs)}].")
 
 	return ks_data
 
