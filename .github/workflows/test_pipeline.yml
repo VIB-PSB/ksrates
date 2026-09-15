@@ -52,4 +52,4 @@ jobs:
         if: ${{ always() }}
         with:
           name: ksrates_test_pipeline_output
-          path: test/rate_adjustment/elaeis/
+          path: test

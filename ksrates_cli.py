@@ -1,5 +1,6 @@
 import click
 import logging
+import sys
 from sys import argv
 from ksrates._version import __version__
 
@@ -418,7 +419,45 @@ def orthologs_ks_cleanup(orthologs_dir_path, dry_run):
                 print('Please choose between "y" or "n". Cancelled.')
 
 
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Populates paralog Ks database from config files and paralog distributions.")
+@click.argument('config_dir', type=click.Path(exists=True))
+@click.argument('paralog_distributions_dir', type=click.Path(exists=True))
+@click.option('-d', '--database', type=click.Path(), required=True, help="Database output file path")
+@click.option('--force', is_flag=True, help="Overwrite species that already exist in database")
+@click.option('--num-gfs', type=int, default=2000, help="Number of gene families for reciprocally retained (default: 2000)")
+def populate_paralog_ks_db(config_dir, paralog_distributions_dir, database, force, num_gfs):
+	"""
+	Populates the paralog Ks database from config files and existing paralog TSV files.
+
+	Reads config files in CONFIG_DIR to extract species information (informal and latin names),
+	then consolidates paralog Ks data from matching directories in PARALOG_DISTRIBUTIONS_DIR.
+
+	\b
+	CONFIG_DIR: path to directory containing config files for species to consolidate
+	PARALOG_DISTRIBUTIONS_DIR: path to directory containing wgd_* subdirectories
+
+	\b
+	Example (process all species with configs in configs/ directory):
+	  ksrates populate-paralog-ks-db configs/ paralog_distributions/ --database paralog_ks_db.tsv
+
+	\b
+	Overwrite existing entries:
+	  ksrates populate-paralog-ks-db configs/ paralog_distributions/ --database paralog_ks_db.tsv --force
+
+	\b
+	Use different recret GF number:
+	  ksrates populate-paralog-ks-db configs/ paralog_distributions/ --database paralog_ks_db.tsv --num-gfs 4000
+	"""
+	from ksrates.populate_paralog_ks_db import populate_paralog_ks_db_batch as populate_batch
+
+	click.format_filename(config_dir)
+	click.format_filename(paralog_distributions_dir)
+	click.format_filename(database)
+
+	populate_batch(config_dir, paralog_distributions_dir, database, force_overwrite=force, num_gfs=num_gfs)
+
+
 # For debugging
 # Syntax: python3 ksrates_cli.py [command] [args]
 if __name__ == "__main__":
-    cli(argv[1:])
+	cli(argv[1:])

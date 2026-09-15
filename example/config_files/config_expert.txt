@@ -14,3 +14,4 @@ num_reciprocally_retained_gfs = 2000
 use_bottom_gfs_instead_of_top = no
 use_original_orthomcl_version = no
 min_ks_anchor_pairs = 0.05
+use_paralog_ks_database = yes
