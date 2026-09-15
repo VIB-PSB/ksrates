@@ -1,7 +1,7 @@
 import os
 import glob
 import logging
-from pandas import DataFrame
+from pandas import DataFrame, read_csv
 import ksrates.fc_extract_ks_list as fc_extract_ks_list
 import ksrates.fc_check_input as fcCheck
 from ksrates.fc_wgd import _OUTPUT_KS_FILE_PATTERN_PARA, _OUTPUT_KS_FILE_PATTERN_ANCHORS, _OUTPUT_KS_FILE_PATTERN_RR_OMCL
@@ -13,14 +13,20 @@ def initialize_paralog_db(db_path):
 	Creates file with proper column headers.
 
 	:param db_path: path to the paralog Ks database file
+	:return: True if the database file exists or was successfully created, False if it could not be created
+	         (e.g. parent directory missing, permission denied). Callers are responsible for acting on failure.
 	"""
+	if os.path.isfile(db_path):
+		return True
+
+	logging.info(f"Paralog Ks list database [{db_path}] not found: creating a new one.")
 	try:
-		with open(db_path, "r") as f:
-			pass
-	except Exception:
-		logging.info(f"Paralog Ks list database [{db_path}] not found: creating a new one.")
 		with open(db_path, "w+") as outfile:
 			outfile.write('\tKs_paranome\tKs_paranome_weights\tKs_anchors\tKs_anchors_weights\tKs_reciprocally_retained\tKs_reciprocally_retained_weights\n')
+		return True
+	except Exception as e:
+		logging.error(f"Could not create paralog Ks database at [{db_path}]: {str(e)}")
+		return False
 
 
 def extract_paralog_ks_from_tsv(species_name, paranome_enabled=False, anchors_enabled=False,
@@ -81,11 +87,11 @@ def extract_paralog_ks_from_tsv(species_name, paranome_enabled=False, anchors_en
 	return ks_data
 
 
-def write_to_paralog_db(species_name, ks_data_dict, db_path):
+def write_to_paralog_db(latin_name, ks_data_dict, db_path):
 	"""
 	Write consolidated paralog Ks data to database.
 
-	:param species_name: species of interest (informal name)
+	:param latin_name: latin name of species of interest
 	:param ks_data_dict: dictionary from extract_paralog_ks_from_tsv with keys 'paranome', 'anchors', 'recret'
 	                     each value is either None or tuple of (ks_list, weights_list)
 	:param db_path: path to the paralog Ks database file
@@ -110,16 +116,16 @@ def write_to_paralog_db(species_name, ks_data_dict, db_path):
 		ks_list_new_row = DataFrame([[ks_paranome, weights_paranome, ks_anchors, weights_anchors, ks_recret, weights_recret]],
 		                             columns=['Ks_paranome', 'Ks_paranome_weights', 'Ks_anchors', 'Ks_anchors_weights',
 		                                      'Ks_reciprocally_retained', 'Ks_reciprocally_retained_weights'],
-		                             index=[species_name])
+		                             index=[latin_name])
 		with open(db_path, "a+") as outfile_ks_list:
 			outfile_ks_list.write(ks_list_new_row.to_csv(sep="\t", header=None))
 		return True
 	else:
-		logging.warning(f"  No paralog Ks data could be extracted for {species_name}.")
+		logging.warning(f"  No paralog Ks data could be extracted.")
 		return False
 
 
-def consolidate_paralog_ks_lists(species_name, ks_list_paralog_db_path, paranome_enabled=False,
+def consolidate_paralog_ks_lists(species_name, latin_name, ks_list_paralog_db_path, paranome_enabled=False,
                                   anchors_enabled=False, reciprocal_retention_enabled=False,
                                   num_gfs=None, rank_type="lambda", bottom=False):
 	"""
@@ -137,11 +143,11 @@ def consolidate_paralog_ks_lists(species_name, ks_list_paralog_db_path, paranome
 	:param bottom: whether to use bottom gene families instead of top (default: False)
 	:return: True if consolidation failed, False otherwise
 	"""
-	logging.info(f"{species_name}:")
+	logging.info(f"{species_name} [{latin_name}]:")
 	logging.info("- Consolidating paralog Ks lists")
 
 	ks_data = extract_paralog_ks_from_tsv(species_name, paranome_enabled, anchors_enabled,
-	                                       reciprocal_retention_enabled, num_gfs, rank_type, bottom)
+										reciprocal_retention_enabled, num_gfs, rank_type, bottom)
 
-	success = write_to_paralog_db(species_name, ks_data, ks_list_paralog_db_path)
-	return not success
+	write_to_paralog_db(latin_name, ks_data, ks_list_paralog_db_path)
+	return
