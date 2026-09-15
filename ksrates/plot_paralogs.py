@@ -22,7 +22,7 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
 
     # GET PARAMETERS and INPUT FILES
     species = config.get_species()
-    latin_names = config.get_latin_names()
+    latin_name = config.get_latin_names().get(species)
     # Get analysis type
     paranome_analysis = config.get_paranome()
     colinearity_analysis = config.get_colinearity()
@@ -62,15 +62,15 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
             with open(ks_list_paralog_db_path, "r") as f:
                 paranome_ks_list_db = pandas.read_csv(f, sep="\t", index_col=0)
 
-            # If species not in database, add it using its TSV files, then reload
-            species_in_db = species in paranome_ks_list_db.index
+            # If species not in database (checked by latin name), add it using its TSV files, then reload
+            species_in_db = latin_name in paranome_ks_list_db.index
             if not species_in_db:
                 logging.info(f"Species [{species}] not found in database. Populating it from TSV files...")
                 ks_data = fc_consolidate_paralog_ks.extract_paralog_ks_from_tsv(
                     species, paranome_analysis, colinearity_analysis, reciprocal_retention_analysis,
                     num_gfs=num_gfs, rank_type=rank_type, bottom=bottom
                 )
-                fc_consolidate_paralog_ks.write_to_paralog_db(species, ks_data, ks_list_paralog_db_path)
+                fc_consolidate_paralog_ks.write_to_paralog_db(latin_name, ks_data, ks_list_paralog_db_path)
                 with open(ks_list_paralog_db_path, "r") as f:
                     paranome_ks_list_db = pandas.read_csv(f, sep="\t", index_col=0)
 
@@ -95,9 +95,9 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
     #   2. Whether data for that type is missing from the database
     # Example: TSV file IS required if the analysis type is enabled BUT its data is missing from database
     # Example: paralog_tsv_file is NOT required if paranome_analysis=True AND database contains valid Ks_paranome data
-    paralog_tsv_file_required = paranome_analysis and not (paralog_db_available and paranome_ks_list_db is not None and species in paranome_ks_list_db.index and paranome_ks_list_db.loc[species, 'Ks_paranome'] is not None)
-    anchors_tsv_file_required = colinearity_analysis and not (paralog_db_available and paranome_ks_list_db is not None and species in paranome_ks_list_db.index and paranome_ks_list_db.loc[species, 'Ks_anchors'] is not None)
-    recret_tsv_file_required = reciprocal_retention_analysis and not (paralog_db_available and paranome_ks_list_db is not None and species in paranome_ks_list_db.index and paranome_ks_list_db.loc[species, 'Ks_reciprocally_retained'] is not None)
+    paralog_tsv_file_required = paranome_analysis and not (paralog_db_available and paranome_ks_list_db is not None and latin_name in paranome_ks_list_db.index and paranome_ks_list_db.loc[latin_name, 'Ks_paranome'] is not None)
+    anchors_tsv_file_required = colinearity_analysis and not (paralog_db_available and paranome_ks_list_db is not None and latin_name in paranome_ks_list_db.index and paranome_ks_list_db.loc[latin_name, 'Ks_anchors'] is not None)
+    recret_tsv_file_required = reciprocal_retention_analysis and not (paralog_db_available and paranome_ks_list_db is not None and latin_name in paranome_ks_list_db.index and paranome_ks_list_db.loc[latin_name, 'Ks_reciprocally_retained'] is not None)
 
     if paralog_tsv_file_required:
         default_path_paralog_tsv_file = os.path.join("paralog_distributions", f"wgd_{species}", _OUTPUT_KS_FILE_PATTERN_PARA.format(species))
@@ -174,10 +174,10 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
     # Generate the mixed plot with a single data type (e.g. paranome) for any required data_type
     if paranome_analysis:
         logging.info(f"Plotting paranome Ks distribution for species [{species}]")
-        fig_uncorr_para, ax_uncorr_para = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
+        fig_uncorr_para, ax_uncorr_para = fcPlot.generate_mixed_plot_figure(latin_name, x_max_lim, y_lim, 
                                     "un-corrected", correction_table_available, plot_correction_arrows,
                                     paranome_data=paranome_analysis, num_gfs=num_gfs, rank_type=rank_type)
-        fig_corr_para, ax_corr_para = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
+        fig_corr_para, ax_corr_para = fcPlot.generate_mixed_plot_figure(latin_name, x_max_lim, y_lim, 
                                     "corrected", correction_table_available, plot_correction_arrows,
                                     paranome_data=paranome_analysis, num_gfs=num_gfs, rank_type=rank_type)
         ax_uncorr_include_para.append(ax_uncorr_para)
@@ -187,10 +187,10 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
 
     if colinearity_analysis:
         logging.info(f"Plotting anchor pair Ks distribution for species [{species}]")
-        fig_uncorr_col, ax_uncorr_col = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
+        fig_uncorr_col, ax_uncorr_col = fcPlot.generate_mixed_plot_figure(latin_name, x_max_lim, y_lim, 
                                     "un-corrected", correction_table_available, plot_correction_arrows,
                                     colinearity_data=colinearity_analysis, num_gfs=num_gfs, rank_type=rank_type)
-        fig_corr_col, ax_corr_col = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
+        fig_corr_col, ax_corr_col = fcPlot.generate_mixed_plot_figure(latin_name, x_max_lim, y_lim, 
                                     "corrected", correction_table_available, plot_correction_arrows,
                                     colinearity_data=colinearity_analysis, num_gfs=num_gfs, rank_type=rank_type)
         ax_uncorr_include_col.append(ax_uncorr_col)
@@ -200,10 +200,10 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
 
     if reciprocal_retention_analysis:
         logging.info(f"Plotting reciprocally retained paralog Ks distribution for species [{species}]")
-        fig_uncorr_rr, ax_uncorr_rr = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
+        fig_uncorr_rr, ax_uncorr_rr = fcPlot.generate_mixed_plot_figure(latin_name, x_max_lim, y_lim, 
                                     "un-corrected", correction_table_available, plot_correction_arrows,
                                     reciprocal_retention_data=reciprocal_retention_analysis, num_gfs=num_gfs, rank_type=rank_type)
-        fig_corr_rr, ax_corr_rr = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
+        fig_corr_rr, ax_corr_rr = fcPlot.generate_mixed_plot_figure(latin_name, x_max_lim, y_lim, 
                                     "corrected", correction_table_available, plot_correction_arrows,
                                     reciprocal_retention_data=reciprocal_retention_analysis, num_gfs=num_gfs, rank_type=rank_type)
         ax_uncorr_include_rr.append(ax_uncorr_rr)
@@ -214,11 +214,11 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
     # Generate the mixed plot for any required pair of data types (e.g. paranome and anchors)
     if paranome_analysis and colinearity_analysis:
         logging.info(f"Plotting paranome and anchor pairs Ks distributions for species [{species}]")
-        fig_uncorr_para_col, ax_uncorr_para_col = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
+        fig_uncorr_para_col, ax_uncorr_para_col = fcPlot.generate_mixed_plot_figure(latin_name, x_max_lim, y_lim, 
                                     "un-corrected", correction_table_available, plot_correction_arrows,
                                     paranome_data=paranome_analysis, colinearity_data=colinearity_analysis,
                                     num_gfs=num_gfs, rank_type=rank_type)
-        fig_corr_para_col, ax_corr_para_col = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
+        fig_corr_para_col, ax_corr_para_col = fcPlot.generate_mixed_plot_figure(latin_name, x_max_lim, y_lim, 
                                     "corrected", correction_table_available, plot_correction_arrows,
                                     paranome_data=paranome_analysis, colinearity_data=colinearity_analysis,
                                     num_gfs=num_gfs, rank_type=rank_type)
@@ -231,11 +231,11 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
 
     if paranome_analysis and reciprocal_retention_analysis:
         logging.info(f"Plotting paranome and reciprocally retained paralog Ks distributions for species [{species}]")
-        fig_uncorr_para_rr, ax_uncorr_para_rr = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
+        fig_uncorr_para_rr, ax_uncorr_para_rr = fcPlot.generate_mixed_plot_figure(latin_name, x_max_lim, y_lim, 
                                     "un-corrected", correction_table_available, plot_correction_arrows,
                                     paranome_data=paranome_analysis, reciprocal_retention_data=reciprocal_retention_analysis,
                                     num_gfs=num_gfs, rank_type=rank_type)
-        fig_corr_para_rr, ax_corr_para_rr = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
+        fig_corr_para_rr, ax_corr_para_rr = fcPlot.generate_mixed_plot_figure(latin_name, x_max_lim, y_lim, 
                                     "corrected", correction_table_available, plot_correction_arrows,
                                     paranome_data=paranome_analysis, reciprocal_retention_data=reciprocal_retention_analysis,
                                     num_gfs=num_gfs, rank_type=rank_type)
@@ -248,11 +248,11 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
 
     if colinearity_analysis and reciprocal_retention_analysis:
         logging.info(f"Plotting anchor pairs and reciprocally retained paralog Ks distributions for species [{species}]")
-        fig_uncorr_col_rr, ax_uncorr_col_rr = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
+        fig_uncorr_col_rr, ax_uncorr_col_rr = fcPlot.generate_mixed_plot_figure(latin_name, x_max_lim, y_lim, 
                                     "un-corrected", correction_table_available, plot_correction_arrows,
                                     colinearity_data=colinearity_analysis, reciprocal_retention_data=reciprocal_retention_analysis,
                                     num_gfs=num_gfs, rank_type=rank_type)
-        fig_corr_col_rr, ax_corr_col_rr = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
+        fig_corr_col_rr, ax_corr_col_rr = fcPlot.generate_mixed_plot_figure(latin_name, x_max_lim, y_lim, 
                                     "corrected", correction_table_available, plot_correction_arrows,
                                     colinearity_data=colinearity_analysis, reciprocal_retention_data=reciprocal_retention_analysis,
                                     num_gfs=num_gfs, rank_type=rank_type)
@@ -266,11 +266,11 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
     # Generate the mixed plot for the three data types altogether if required by configuration
     if paranome_analysis and colinearity_analysis and reciprocal_retention_analysis:
         logging.info(f"Plotting paranome, anchor pairs and reciprocally retained paralog Ks distributions for species [{species}]")
-        fig_uncorr_para_col_rr, ax_uncorr_para_col_rr = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
+        fig_uncorr_para_col_rr, ax_uncorr_para_col_rr = fcPlot.generate_mixed_plot_figure(latin_name, x_max_lim, y_lim, 
                                     "un-corrected", correction_table_available, plot_correction_arrows,
                                     paranome_data=paranome_analysis, colinearity_data=colinearity_analysis,
                                     reciprocal_retention_data=reciprocal_retention_analysis, num_gfs=num_gfs, rank_type=rank_type)
-        fig_corr_para_col_rr, ax_corr_para_col_rr = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
+        fig_corr_para_col_rr, ax_corr_para_col_rr = fcPlot.generate_mixed_plot_figure(latin_name, x_max_lim, y_lim, 
                                     "corrected", correction_table_available, plot_correction_arrows,
                                     paranome_data=paranome_analysis, colinearity_data=colinearity_analysis,
                                     reciprocal_retention_data=reciprocal_retention_analysis, num_gfs=num_gfs, rank_type=rank_type)
@@ -288,8 +288,8 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
         paranome_list = None
         paranome_weights = None
         # Try database first if available
-        if paralog_db_available and paranome_ks_list_db is not None and species in paranome_ks_list_db.index:
-            db_paranome = paranome_ks_list_db.loc[species, 'Ks_paranome']
+        if paralog_db_available and paranome_ks_list_db is not None and latin_name in paranome_ks_list_db.index:
+            db_paranome = paranome_ks_list_db.loc[latin_name, 'Ks_paranome']
             if db_paranome is not None:
                 # Reconstruct dataframe from database and recalculate weights
                 paranome_df = pandas.DataFrame(db_paranome)
@@ -313,8 +313,8 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
         anchors_list = None
         anchors_weights = None
         # Try database first if available
-        if paralog_db_available and paranome_ks_list_db is not None and species in paranome_ks_list_db.index:
-            db_anchors = paranome_ks_list_db.loc[species, 'Ks_anchors']
+        if paralog_db_available and paranome_ks_list_db is not None and latin_name in paranome_ks_list_db.index:
+            db_anchors = paranome_ks_list_db.loc[latin_name, 'Ks_anchors']
             if db_anchors is not None:
                 # Reconstruct dataframe from database and recalculate weights
                 anchors_df = pandas.DataFrame(db_anchors)
@@ -342,8 +342,8 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
         rec_ret_list = None
         rec_ret_weights = None
         # Try database first if available
-        if paralog_db_available and paranome_ks_list_db is not None and species in paranome_ks_list_db.index:
-            db_recret = paranome_ks_list_db.loc[species, 'Ks_reciprocally_retained']
+        if paralog_db_available and paranome_ks_list_db is not None and latin_name in paranome_ks_list_db.index:
+            db_recret = paranome_ks_list_db.loc[latin_name, 'Ks_reciprocally_retained']
             if db_recret is not None:
                 # Reconstruct dataframe from database and recalculate weights
                 recret_df = pandas.DataFrame(db_recret)
