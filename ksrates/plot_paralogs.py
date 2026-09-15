@@ -8,6 +8,7 @@ import ksrates.fc_plotting as fcPlot
 import ksrates.fc_extract_ks_list as fc_extract_ks_list
 import ksrates.fc_check_input as fcCheck
 import ksrates.fc_configfile as fcConf
+import ksrates.fc_consolidate_paralog_ks as fc_consolidate_paralog_ks
 from ksrates.fc_rrt_correction import _ADJUSTMENT_TABLE
 from ksrates.fc_plotting import _MIXED_ADJUSTED_PLOT_FILENAME, _MIXED_UNADJUSTED_PLOT_FILENAME, _OTHER_MIXED_PLOTS_SUBDIR
 from ksrates.fc_wgd import _OUTPUT_KS_FILE_PATTERN_PARA, _OUTPUT_KS_FILE_PATTERN_ANCHORS, _OUTPUT_KS_FILE_PATTERN_RR_OMCL
@@ -46,38 +47,49 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
 
     # GET PARALOG KS DATA, EITHER FROM DATABASE OF FROM ORIGINAL KS TSV FILES
 
-    # First try to load paralog Ks lists from consolidated database (optional, for backward compatibility with TSV files)
+    # Assume there is no database or no species data in it
     paralog_db_available = False
     paranome_ks_list_db = None
-    try:
-        with open(ks_list_paralog_db_path, "r") as f:
-            paranome_ks_list_db = pandas.read_csv(f, sep="\t", index_col=0)
+
+    # If database was configured, load from it paralog Ks lists
+    if ks_list_paralog_db_path:
+        try:
+            # Create database file if it doesn't exist yet
+            if not os.path.isfile(ks_list_paralog_db_path):
+                logging.info(f"Paralog Ks database not found at [{ks_list_paralog_db_path}]. Creating...")
+                fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path)
+
+            with open(ks_list_paralog_db_path, "r") as f:
+                paranome_ks_list_db = pandas.read_csv(f, sep="\t", index_col=0)
+
+            # If species not in database, add it using its TSV files, then reload
+            species_in_db = species in paranome_ks_list_db.index
+            if not species_in_db:
+                logging.info(f"Species [{species}] not found in database. Populating it from TSV files...")
+                ks_data = fc_consolidate_paralog_ks.extract_paralog_ks_from_tsv(
+                    species, paranome_analysis, colinearity_analysis, reciprocal_retention_analysis,
+                    num_gfs=num_gfs, rank_type=rank_type, bottom=bottom
+                )
+                fc_consolidate_paralog_ks.write_to_paralog_db(species, ks_data, ks_list_paralog_db_path)
+                with open(ks_list_paralog_db_path, "r") as f:
+                    paranome_ks_list_db = pandas.read_csv(f, sep="\t", index_col=0)
+
             # When imported from csv format, all the Ks lists in the df are read as
             # plain text (strings) and must be converted back to value lists
-            if 'Ks_paranome' in paranome_ks_list_db.columns:
-                paranome_ks_list_db.loc[:, 'Ks_paranome'] = paranome_ks_list_db.loc[:, 'Ks_paranome'].apply(lambda x: literal_eval(x) if x is not None and x != 'None' else None)
-            if 'Ks_paranome_weights' in paranome_ks_list_db.columns:
-                paranome_ks_list_db.loc[:, 'Ks_paranome_weights'] = paranome_ks_list_db.loc[:, 'Ks_paranome_weights'].apply(lambda x: literal_eval(x) if x is not None and x != 'None' else None)
-            
-            if 'Ks_anchors' in paranome_ks_list_db.columns:
-                paranome_ks_list_db.loc[:, 'Ks_anchors'] = paranome_ks_list_db.loc[:, 'Ks_anchors'].apply(lambda x: literal_eval(x) if x is not None and x != 'None' else None)
-            if 'Ks_anchors_weights' in paranome_ks_list_db.columns:
-                paranome_ks_list_db.loc[:, 'Ks_anchors_weights'] = paranome_ks_list_db.loc[:, 'Ks_anchors_weights'].apply(lambda x: literal_eval(x) if x is not None and x != 'None' else None)
-            
-            if 'Ks_reciprocally_retained' in paranome_ks_list_db.columns:
-                paranome_ks_list_db.loc[:, 'Ks_reciprocally_retained'] = paranome_ks_list_db.loc[:, 'Ks_reciprocally_retained'].apply(lambda x: literal_eval(x) if x is not None and x != 'None' else None)
-            if 'Ks_reciprocally_retained_weights' in paranome_ks_list_db.columns:
-                paranome_ks_list_db.loc[:, 'Ks_reciprocally_retained_weights'] = paranome_ks_list_db.loc[:, 'Ks_reciprocally_retained_weights'].apply(lambda x: literal_eval(x) if x is not None and x != 'None' else None)
-            
+            logging.info("Loading paralog Ks list database...")
+            for col in ['Ks_paranome', 'Ks_paranome_weights', 'Ks_anchors', 'Ks_anchors_weights',
+                        'Ks_reciprocally_retained', 'Ks_reciprocally_retained_weights']:
+                if col in paranome_ks_list_db.columns:
+                    paranome_ks_list_db.loc[:, col] = paranome_ks_list_db.loc[:, col].apply(
+                        lambda x: literal_eval(x) if x is not None and x != 'None' else None)
+
             paralog_db_available = True
-            logging.info(f"Loaded paralog Ks list database from [{ks_list_paralog_db_path}]")
-    except Exception:
-        logging.info(f"Paralog Ks list database [{ks_list_paralog_db_path}] not found or empty. Will read from TSV files instead.")
-        paralog_db_available = False
-    # Select Ks values 
 
+        except Exception as e:
+            logging.warning(f"Could not use paralog Ks database [{ks_list_paralog_db_path}]: {str(e)}. Will read TSV files instead.")
+            paralog_db_available = False
 
-    # Paralog TSV files are only required as fallback if their data is not available in the database
+    # If the species' Ks data is not available in the database, use the original paralog TSV files as fallback
     # Determine which TSV files are needed based on:
     #   1. Whether the analysis type is enabled AND
     #   2. Whether data for that type is missing from the database
@@ -107,6 +119,7 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
     if (paralog_tsv_file_required and paralog_tsv_file == "") or (anchors_tsv_file_required and anchors_ks_tsv_file == "") or (recret_tsv_file_required and rec_ret_tsv_file == ""):
         logging.error("Exiting")
         sys.exit(1)
+
 
     # Creating folders for output files
     output_folder = os.path.join("rate_adjustment", f"{species}")
