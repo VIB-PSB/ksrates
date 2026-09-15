@@ -139,7 +139,7 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
 
         paralog_db_ready = fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path)
         if paralog_db_ready:
-            fc_consolidate_paralog_ks.consolidate_paralog_ks_lists(species, ks_list_paralog_db_path,
+            fc_consolidate_paralog_ks.consolidate_paralog_ks_lists(species, latin_name, ks_list_paralog_db_path,
                                                                     paranome_enabled=paranome,
                                                                     anchors_enabled=colinearity,
                                                                     reciprocal_retention_enabled=reciprocal_retention,
