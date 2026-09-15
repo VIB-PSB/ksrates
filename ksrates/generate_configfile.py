@@ -50,6 +50,7 @@ def generate_configfile(configfile_name):
     Config.set("ANALYSIS SETTING", "consensus_mode_for_multiple_outgroups", "mean among outgroups")
     Config.set("ANALYSIS SETTING", "# allowed values: 'mean among outgroups' or 'best outgroup' (default: 'mean among outgroups')\n")
 
+
     Config.add_section("PARAMETERS")
 
     Config.set("PARAMETERS", "x_axis_max_limit_paralogs_plot", "5")
