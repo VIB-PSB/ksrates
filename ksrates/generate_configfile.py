@@ -27,7 +27,7 @@ def generate_configfile(configfile_name):
     Config.set("SPECIES", "ks_list_database_path", "ortholog_ks_list_db.tsv")
     Config.set("SPECIES", "# filenames/paths of the ortholog data databases\n")
 
-    Config.set("SPECIES", "ks_list_paralog_database_path", "paralog_ks_list_db.tsv")
+    Config.set("SPECIES", "ks_list_paralog_database_path", "paralog_ks_db.sqlite")
     Config.set("SPECIES", "# filenames/paths of the paralog data databases\n")
 
 

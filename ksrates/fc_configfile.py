@@ -228,13 +228,13 @@ class Configuration:
 
     def get_paralog_ks_database(self):
         """
-        Gets the config file field of the paralog Ks list database path.  
+        Gets the config file field of the paralog Ks database path (a SQLite database file).
 
-        :return ks_list_paralog_db_path: path to the paralog Ks list database
+        :return ks_list_paralog_db_path: path to the paralog Ks database
         """
-        ks_list_paralog_db_path = self.config.get("SPECIES", "ks_list_paralog_database_path", fallback="paralog_ks_list_db.tsv")
+        ks_list_paralog_db_path = self.config.get("SPECIES", "ks_list_paralog_database_path", fallback="paralog_ks_db.sqlite")
         if not ks_list_paralog_db_path:
-            ks_list_paralog_db_path = "paralog_ks_list_db.tsv"
+            ks_list_paralog_db_path = "paralog_ks_db.sqlite"
         return ks_list_paralog_db_path
     
     def get_fasta_dict(self):

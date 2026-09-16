@@ -31,7 +31,7 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
     max_extra_original_genes_in_new_gfs = config.get_max_extra_original_genes_in_new_gfs(reciprocal_retention)
     min_common_old_genes_in_new_gfs = 3 # TODO: check its use!
     use_original_orthomcl_version = config.get_orthomcl_version() # Whether to use the original or edited OrthoMCL version (default: edited)
-    use_paralog_ks_database = config.use_paralog_ks_database() # Whether to also copy the Ks data into a collective TSV database (default: no)
+    use_paralog_ks_database = config.use_paralog_ks_database() # Whether to also copy the Ks data into a collective SQLite database (default: no)
 
     if not paranome and not colinearity and not reciprocal_retention:
         logging.error('At least one of the "paranome", "collinearity" or "reciprocal retention" parameters in the configuration file needs to be set to "yes".')
@@ -135,7 +135,7 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
     # CONSOLIDATING PARALOG Ks VALUES INTO DATABASE (if database is configured)
     if use_paralog_ks_database:
         logging.info("---")
-        logging.info("Consolidating paralog Ks lists into database")
+        logging.info(f"Consolidating paralog Ks lists into database [{ks_list_paralog_db_path}]")
 
         paralog_db_ready = fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path)
         if paralog_db_ready:
