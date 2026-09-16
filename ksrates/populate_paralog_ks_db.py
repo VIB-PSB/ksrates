@@ -2,7 +2,6 @@ import os
 import sys
 import logging
 import glob
-from pandas import read_csv
 import ksrates.fc_configfile as fcConf
 import ksrates.fc_consolidate_paralog_ks as fc_consolidate_paralog_ks
 from ksrates.utils import init_logging
@@ -84,26 +83,6 @@ def populate_paralog_ks_db_batch(config_dir_path, paralog_distributions_path, db
 	logging.info("Checking paralog Ks database from input path")
 	# Initialize database
 	fc_consolidate_paralog_ks.initialize_paralog_db(db_path)
-
-	# Read existing database and remove any entries for species we're about to process
-	existing_species = set()
-	species_to_remove = set()
-	try:
-		with open(db_path, "r") as f:
-			db_df = read_csv(f, sep="\t", index_col=0)
-			existing_species = set(db_df.index)
-			if existing_species:
-				logging.info(f"Database already contains {len(existing_species)} species")
-				# Find species we're about to process that already exist
-				species_to_remove = existing_species.intersection(set(species_info.values()))
-				if species_to_remove and force_overwrite:
-					logging.info(f"Removing {len(species_to_remove)} existing entries that will be overwritten...")
-					db_df = db_df.drop(list(species_to_remove))
-					with open(db_path, "w") as fw:
-						fw.write(db_df.to_csv(sep="\t"))
-					logging.info("Cleaned database, ready to append new entries")
-	except Exception:
-		pass
 	logging.info("")
 
 	logging.info(f"Processing {len(species_info)} species:")
@@ -117,8 +96,9 @@ def populate_paralog_ks_db_batch(config_dir_path, paralog_distributions_path, db
 	alternative_recret_files = {}
 
 	for informal_name, latin_name in species_info.items():
-		# Check if species already exists in database (by latin name)
-		will_overwrite = latin_name in existing_species
+		# Check if species already exists in database (by latin name); a single indexed lookup,
+		# not a full-database scan.
+		will_overwrite = fc_consolidate_paralog_ks.species_exists(db_path, latin_name)
 		if will_overwrite and not force_overwrite:
 			logging.warning(f"Skipping [{informal_name}] ({latin_name}): already exists in database (use --force to overwrite)")
 			skipped.append(informal_name)
