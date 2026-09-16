@@ -1,7 +1,9 @@
 import os
 import glob
+import pickle
+import sqlite3
 import logging
-from pandas import DataFrame, read_csv
+from pandas import read_csv
 import ksrates.fc_check_input as fcCheck
 from ksrates.fc_wgd import _OUTPUT_KS_FILE_PATTERN_PARA, _OUTPUT_KS_FILE_PATTERN_ANCHORS, _OUTPUT_KS_FILE_PATTERN_RR_OMCL
 
@@ -9,27 +11,93 @@ from ksrates.fc_wgd import _OUTPUT_KS_FILE_PATTERN_PARA, _OUTPUT_KS_FILE_PATTERN
 # for an arbitrary Ks/alignment-quality cutoff, without having to re-read the original TSV file.
 _REQUIRED_COLUMNS = ['Family', 'Node', 'Ks', 'AlignmentCoverage', 'AlignmentIdentity', 'AlignmentLength']
 
+_TABLE = "paralog_ks"
+# Maps the extract_paralog_ks_from_tsv()/ks_data_dict keys to the SQLite column names
+_ANALYSIS_TYPE_TO_COLUMN = {"paranome": "paranome", "anchors": "anchors", "recret": "reciprocally_retained"}
+
+
+def _connect(db_path):
+	"""
+	Open a connection to the paralog Ks SQLite database. Uses WAL mode and a generous busy timeout
+	so that multiple processes (e.g. one per species in a batch/cluster run) writing to the same
+	shared database file don't fail outright on lock contention.
+
+	:param db_path: path to the paralog Ks database file
+	:return: sqlite3 connection
+	"""
+	conn = sqlite3.connect(db_path, timeout=30)
+	conn.execute("PRAGMA journal_mode=WAL")
+	return conn
+
 
 def initialize_paralog_db(db_path):
 	"""
-	Initialize paralog Ks database file if it doesn't exist.
-	Creates file with proper column headers.
+	Initialize the paralog Ks SQLite database if it doesn't exist yet (creates the file and table).
 
 	:param db_path: path to the paralog Ks database file
-	:return: True if the database file exists or was successfully created, False if it could not be created
+	:return: True if the database is ready to use, False if it could not be created/opened
 	         (e.g. parent directory missing, permission denied). Callers are responsible for acting on failure.
 	"""
-	if os.path.isfile(db_path):
-		return True
-
-	logging.info(f"Paralog Ks list database [{db_path}] not found: creating a new one.")
 	try:
-		with open(db_path, "w+") as outfile:
-			outfile.write('\tParanome\tAnchors\tReciprocally_retained\n')
+		conn = _connect(db_path)
+		conn.execute(f"""
+			CREATE TABLE IF NOT EXISTS {_TABLE} (
+				latin_name TEXT PRIMARY KEY,
+				paranome BLOB,
+				anchors BLOB,
+				reciprocally_retained BLOB
+			)
+		""")
+		conn.commit()
+		conn.close()
 		return True
 	except Exception as e:
-		logging.error(f"Could not create paralog Ks database at [{db_path}]: {str(e)}")
+		logging.error(f"Could not create/open paralog Ks database at [{db_path}]: {str(e)}")
 		return False
+
+
+def species_exists(db_path, latin_name):
+	"""
+	Check whether a species already has a row in the paralog Ks database, regardless of which
+	analysis types it holds data for.
+
+	:param db_path: path to the paralog Ks database file
+	:param latin_name: latin name of species of interest
+	:return: True if the species has a row, False otherwise (including on any read error)
+	"""
+	try:
+		conn = _connect(db_path)
+		row = conn.execute(f"SELECT 1 FROM {_TABLE} WHERE latin_name = ? LIMIT 1", (latin_name,)).fetchone()
+		conn.close()
+		return row is not None
+	except Exception:
+		return False
+
+
+def read_analysis_data(db_path, latin_name, analysis_type):
+	"""
+	Look up one species' stored Ks data for one analysis type, without loading the rest of the
+	database. This is the single shared entry point all consumers should use to read from the
+	paralog Ks database.
+
+	:param db_path: path to the paralog Ks database file
+	:param latin_name: latin name of species of interest
+	:param analysis_type: one of 'paranome', 'anchors', 'recret'
+	:return: dict of lists (Family, Node, Ks, AlignmentCoverage, AlignmentIdentity, AlignmentLength),
+	         or None if the species isn't in the database, has no data for this analysis type, or the
+	         database couldn't be read
+	"""
+	column = _ANALYSIS_TYPE_TO_COLUMN[analysis_type]
+	try:
+		conn = _connect(db_path)
+		row = conn.execute(f"SELECT {column} FROM {_TABLE} WHERE latin_name = ?", (latin_name,)).fetchone()
+		conn.close()
+	except Exception as e:
+		logging.warning(f"Could not read from paralog Ks database [{db_path}]: {str(e)}")
+		return None
+	if row is None or row[0] is None:
+		return None
+	return pickle.loads(row[0])
 
 
 def _extract_columns_from_tsv(tsv_path):
@@ -105,9 +173,15 @@ def extract_paralog_ks_from_tsv(species_name, paranome_enabled=False, anchors_en
 
 def write_to_paralog_db(latin_name, ks_data_dict, db_path):
 	"""
-	Write consolidated paralog Ks data to database. Weights are not stored: they are recomputed
-	at analysis time from the stored Family/Node/alignment columns for whichever Ks/alignment
-	cutoff is requested.
+	Write consolidated paralog Ks data to the database. Weights are not stored: they are recomputed
+	at analysis time from the stored Family/Node/alignment columns for whichever Ks/alignment cutoff
+	is requested.
+
+	If the species already has a row, only the analysis types present in ks_data_dict (non-None) are
+	overwritten; analysis types not present here are left untouched. This matters because this function
+	may be called multiple times for the same species with different analyses enabled (e.g. a first run
+	with only paranome, a later run adding colinearity) — without this, a later call would otherwise wipe
+	out data for analysis types it wasn't asked to extract.
 
 	:param latin_name: latin name of species of interest
 	:param ks_data_dict: dictionary from extract_paralog_ks_from_tsv with keys 'paranome', 'anchors', 'recret'
@@ -120,29 +194,27 @@ def write_to_paralog_db(latin_name, ks_data_dict, db_path):
 	ks_anchors = ks_data_dict['anchors']
 	ks_recret = ks_data_dict['recret']
 
-	if ks_paranome is not None or ks_anchors is not None or ks_recret is not None:
-		logging.info("  - Writing consolidated Ks lists to database")
-
-		# Remove any existing row for this species to avoid duplicates (e.g. from a re-run)
-		try:
-			with open(db_path, "r") as f:
-				db_df = read_csv(f, sep="\t", index_col=0)
-			if latin_name in db_df.index:
-				db_df = db_df.drop(latin_name)
-				with open(db_path, "w") as fw:
-					fw.write(db_df.to_csv(sep="\t"))
-		except Exception:
-			pass
-
-		ks_list_new_row = DataFrame([[ks_paranome, ks_anchors, ks_recret]],
-		                             columns=['Paranome', 'Anchors', 'Reciprocally_retained'],
-		                             index=[latin_name])
-		with open(db_path, "a+") as outfile_ks_list:
-			outfile_ks_list.write(ks_list_new_row.to_csv(sep="\t", header=None))
-		return True
-	else:
+	if ks_paranome is None and ks_anchors is None and ks_recret is None:
 		logging.warning(f"  No paralog Ks data could be extracted.")
 		return False
+
+	logging.info("  - Writing consolidated Ks lists to database")
+	blob_paranome = pickle.dumps(ks_paranome) if ks_paranome is not None else None
+	blob_anchors = pickle.dumps(ks_anchors) if ks_anchors is not None else None
+	blob_recret = pickle.dumps(ks_recret) if ks_recret is not None else None
+
+	conn = _connect(db_path)
+	conn.execute(f"""
+		INSERT INTO {_TABLE} (latin_name, paranome, anchors, reciprocally_retained)
+		VALUES (?, ?, ?, ?)
+		ON CONFLICT(latin_name) DO UPDATE SET
+			paranome=COALESCE(excluded.paranome, {_TABLE}.paranome),
+			anchors=COALESCE(excluded.anchors, {_TABLE}.anchors),
+			reciprocally_retained=COALESCE(excluded.reciprocally_retained, {_TABLE}.reciprocally_retained)
+	""", (latin_name, blob_paranome, blob_anchors, blob_recret))
+	conn.commit()
+	conn.close()
+	return True
 
 
 def consolidate_paralog_ks_lists(species_name, latin_name, ks_list_paralog_db_path, paranome_enabled=False,
