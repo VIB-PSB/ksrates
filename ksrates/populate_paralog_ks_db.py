@@ -211,13 +211,13 @@ def populate_paralog_ks_db_batch(config_dir_path, paralog_distributions_path, db
 		logging.info("")
 		logging.warning(f"Skipped (already in database, use --force to overwrite): {len(skipped)} species")
 		for informal_name in skipped:
-			logging.warning(f"  - {informal_name}")
+			logging.warning(f"  - {informal_name} ({latin_names.get(informal_name)})")
 
 	if failed:
 		logging.info("")
 		logging.error(f"Failed to process: {len(failed)} species")
 		for informal_name in failed:
-			logging.error(f"  - {informal_name}")
+			logging.error(f"  - {informal_name} ({latin_names.get(informal_name)})")
 
 	if alternative_recret_files:
 		logging.info("")
