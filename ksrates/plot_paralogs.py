@@ -2,7 +2,6 @@ import pandas
 import sys
 import os
 import logging
-from ast import literal_eval
 from ksrates.utils import init_logging
 import ksrates.fc_plotting as fcPlot
 import ksrates.fc_extract_ks_list as fc_extract_ks_list
@@ -32,7 +31,7 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
     bottom = config.use_bottom_gfs_instead_of_top(reciprocal_retention_analysis) # Use actually the BOTTOM GFs instead of the top ones (number of bottom GFs remains defined by "top" variable)
     rank_type = config.get_reciprocal_retention_rank_type(reciprocal_retention_analysis) # Rank type (only "lambda" supported)
     use_paralog_ks_database = config.use_paralog_ks_database() # Whether to use the collective paralog Ks database (default: no)
-    ks_list_paralog_db_path = config.get_paralog_ks_database() # TSV file listing paralog Ks values
+    ks_list_paralog_db_path = config.get_paralog_ks_database() # SQLite database consolidating paralog Ks data across species
 
     # By default the pipeline uses the TOP-ranked reciprocally retained GFs.
     # However, for comparison purposes, the user might want to use the BOTTOM GFs (e.g. the bottom 2000 ones)
@@ -48,56 +47,29 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
 
     # GET PARALOG KS DATA, EITHER FROM DATABASE OF FROM ORIGINAL KS TSV FILES
 
-    # Assume there is no database or no species data in it
-    paralog_db_available = False
-    paranome_ks_list_db = None
+    # Assume there is no database data for any analysis type, until proven otherwise below
+    db_paranome_data = None
+    db_anchors_data = None
+    db_recret_data = None
 
-    # If database usage was enabled in expert config, load from it paralog Ks lists
+    # If database usage was enabled in expert config, look up this species' data for each analysis type.
+    # Each lookup is an indexed single-row read: it doesn't load data for any other species.
     if use_paralog_ks_database:
         try:
-            # Create database file if it doesn't exist yet
-            if not os.path.isfile(ks_list_paralog_db_path):
-                logging.info(f"Paralog Ks database not found at [{ks_list_paralog_db_path}]. Creating...")
-                fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path)
-
-            with open(ks_list_paralog_db_path, "r") as f:
-                paranome_ks_list_db = pandas.read_csv(f, sep="\t", index_col=0)
-
-            # If species not in database (checked by latin name), add it using its TSV files, then reload
-            species_in_db = latin_name in paranome_ks_list_db.index
-            if not species_in_db:
-                logging.info(f"Species [{species}] not found in database. Populating it from TSV files...")
-                ks_data = fc_consolidate_paralog_ks.extract_paralog_ks_from_tsv(
-                    species, paranome_analysis, colinearity_analysis, reciprocal_retention_analysis,
-                    num_gfs=num_gfs, rank_type=rank_type, bottom=bottom
-                )
-                fc_consolidate_paralog_ks.write_to_paralog_db(latin_name, ks_data, ks_list_paralog_db_path)
-                with open(ks_list_paralog_db_path, "r") as f:
-                    paranome_ks_list_db = pandas.read_csv(f, sep="\t", index_col=0)
-
-            # When imported from csv format, all the Ks data in the df are read as
-            # plain text (strings) and must be converted back to dicts of lists
-            logging.info("Loading paralog Ks list database...")
-            for col in ['Paranome', 'Anchors', 'Reciprocally_retained']:
-                if col in paranome_ks_list_db.columns:
-                    paranome_ks_list_db.loc[:, col] = paranome_ks_list_db.loc[:, col].apply(
-                        lambda x: literal_eval(x) if x is not None and x != 'None' else None)
-
-            paralog_db_available = True
-
+            fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path)
+            if paranome_analysis:
+                db_paranome_data = fc_consolidate_paralog_ks.read_analysis_data(ks_list_paralog_db_path, latin_name, 'paranome')
+            if colinearity_analysis:
+                db_anchors_data = fc_consolidate_paralog_ks.read_analysis_data(ks_list_paralog_db_path, latin_name, 'anchors')
+            if reciprocal_retention_analysis:
+                db_recret_data = fc_consolidate_paralog_ks.read_analysis_data(ks_list_paralog_db_path, latin_name, 'recret')
         except Exception as e:
             logging.warning(f"Could not use paralog Ks database [{ks_list_paralog_db_path}]: {str(e)}. Will read TSV files instead.")
-            paralog_db_available = False
 
     # If the species' Ks data is not available in the database, use the original paralog TSV files as fallback
-    # Determine which TSV files are needed based on:
-    #   1. Whether the analysis type is enabled AND
-    #   2. Whether data for that type is missing from the database
-    # Example: TSV file IS required if the analysis type is enabled BUT its data is missing from database
-    # Example: paralog_tsv_file is NOT required if paranome_analysis=True AND database contains valid Paranome data
-    paralog_tsv_file_required = paranome_analysis and not (paralog_db_available and paranome_ks_list_db is not None and latin_name in paranome_ks_list_db.index and paranome_ks_list_db.loc[latin_name, 'Paranome'] is not None)
-    anchors_tsv_file_required = colinearity_analysis and not (paralog_db_available and paranome_ks_list_db is not None and latin_name in paranome_ks_list_db.index and paranome_ks_list_db.loc[latin_name, 'Anchors'] is not None)
-    recret_tsv_file_required = reciprocal_retention_analysis and not (paralog_db_available and paranome_ks_list_db is not None and latin_name in paranome_ks_list_db.index and paranome_ks_list_db.loc[latin_name, 'Reciprocally_retained'] is not None)
+    paralog_tsv_file_required = paranome_analysis and db_paranome_data is None
+    anchors_tsv_file_required = colinearity_analysis and db_anchors_data is None
+    recret_tsv_file_required = reciprocal_retention_analysis and db_recret_data is None
 
     if paralog_tsv_file_required:
         default_path_paralog_tsv_file = os.path.join("paralog_distributions", f"wgd_{species}", _OUTPUT_KS_FILE_PATTERN_PARA.format(species))
@@ -287,21 +259,24 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
     if paranome_analysis:
         paranome_list = None
         paranome_weights = None
-        # Try database first if available
-        if paralog_db_available and paranome_ks_list_db is not None and latin_name in paranome_ks_list_db.index:
-            db_paranome = paranome_ks_list_db.loc[latin_name, 'Paranome']
-            if db_paranome is not None:
-                # Reconstruct dataframe from database and recalculate weights
-                paranome_df = pandas.DataFrame(db_paranome)
-                paranome_df_recalc = filter_compute_weights(paranome_df, min_ks=0.005, max_ks=max_ks_para)
-                paranome_list = paranome_df_recalc["Ks"].to_list()
-                paranome_weights = paranome_df_recalc["WeightOutliersExcluded"].to_list()
-                logging.info(f"Using paranome Ks list from database for [{species}] (weights recalculated for Ks <= {max_ks_para})")
-        # Fall back to TSV file if database not available or empty
-        if paranome_list is None:
+        if db_paranome_data is not None:
+            # Reconstruct dataframe from database and recalculate weights
+            paranome_df = filter_compute_weights(pandas.DataFrame(db_paranome_data), min_ks=0.005, max_ks=max_ks_para)
+            paranome_list = paranome_df["Ks"].to_list()
+            paranome_weights = paranome_df["WeightOutliersExcluded"].to_list()
+            logging.info(f"Using paranome Ks list from database for [{species}] (weights recalculated for Ks <= {max_ks_para})")
+        else:
+            # Fall back to TSV file if database not available or empty
             # Get paranome Ks values within the requested range and recalculate their associated weight
             paranome_list, paranome_weights = fc_extract_ks_list.ks_list_from_tsv(paralog_tsv_file, max_ks_para, "paralogs")
-        
+            # Opportunistically populate the database with this species' paranome data, if enabled
+            if use_paralog_ks_database:
+                try:
+                    ks_data = fc_consolidate_paralog_ks.extract_paralog_ks_from_tsv(species, paranome_enabled=True)
+                    fc_consolidate_paralog_ks.write_to_paralog_db(latin_name, ks_data, ks_list_paralog_db_path)
+                except Exception as e:
+                    logging.warning(f"Could not populate paralog Ks database: {str(e)}")
+
         for ax_uncorr in ax_uncorr_include_para:
             hist_paranome = fcPlot.plot_histogram("Whole-paranome", ax_uncorr, paranome_list, bin_list, bin_width_para,
                                 max_ks_para, kde_bandwidth_modifier, weight_list=paranome_weights)
@@ -312,20 +287,23 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
     if colinearity_analysis:
         anchors_list = None
         anchors_weights = None
-        # Try database first if available
-        if paralog_db_available and paranome_ks_list_db is not None and latin_name in paranome_ks_list_db.index:
-            db_anchors = paranome_ks_list_db.loc[latin_name, 'Anchors']
-            if db_anchors is not None:
-                # Reconstruct dataframe from database and recalculate weights
-                anchors_df = pandas.DataFrame(db_anchors)
-                anchors_df_recalc = filter_compute_weights(anchors_df, min_ks=min_ks_anchors, max_ks=max_ks_para)
-                anchors_list = anchors_df_recalc["Ks"].to_list()
-                anchors_weights = anchors_df_recalc["WeightOutliersExcluded"].to_list()
-                logging.info(f"Using anchor Ks list from database for [{species}] (weights recalculated for {min_ks_anchors} <= Ks <= {max_ks_para})")
-        # Fall back to TSV file if database not available or empty
-        if anchors_list is None:
+        if db_anchors_data is not None:
+            # Reconstruct dataframe from database and recalculate weights
+            anchors_df = filter_compute_weights(pandas.DataFrame(db_anchors_data), min_ks=min_ks_anchors, max_ks=max_ks_para)
+            anchors_list = anchors_df["Ks"].to_list()
+            anchors_weights = anchors_df["WeightOutliersExcluded"].to_list()
+            logging.info(f"Using anchor Ks list from database for [{species}] (weights recalculated for {min_ks_anchors} <= Ks <= {max_ks_para})")
+        else:
+            # Fall back to TSV file if database not available or empty
             # Get anchor pair Ks values within the requested range (using min_ks_anchors) and recalculate their associated weight
             anchors_list, anchors_weights = fc_extract_ks_list.ks_list_from_tsv(anchors_ks_tsv_file, max_ks_para, "anchor pairs", min_ks=min_ks_anchors)
+            # Opportunistically populate the database with this species' anchors data, if enabled
+            if use_paralog_ks_database:
+                try:
+                    ks_data = fc_consolidate_paralog_ks.extract_paralog_ks_from_tsv(species, anchors_enabled=True)
+                    fc_consolidate_paralog_ks.write_to_paralog_db(latin_name, ks_data, ks_list_paralog_db_path)
+                except Exception as e:
+                    logging.warning(f"Could not populate paralog Ks database: {str(e)}")
 
         if len(anchors_list) == 0:
             logging.warning(f"No anchor pairs found! Maybe check your (gene) IDs between "
@@ -341,20 +319,25 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
     if reciprocal_retention_analysis:
         rec_ret_list = None
         rec_ret_weights = None
-        # Try database first if available
-        if paralog_db_available and paranome_ks_list_db is not None and latin_name in paranome_ks_list_db.index:
-            db_recret = paranome_ks_list_db.loc[latin_name, 'Reciprocally_retained']
-            if db_recret is not None:
-                # Reconstruct dataframe from database and recalculate weights
-                recret_df = pandas.DataFrame(db_recret)
-                recret_df_recalc = filter_compute_weights(recret_df, min_ks=0.005, max_ks=max_ks_para)
-                rec_ret_list = recret_df_recalc["Ks"].to_list()
-                rec_ret_weights = recret_df_recalc["WeightOutliersExcluded"].to_list()
-                logging.info(f"Using reciprocally retained Ks list from database for [{species}] (weights recalculated for 0.005 <= Ks <= {max_ks_para})")
-        # Fall back to TSV file if database not available or empty
-        if rec_ret_list is None:
+        if db_recret_data is not None:
+            # Reconstruct dataframe from database and recalculate weights
+            recret_df = filter_compute_weights(pandas.DataFrame(db_recret_data), min_ks=0.005, max_ks=max_ks_para)
+            rec_ret_list = recret_df["Ks"].to_list()
+            rec_ret_weights = recret_df["WeightOutliersExcluded"].to_list()
+            logging.info(f"Using reciprocally retained Ks list from database for [{species}] (weights recalculated for 0.005 <= Ks <= {max_ks_para})")
+        else:
+            # Fall back to TSV file if database not available or empty
             # Get recret Ks values within the requested range and recalculate their associated weight
             rec_ret_list, rec_ret_weights = fc_extract_ks_list.ks_list_from_tsv(rec_ret_tsv_file, max_ks_para, "reciprocally retained")
+            # Opportunistically populate the database with this species' reciprocally retained data, if enabled
+            if use_paralog_ks_database:
+                try:
+                    ks_data = fc_consolidate_paralog_ks.extract_paralog_ks_from_tsv(
+                        species, reciprocal_retention_enabled=True, num_gfs=num_gfs, rank_type=rank_type, bottom=bottom
+                    )
+                    fc_consolidate_paralog_ks.write_to_paralog_db(latin_name, ks_data, ks_list_paralog_db_path)
+                except Exception as e:
+                    logging.warning(f"Could not populate paralog Ks database: {str(e)}")
         
         for ax_uncorr in ax_uncorr_include_rr:
             hist_rec_ret = fcPlot.plot_histogram("Reciprocally retained paralogs", ax_uncorr, rec_ret_list, bin_list, bin_width_para,
