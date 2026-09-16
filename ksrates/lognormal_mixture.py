@@ -1,5 +1,5 @@
 import os
-from pandas import read_csv
+from pandas import read_csv, DataFrame
 import matplotlib.pyplot as plt
 from ksrates.utils import init_logging
 import logging
@@ -9,6 +9,7 @@ import ksrates.fc_configfile as fcConf
 import ksrates.fc_check_input as fcCheck
 import ksrates.fc_plotting as fcPlot
 import ksrates.fc_extract_ks_list as fc_extract_ks_list
+import ksrates.fc_consolidate_paralog_ks as fc_consolidate_paralog_ks
 import ksrates.fc_lognormal_mixture as fcLMM
 from ksrates.fc_plotting import COLOR_ANCHOR_HISTOGRAM, COLOR_REC_RET_HISTOGRAM
 from ksrates.fc_cluster_anchors import subfolder
@@ -98,27 +99,97 @@ def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors
             correction_table = read_csv(f, sep="\t")
             correction_table_available = True
 
-    # Get paralog and anchors TSV files
-    # If a Ks file is not required, it will be equal to "None";
-    # If the required input Ks file (paranome or anchor pairs or both) is missing,
-    # its path will be qual to an empty string ("") and the script will exit
-    if paranome_analysis:
-        default_path_paralog_tsv_file = os.path.join("paralog_distributions", f"wgd_{species}", _OUTPUT_KS_FILE_PATTERN_PARA.format(species))
-        paralog_tsv_file = fcCheck.get_argument_path(paralog_tsv_file, default_path_paralog_tsv_file, "Paralog Ks TSV file")
-        if paralog_tsv_file == "":
-            logging.error(f"Paralog Ks TSV file not found at default position [{default_path_paralog_tsv_file}].")
-    if colinearity_analysis:
-        default_path_anchors_tsv_file = os.path.join("paralog_distributions", f"wgd_{species}", _OUTPUT_KS_FILE_PATTERN_ANCHORS.format(species))
-        anchors_ks_tsv_file = fcCheck.get_argument_path(anchors_ks_tsv_file, default_path_anchors_tsv_file, "Anchor pair Ks TSV file")
-        if anchors_ks_tsv_file == "":
-            logging.error(f"Anchor pair Ks TSV file not found at default position [{default_path_anchors_tsv_file}].")
-    if reciprocal_retention_analysis:
-        default_path_rec_ret_tsv_file = os.path.join("paralog_distributions", f"wgd_{species}", _OUTPUT_KS_FILE_PATTERN_RR_OMCL.format(species, top_or_bottom, num_gfs))
-        rec_ret_tsv_file = fcCheck.get_argument_path(rec_ret_tsv_file, default_path_rec_ret_tsv_file, "Reciprocally retained paralog Ks TSV file")
-        if rec_ret_tsv_file == "":
-            logging.error(f"Reciprocally retained paralog Ks TSV file not found at default position [{default_path_rec_ret_tsv_file}].")
+    use_paralog_ks_database = config.use_paralog_ks_database() # Whether to use the collective paralog Ks database (default: no)
+    ks_list_paralog_db_path = config.get_paralog_ks_database() # SQLite database consolidating paralog Ks data across species
 
-    if paralog_tsv_file == "" or anchors_ks_tsv_file == "" or rec_ret_tsv_file == "":
+    # Get paralog/anchors/recret Ks data as DataFrames, either from the consolidated database first
+    # (if enabled; an indexed single-row lookup that doesn't load data for any other species) or by
+    # reading the corresponding wgd output TSV file. Read once per analysis type and reuse the same
+    # DataFrame everywhere below (for the background histogram and for the EM fitting).
+    paranome_df, anchors_df, recret_df = None, None, None
+    resolution_failed = False
+
+    if paranome_analysis:
+        db_data = None
+        if use_paralog_ks_database:
+            try:
+                fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path)
+                db_data = fc_consolidate_paralog_ks.read_analysis_data(ks_list_paralog_db_path, latinSpecies, 'paranome')
+            except Exception as e:
+                logging.warning(f"Could not use paralog Ks database [{ks_list_paralog_db_path}]: {str(e)}. Will read TSV file instead.")
+        if db_data is not None:
+            paranome_df = DataFrame(db_data)
+        else:
+            default_path_paralog_tsv_file = os.path.join("paralog_distributions", f"wgd_{species}", _OUTPUT_KS_FILE_PATTERN_PARA.format(species))
+            paralog_tsv_file = fcCheck.get_argument_path(paralog_tsv_file, default_path_paralog_tsv_file, "Paralog Ks TSV file")
+            if paralog_tsv_file == "":
+                logging.error(f"Paralog Ks TSV file not found at default position [{default_path_paralog_tsv_file}].")
+                resolution_failed = True
+            else:
+                with open(paralog_tsv_file, "r") as f:
+                    paranome_df = read_csv(f, sep="\t")
+                if use_paralog_ks_database:
+                    try:
+                        ks_data = fc_consolidate_paralog_ks.extract_paralog_ks_from_tsv(species, paranome_enabled=True)
+                        fc_consolidate_paralog_ks.write_to_paralog_db(latinSpecies, ks_data, ks_list_paralog_db_path)
+                    except Exception as e:
+                        logging.warning(f"Could not populate paralog Ks database: {str(e)}")
+
+    if colinearity_analysis:
+        db_data = None
+        if use_paralog_ks_database:
+            try:
+                fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path)
+                db_data = fc_consolidate_paralog_ks.read_analysis_data(ks_list_paralog_db_path, latinSpecies, 'anchors')
+            except Exception as e:
+                logging.warning(f"Could not use paralog Ks database [{ks_list_paralog_db_path}]: {str(e)}. Will read TSV file instead.")
+        if db_data is not None:
+            anchors_df = DataFrame(db_data)
+        else:
+            default_path_anchors_tsv_file = os.path.join("paralog_distributions", f"wgd_{species}", _OUTPUT_KS_FILE_PATTERN_ANCHORS.format(species))
+            anchors_ks_tsv_file = fcCheck.get_argument_path(anchors_ks_tsv_file, default_path_anchors_tsv_file, "Anchor pair Ks TSV file")
+            if anchors_ks_tsv_file == "":
+                logging.error(f"Anchor pair Ks TSV file not found at default position [{default_path_anchors_tsv_file}].")
+                resolution_failed = True
+            else:
+                with open(anchors_ks_tsv_file, "r") as f:
+                    anchors_df = read_csv(f, sep="\t")
+                if use_paralog_ks_database:
+                    try:
+                        ks_data = fc_consolidate_paralog_ks.extract_paralog_ks_from_tsv(species, anchors_enabled=True)
+                        fc_consolidate_paralog_ks.write_to_paralog_db(latinSpecies, ks_data, ks_list_paralog_db_path)
+                    except Exception as e:
+                        logging.warning(f"Could not populate paralog Ks database: {str(e)}")
+
+    if reciprocal_retention_analysis:
+        db_data = None
+        if use_paralog_ks_database:
+            try:
+                fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path)
+                db_data = fc_consolidate_paralog_ks.read_analysis_data(ks_list_paralog_db_path, latinSpecies, 'recret')
+            except Exception as e:
+                logging.warning(f"Could not use paralog Ks database [{ks_list_paralog_db_path}]: {str(e)}. Will read TSV file instead.")
+        if db_data is not None:
+            recret_df = DataFrame(db_data)
+        else:
+            default_path_rec_ret_tsv_file = os.path.join("paralog_distributions", f"wgd_{species}", _OUTPUT_KS_FILE_PATTERN_RR_OMCL.format(species, top_or_bottom, num_gfs))
+            rec_ret_tsv_file = fcCheck.get_argument_path(rec_ret_tsv_file, default_path_rec_ret_tsv_file, "Reciprocally retained paralog Ks TSV file")
+            if rec_ret_tsv_file == "":
+                logging.error(f"Reciprocally retained paralog Ks TSV file not found at default position [{default_path_rec_ret_tsv_file}].")
+                resolution_failed = True
+            else:
+                with open(rec_ret_tsv_file, "r") as f:
+                    recret_df = read_csv(f, sep="\t")
+                if use_paralog_ks_database:
+                    try:
+                        ks_data = fc_consolidate_paralog_ks.extract_paralog_ks_from_tsv(
+                            species, reciprocal_retention_enabled=True, num_gfs=num_gfs, rank_type=rank_type, bottom=bottom
+                        )
+                        fc_consolidate_paralog_ks.write_to_paralog_db(latinSpecies, ks_data, ks_list_paralog_db_path)
+                    except Exception as e:
+                        logging.warning(f"Could not populate paralog Ks database: {str(e)}")
+
+    if resolution_failed:
         logging.error("Exiting")
         sys.exit(1)
 
@@ -134,7 +205,7 @@ def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors
         with open (os.path.join("rate_adjustment", f"{species}", subfolder, _LMM_PARAMETERS_FILENAME_TXT.format(species, "paranome")), "w+") as outfile:
             logging.info("Performing lognormal mixture model on whole-paranome Ks distribution")
             # Get paranome Ks values within the requested range and recalculate their associated weight
-            paranome_list, paranome_weights = fc_extract_ks_list.ks_list_from_tsv(paralog_tsv_file, max_ks_para, "paralogs")
+            paranome_list, paranome_weights = fc_extract_ks_list.ks_list_from_df(paranome_df, max_ks_para, "paralogs")
             hist_paranome = fcPlot.plot_histogram("Whole-paranome", axis_para, paranome_list, bin_list, 
                                         bin_width_para, max_ks_para, kde_bandwidth_modifier, paranome_weights, plot_kde=False)
             # Setting the plot height based on tallest histogram bin
@@ -142,7 +213,7 @@ def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors
                 fcPlot.set_mixed_plot_height(axis_para, y_lim, hist_paranome)
 
             best_model_paranome, letter_to_peak_dict_para = fcLMM.lmm(
-                    fig_para, x_max_lim, "paralogs", paralog_tsv_file, species, axis_para, (0, max_ks_EM), min_ks_anchors,
+                    fig_para, x_max_lim, "paralogs", paranome_df, species, axis_para, (0, max_ks_EM), min_ks_anchors,
                     (1, max_num_comp), arange(-10, max_ks_EM + bin_width_para, bin_width_para), bin_width_para, max_EM_iterations, num_EM_initializations,
                     output_dir, outfile, parameter_table, "paranome", peak_stats, correction_table_available, plot_correction_arrows)
         
@@ -165,7 +236,7 @@ def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors
             logging.info("Performing lognormal mixture model on anchor pair Ks distribution")
 
             # Get anchor pair Ks values within the requested range and recalculate their associated weight
-            anchors_list_filtered, anchors_weights_filtered = fc_extract_ks_list.ks_list_from_tsv(anchors_ks_tsv_file, max_ks_para, "anchor pairs", min_ks=min_ks_anchors)
+            anchors_list_filtered, anchors_weights_filtered = fc_extract_ks_list.ks_list_from_df(anchors_df, max_ks_para, "anchor pairs", min_ks=min_ks_anchors)
 
             if len(anchors_list_filtered) == 0:
                 logging.warning(f"No anchor pairs found! Maybe check your (gene) IDs between "
@@ -178,7 +249,7 @@ def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors
                 fcPlot.set_mixed_plot_height(axis_colin, y_lim, hist_anchors)
 
             best_model_anchors, letter_to_peak_dict_anchors = fcLMM.lmm(
-                    fig_colin, x_max_lim, "anchor pairs", anchors_ks_tsv_file, species, axis_colin, (0, max_ks_EM), min_ks_anchors,
+                    fig_colin, x_max_lim, "anchor pairs", anchors_df, species, axis_colin, (0, max_ks_EM), min_ks_anchors,
                     (1, max_num_comp), arange(-10, max_ks_EM + bin_width_para, bin_width_para), bin_width_para, max_EM_iterations, num_EM_initializations,
                     output_dir, outfile, parameter_table, "anchors", peak_stats, correction_table_available, plot_correction_arrows)
 
@@ -200,7 +271,7 @@ def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors
         with open (os.path.join("rate_adjustment", f"{species}", subfolder, _LMM_PARAMETERS_FILENAME_TXT.format(species, "recret")), "w+") as outfile:
             logging.info("Performing lognormal mixture model on reciprocally retained paralog Ks distribution")
             # Get recret Ks values within the requested range and recalculate their associated weight
-            rec_ret_list, rec_ret_weights = fc_extract_ks_list.ks_list_from_tsv(rec_ret_tsv_file, max_ks_para, "reciprocally retained")
+            rec_ret_list, rec_ret_weights = fc_extract_ks_list.ks_list_from_df(recret_df, max_ks_para, "reciprocally retained")
             hist_rec_ret = fcPlot.plot_histogram("Reciprocally retained paralogs", axis_rec_ret, rec_ret_list, bin_list, 
                            bin_width_para, max_ks_para, kde_bandwidth_modifier, rec_ret_weights, color=COLOR_REC_RET_HISTOGRAM, plot_kde=False)
             # Setting the plot height based on tallest histogram bin
@@ -208,7 +279,7 @@ def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors
                 fcPlot.set_mixed_plot_height(axis_rec_ret, y_lim, hist_rec_ret)
 
             best_model_rec_ret, letter_to_peak_dict_recret = fcLMM.lmm(
-                    fig_rec_ret, x_max_lim, "reciprocally retained", rec_ret_tsv_file, species, axis_rec_ret, (0, max_ks_EM), min_ks_anchors,
+                    fig_rec_ret, x_max_lim, "reciprocally retained", recret_df, species, axis_rec_ret, (0, max_ks_EM), min_ks_anchors,
                     (1, max_num_comp), arange(-10, max_ks_EM + bin_width_para, bin_width_para), bin_width_para, max_EM_iterations, num_EM_initializations,
                     output_dir, outfile, parameter_table, "recret", peak_stats, correction_table_available, plot_correction_arrows)
         

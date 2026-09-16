@@ -4,7 +4,7 @@ from pandas import DataFrame
 import matplotlib.pyplot as plt
 import seaborn as sns
 import ksrates.fc_plotting as fcPlot
-from ksrates.fc_exp_log_mixture import deconvolute_data
+from ksrates.fc_exp_log_mixture import deconvolute_data_from_df
 from numpy import exp, sqrt, linspace, arange, log, argmin, around, array
 from sklearn import mixture
 import scipy.stats as ss
@@ -252,7 +252,7 @@ def plot_mixture_model(model, data, max_x_axis_lim, ax, bin_width, scaling, peak
 
 
 def lmm(
-    fig, max_x_axis_lim, data_type, tsv_file, species, axis, ks_range, min_ks_anchors,
+    fig, max_x_axis_lim, data_type, df, species, axis, ks_range, min_ks_anchors,
     components, bins, bin_width_para, max_iter, n_init,
     output_dir, outfile, parameter_table, datatype_tag, peak_stats, correction_table_available, plot_correction_arrows):
     """
@@ -263,13 +263,14 @@ def lmm(
     note that mixture models are fitted to node-averaged (not weighted)
     histograms. Please interpret mixture model results with caution.
     :param fig: figure object
-    :param max_x_axis_lim: upper limit in the x-axis 
+    :param max_x_axis_lim: upper limit in the x-axis
     :param data_type: strings stating whether the data are "paralogs" or "anchor pairs" or "reciprocally retained"
-    :param tsv_file: wgd output file containing either paranome, anchor pairs or recret Ks values (suffix formats: ".ks.tsv", "ks_anchors.tsv" or "ks_recret_topX.tsv)
+    :param df: DataFrame with the same columns as a wgd Ks TSV file (paranome, anchor pairs or recret;
+               at minimum: Family, Node, Ks, AlignmentCoverage, AlignmentIdentity, AlignmentLength)
     :param species: informal name of the focal species
     :param axis: axis object
     :param ks_range: Ks range used for models
-    :param min_ks_anchors: minimum anchor Ks value to be modelled 
+    :param min_ks_anchors: minimum anchor Ks value to be modelled
     :param components: number of components to use (tuple: (min, max))
     :param bins: number histogram bins for visualization
     :param bin_width_para: bin width of paralog Ks histogram
@@ -284,7 +285,7 @@ def lmm(
     :param plot_correction_arrows: boolean stating whether there will be plotted adjustment arrows or not
     """
     # Generating artificial dataset with same shape as the Ks histogram with 0.01 bin width
-    deconvoluted_data = deconvolute_data(tsv_file, ks_range[1], data_type, min_ks_anchors)
+    deconvoluted_data = deconvolute_data_from_df(df, ks_range[1], data_type, min_ks_anchors)
     deconvoluted_data = log(deconvoluted_data).reshape(-1, 1) # log-transform and reshape data for fit_gmm
 
     models, bic, aic, best = fit_gmm(
