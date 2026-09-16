@@ -7,9 +7,10 @@ from pandas import read_csv
 import ksrates.fc_check_input as fcCheck
 from ksrates.fc_wgd import _OUTPUT_KS_FILE_PATTERN_PARA, _OUTPUT_KS_FILE_PATTERN_ANCHORS, _OUTPUT_KS_FILE_PATTERN_RR_OMCL
 
-# Columns needed to recompute per-family/per-node weights later (via filter_compute_weights)
-# for an arbitrary Ks/alignment-quality cutoff, without having to re-read the original TSV file.
-_REQUIRED_COLUMNS = ['Family', 'Node', 'Ks', 'AlignmentCoverage', 'AlignmentIdentity', 'AlignmentLength']
+# Columns needed to (1) recompute per-family/per-node weights later (via filter_compute_weights)
+# for an arbitrary Ks/alignment-quality cutoff, and (2) identify which gene pair each Ks value
+# belongs to (Paralog1, Paralog2), without having to re-read the original TSV file.
+_REQUIRED_COLUMNS = ['Family', 'Node', 'Ks', 'AlignmentCoverage', 'AlignmentIdentity', 'AlignmentLength', 'Paralog1', 'Paralog2']
 
 _TABLE = "paralog_ks"
 # Maps the extract_paralog_ks_from_tsv()/ks_data_dict keys to the SQLite column names
@@ -103,7 +104,7 @@ def read_analysis_data(db_path, latin_name, analysis_type):
 def _extract_columns_from_tsv(tsv_path):
 	"""
 	Read a wgd Ks TSV file and extract the columns needed to recompute weights later
-	(Family, Node, Ks, AlignmentCoverage, AlignmentIdentity, AlignmentLength), as a dict of lists.
+	(Family, Node, Ks, AlignmentCoverage, AlignmentIdentity, AlignmentLength, Paralog1, Paralog2), as a dict of lists.
 	All rows are kept unfiltered: filtering by Ks range or alignment quality happens at analysis time.
 
 	:param tsv_path: path to a wgd output Ks TSV file
