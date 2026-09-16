@@ -93,6 +93,23 @@ def parse_ks_anchors_tsv_file(path_ks_anchor_file):
     return ks_anchors
 
 
+def parse_ks_anchors_from_df(df):
+    """
+    Same as parse_ks_anchors_tsv_file, but builds the anchor-pair-to-Ks mapping from an
+    already-loaded DataFrame (e.g. reconstructed from the paralog Ks database) instead of
+    reading the wgd ks_anchors.tsv file from disk.
+
+    :param df: DataFrame with at least Paralog1, Paralog2 and Ks columns
+    :return ks_anchors: dictionary assigning to each anchor pair its Ks value (as string,
+                         matching parse_ks_anchors_tsv_file's return type)
+    """
+    ks_anchors = {}
+    for anchor1, anchor2, ks in zip(df["Paralog1"], df["Paralog2"], df["Ks"]):
+        anchor_pair_sorted = tuple(sorted((anchor1, anchor2)))
+        if anchor_pair_sorted not in ks_anchors:
+            ks_anchors[anchor_pair_sorted] = str(ks)
+    return ks_anchors
+
 def parse_multiplicons_file(path_multiplicons_txt):
     """
     Gets from multiplicons.txt info about multiplicon levels.

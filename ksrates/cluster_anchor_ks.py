@@ -3,7 +3,7 @@ import sys
 import copy
 import logging
 from numpy import array
-from pandas import read_csv
+from pandas import read_csv, DataFrame
 from statistics import median
 from scipy import stats
 import ksrates.fc_cluster_anchors as fcCluster
@@ -11,6 +11,7 @@ import ksrates.fc_configfile as fcConf
 import ksrates.fc_plotting as fcPlot
 import ksrates.fc_check_input as fcCheck
 import ksrates.fc_extract_ks_list as fc_extract_ks_list
+import ksrates.fc_consolidate_paralog_ks as fc_consolidate_paralog_ks
 from ksrates.utils import init_logging
 from ksrates.fc_cluster_anchors import subfolder
 from ksrates.fc_rrt_correction import _ADJUSTMENT_TABLE, interpretation_adjusted_plot
@@ -86,13 +87,42 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
     if path_list_elements_txt == "":
         logging.error(f"list_elements.txt file not found at default position [{default_path_list_elements_txt}].")
 
-    default_path_ks_anchor_file = os.path.join("paralog_distributions", f"wgd_{species}", _OUTPUT_KS_FILE_PATTERN_ANCHORS.format(species))
-    path_ks_anchor_file = fcCheck.get_argument_path(path_ks_anchor_file, default_path_ks_anchor_file, "Anchor pair Ks TSV file")
-    if path_ks_anchor_file == "":
-        logging.error(f"Anchor pair Ks TSV file not found at default position [{default_path_ks_anchor_file}].")
+    use_paralog_ks_database = config.use_paralog_ks_database() # Whether to use the collective paralog Ks database (default: no)
+    ks_list_paralog_db_path = config.get_paralog_ks_database() # SQLite database consolidating paralog Ks data across species
 
-    if path_anchorpoints_txt == "" or path_multiplicons_txt == "" or path_segments_txt == "" or path_multiplicon_pair_txt == "" or path_list_elements_txt == "" or path_ks_anchor_file == "":
+    # Get anchor pair Ks data as a DataFrame, either from the consolidated database first (if
+    # enabled; an indexed single-row lookup that doesn't load data for any other species) or by
+    # reading the wgd output TSV file. Read once here and reuse the same DataFrame everywhere below.
+    # Note: the i-ADHoRe structural files (anchorpoints/multiplicons/segments/list_elements) are
+    # never in the database, so they are always required from disk regardless.
+    anchors_df = None
+    if use_paralog_ks_database:
+        try:
+            fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path)
+            db_data = fc_consolidate_paralog_ks.read_analysis_data(ks_list_paralog_db_path, latin_names[species], 'anchors')
+            if db_data is not None:
+                anchors_df = DataFrame(db_data)
+        except Exception as e:
+            logging.warning(f"Could not use paralog Ks database [{ks_list_paralog_db_path}]: {str(e)}. Will read TSV file instead.")
+
+    if anchors_df is None:
+        default_path_ks_anchor_file = os.path.join("paralog_distributions", f"wgd_{species}", _OUTPUT_KS_FILE_PATTERN_ANCHORS.format(species))
+        path_ks_anchor_file = fcCheck.get_argument_path(path_ks_anchor_file, default_path_ks_anchor_file, "Anchor pair Ks TSV file")
+        if path_ks_anchor_file == "":
+            logging.error(f"Anchor pair Ks TSV file not found at default position [{default_path_ks_anchor_file}].")
+        else:
+            with open(path_ks_anchor_file, "r") as f:
+                anchors_df = read_csv(f, sep="\t")
+            if use_paralog_ks_database:
+                try:
+                    ks_data = fc_consolidate_paralog_ks.extract_paralog_ks_from_tsv(species, anchors_enabled=True)
+                    fc_consolidate_paralog_ks.write_to_paralog_db(latin_names[species], ks_data, ks_list_paralog_db_path)
+                except Exception as e:
+                    logging.warning(f"Could not populate paralog Ks database: {str(e)}")
+
+    if path_anchorpoints_txt == "" or path_multiplicons_txt == "" or path_segments_txt == "" or path_multiplicon_pair_txt == "" or path_list_elements_txt == "" or anchors_df is None:
         logging.error("Exiting")
+        sys.exit(1)
         sys.exit(1)
 
     # Creating folder for secondary output files
@@ -106,7 +136,7 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
 
     segments_from_gene = fcCluster.parse_list_elements(path_list_elements_txt)
 
-    ks_anchors = fcCluster.parse_ks_anchors_tsv_file(path_ks_anchor_file)
+    ks_anchors = fcCluster.parse_ks_anchors_from_df(anchors_df)
 
     multipl_per_level, level_of_each_multipl, max_level, level_list, level_list_filtered = fcCluster.parse_multiplicons_file(path_multiplicons_txt)
 
@@ -116,7 +146,7 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
 
     # Get anchor pair Ks values within the requested range (custom max value, but down to default min_ks=0.005),
     # and recalculate their associated weight
-    anchor_ks_list, anchors_weights = fc_extract_ks_list.ks_list_from_tsv(path_ks_anchor_file, max_ks_para, "anchor pairs") # Get complete anchor Ks list to be plotted in the background
+    anchor_ks_list, anchors_weights = fc_extract_ks_list.ks_list_from_df(anchors_df, max_ks_para, "anchor pairs") # Get complete anchor Ks list to be plotted in the background
 
     # -----------------------------------------------------------------------------
 
@@ -381,7 +411,7 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
         
         # Plot the original complete anchor distribution in the background
         # (First remove anchor Ks values that are smaller than min_ks_anchors)
-        anchors_list_filtered, anchors_weights_filtered = fc_extract_ks_list.ks_list_from_tsv(path_ks_anchor_file,
+        anchors_list_filtered, anchors_weights_filtered = fc_extract_ks_list.ks_list_from_df(anchors_df,
                                                           max_ks_para, "anchor pairs", min_ks=min_ks_anchors)
 
         fcPlot.plot_histogram_for_anchor_clustering(ax_corr_second, anchors_list_filtered, anchors_weights_filtered, bin_list, y_max_lim)
