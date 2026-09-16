@@ -38,6 +38,8 @@ The analysis configuration file is composed of a first section defining the spec
     peak_database_path = ortholog_peak_db.tsv
     ks_list_database_path = ortholog_ks_list_db.tsv
 
+    ks_list_paralog_database_path = paralog_ks_db.sqlite
+
 
     [ANALYSIS SETTING]
     paranome = yes
@@ -74,6 +76,7 @@ The [SPECIES] section includes:
 * **gff_filename**: association between the focal species as named in parameter `focal_species` and the path to the GFF3 file for the focal species (only required for collinearity analysis). The association is made with a colon (':').
 * **peak_database_path**: path to the database of ortholog *K*:sub:`S` distribution peaks. If the file is not present yet, it will be automatically generated.
 * **ks_list_database_path**: path to the database of ortholog *K*:sub:`S` lists. If the file is not present, it will be automatically generated.
+* **ks_list_paralog_database_path**: path to the database of paralog *K*:sub:`S` lists. If the file is not present, it will be automatically generated. Consitioned on expert **use_paralog_ks_database** being active.
 
 The [ANALYSIS SETTING] section includes:
 
@@ -244,6 +247,7 @@ The following can be used as a template (default values)::
     num_reciprocally_retained_gfs = 2000
     use_bottom_gfs_instead_of_top = no
     use_original_orthomcl_version = no
+    use_paralog_ks_database = no
 
 * **logging_level**: the lowest logging/verbosity level of messages printed to the console/logs (increasing severity levels: *notset*, *debug*, *info*, *warning*, *error*, *critical*). Messages less severe than *level* will be ignored; *notset* causes all messages to be processed. [Default: "info"]
 * **preserve_ks_tmp_files**: whether to preserve or not the intermediate files generated during the paralogs *K*:sub:`S` and ortholog *K*:sub:`S` pipelines (options: "yes" and "no"). [Default: "no"]
@@ -260,3 +264,4 @@ The following can be used as a template (default values)::
 * **num_reciprocally_retained_gfs**: number of gene families at the top of the reciprocal retention ranking that will be used to build the related *K*:sub:`S` distribution. [Default: 2000]
 * **use_bottom_gfs_instead_of_top**: use the bottom-ranked reciprocally retained GFs instead of the top-ranked ones (not recommended; only meant for comparison purposes with top-ranked GFs) 
 * **use_original_orthomcl_version**: allows compatibility with the original OrthoMCL v1.4 version; by default it is used a modified faster version called OrthoMCLight. [Default: "no"]
+* **use_paralog_ks_database**: store the Ks data into a SQLite database, additionally to the standard Ks TSV files; useful to centralize multiple analyses
