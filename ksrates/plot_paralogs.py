@@ -74,11 +74,10 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
                 with open(ks_list_paralog_db_path, "r") as f:
                     paranome_ks_list_db = pandas.read_csv(f, sep="\t", index_col=0)
 
-            # When imported from csv format, all the Ks lists in the df are read as
-            # plain text (strings) and must be converted back to value lists
+            # When imported from csv format, all the Ks data in the df are read as
+            # plain text (strings) and must be converted back to dicts of lists
             logging.info("Loading paralog Ks list database...")
-            for col in ['Ks_paranome', 'Ks_paranome_weights', 'Ks_anchors', 'Ks_anchors_weights',
-                        'Ks_reciprocally_retained', 'Ks_reciprocally_retained_weights']:
+            for col in ['Paranome', 'Anchors', 'Reciprocally_retained']:
                 if col in paranome_ks_list_db.columns:
                     paranome_ks_list_db.loc[:, col] = paranome_ks_list_db.loc[:, col].apply(
                         lambda x: literal_eval(x) if x is not None and x != 'None' else None)
@@ -94,10 +93,10 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
     #   1. Whether the analysis type is enabled AND
     #   2. Whether data for that type is missing from the database
     # Example: TSV file IS required if the analysis type is enabled BUT its data is missing from database
-    # Example: paralog_tsv_file is NOT required if paranome_analysis=True AND database contains valid Ks_paranome data
-    paralog_tsv_file_required = paranome_analysis and not (paralog_db_available and paranome_ks_list_db is not None and latin_name in paranome_ks_list_db.index and paranome_ks_list_db.loc[latin_name, 'Ks_paranome'] is not None)
-    anchors_tsv_file_required = colinearity_analysis and not (paralog_db_available and paranome_ks_list_db is not None and latin_name in paranome_ks_list_db.index and paranome_ks_list_db.loc[latin_name, 'Ks_anchors'] is not None)
-    recret_tsv_file_required = reciprocal_retention_analysis and not (paralog_db_available and paranome_ks_list_db is not None and latin_name in paranome_ks_list_db.index and paranome_ks_list_db.loc[latin_name, 'Ks_reciprocally_retained'] is not None)
+    # Example: paralog_tsv_file is NOT required if paranome_analysis=True AND database contains valid Paranome data
+    paralog_tsv_file_required = paranome_analysis and not (paralog_db_available and paranome_ks_list_db is not None and latin_name in paranome_ks_list_db.index and paranome_ks_list_db.loc[latin_name, 'Paranome'] is not None)
+    anchors_tsv_file_required = colinearity_analysis and not (paralog_db_available and paranome_ks_list_db is not None and latin_name in paranome_ks_list_db.index and paranome_ks_list_db.loc[latin_name, 'Anchors'] is not None)
+    recret_tsv_file_required = reciprocal_retention_analysis and not (paralog_db_available and paranome_ks_list_db is not None and latin_name in paranome_ks_list_db.index and paranome_ks_list_db.loc[latin_name, 'Reciprocally_retained'] is not None)
 
     if paralog_tsv_file_required:
         default_path_paralog_tsv_file = os.path.join("paralog_distributions", f"wgd_{species}", _OUTPUT_KS_FILE_PATTERN_PARA.format(species))
@@ -289,7 +288,7 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
         paranome_weights = None
         # Try database first if available
         if paralog_db_available and paranome_ks_list_db is not None and latin_name in paranome_ks_list_db.index:
-            db_paranome = paranome_ks_list_db.loc[latin_name, 'Ks_paranome']
+            db_paranome = paranome_ks_list_db.loc[latin_name, 'Paranome']
             if db_paranome is not None:
                 # Reconstruct dataframe from database and recalculate weights
                 paranome_df = pandas.DataFrame(db_paranome)
@@ -314,7 +313,7 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
         anchors_weights = None
         # Try database first if available
         if paralog_db_available and paranome_ks_list_db is not None and latin_name in paranome_ks_list_db.index:
-            db_anchors = paranome_ks_list_db.loc[latin_name, 'Ks_anchors']
+            db_anchors = paranome_ks_list_db.loc[latin_name, 'Anchors']
             if db_anchors is not None:
                 # Reconstruct dataframe from database and recalculate weights
                 anchors_df = pandas.DataFrame(db_anchors)
@@ -343,7 +342,7 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
         rec_ret_weights = None
         # Try database first if available
         if paralog_db_available and paranome_ks_list_db is not None and latin_name in paranome_ks_list_db.index:
-            db_recret = paranome_ks_list_db.loc[latin_name, 'Ks_reciprocally_retained']
+            db_recret = paranome_ks_list_db.loc[latin_name, 'Reciprocally_retained']
             if db_recret is not None:
                 # Reconstruct dataframe from database and recalculate weights
                 recret_df = pandas.DataFrame(db_recret)
