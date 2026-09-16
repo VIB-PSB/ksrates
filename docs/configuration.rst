@@ -264,4 +264,4 @@ The following can be used as a template (default values)::
 * **num_reciprocally_retained_gfs**: number of gene families at the top of the reciprocal retention ranking that will be used to build the related *K*:sub:`S` distribution. [Default: 2000]
 * **use_bottom_gfs_instead_of_top**: use the bottom-ranked reciprocally retained GFs instead of the top-ranked ones (not recommended; only meant for comparison purposes with top-ranked GFs) 
 * **use_original_orthomcl_version**: allows compatibility with the original OrthoMCL v1.4 version; by default it is used a modified faster version called OrthoMCLight. [Default: "no"]
-* **use_paralog_ks_database**: store the Ks data into a SQLite database, additionally to the standard Ks TSV files; useful to centralize multiple analyses
+* **use_paralog_ks_database**: store the *K*:sub:`S` data into a SQLite database, additionally to the standard *K*:sub:`S` TSV files; useful to centralize multiple analyses
