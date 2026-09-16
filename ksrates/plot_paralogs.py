@@ -30,7 +30,8 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
     # Get parameters related to reciprocal retention pipeline
     num_gfs = config.get_num_reciprocal_retention_gfs(reciprocal_retention_analysis) # Number of top gene families
     bottom = config.use_bottom_gfs_instead_of_top(reciprocal_retention_analysis) # Use actually the BOTTOM GFs instead of the top ones (number of bottom GFs remains defined by "top" variable)
-    rank_type = config.get_reciprocal_retention_rank_type(reciprocal_retention_analysis) # Rank type (only "lambda" supported)  
+    rank_type = config.get_reciprocal_retention_rank_type(reciprocal_retention_analysis) # Rank type (only "lambda" supported)
+    use_paralog_ks_database = config.use_paralog_ks_database() # Whether to use the collective paralog Ks database (default: no)
     ks_list_paralog_db_path = config.get_paralog_ks_database() # TSV file listing paralog Ks values
 
     # By default the pipeline uses the TOP-ranked reciprocally retained GFs.
@@ -51,8 +52,8 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
     paralog_db_available = False
     paranome_ks_list_db = None
 
-    # If database was configured, load from it paralog Ks lists
-    if ks_list_paralog_db_path:
+    # If database usage was enabled in expert config, load from it paralog Ks lists
+    if use_paralog_ks_database:
         try:
             # Create database file if it doesn't exist yet
             if not os.path.isfile(ks_list_paralog_db_path):
