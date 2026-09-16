@@ -76,7 +76,7 @@ def setup_correction(config_file, expert_config_file, nextflow_flag):
         trigger_exit = True
 
     # Fail fast if the paralog Ks database is enabled but its path is invalid
-    if use_paralog_ks_db():
+    if use_paralog_ks_db:
         # Initialize the dabatase
         paralog_db_ready = fc_consolidate_paralog_ks.initialize_paralog_db(paralog_ks_db_path)
         if not paralog_db_ready:
