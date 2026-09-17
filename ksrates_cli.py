@@ -459,33 +459,35 @@ def populate_paralog_ks_db(config_dir, paralog_distributions_dir, database, forc
 
 @cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Dumps the full paralog Ks database content to a flat TSV file.")
 @click.argument('database', type=click.Path(exists=True))
-@click.argument('output_tsv', type=click.Path())
 @click.argument('species_filter', required=False)
-def inspect_paralog_ks_db(database, output_tsv, species_filter):
+def inspect_paralog_ks_db(database, species_filter):
 	"""
-	Dumps the full content of the paralog Ks DATABASE into OUTPUT_TSV, one row per gene pair:
-	columns are latin_name, analysis_type, Paralog1, Paralog2, Family, Node, Ks, AlignmentCoverage, AlignmentIdentity,
-	AlignmentLength. The database itself stores this data as binary blobs (for speed/size), so this
-	is the way to actually inspect its content (e.g. in Excel, VSCode, pandas...).
+	Dumps the full content of the paralog Ks DATABASE, one row per gene pair: columns are
+	latin_name, analysis_type, Paralog1, Paralog2, Family, Node, Ks, AlignmentCoverage, AlignmentIdentity,
+	AlignmentLength. The output filename is generated automatically next to the database, from its
+	basename with the current timestamp appended, e.g. "paralog_ks_db.sqlite" ->
+	"paralog_ks_db_YYYYMMDD_HHMMSS.tsv". The per-species i-ADHoRe output files (anchorpoints.txt,
+	multiplicons.txt, segments.txt, list_elements.txt, multiplicon_pairs.txt) are written back out
+	under a matching "..._iadhore_files" directory, one subdirectory per species. The database itself
+	stores this data as binary blobs and text columns (for speed/size), so this is the way to actually
+	inspect its content (e.g. in Excel, VSCode, pandas...).
 
 	\b
 	DATABASE: path to the paralog Ks SQLite database file
-	OUTPUT_TSV: path where the flat TSV dump will be written
 	SPECIES_FILTER: optional substring to only export matching species (case-insensitive)
 
 	\b
 	Example (dump all species):
-	  ksrates inspect-paralog-ks-db paralog_ks_db.sqlite paralog_ks_db_dump.tsv
+	  ksrates inspect-paralog-ks-db paralog_ks_db.sqlite
 
 	\b
 	Example (dump only species whose latin name contains "guineensis"):
-	  ksrates inspect-paralog-ks-db paralog_ks_db.sqlite paralog_ks_db_dump.tsv guineensis
+	  ksrates inspect-paralog-ks-db paralog_ks_db.sqlite guineensis
 	"""
 	from ksrates.inspect_paralog_ks_db import export_full_tsv
 
 	click.format_filename(database)
-	click.format_filename(output_tsv)
-	export_full_tsv(database, output_tsv, species_filter)
+	export_full_tsv(database, species_filter)
 
 
 # For debugging
