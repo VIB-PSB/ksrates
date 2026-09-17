@@ -76,7 +76,7 @@ The [SPECIES] section includes:
 * **gff_filename**: association between the focal species as named in parameter `focal_species` and the path to the GFF3 file for the focal species (only required for collinearity analysis). The association is made with a colon (':').
 * **peak_database_path**: path to the database of ortholog *K*:sub:`S` distribution peaks. If the file is not present yet, it will be automatically generated.
 * **ks_list_database_path**: path to the database of ortholog *K*:sub:`S` lists. If the file is not present, it will be automatically generated.
-* **ks_list_paralog_database_path**: path to the database of paralog *K*:sub:`S` lists. If the file is not present, it will be automatically generated. Consitioned on expert **use_paralog_ks_database** being active.
+* **ks_list_paralog_database_path**: path to the SQLite database hosting paralog *K*:sub:`S` lists. If the file is not present, it will be automatically generated. Consitioned on expert **use_paralog_ks_database** being active. Its content can be inspected with command ``inspect-paralog-ks-db``.
 
 The [ANALYSIS SETTING] section includes:
 
