@@ -16,6 +16,23 @@ _TABLE = "paralog_ks"
 # Maps the extract_paralog_ks_from_tsv()/ks_data_dict keys to the SQLite column names
 _ANALYSIS_TYPE_TO_COLUMN = {"paranome": "paranome", "anchors": "anchors", "recret": "reciprocally_retained"}
 
+# i-ADHoRe output files needed by anchor clustering (cluster_anchor_ks.py), stored as raw text
+# rather than parsed: the existing line-based parsers in fc_cluster_anchors.py can read from an
+# io.StringIO wrapping this text exactly as they read from a real file, so no parser rewrite is
+# needed to support the database as an alternative source.
+_IADHORE_FILES = ['anchorpoints', 'multiplicons', 'segments', 'list_elements', 'multiplicon_pairs']
+_IADHORE_COLUMN = {key: f"{key}_txt" for key in _IADHORE_FILES}
+
+# All columns beyond the latin_name primary key, with their SQLite type: used both to create a
+# brand new database and to add any missing columns to a database created by an older version of
+# this schema (plain CREATE TABLE IF NOT EXISTS would not add columns to an existing table).
+_ALL_COLUMNS = {
+	"paranome": "BLOB",
+	"anchors": "BLOB",
+	"reciprocally_retained": "BLOB",
+	**{col: "TEXT" for col in _IADHORE_COLUMN.values()},
+}
+
 
 def _connect(db_path):
 	"""
@@ -33,7 +50,8 @@ def _connect(db_path):
 
 def initialize_paralog_db(db_path):
 	"""
-	Initialize the paralog Ks SQLite database if it doesn't exist yet (creates the file and table).
+	Initialize the paralog Ks SQLite database if it doesn't exist yet (creates the file and table),
+	and add any columns missing from an existing database created by an older version of this schema.
 
 	:param db_path: path to the paralog Ks database file
 	:return: True if the database is ready to use, False if it could not be created/opened
@@ -41,14 +59,11 @@ def initialize_paralog_db(db_path):
 	"""
 	try:
 		conn = _connect(db_path)
-		conn.execute(f"""
-			CREATE TABLE IF NOT EXISTS {_TABLE} (
-				latin_name TEXT PRIMARY KEY,
-				paranome BLOB,
-				anchors BLOB,
-				reciprocally_retained BLOB
-			)
-		""")
+		conn.execute(f"CREATE TABLE IF NOT EXISTS {_TABLE} (latin_name TEXT PRIMARY KEY)")
+		existing_columns = {row[1] for row in conn.execute(f"PRAGMA table_info({_TABLE})")}
+		for column, col_type in _ALL_COLUMNS.items():
+			if column not in existing_columns:
+				conn.execute(f"ALTER TABLE {_TABLE} ADD COLUMN {column} {col_type}")
 		conn.commit()
 		conn.close()
 		return True
@@ -99,6 +114,63 @@ def read_analysis_data(db_path, latin_name, analysis_type):
 	if row is None or row[0] is None:
 		return None
 	return pickle.loads(row[0])
+
+
+def read_anchor_iadhore_files(db_path, latin_name):
+	"""
+	Look up one species' stored i-ADHoRe output file contents (anchorpoints.txt, multiplicons.txt,
+	segments.txt, list_elements.txt, multiplicon_pairs.txt), without loading the rest of the database.
+	These are stored as raw text rather than parsed, so they can be fed into the existing line-based
+	parsers in fc_cluster_anchors.py via io.StringIO exactly as a real file would be.
+
+	:param db_path: path to the paralog Ks database file
+	:param latin_name: latin name of species of interest
+	:return: dict mapping each of 'anchorpoints', 'multiplicons', 'segments', 'list_elements',
+	         'multiplicon_pairs' to its raw file text, or None (per key) if not present or on read error
+	"""
+	columns = [_IADHORE_COLUMN[key] for key in _IADHORE_FILES]
+	try:
+		conn = _connect(db_path)
+		row = conn.execute(f"SELECT {', '.join(columns)} FROM {_TABLE} WHERE latin_name = ?", (latin_name,)).fetchone()
+		conn.close()
+	except Exception as e:
+		logging.warning(f"Could not read from paralog Ks database [{db_path}]: {str(e)}")
+		return {key: None for key in _IADHORE_FILES}
+	if row is None:
+		return {key: None for key in _IADHORE_FILES}
+	return dict(zip(_IADHORE_FILES, row))
+
+
+def write_anchor_iadhore_files(latin_name, iadhore_dict, db_path):
+	"""
+	Write the i-ADHoRe output file contents (raw text) for one species to the database. Like
+	write_to_paralog_db, only the keys present (non-None) in iadhore_dict are overwritten; keys
+	not present are left untouched (so a partial dict never wipes out previously stored files).
+
+	:param latin_name: latin name of species of interest
+	:param iadhore_dict: dict with any of the keys 'anchorpoints', 'multiplicons', 'segments',
+	                       'list_elements', 'multiplicon_pairs', each mapping to raw file text or None
+	:param db_path: path to the paralog Ks database file
+	:return: True if write succeeded, False if there was nothing to write
+	"""
+	values = {key: iadhore_dict.get(key) for key in _IADHORE_FILES}
+	if all(v is None for v in values.values()):
+		logging.warning("  No i-ADHoRe output files could be read.")
+		return False
+
+	columns = [_IADHORE_COLUMN[key] for key in _IADHORE_FILES]
+	placeholders = ', '.join(['?'] * len(columns))
+	set_clause = ", ".join(f"{col}=COALESCE(excluded.{col}, {_TABLE}.{col})" for col in columns)
+
+	conn = _connect(db_path)
+	conn.execute(f"""
+		INSERT INTO {_TABLE} (latin_name, {', '.join(columns)})
+		VALUES (?, {placeholders})
+		ON CONFLICT(latin_name) DO UPDATE SET {set_clause}
+	""", (latin_name, *[values[key] for key in _IADHORE_FILES]))
+	conn.commit()
+	conn.close()
+	return True
 
 
 def _extract_columns_from_tsv(tsv_path):
