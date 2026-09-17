@@ -112,6 +112,28 @@ The [PARAMETERS] section includes:
     * **max_ks_orthologs**: maximum value accepted for ortholog *K*:sub:`S` from data table. [Default: 10]
 
 
+Paralog Ks database server
+---------------------------
+
+The paralog *K*:sub:`S` database (``ks_list_paralog_database_path``, enabled with expert parameter
+``use_paralog_ks_database``) is served by a small, self-hosted `sqld <https://github.com/tursodatabase/libsql>`__
+server rather than a local file. This lets many independent analyses — even on different compute
+nodes — safely share one central database, which a plain local database file cannot do reliably
+over a network filesystem.
+
+This means the server has to be running *before* any analysis that uses the database. To start it:
+
+1. Copy ``cluster_scripts/run_paralog_ks_server.sbatch`` and edit the variables at the top
+   (install/data directories, address file path, port) for your own cluster.
+2. Submit it once: ``sbatch run_paralog_ks_server.sbatch``. With unlimited job walltime, this can
+   then keep running indefinitely — no need to resubmit it for every analysis.
+3. Point ``ks_list_paralog_database_path`` in your *ksrates* configuration file(s) at the same
+   address file the script writes.
+
+If the server isn't reachable (not yet started, or address file missing/stale), *ksrates*
+transparently falls back to reading/writing the original Ks TSV files instead — an analysis will
+still complete, just without the shared-database benefit for that run.
+
 Guidelines to set the maximum number of outgroups per rate-adjustment
 ---------------------------------------------------------------------
 
