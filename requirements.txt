@@ -16,3 +16,4 @@ plumbum==1.8.1
 progressbar2==3.53.1
 bokeh==1.4.0
 fastcluster==1.2.2
+libsql-client==0.3.1

@@ -422,12 +422,12 @@ def orthologs_ks_cleanup(orthologs_dir_path, dry_run):
 @cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Populates paralog Ks database from config files and paralog distributions.")
 @click.argument('config_dir', type=click.Path(exists=True))
 @click.argument('paralog_distributions_dir', type=click.Path(exists=True))
-@click.option('-d', '--database', type=click.Path(), required=True, help="Path to the paralog Ks SQLite database file (created if it doesn't exist)")
+@click.option('-d', '--database', type=click.Path(), required=True, help="Path to the sqld server's address file (written by the server job at startup; the server must already be running)")
 @click.option('--force', is_flag=True, help="Overwrite species that already exist in database")
 @click.option('--num-gfs', type=int, default=2000, help="Number of gene families for reciprocally retained (default: 2000)")
 def populate_paralog_ks_db(config_dir, paralog_distributions_dir, database, force, num_gfs):
 	"""
-	Populates the paralog Ks SQLite database from config files and existing paralog TSV files.
+	Populates the paralog Ks database (served by a running sqld server) from config files and existing paralog TSV files.
 
 	Reads config files in CONFIG_DIR to extract species information (informal and latin names),
 	then consolidates paralog Ks data from matching directories in PARALOG_DISTRIBUTIONS_DIR.
@@ -438,15 +438,15 @@ def populate_paralog_ks_db(config_dir, paralog_distributions_dir, database, forc
 
 	\b
 	Example (process all species with configs in configs/ directory):
-	  ksrates populate-paralog-ks-db configs/ paralog_distributions/ --database paralog_ks_db.sqlite
+	  ksrates populate-paralog-ks-db configs/ paralog_distributions/ --database paralog_ks_server_address.txt
 
 	\b
 	Overwrite existing entries:
-	  ksrates populate-paralog-ks-db configs/ paralog_distributions/ --database paralog_ks_db.sqlite --force
+	  ksrates populate-paralog-ks-db configs/ paralog_distributions/ --database paralog_ks_server_address.txt --force
 
 	\b
 	Use different recret GF number:
-	  ksrates populate-paralog-ks-db configs/ paralog_distributions/ --database paralog_ks_db.sqlite --num-gfs 4000
+	  ksrates populate-paralog-ks-db configs/ paralog_distributions/ --database paralog_ks_server_address.txt --num-gfs 4000
 	"""
 	from ksrates.populate_paralog_ks_db import populate_paralog_ks_db_batch as populate_batch
 
@@ -465,7 +465,7 @@ def inspect_paralog_ks_db(database, species_filter):
 	Dumps the full content of the paralog Ks DATABASE, one row per gene pair: columns are
 	latin_name, analysis_type, Paralog1, Paralog2, Family, Node, Ks, AlignmentCoverage, AlignmentIdentity,
 	AlignmentLength. The output filename is generated automatically next to the database, from its
-	basename with the current timestamp appended, e.g. "paralog_ks_db.sqlite" ->
+	basename with the current timestamp appended, e.g. "paralog_ks_server_address.txt" ->
 	"paralog_ks_db_YYYYMMDD_HHMMSS.tsv". The per-species i-ADHoRe output files (anchorpoints.txt,
 	multiplicons.txt, segments.txt, list_elements.txt, multiplicon_pairs.txt) are written back out
 	under a matching "..._iadhore_files" directory, one subdirectory per species. The database itself
@@ -473,16 +473,16 @@ def inspect_paralog_ks_db(database, species_filter):
 	inspect its content (e.g. in Excel, VSCode, pandas...).
 
 	\b
-	DATABASE: path to the paralog Ks SQLite database file
+	DATABASE: path to the sqld server's address file
 	SPECIES_FILTER: optional substring to only export matching species (case-insensitive)
 
 	\b
 	Example (dump all species):
-	  ksrates inspect-paralog-ks-db paralog_ks_db.sqlite
+	  ksrates inspect-paralog-ks-db paralog_ks_server_address.txt
 
 	\b
 	Example (dump only species whose latin name contains "guineensis"):
-	  ksrates inspect-paralog-ks-db paralog_ks_db.sqlite guineensis
+	  ksrates inspect-paralog-ks-db paralog_ks_server_address.txt guineensis
 	"""
 	from ksrates.inspect_paralog_ks_db import export_full_tsv
 

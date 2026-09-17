@@ -1,8 +1,7 @@
 import os
-import glob
 import pickle
-import sqlite3
 import logging
+import libsql_client
 from pandas import read_csv
 import ksrates.fc_check_input as fcCheck
 from ksrates.fc_wgd import _OUTPUT_KS_FILE_PATTERN_PARA, _OUTPUT_KS_FILE_PATTERN_ANCHORS, _OUTPUT_KS_FILE_PATTERN_RR_OMCL
@@ -36,36 +35,57 @@ _ALL_COLUMNS = {
 
 def _connect(db_path):
 	"""
-	Open a connection to the paralog Ks SQLite database. Uses WAL mode and a generous busy timeout
-	so that multiple processes (e.g. one per species in a batch/cluster run) writing to the same
-	shared database file don't fail outright on lock contention.
+	Open a connection to the paralog Ks database, which is served remotely by a long-running
+	sqld server (self-hosted libSQL server) rather than being a local file: this lets many
+	independent cluster jobs, possibly on different compute nodes, safely read/write a shared
+	database without relying on SQLite's WAL mode over a network filesystem (which SQLite's own
+	docs say doesn't work reliably across hosts).
 
-	:param db_path: path to the paralog Ks database file
-	:return: sqlite3 connection
+	:param db_path: path to a small text file, written once at startup by the sqld server job,
+	                containing the server's own address as "host:port"
+	:return: a libsql_client sync client connected to the sqld server
+	:raises: any error reading/parsing the address file, or (on the first query issued against
+	         the returned client, since the connection itself is opened lazily) any error
+	         reaching the server, exactly as sqlite3.connect() used to raise on a bad local path.
+	         Every caller already wraps its database calls in a broad except Exception, so this
+	         requires no changes on the caller side.
 	"""
-	conn = sqlite3.connect(db_path, timeout=30)
-	conn.execute("PRAGMA journal_mode=WAL")
-	return conn
+	with open(db_path, "r") as f:
+		address = f.read().strip()
+	if not address or ":" not in address:
+		raise ValueError(f"Malformed sqld server address file [{db_path}]: {address!r}")
+	# ws:// (not http://) since http:// explicitly can't support transactions; note that
+	# libsql-client is an archived (frozen, unmaintained) package as of writing, but its
+	# execute()/close() surface is small, stable, and verified to work against a real sqld
+	# instance for our usage pattern.
+	return libsql_client.create_client_sync(f"ws://{address}")
 
 
 def initialize_paralog_db(db_path):
 	"""
-	Initialize the paralog Ks SQLite database if it doesn't exist yet (creates the file and table),
-	and add any columns missing from an existing database created by an older version of this schema.
+	Initialize the paralog Ks database if it doesn't exist yet (creates the table), and add any
+	columns missing from a database created by an older version of this schema.
 
-	:param db_path: path to the paralog Ks database file
+	:param db_path: path to the sqld server address file (see _connect)
 	:return: True if the database is ready to use, False if it could not be created/opened
-	         (e.g. parent directory missing, permission denied). Callers are responsible for acting on failure.
+	         (e.g. server unreachable, malformed address file). Callers are responsible for
+	         acting on failure.
 	"""
 	try:
-		conn = _connect(db_path)
-		conn.execute(f"CREATE TABLE IF NOT EXISTS {_TABLE} (latin_name TEXT PRIMARY KEY)")
-		existing_columns = {row[1] for row in conn.execute(f"PRAGMA table_info({_TABLE})")}
+		client = _connect(db_path)
+		client.execute(f"CREATE TABLE IF NOT EXISTS {_TABLE} (latin_name TEXT PRIMARY KEY)")
+		# Ordinary SELECT against the pragma_table_info table-valued function, rather than a
+		# bare "PRAGMA table_info(...)" statement: some PRAGMA statement forms are known to be
+		# rejected over sqld's remote/Hrana protocol, while this SELECT form is not.
+		result = client.execute(f"SELECT name FROM pragma_table_info('{_TABLE}')")
+		existing_columns = {row[0] for row in result.rows}
 		for column, col_type in _ALL_COLUMNS.items():
 			if column not in existing_columns:
-				conn.execute(f"ALTER TABLE {_TABLE} ADD COLUMN {column} {col_type}")
-		conn.commit()
-		conn.close()
+				client.execute(f"ALTER TABLE {_TABLE} ADD COLUMN {column} {col_type}")
+		# No commit needed/possible here: outside of an explicit transaction, the sqld client
+		# has no .commit() method, since each execute() above is already committed by the
+		# server as soon as it returns.
+		client.close()
 		return True
 	except Exception as e:
 		logging.error(f"Could not create/open paralog Ks database at [{db_path}]: {str(e)}")
@@ -77,15 +97,15 @@ def species_exists(db_path, latin_name):
 	Check whether a species already has a row in the paralog Ks database, regardless of which
 	analysis types it holds data for.
 
-	:param db_path: path to the paralog Ks database file
+	:param db_path: path to the sqld server address file (see _connect)
 	:param latin_name: latin name of species of interest
 	:return: True if the species has a row, False otherwise (including on any read error)
 	"""
 	try:
-		conn = _connect(db_path)
-		row = conn.execute(f"SELECT 1 FROM {_TABLE} WHERE latin_name = ? LIMIT 1", (latin_name,)).fetchone()
-		conn.close()
-		return row is not None
+		client = _connect(db_path)
+		result = client.execute(f"SELECT 1 FROM {_TABLE} WHERE latin_name = ? LIMIT 1", (latin_name,))
+		client.close()
+		return len(result.rows) > 0
 	except Exception:
 		return False
 
@@ -96,7 +116,7 @@ def read_analysis_data(db_path, latin_name, analysis_type):
 	database. This is the single shared entry point all consumers should use to read from the
 	paralog Ks database.
 
-	:param db_path: path to the paralog Ks database file
+	:param db_path: path to the sqld server address file (see _connect)
 	:param latin_name: latin name of species of interest
 	:param analysis_type: one of 'paranome', 'anchors', 'recret'
 	:return: dict of lists (Family, Node, Ks, AlignmentCoverage, AlignmentIdentity, AlignmentLength),
@@ -105,12 +125,13 @@ def read_analysis_data(db_path, latin_name, analysis_type):
 	"""
 	column = _ANALYSIS_TYPE_TO_COLUMN[analysis_type]
 	try:
-		conn = _connect(db_path)
-		row = conn.execute(f"SELECT {column} FROM {_TABLE} WHERE latin_name = ?", (latin_name,)).fetchone()
-		conn.close()
+		client = _connect(db_path)
+		result = client.execute(f"SELECT {column} FROM {_TABLE} WHERE latin_name = ?", (latin_name,))
+		client.close()
 	except Exception as e:
 		logging.warning(f"Could not read from paralog Ks database [{db_path}]: {str(e)}")
 		return None
+	row = result.rows[0] if result.rows else None
 	if row is None or row[0] is None:
 		return None
 	return pickle.loads(row[0])
@@ -123,19 +144,20 @@ def read_anchor_iadhore_files(db_path, latin_name):
 	These are stored as raw text rather than parsed, so they can be fed into the existing line-based
 	parsers in fc_cluster_anchors.py via io.StringIO exactly as a real file would be.
 
-	:param db_path: path to the paralog Ks database file
+	:param db_path: path to the sqld server address file (see _connect)
 	:param latin_name: latin name of species of interest
 	:return: dict mapping each of 'anchorpoints', 'multiplicons', 'segments', 'list_elements',
 	         'multiplicon_pairs' to its raw file text, or None (per key) if not present or on read error
 	"""
 	columns = [_IADHORE_COLUMN[key] for key in _IADHORE_FILES]
 	try:
-		conn = _connect(db_path)
-		row = conn.execute(f"SELECT {', '.join(columns)} FROM {_TABLE} WHERE latin_name = ?", (latin_name,)).fetchone()
-		conn.close()
+		client = _connect(db_path)
+		result = client.execute(f"SELECT {', '.join(columns)} FROM {_TABLE} WHERE latin_name = ?", (latin_name,))
+		client.close()
 	except Exception as e:
 		logging.warning(f"Could not read from paralog Ks database [{db_path}]: {str(e)}")
 		return {key: None for key in _IADHORE_FILES}
+	row = result.rows[0] if result.rows else None
 	if row is None:
 		return {key: None for key in _IADHORE_FILES}
 	return dict(zip(_IADHORE_FILES, row))
@@ -150,7 +172,7 @@ def write_anchor_iadhore_files(latin_name, iadhore_dict, db_path):
 	:param latin_name: latin name of species of interest
 	:param iadhore_dict: dict with any of the keys 'anchorpoints', 'multiplicons', 'segments',
 	                       'list_elements', 'multiplicon_pairs', each mapping to raw file text or None
-	:param db_path: path to the paralog Ks database file
+	:param db_path: path to the sqld server address file (see _connect)
 	:return: True if write succeeded, False if there was nothing to write
 	"""
 	values = {key: iadhore_dict.get(key) for key in _IADHORE_FILES}
@@ -162,14 +184,13 @@ def write_anchor_iadhore_files(latin_name, iadhore_dict, db_path):
 	placeholders = ', '.join(['?'] * len(columns))
 	set_clause = ", ".join(f"{col}=COALESCE(excluded.{col}, {_TABLE}.{col})" for col in columns)
 
-	conn = _connect(db_path)
-	conn.execute(f"""
+	client = _connect(db_path)
+	client.execute(f"""
 		INSERT INTO {_TABLE} (latin_name, {', '.join(columns)})
 		VALUES (?, {placeholders})
 		ON CONFLICT(latin_name) DO UPDATE SET {set_clause}
 	""", (latin_name, *[values[key] for key in _IADHORE_FILES]))
-	conn.commit()
-	conn.close()
+	client.close()
 	return True
 
 
@@ -292,7 +313,7 @@ def write_to_paralog_db(latin_name, ks_data_dict, db_path):
 	:param ks_data_dict: dictionary from extract_paralog_ks_from_tsv with keys 'paranome', 'anchors', 'recret'
 	                     each value is either None or a dict of lists (Family, Node, Ks, AlignmentCoverage,
 	                     AlignmentIdentity, AlignmentLength)
-	:param db_path: path to the paralog Ks database file
+	:param db_path: path to the sqld server address file (see _connect)
 	:return: True if write succeeded, False otherwise
 	"""
 	ks_paranome = ks_data_dict['paranome']
@@ -308,8 +329,8 @@ def write_to_paralog_db(latin_name, ks_data_dict, db_path):
 	blob_anchors = pickle.dumps(ks_anchors) if ks_anchors is not None else None
 	blob_recret = pickle.dumps(ks_recret) if ks_recret is not None else None
 
-	conn = _connect(db_path)
-	conn.execute(f"""
+	client = _connect(db_path)
+	client.execute(f"""
 		INSERT INTO {_TABLE} (latin_name, paranome, anchors, reciprocally_retained)
 		VALUES (?, ?, ?, ?)
 		ON CONFLICT(latin_name) DO UPDATE SET
@@ -317,8 +338,7 @@ def write_to_paralog_db(latin_name, ks_data_dict, db_path):
 			anchors=COALESCE(excluded.anchors, {_TABLE}.anchors),
 			reciprocally_retained=COALESCE(excluded.reciprocally_retained, {_TABLE}.reciprocally_retained)
 	""", (latin_name, blob_paranome, blob_anchors, blob_recret))
-	conn.commit()
-	conn.close()
+	client.close()
 	return True
 
 
@@ -331,7 +351,7 @@ def consolidate_paralog_ks_lists(species_name, latin_name, ks_list_paralog_db_pa
 	at the analysis stage.
 
 	:param species_name: species of interest (informal name)
-	:param ks_list_paralog_db_path: filename/path to the consolidated paralog Ks list database
+	:param ks_list_paralog_db_path: path to the sqld server address file (see _connect)
 	:param paranome_enabled: whether paranome Ks values are present
 	:param anchors_enabled: whether anchor pair Ks values are present
 	:param reciprocal_retention_enabled: whether reciprocally retained Ks values are present

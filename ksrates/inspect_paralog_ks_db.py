@@ -1,8 +1,8 @@
 import csv
 import os
 import pickle
-import sqlite3
 from datetime import datetime
+import ksrates.fc_consolidate_paralog_ks as fc_consolidate_paralog_ks
 
 _TABLE = "paralog_ks"
 _PAIR_COLUMNS = ['Paralog1', 'Paralog2', 'Family', 'Node', 'Ks', 'AlignmentCoverage', 'AlignmentIdentity', 'AlignmentLength']
@@ -16,9 +16,9 @@ _IADHORE_COLUMNS = [f"{name}_txt" for name in _IADHORE_FILES]
 
 def export_full_tsv(db_path, species_filter=None):
 	"""
-	Dump the full content of the paralog Ks database to disk, next to the database itself. Two kinds
-	of output are produced, both named from the database's basename with the current timestamp
-	appended (e.g. "paralog_ks_db.sqlite" -> "paralog_ks_db_YYYYMMDD_HHMMSS.tsv"):
+	Dump the full content of the paralog Ks database to disk, next to the address file itself. Two
+	kinds of output are produced, both named from the address file's basename with the current
+	timestamp appended (e.g. "paralog_ks_server_address.txt" -> "paralog_ks_server_address_YYYYMMDD_HHMMSS.tsv"):
 	- a single flat TSV file, one row per gene pair (not per species): columns are latin_name,
 	  analysis_type, Paralog1, Paralog2, Family, Node, Ks, AlignmentCoverage, AlignmentIdentity,
 	  AlignmentLength.
@@ -26,9 +26,9 @@ def export_full_tsv(db_path, species_filter=None):
 	  list_elements.txt, multiplicon_pairs.txt) stored per species, written back out one subdirectory
 	  per species (named after its latin name) under a matching "..._iadhore_files" directory.
 	Useful for inspecting or analyzing the underlying data outside of ksrates (e.g. in Excel, pandas,
-	awk), since the SQLite blobs and text columns themselves aren't directly readable.
+	awk), since the database's blobs and text columns themselves aren't directly readable.
 
-	:param db_path: path to the paralog Ks SQLite database file
+	:param db_path: path to the sqld server address file (see fc_consolidate_paralog_ks._connect)
 	:param species_filter: if given, only export species whose latin name contains this substring
 	                        (case-insensitive)
 	"""
@@ -37,10 +37,11 @@ def export_full_tsv(db_path, species_filter=None):
 	output_tsv_path = os.path.join(os.path.dirname(db_path), f"{db_base}_{timestamp}.tsv")
 	iadhore_dir = os.path.join(os.path.dirname(db_path), f"{db_base}_{timestamp}_iadhore_files")
 
-	conn = sqlite3.connect(db_path)
+	client = fc_consolidate_paralog_ks._connect(db_path)
 	columns = ['latin_name', 'paranome', 'anchors', 'reciprocally_retained'] + _IADHORE_COLUMNS
-	rows = conn.execute(f"SELECT {', '.join(columns)} FROM {_TABLE} ORDER BY latin_name").fetchall()
-	conn.close()
+	result = client.execute(f"SELECT {', '.join(columns)} FROM {_TABLE} ORDER BY latin_name")
+	rows = result.rows
+	client.close()
 
 	n_pairs = 0
 	n_species = 0
