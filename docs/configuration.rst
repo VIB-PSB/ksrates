@@ -112,6 +112,8 @@ The [PARAMETERS] section includes:
     * **max_ks_orthologs**: maximum value accepted for ortholog *K*:sub:`S` from data table. [Default: 10]
 
 
+.. _`paralog_ks_database_server`:
+
 Paralog Ks database server
 ---------------------------
 
@@ -141,6 +143,11 @@ next to the database, untouched on later restarts) and writes the matching acces
 address file's second line, right below the ``host:port`` line. Every *ksrates* client reads both
 lines from the same file it already needed for the server's address, so there is no separate
 token to configure or keep track of.
+
+.. seealso::
+    The same running server, and the same underlying database, can be shared by any number of
+    independent *ksrates* runs/datasets rather than just one - see
+    :ref:`paralog_ks_database_centralization`.
 
 Guidelines to set the maximum number of outgroups per rate-adjustment
 ---------------------------------------------------------------------
