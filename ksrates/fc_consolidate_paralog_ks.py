@@ -33,6 +33,24 @@ _ALL_COLUMNS = {
 }
 
 
+def _read_address_file(db_path):
+	"""
+	Parse the sqld server address file: "host:port" on the first line and, if the server was
+	started with JWT auth enabled, the shared auth token on the second line.
+
+	:param db_path: path to the address file
+	:return: (address, token) tuple; token is None if the file has no second (non-blank) line
+	:raises ValueError: if the file is empty or its first line isn't a "host:port" address
+	"""
+	with open(db_path, "r") as f:
+		lines = f.read().splitlines()
+	address = lines[0].strip() if lines else ""
+	if not address or ":" not in address:
+		raise ValueError(f"Malformed sqld server address file [{db_path}]: {address!r}")
+	token = lines[1].strip() if len(lines) > 1 and lines[1].strip() else None
+	return address, token
+
+
 def _connect(db_path):
 	"""
 	Open a connection to the paralog Ks database, which is served remotely by a long-running
@@ -52,15 +70,7 @@ def _connect(db_path):
 	         Every caller already wraps its database calls in a broad except Exception, so this
 	         requires no changes on the caller side.
 	"""
-	with open(db_path, "r") as f:
-		lines = f.read().splitlines()
-	address = lines[0].strip() if lines else ""
-	if not address or ":" not in address:
-		raise ValueError(f"Malformed sqld server address file [{db_path}]: {address!r}")
-	# Second line, if present, is the shared auth token written by the server job (see
-	# run_paralog_ks_server.sbatch); its absence just means the server was started without
-	# auth, so no token is sent.
-	token = lines[1].strip() if len(lines) > 1 and lines[1].strip() else None
+	address, token = _read_address_file(db_path)
 	# ws:// (not http://) since http:// explicitly can't support transactions; note that
 	# libsql-client is an archived (frozen, unmaintained) package as of writing, but its
 	# execute()/close() surface is small, stable, and verified to work against a real sqld

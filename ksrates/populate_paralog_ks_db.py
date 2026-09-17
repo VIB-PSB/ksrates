@@ -272,7 +272,7 @@ def populate_paralog_ks_db_batch(config_dir_path, paralog_distributions_path, db
 				logging.warning(f"      To consolidate this, add its config to the config directory and use --num-gfs {gf_num} --force")
 
 	logging.info("")
-	logging.info(f"Database saved to: {db_path}")
+	logging.info(f"Address file: {db_path}")
 	logging.info("=" * 70)
 	logging.info("")
 	logging.info("Done")
