@@ -423,7 +423,7 @@ def orthologs_ks_cleanup(orthologs_dir_path, dry_run):
 @click.argument('config_dir', type=click.Path(exists=True))
 @click.argument('paralog_distributions_dir', type=click.Path(exists=True))
 @click.option('-d', '--database', type=click.Path(), required=True, help="Path to the sqld server's address file (written by the server job at startup; the server must already be running)")
-@click.option('--force', is_flag=True, help="Overwrite species that already exist in database")
+@click.option('--force', is_flag=True, help="Re-extract and overwrite analysis types a species already has data for (by default only what's missing is added)")
 @click.option('--num-gfs', type=int, default=2000, help="Number of gene families for reciprocally retained (default: 2000)")
 def populate_paralog_ks_db(config_dir, paralog_distributions_dir, database, force, num_gfs):
 	"""
@@ -437,11 +437,18 @@ def populate_paralog_ks_db(config_dir, paralog_distributions_dir, database, forc
 	PARALOG_DISTRIBUTIONS_DIR: path to directory containing wgd_* subdirectories
 
 	\b
+	If a species is already in the database, only analysis types (paranome/anchors/reciprocally
+	retained) and i-ADHoRe files it doesn't have data for yet are extracted and added - e.g. if
+	reciprocal retention finishes days after paranome/anchors were first stored, a later run of
+	this command picks it up automatically, without disturbing what's already there. Use --force
+	to instead re-extract and overwrite everything, including types the species already has.
+
+	\b
 	Example (process all species with configs in configs/ directory):
 	  ksrates populate-paralog-ks-db configs/ paralog_distributions/ --database paralog_ks_server_address.txt
 
 	\b
-	Overwrite existing entries:
+	Re-extract and overwrite everything, even already-populated types:
 	  ksrates populate-paralog-ks-db configs/ paralog_distributions/ --database paralog_ks_server_address.txt --force
 
 	\b

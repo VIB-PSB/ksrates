@@ -117,6 +117,40 @@ def species_exists(db_path, latin_name):
 		return False
 
 
+def existing_data_types(db_path, latin_name):
+	"""
+	Check which analysis types (and the i-ADHoRe file bundle) a species already has non-null data
+	for, without loading the actual blobs/text. Used by populate_paralog_ks_db_batch to fill in
+	only what's missing for a species already in the database (e.g. reciprocal retention finishes
+	days after paranome/anchors were first stored), without touching data that's already there.
+
+	:param db_path: path to the sqld server address file (see _connect)
+	:param latin_name: latin name of species of interest
+	:return: dict with keys 'paranome', 'anchors', 'recret', 'iadhore', each True if already
+	         populated; 'iadhore' is True only if all 5 files are present, matching how they're
+	         always read/written as one bundle elsewhere. All False if the species has no row yet
+	         or the database couldn't be read.
+	"""
+	empty = {"paranome": False, "anchors": False, "recret": False, "iadhore": False}
+	columns = ["paranome", "anchors", "reciprocally_retained"] + [_IADHORE_COLUMN[key] for key in _IADHORE_FILES]
+	try:
+		client = _connect(db_path)
+		result = client.execute(f"SELECT {', '.join(columns)} FROM {_TABLE} WHERE latin_name = ?", (latin_name,))
+		client.close()
+	except Exception as e:
+		logging.warning(f"Could not read from paralog Ks database [{db_path}]: {str(e)}")
+		return empty
+	if not result.rows:
+		return empty
+	paranome, anchors, recret, *iadhore_values = result.rows[0]
+	return {
+		"paranome": paranome is not None,
+		"anchors": anchors is not None,
+		"recret": recret is not None,
+		"iadhore": all(v is not None for v in iadhore_values),
+	}
+
+
 def read_analysis_data(db_path, latin_name, analysis_type):
 	"""
 	Look up one species' stored Ks data for one analysis type, without loading the rest of the

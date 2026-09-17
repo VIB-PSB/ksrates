@@ -89,23 +89,41 @@ def populate_paralog_ks_db_batch(config_dir_path, paralog_distributions_path, db
 
 	# Process each species
 	successful = []
+	updated = []
 	failed = []
 	skipped = []
 	overwritten = []
 	data_types_found = {}
+	iadhore_found = {}
 	alternative_recret_files = {}
 
 	for informal_name, latin_name in species_info.items():
-		# Check if species already exists in database (by latin name); a single indexed lookup,
-		# not a full-database scan.
-		will_overwrite = fc_consolidate_paralog_ks.species_exists(db_path, latin_name)
-		if will_overwrite and not force_overwrite:
-			logging.warning(f"Skipping [{informal_name}] ({latin_name}): already exists in database (use --force to overwrite)")
+		# Check if species already exists in database (by latin name), and if so which analysis
+		# types/i-ADHoRe bundle it already has data for (e.g. paranome and anchors were stored on
+		# a first pass, and reciprocal retention only finished days later): without --force, only
+		# what's actually missing gets extracted and written, so an already-populated type is
+		# never touched, but a species isn't skipped wholesale just because it exists.
+		exists = fc_consolidate_paralog_ks.species_exists(db_path, latin_name)
+		if exists and not force_overwrite:
+			existing_types = fc_consolidate_paralog_ks.existing_data_types(db_path, latin_name)
+		else:
+			existing_types = {"paranome": False, "anchors": False, "recret": False, "iadhore": False}
+
+		paranome_enabled = force_overwrite or not existing_types["paranome"]
+		anchors_enabled = force_overwrite or not existing_types["anchors"]
+		recret_enabled = force_overwrite or not existing_types["recret"]
+		iadhore_enabled = force_overwrite or not existing_types["iadhore"]
+
+		if exists and not force_overwrite and not (paranome_enabled or anchors_enabled or recret_enabled or iadhore_enabled):
+			logging.warning(f"Skipping [{informal_name}] ({latin_name}): already fully populated (use --force to overwrite)")
 			skipped.append(informal_name)
 			continue
 
-		if will_overwrite and force_overwrite:
+		if force_overwrite and exists:
 			logging.info(f"Overwriting [{informal_name}] ({latin_name}):")
+		elif exists:
+			missing = [t for t, enabled in [('paranome', paranome_enabled), ('anchors', anchors_enabled), ('recret', recret_enabled)] if enabled] + (['i-ADHoRe files'] if iadhore_enabled else [])
+			logging.info(f"Filling in missing data for [{informal_name}] ({latin_name}): {', '.join(missing)}")
 		else:
 			logging.info(f"Adding [{informal_name}] ({latin_name})")
 
@@ -113,7 +131,7 @@ def populate_paralog_ks_db_batch(config_dir_path, paralog_distributions_path, db
 			# Get config parameters. Note: we don't trust the config's current paranome/colinearity/
 			# reciprocal_retention yes/no toggles, since they may have changed since the TSV files were
 			# generated (e.g. a species run with recret=yes in the past, but config now set to recret=no).
-			# Instead, we always search for all three output file types and use whichever actually exist.
+			# Instead, we always search among the enabled types for whichever actually exist.
 			config_file = species_configs[informal_name]
 			config = fcConf.Configuration(config_file, "")
 			bottom = config.use_bottom_gfs_instead_of_top(True)
@@ -124,10 +142,11 @@ def populate_paralog_ks_db_batch(config_dir_path, paralog_distributions_path, db
 			parent_dir = os.path.dirname(paralog_distributions_path)
 			os.chdir(parent_dir)
 
-			# Extract Ks data from TSV files: search for all three types regardless of config toggles
+			# Extract Ks data from TSV files, but only for the types that are actually enabled
+			# above (missing, or forced); a type already present in the database is left untouched.
 			ks_data = fc_consolidate_paralog_ks.extract_paralog_ks_from_tsv(
-				informal_name, paranome_enabled=True, anchors_enabled=True, reciprocal_retention_enabled=True,
-				num_gfs=num_gfs, rank_type=rank_type, bottom=bottom
+				informal_name, paranome_enabled=paranome_enabled, anchors_enabled=anchors_enabled,
+				reciprocal_retention_enabled=recret_enabled, num_gfs=num_gfs, rank_type=rank_type, bottom=bottom
 			)
 
 			# Check for alternative recret files
@@ -140,25 +159,47 @@ def populate_paralog_ks_db_batch(config_dir_path, paralog_distributions_path, db
 					if alternative_files:
 						alternative_recret_files[informal_name] = alternative_files
 
-			# Track which data types were found
-			found_types = []
-			if ks_data['paranome'] is not None:
-				found_types.append('paranome')
-			if ks_data['anchors'] is not None:
-				found_types.append('anchors')
-			if ks_data['recret'] is not None:
-				found_types.append('recret')
+			# Write to database using latin name (a no-op, returning False, if nothing was enabled
+			# above or nothing was actually found on disk for the enabled types)
+			wrote_ks_data = fc_consolidate_paralog_ks.write_to_paralog_db(latin_name, ks_data, db_path)
 
-			data_types_found[informal_name] = found_types
+			# Also pick up the i-ADHoRe output files if present on disk and enabled above, same as
+			# wgd_paralogs.py does right after a fresh colinearity run: extract_paralog_ks_from_tsv()
+			# above only ever reads the three Ks TSVs, so without this the accessory files a past
+			# colinearity run already produced would never make it into the database via this batch
+			# command.
+			if iadhore_enabled:
+				iadhore_texts = fc_consolidate_paralog_ks.extract_anchor_iadhore_files(informal_name)
+				wrote_iadhore = any(text is not None for text in iadhore_texts.values())
+				if wrote_iadhore:
+					fc_consolidate_paralog_ks.write_anchor_iadhore_files(latin_name, iadhore_texts, db_path)
+			else:
+				wrote_iadhore = False
 
-			# Write to database using latin name
-			success = fc_consolidate_paralog_ks.write_to_paralog_db(latin_name, ks_data, db_path)
+			# Final status shown in the summary table below: the union of what the species already
+			# had before this run and whatever was freshly written just now (rather than only what
+			# this run itself touched), so an already-populated type isn't shown as missing.
+			data_types_found[informal_name] = [
+				t for t, already, fresh in [
+					('paranome', existing_types["paranome"], ks_data['paranome'] is not None),
+					('anchors', existing_types["anchors"], ks_data['anchors'] is not None),
+					('recret', existing_types["recret"], ks_data['recret'] is not None),
+				] if already or fresh
+			]
+			iadhore_found[informal_name] = existing_types["iadhore"] or wrote_iadhore
 
-			if success:
-				if will_overwrite:
+			if wrote_ks_data or wrote_iadhore:
+				if force_overwrite and exists:
 					overwritten.append(informal_name)
+				elif exists:
+					updated.append(informal_name)
 				else:
 					successful.append(informal_name)
+			elif exists:
+				# Something was missing, but the TSV/i-ADHoRe files for it still aren't on disk
+				# yet (e.g. reciprocal retention hasn't finished) - nothing new to add this run.
+				logging.warning(f"  Still missing data for [{informal_name}] ({latin_name}); nothing new found on disk")
+				skipped.append(informal_name)
 			else:
 				logging.warning(f"  No data extracted for [{informal_name}] ({latin_name})")
 				failed.append(informal_name)
@@ -178,46 +219,45 @@ def populate_paralog_ks_db_batch(config_dir_path, paralog_distributions_path, db
 	logging.info("=" * 70)
 	logging.info("BATCH PROCESSING SUMMARY")
 	logging.info("=" * 70)
-	logging.info(f"Processed: {len(successful)} new, {len(overwritten)} overwritten, {len(skipped)} skipped, {len(failed)} failed, out of {len(species_info)} species")
+	logging.info(f"Processed: {len(successful)} new, {len(updated)} updated, {len(overwritten)} overwritten, "
+	             f"{len(skipped)} skipped, {len(failed)} failed, out of {len(species_info)} species")
 
 	spacer_informal_names = max(len(s) for s in species_info.keys()) + 5
 	spacer_latin_names = max(len(s) for s in species_info.values()) + 3
 
-	if successful:
+	def print_species_table(title, informal_names):
 		logging.info("")
-		logging.info("Successfully added new species:")
-		logging.info(f"  {'Species':{spacer_informal_names}} {'Latin name':{spacer_latin_names}} {'Paranome':9} {'Anchors':9} {'RecRet':9}")
+		logging.info(title)
+		logging.info(f"  {'Species':{spacer_informal_names}} {'Latin name':{spacer_latin_names}} {'Paranome':9} {'Anchors':9} {'RecRet':9} {'iADHoRe':9}")
 		logging.info("  " + "-" * 64)
-		for informal_name in successful:
+		for informal_name in informal_names:
 			types_found = data_types_found.get(informal_name, [])
 			paranome_status = "[YES]" if 'paranome' in types_found else "[NO]"
 			anchors_status = "[YES]" if 'anchors' in types_found else "[NO]"
 			recret_status = "[YES]" if 'recret' in types_found else "[NO]"
-			logging.info(f"  {informal_name:{spacer_informal_names}} {species_info[informal_name]:{spacer_latin_names}} {paranome_status:9}  {anchors_status:9}  {recret_status:9}")
+			iadhore_status = "[YES]" if iadhore_found.get(informal_name) else "[NO]"
+			logging.info(f"  {informal_name:{spacer_informal_names}} {species_info[informal_name]:{spacer_latin_names}} {paranome_status:9}  {anchors_status:9}  {recret_status:9}  {iadhore_status:9}")
+
+	if successful:
+		print_species_table("Successfully added new species:", successful)
+
+	if updated:
+		print_species_table("Filled in missing data for existing species:", updated)
 
 	if overwritten:
-		logging.info("")
-		logging.info("Successfully overwritten existing species:")
-		logging.info(f"  {'Species':{spacer_informal_names}} {'Latin name':{spacer_latin_names}} {'Paranome':9} {'Anchors':9} {'RecRet':9}")
-		logging.info("  " + "-" * 64)
-		for informal_name in overwritten:
-			types_found = data_types_found.get(informal_name, [])
-			paranome_status = "[YES]" if 'paranome' in types_found else "[NO]"
-			anchors_status = "[YES]" if 'anchors' in types_found else "[NO]"
-			recret_status = "[YES]" if 'recret' in types_found else "[NO]"
-			logging.info(f"  {informal_name:{spacer_informal_names}} {species_info[informal_name]:{spacer_latin_names}} {paranome_status:9}  {anchors_status:9}  {recret_status:9}")
+		print_species_table("Successfully overwritten existing species:", overwritten)
 
 	if skipped:
 		logging.info("")
-		logging.warning(f"Skipped (already in database, use --force to overwrite): {len(skipped)} species")
+		logging.warning(f"Skipped: {len(skipped)} species")
 		for informal_name in skipped:
-			logging.warning(f"  - {informal_name} ({latin_names.get(informal_name)})")
+			logging.warning(f"  - {informal_name} ({species_info.get(informal_name)})")
 
 	if failed:
 		logging.info("")
 		logging.error(f"Failed to process: {len(failed)} species")
 		for informal_name in failed:
-			logging.error(f"  - {informal_name} ({latin_names.get(informal_name)})")
+			logging.error(f"  - {informal_name} ({species_info.get(informal_name)})")
 
 	if alternative_recret_files:
 		logging.info("")
