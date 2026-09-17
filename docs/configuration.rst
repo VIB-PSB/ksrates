@@ -134,6 +134,14 @@ If the server isn't reachable (not yet started, or address file missing/stale), 
 transparently falls back to reading/writing the original Ks TSV files instead — an analysis will
 still complete, just without the shared-database benefit for that run.
 
+The server requires every client to authenticate, since the port it listens on is reachable by
+any job on the cluster network, not just *ksrates* ones. This needs no setup on the user's side:
+the launch script generates a signing key the first time it runs (kept in ``paralog_ks_sqld_keys``
+next to the database, untouched on later restarts) and writes the matching access token as the
+address file's second line, right below the ``host:port`` line. Every *ksrates* client reads both
+lines from the same file it already needed for the server's address, so there is no separate
+token to configure or keep track of.
+
 Guidelines to set the maximum number of outgroups per rate-adjustment
 ---------------------------------------------------------------------
 

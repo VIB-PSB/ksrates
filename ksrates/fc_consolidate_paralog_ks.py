@@ -42,7 +42,9 @@ def _connect(db_path):
 	docs say doesn't work reliably across hosts).
 
 	:param db_path: path to a small text file, written once at startup by the sqld server job,
-	                containing the server's own address as "host:port"
+	                containing the server's own address as "host:port" on the first line and,
+	                if the server was started with JWT auth enabled, the shared auth token on
+	                the second line
 	:return: a libsql_client sync client connected to the sqld server
 	:raises: any error reading/parsing the address file, or (on the first query issued against
 	         the returned client, since the connection itself is opened lazily) any error
@@ -51,14 +53,19 @@ def _connect(db_path):
 	         requires no changes on the caller side.
 	"""
 	with open(db_path, "r") as f:
-		address = f.read().strip()
+		lines = f.read().splitlines()
+	address = lines[0].strip() if lines else ""
 	if not address or ":" not in address:
 		raise ValueError(f"Malformed sqld server address file [{db_path}]: {address!r}")
+	# Second line, if present, is the shared auth token written by the server job (see
+	# run_paralog_ks_server.sbatch); its absence just means the server was started without
+	# auth, so no token is sent.
+	token = lines[1].strip() if len(lines) > 1 and lines[1].strip() else None
 	# ws:// (not http://) since http:// explicitly can't support transactions; note that
 	# libsql-client is an archived (frozen, unmaintained) package as of writing, but its
 	# execute()/close() surface is small, stable, and verified to work against a real sqld
 	# instance for our usage pattern.
-	return libsql_client.create_client_sync(f"ws://{address}")
+	return libsql_client.create_client_sync(f"ws://{address}", auth_token=token)
 
 
 def initialize_paralog_db(db_path):
