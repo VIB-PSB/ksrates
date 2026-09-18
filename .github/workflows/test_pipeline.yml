@@ -50,8 +50,15 @@ jobs:
         # so the "reachable by every job on a shared cluster network" risk that JWT auth exists
         # for doesn't apply. fc_consolidate_paralog_ks.py already treats a missing second
         # (token) line in the address file as "no auth needed".
+        #
+        # The database directory is bind-mounted under test/ (rather than left inside the
+        # container's own writable layer) purely so it rides along with the "Test output
+        # files" artifact upload below, which already captures the whole test/ directory.
         run: |
-          docker run -d --network host --name sqld_ci ghcr.io/tursodatabase/libsql-server:latest
+          mkdir -p test/paralog_ks_sqld_data
+          docker run -d --network host --name sqld_ci \
+            -v "$PWD/test/paralog_ks_sqld_data:/var/lib/sqld" \
+            ghcr.io/tursodatabase/libsql-server:latest
           for i in $(seq 1 30); do
             curl -sf http://localhost:8080/health && break
             sleep 1
