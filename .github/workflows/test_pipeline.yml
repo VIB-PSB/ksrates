@@ -55,9 +55,9 @@ jobs:
         # container's own writable layer) purely so it rides along with the "Test output
         # files" artifact upload below, which already captures the whole test/ directory.
         run: |
-          mkdir -p test/paralog_ks_sqld_data
+          mkdir -p test/paralog_ks_database
           docker run -d --network host --name sqld_ci \
-            -v "$PWD/test/paralog_ks_sqld_data:/var/lib/sqld" \
+            -v "$PWD/test/paralog_ks_database:/var/lib/sqld" \
             ghcr.io/tursodatabase/libsql-server:latest
           for i in $(seq 1 30); do
             curl -sf http://localhost:8080/health && break
@@ -71,6 +71,16 @@ jobs:
         run: |
           cd test
           NXF_VER=24.10.5 nextflow run ../main.nf --test -profile docker --config config_files/config_elaeis.txt --expert config_files/config_expert.txt -with-docker ksrates
+
+      - name: Export human-readable paralog Ks database dump
+        # Runs before the sqld server is stopped, and even if the pipeline step above failed
+        # (still useful for debugging a partial run). Reuses the same "ksrates" image already
+        # built above; the "ksrates" command is on PATH there as a proper console script
+        # (setup.py entry_points), same as end users get from a real install.
+        if: ${{ always() }}
+        run: |
+          docker run --rm -v "$PWD:$PWD" -w "$PWD" ksrates \
+            ksrates inspect-paralog-ks-db test/config_files/paralog_ks_server_address.txt
 
       - name: Stop sqld server
         if: ${{ always() }}
