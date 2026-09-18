@@ -219,7 +219,14 @@ def read_anchor_iadhore_files(db_path, latin_name):
 	row = result.rows[0] if result.rows else None
 	if row is None:
 		return {key: None for key in _IADHORE_FILES}
-	return dict(zip(_IADHORE_FILES, row))
+	# Decompress each i-ADHoRe file's text
+	decompressed = {}
+	for key, blob in zip(_IADHORE_FILES, row):
+		if blob is not None:
+			decompressed[key] = zlib.decompress(blob).decode('utf-8')
+		else:
+			decompressed[key] = None
+	return decompressed
 
 
 def write_anchor_iadhore_files(latin_name, iadhore_dict, db_path):
@@ -227,6 +234,7 @@ def write_anchor_iadhore_files(latin_name, iadhore_dict, db_path):
 	Write the i-ADHoRe output file contents (raw text) for one species to the database. Like
 	write_to_paralog_db, only the keys present (non-None) in iadhore_dict are overwritten; keys
 	not present are left untouched (so a partial dict never wipes out previously stored files).
+	Text is compressed with zlib before storage to avoid exceeding parameter size limits.
 
 	:param latin_name: latin name of species of interest
 	:param iadhore_dict: dict with any of the keys 'anchorpoints', 'multiplicons', 'segments',
@@ -243,12 +251,21 @@ def write_anchor_iadhore_files(latin_name, iadhore_dict, db_path):
 	placeholders = ', '.join(['?'] * len(columns))
 	set_clause = ", ".join(f"{col}=COALESCE(excluded.{col}, {_TABLE}.{col})" for col in columns)
 
+	# Compress each i-ADHoRe file's text before storage
+	compressed_values = []
+	for key in _IADHORE_FILES:
+		val = values[key]
+		if val is not None:
+			compressed_values.append(zlib.compress(val.encode('utf-8')))
+		else:
+			compressed_values.append(None)
+
 	client = _connect(db_path)
 	client.execute(f"""
 		INSERT INTO {_TABLE} (latin_name, {', '.join(columns)})
 		VALUES (?, {placeholders})
 		ON CONFLICT(latin_name) DO UPDATE SET {set_clause}
-	""", (latin_name, *[values[key] for key in _IADHORE_FILES]))
+	""", (latin_name, *compressed_values))
 	client.close()
 	return True
 
