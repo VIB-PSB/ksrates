@@ -1,9 +1,10 @@
 import os
+import io
 import sys
 import copy
 import logging
 from numpy import array
-from pandas import read_csv
+from pandas import read_csv, DataFrame
 from statistics import median
 from scipy import stats
 import ksrates.fc_cluster_anchors as fcCluster
@@ -11,6 +12,7 @@ import ksrates.fc_configfile as fcConf
 import ksrates.fc_plotting as fcPlot
 import ksrates.fc_check_input as fcCheck
 import ksrates.fc_extract_ks_list as fc_extract_ks_list
+import ksrates.fc_consolidate_paralog_ks as fc_consolidate_paralog_ks
 from ksrates.utils import init_logging
 from ksrates.fc_cluster_anchors import subfolder
 from ksrates.fc_rrt_correction import _ADJUSTMENT_TABLE, interpretation_adjusted_plot
@@ -61,40 +63,130 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
             correction_table = read_csv(f, sep="\t")
             correction_table_available = True
 
-    default_path_anchorpoints_txt = os.path.join("paralog_distributions", f"wgd_{species}", f"{species}_i-adhore", "anchorpoints.txt")
-    path_anchorpoints_txt = fcCheck.get_argument_path(path_anchorpoints_txt, default_path_anchorpoints_txt, "anchorpoints.txt file")
-    if path_anchorpoints_txt == "":
-        logging.error(f"anchorpoints.txt file not found at default position [{default_path_anchorpoints_txt}].")
+    use_paralog_ks_database = config.use_paralog_ks_database() # Whether to use the collective paralog Ks database (default: no)
+    ks_list_paralog_db_path = config.get_paralog_ks_database() # SQLite database consolidating paralog Ks data across species
 
-    default_path_multiplicons_txt = os.path.join("paralog_distributions", f"wgd_{species}", f"{species}_i-adhore", "multiplicons.txt")
-    path_multiplicons_txt = fcCheck.get_argument_path(path_multiplicons_txt, default_path_multiplicons_txt, "multiplicons.txt file")
-    if path_multiplicons_txt == "":
-        logging.error(f"multiplicons.txt file not found at default position [{default_path_anchorpoints_txt}].")
+    # Get the i-ADHoRe output files (anchorpoints/multiplicons/segments/list_elements/multiplicon_pairs)
+    # as in-memory text, either from the consolidated database first (if enabled; an indexed single-row
+    # lookup that doesn't load data for any other species) or by reading them from disk. These 5 files
+    # are always generated together by the same i-ADHoRe run, so they are resolved as one bundle: either
+    # the database already has the full set for this species, or all 5 are read from disk and the whole
+    # bundle is opportunistically stored.
+    iadhore_keys = ['anchorpoints', 'multiplicons', 'segments', 'list_elements', 'multiplicon_pairs']
+    iadhore_texts = None
+    if use_paralog_ks_database:
+        try:
+            fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path)
+            db_iadhore = fc_consolidate_paralog_ks.read_anchor_iadhore_files(ks_list_paralog_db_path, latin_names[species])
+            if all(db_iadhore[key] is not None for key in iadhore_keys):
+                iadhore_texts = db_iadhore
+                logging.info(f"Using i-ADHoRe output files stored in paralog Ks database")
+            else:
+                logging.info(f"Paralog database doesn't contain the i-ADHoRe output files for [{species}]")
+                logging.info(f"Will read i-ADHoRe output files from TSV files instead")
+        except Exception as e:
+            logging.warning(f"Could not use paralog Ks database [{ks_list_paralog_db_path}]: {str(e)}. Will read i-ADHoRe output files from disk instead.")
 
-    default_path_segments_txt = os.path.join("paralog_distributions", f"wgd_{species}", f"{species}_i-adhore", "segments.txt")
-    path_segments_txt = fcCheck.get_argument_path(path_segments_txt, default_path_segments_txt, "segments.txt file")
-    if path_segments_txt == "":
-        logging.error(f"segments.txt file not found at default position [{default_path_segments_txt}].")
+    iadhore_resolution_failed = False
+    if iadhore_texts is None:
+        default_path_anchorpoints_txt = os.path.join("paralog_distributions", f"wgd_{species}", f"{species}_i-adhore", "anchorpoints.txt")
+        path_anchorpoints_txt = fcCheck.get_argument_path(path_anchorpoints_txt, default_path_anchorpoints_txt, "anchorpoints.txt file")
+        if path_anchorpoints_txt == "":
+            logging.error(f"anchorpoints.txt file not found at default position [{default_path_anchorpoints_txt}].")
+            iadhore_resolution_failed = True
 
-    default_path_multiplicon_pair_txt = os.path.join("paralog_distributions", f"wgd_{species}", f"{species}_i-adhore", "multiplicon_pairs.txt")
-    path_multiplicon_pair_txt = fcCheck.get_argument_path(path_multiplicon_pair_txt, default_path_multiplicon_pair_txt, "multiplicon_pairs.txt file")
-    if path_multiplicon_pair_txt == "":
-        logging.error(f"multiplicon_pairs.txt file not found at default position [{default_path_multiplicon_pair_txt}].")
+        default_path_multiplicons_txt = os.path.join("paralog_distributions", f"wgd_{species}", f"{species}_i-adhore", "multiplicons.txt")
+        path_multiplicons_txt = fcCheck.get_argument_path(path_multiplicons_txt, default_path_multiplicons_txt, "multiplicons.txt file")
+        if path_multiplicons_txt == "":
+            logging.error(f"multiplicons.txt file not found at default position [{default_path_multiplicons_txt}].")
+            iadhore_resolution_failed = True
 
-    default_path_list_elements_txt = os.path.join("paralog_distributions", f"wgd_{species}", f"{species}_i-adhore", "list_elements.txt")
-    path_list_elements_txt = fcCheck.get_argument_path(path_list_elements_txt, default_path_list_elements_txt, "list_elements.txt file")
-    if path_list_elements_txt == "":
-        logging.error(f"list_elements.txt file not found at default position [{default_path_list_elements_txt}].")
+        default_path_segments_txt = os.path.join("paralog_distributions", f"wgd_{species}", f"{species}_i-adhore", "segments.txt")
+        path_segments_txt = fcCheck.get_argument_path(path_segments_txt, default_path_segments_txt, "segments.txt file")
+        if path_segments_txt == "":
+            logging.error(f"segments.txt file not found at default position [{default_path_segments_txt}].")
+            iadhore_resolution_failed = True
 
-    default_path_ks_anchor_file = os.path.join("paralog_distributions", f"wgd_{species}", _OUTPUT_KS_FILE_PATTERN_ANCHORS.format(species))
-    path_ks_anchor_file = fcCheck.get_argument_path(path_ks_anchor_file, default_path_ks_anchor_file, "Anchor pair Ks TSV file")
-    if path_ks_anchor_file == "":
-        logging.error(f"Anchor pair Ks TSV file not found at default position [{default_path_ks_anchor_file}].")
+        default_path_multiplicon_pair_txt = os.path.join("paralog_distributions", f"wgd_{species}", f"{species}_i-adhore", "multiplicon_pairs.txt")
+        path_multiplicon_pair_txt = fcCheck.get_argument_path(path_multiplicon_pair_txt, default_path_multiplicon_pair_txt, "multiplicon_pairs.txt file")
+        if path_multiplicon_pair_txt == "":
+            logging.error(f"multiplicon_pairs.txt file not found at default position [{default_path_multiplicon_pair_txt}].")
+            iadhore_resolution_failed = True
 
-    if path_anchorpoints_txt == "" or path_multiplicons_txt == "" or path_segments_txt == "" or path_multiplicon_pair_txt == "" or path_list_elements_txt == "" or path_ks_anchor_file == "":
+        default_path_list_elements_txt = os.path.join("paralog_distributions", f"wgd_{species}", f"{species}_i-adhore", "list_elements.txt")
+        path_list_elements_txt = fcCheck.get_argument_path(path_list_elements_txt, default_path_list_elements_txt, "list_elements.txt file")
+        if path_list_elements_txt == "":
+            logging.error(f"list_elements.txt file not found at default position [{default_path_list_elements_txt}].")
+            iadhore_resolution_failed = True
+
+        if not iadhore_resolution_failed:
+            with open(path_anchorpoints_txt, "r") as f:
+                anchorpoints_text = f.read()
+            with open(path_multiplicons_txt, "r") as f:
+                multiplicons_text = f.read()
+            with open(path_segments_txt, "r") as f:
+                segments_text = f.read()
+            with open(path_list_elements_txt, "r") as f:
+                list_elements_text = f.read()
+            with open(path_multiplicon_pair_txt, "r") as f:
+                multiplicon_pairs_text = f.read()
+
+            iadhore_texts = {
+                'anchorpoints': anchorpoints_text,
+                'multiplicons': multiplicons_text,
+                'segments': segments_text,
+                'list_elements': list_elements_text,
+                'multiplicon_pairs': multiplicon_pairs_text,
+            }
+
+            if use_paralog_ks_database:
+                # Opportunistically populate the paralog Ks database with I-ADHoRe output files
+                try:
+                    logging.info(f"Storing i-ADHoRe output files in paralog Ks database")
+                    fc_consolidate_paralog_ks.write_anchor_iadhore_files(latin_names[species], iadhore_texts, ks_list_paralog_db_path)
+                except Exception as e:
+                    logging.warning(f"Could not populate paralog Ks database with i-ADHoRe output files: {str(e)}")
+    logging.info("")
+
+    # Get anchor pair Ks data as a DataFrame, either from the consolidated database first (if
+    # enabled; an indexed single-row lookup that doesn't load data for any other species) or by
+    # reading the wgd output TSV file. Read once here and reuse the same DataFrame everywhere below.
+    anchors_df = None
+    if use_paralog_ks_database:
+        try:
+            fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path)
+            db_data = fc_consolidate_paralog_ks.read_analysis_data(ks_list_paralog_db_path, latin_names[species], 'anchors')
+            if db_data is not None:
+                anchors_df = DataFrame(db_data)
+                logging.info(f"Using anchor pair Ks data stored in paralog Ks database")
+            else:
+                logging.info(f"Paralog database doesn't contain the anchor pair Ks data for [{species}]")
+                logging.info(f"Will read anchor pair Ks data from TSV files instead")
+        except Exception as e:
+            logging.warning(f"Could not use paralog Ks database [{ks_list_paralog_db_path}]: {str(e)}. Will read TSV file instead.")
+
+    if anchors_df is None:
+        default_path_ks_anchor_file = os.path.join("paralog_distributions", f"wgd_{species}", _OUTPUT_KS_FILE_PATTERN_ANCHORS.format(species))
+        path_ks_anchor_file = fcCheck.get_argument_path(path_ks_anchor_file, default_path_ks_anchor_file, "Anchor pair Ks TSV file")
+        if path_ks_anchor_file == "":
+            logging.error(f"Anchor pair Ks TSV file not found at default position [{default_path_ks_anchor_file}].")
+        else:
+            with open(path_ks_anchor_file, "r") as f:
+                anchors_df = read_csv(f, sep="\t")
+            if use_paralog_ks_database:
+                # Opportunistically populate the paralog Ks database with anchor pair Ks data
+                try:
+                    logging.info(f"Storing anchor pair Ks data in paralog Ks database")
+                    ks_data = fc_consolidate_paralog_ks.extract_paralog_ks_from_tsv(species, anchors_enabled=True)
+                    fc_consolidate_paralog_ks.write_to_paralog_db(latin_names[species], ks_data, ks_list_paralog_db_path)
+                except Exception as e:
+                    logging.warning(f"Could not populate paralog Ks database: {str(e)}")
+
+    if iadhore_resolution_failed or anchors_df is None:
         logging.error("Exiting")
         sys.exit(1)
-
+    logging.info("")
+    
     # Creating folder for secondary output files
     output = os.path.join(subfolder)
     if not os.path.isdir(os.path.join("rate_adjustment", species, output)):
@@ -102,21 +194,21 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
         os.makedirs(os.path.join("rate_adjustment", species, output))
 
     # Parsing I-ADHoRe output files to get information about multiplicons, multiplicon levels, segments, anchorpoints, anchor pairs and Ks values. 
-    segments_per_multip = fcCluster.parse_segments_file(path_segments_txt)
+    segments_per_multip = fcCluster.parse_segments_file(io.StringIO(iadhore_texts["segments"]))
 
-    segments_from_gene = fcCluster.parse_list_elements(path_list_elements_txt)
+    segments_from_gene = fcCluster.parse_list_elements(io.StringIO(iadhore_texts["list_elements"]))
 
-    ks_anchors = fcCluster.parse_ks_anchors_tsv_file(path_ks_anchor_file)
+    ks_anchors = fcCluster.parse_ks_anchors_from_df(anchors_df)
 
-    multipl_per_level, level_of_each_multipl, max_level, level_list, level_list_filtered = fcCluster.parse_multiplicons_file(path_multiplicons_txt)
+    multipl_per_level, level_of_each_multipl, max_level, level_list, level_list_filtered = fcCluster.parse_multiplicons_file(io.StringIO(iadhore_texts["multiplicons"]))
 
-    anchors_per_multipl, levels_of_each_anchor = fcCluster.parse_multiplicon_pairs_file(path_multiplicon_pair_txt, level_of_each_multipl)
+    anchors_per_multipl, levels_of_each_anchor = fcCluster.parse_multiplicon_pairs_file(io.StringIO(iadhore_texts["multiplicon_pairs"]), level_of_each_multipl)
 
-    anchorpoints_per_multipl, multipl_per_anchorpoint, levels_of_anchorpoints = fcCluster.parse_anchorpoints_file(path_anchorpoints_txt, level_of_each_multipl)
+    anchorpoints_per_multipl, multipl_per_anchorpoint, levels_of_anchorpoints = fcCluster.parse_anchorpoints_file(io.StringIO(iadhore_texts["anchorpoints"]), level_of_each_multipl)
 
     # Get anchor pair Ks values within the requested range (custom max value, but down to default min_ks=0.005),
     # and recalculate their associated weight
-    anchor_ks_list, anchors_weights = fc_extract_ks_list.ks_list_from_tsv(path_ks_anchor_file, max_ks_para, "anchor pairs") # Get complete anchor Ks list to be plotted in the background
+    anchor_ks_list, anchors_weights = fc_extract_ks_list.ks_list_from_df(anchors_df, max_ks_para, "anchor pairs") # Get complete anchor Ks list to be plotted in the background
 
     # -----------------------------------------------------------------------------
 
@@ -381,7 +473,7 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
         
         # Plot the original complete anchor distribution in the background
         # (First remove anchor Ks values that are smaller than min_ks_anchors)
-        anchors_list_filtered, anchors_weights_filtered = fc_extract_ks_list.ks_list_from_tsv(path_ks_anchor_file,
+        anchors_list_filtered, anchors_weights_filtered = fc_extract_ks_list.ks_list_from_df(anchors_df,
                                                           max_ks_para, "anchor pairs", min_ks=min_ks_anchors)
 
         fcPlot.plot_histogram_for_anchor_clustering(ax_corr_second, anchors_list_filtered, anchors_weights_filtered, bin_list, y_max_lim)

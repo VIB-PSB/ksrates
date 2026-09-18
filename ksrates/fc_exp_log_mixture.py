@@ -13,6 +13,7 @@ import logging
 import os
 import ksrates.fc_plotting as fcPlot
 import ksrates.fc_extract_ks_list as fc_extract_ks_list
+from wgd_ksrates.viz import filter_compute_weights
 from ksrates.fc_cluster_anchors import ALPHA_ANCHOR_CLUSTERS
 from ksrates.fc_plotting import NEGATIVE_Y_FRACTION
 from ksrates.fc_cluster_anchors import subfolder
@@ -438,14 +439,31 @@ def deconvolute_data(tsv_file, max_ks, data_type, min_ks_anchors=0.05):
   :param data_type: flag stating whether input Ks are "paralogs" or "anchor pairs"
   :return deconvoluted_data: artificial dataset that produces the same histogram shape, used to avoid having weights in EM
   """
+  with open(tsv_file, "r") as f:
+    df = read_csv(f, sep="\t")
+  return deconvolute_data_from_df(df, max_ks, data_type, min_ks_anchors=min_ks_anchors)
+
+
+def deconvolute_data_from_df(df, max_ks, data_type, min_ks_anchors=0.05):
+  """
+  Same as deconvolute_data, but takes an already-loaded DataFrame instead of reading a TSV file
+  from disk (e.g. when the data was reconstructed from the paralog Ks database rather than read
+  from a wgd output file).
+
+  :param df: DataFrame with the same columns as a wgd Ks TSV file (at minimum: Family, Node, Ks,
+             AlignmentCoverage, AlignmentIdentity, AlignmentLength)
+  :param max_ks: maximum Ks value considered for the mixture model algorithm
+  :param data_type: flag stating whether input Ks are "paralogs" or "anchor pairs"
+  :return deconvoluted_data: artificial dataset that produces the same histogram shape, used to avoid having weights in EM
+  """
   tail_length = 0.5 # tail spans for 0.5 extra Ks range
 
   if data_type == "paralogs" or data_type == "reciprocally retained":
-    ks_data, ks_weights = fc_extract_ks_list.ks_list_from_tsv(tsv_file, max_ks, data_type)
+    ks_data, ks_weights = fc_extract_ks_list.ks_list_from_df(df, max_ks, data_type)
   elif data_type == "anchor pairs":
-    ks_data, ks_weights = fc_extract_ks_list.ks_list_from_tsv(tsv_file, max_ks, data_type, min_ks=min_ks_anchors)
+    ks_data, ks_weights = fc_extract_ks_list.ks_list_from_df(df, max_ks, data_type, min_ks=min_ks_anchors)
   elif data_type == "orthologs":
-    ks_data = fc_extract_ks_list.ks_list_from_tsv(tsv_file, max_ks, data_type)
+    ks_data = fc_extract_ks_list.ks_list_from_df(df, max_ks, data_type)
     ks_weights = [1] * len(ks_data) # dummy weights all equal to 1
 
   if max_ks <= 4.5:
@@ -453,18 +471,20 @@ def deconvolute_data(tsv_file, max_ks, data_type, min_ks_anchors=0.05):
     # If we have real data on the right boundary, let's use an extra Ks as right tail
     # Real data reach only 5 Ks because after that they are not weighted anymore
     max_ks_tail = max_ks + tail_length # the max Ks reached with the tail (0.5 Ks extra than the maximum Ks)
-    with open(tsv_file, "r") as tsv_file:
-        tsv = read_csv(tsv_file, sep="\t")
-        filtered_tsv = tsv.loc[(tsv["Ks"].dtypes == float64) & (tsv["Ks"] >= max_ks) & (tsv["Ks"] <= max_ks_tail)]
-        tail_ks = filtered_tsv["Ks"].to_list()
-        tail_weights = filtered_tsv["WeightOutliersExcluded"].to_list()
-        ks_data.extend(tail_ks)
-        ks_weights.extend(tail_weights)
+    # Recompute the same default weight column normally baked into the wgd output TSV file
+    # (min_ks=0.005, max_ks=5): the tail lies beyond max_ks, so it needs weights computed
+    # without the requested max_ks cutoff applied by ks_list_from_df() above.
+    df_default_weights = filter_compute_weights(df.copy(), min_ks=0.005, max_ks=5)
+    filtered_df = df_default_weights.loc[(df_default_weights["Ks"].dtypes == float64) & (df_default_weights["Ks"] >= max_ks) & (df_default_weights["Ks"] <= max_ks_tail)]
+    tail_ks = filtered_df["Ks"].to_list()
+    tail_weights = filtered_df["WeightOutliersExcluded"].to_list()
+    ks_data.extend(tail_ks)
+    ks_weights.extend(tail_weights)
     bin_list_for_deconvoluted_data = arange(0, max_ks_tail + 0.01, 0.01) # must have 0.01 bin width
   else:
     # Ks dataset remains up to max_ks_para without adding tail
     bin_list_for_deconvoluted_data = arange(0, max_ks + 0.01, 0.01) # must have 0.01 bin width
-  
+
   hist_data = histogram(ks_data, bins=bin_list_for_deconvoluted_data, weights=ks_weights)
   deconvoluted_data = array([])
   for i in range(1, len(hist_data[0]) + 1):
@@ -475,16 +495,16 @@ def deconvolute_data(tsv_file, max_ks, data_type, min_ks_anchors=0.05):
   
   if max_ks > 4.5:
     # If instead there aren't enough real data to extend for the Ks tail, then add artificial tail
-    deconvoluted_data = add_right_tail(deconvoluted_data, hist_data, max_ks, tail_length, tsv_file)
+    deconvoluted_data = add_right_tail(deconvoluted_data, hist_data, max_ks, tail_length)
   return deconvoluted_data
 
 
-def add_right_tail(deconvoluted_data, hist_data, max_ks, tail_length, tsv_file):
+def add_right_tail(deconvoluted_data, hist_data, max_ks, tail_length):
   """
   Adds extra right tail data for a range of 1 Ks to avoid the problem of
   fitting the EM on a truncated distribution (truncated at the maximum accepted Ks,
   default 5). The data are added so that they form 100 new histogram bins
-  of 0.01 width and of the same height/count as the mean count of the last 
+  of 0.01 width and of the same height/count as the mean count of the last
   50 bins of the distribution (corresponding to a range of 0.5 Ks).
   This way, the buffer gaussian can cover the higher Ks without
   being biased by the truncation.
@@ -493,7 +513,6 @@ def add_right_tail(deconvoluted_data, hist_data, max_ks, tail_length, tsv_file):
   :param hist_data: count data and bins of the real weighted Ks distribution
   :param max_ks: maximum accepted Ks taken from TSV file (default 5)
   :param tail_length: how much does the tail span beyond the maximum Ks (default 0.5 Ks)
-  :param tsv_file: wgd output file containing either paranome or anchor pairs Ks values (suffix formats: ".ks.tsv", "ks_anchors.tsv")
   :return deconvoluted_data: same artificial set with the right tail added
   """
   max_ks_tail = max_ks + tail_length # the max Ks reached with the tail (0.5 Ks extra than the maximum Ks)
@@ -512,7 +531,23 @@ def logtransformation(tsv_file, max_ks):
   :return ks_data_log: log-transformed paranome Ks values
   :return ks_weights_clean: weights associated to the log-transformed paranome Ks values
   """
-  ks_data, ks_weights = fc_extract_ks_list.ks_list_from_tsv(tsv_file, max_ks, "paralogs")
+  with open(tsv_file, "r") as f:
+    df = read_csv(f, sep="\t")
+  return logtransformation_from_df(df, max_ks)
+
+
+def logtransformation_from_df(df, max_ks):
+  """
+  Same as logtransformation, but takes an already-loaded DataFrame instead of reading a TSV file
+  from disk.
+
+  :param df: DataFrame with the same columns as a wgd Ks TSV file (at minimum: Family, Node, Ks,
+             AlignmentCoverage, AlignmentIdentity, AlignmentLength)
+  :param max_ks: maximum Ks value to be accepted for the analysis
+  :return ks_data_log: log-transformed paranome Ks values
+  :return ks_weights_clean: weights associated to the log-transformed paranome Ks values
+  """
+  ks_data, ks_weights = fc_extract_ks_list.ks_list_from_df(df, max_ks, "paralogs")
   ks_data_clean, ks_weights_clean = remove_ks_zeros(ks_data, ks_weights)
   ks_data_log = log(ks_data_clean)
   return ks_data_log, ks_weights_clean

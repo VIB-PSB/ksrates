@@ -7,6 +7,7 @@ from pandas import DataFrame
 import ksrates.fc_configfile as fcConf
 import ksrates.fc_check_input as fcCheck
 import ksrates.fc_manipulate_trees as fcTree
+import ksrates.fc_consolidate_paralog_ks as fc_consolidate_paralog_ks
 from ksrates.utils import init_logging
 from ksrates.fc_rec_ret_orthomcl import check_recret_name_compatibility
 
@@ -27,6 +28,8 @@ def setup_correction(config_file, expert_config_file, nextflow_flag):
     colinearity = config.get_colinearity()
     reciprocal_retention = config.get_reciprocal_retention()
     divergence_colors = config.get_color_list()
+    use_paralog_ks_db = config.use_paralog_ks_database()
+    paralog_ks_db_path = config.get_paralog_ks_database()
 
     if not paranome and not colinearity and not reciprocal_retention:
         logging.error('At least "paranome", "collinearity" or "reciprocal_retention" in the configuration file needs to be set to "yes".')
@@ -71,7 +74,14 @@ def setup_correction(config_file, expert_config_file, nextflow_flag):
     # Check species informal names' compatibility with reciprocal retention pipeline
     if check_recret_name_compatibility(tree.get_leaf_names(), reciprocal_retention):
         trigger_exit = True
-    
+
+    # Fail fast if the paralog Ks database is enabled but its path is invalid
+    if use_paralog_ks_db:
+        # Initialize the dabatase
+        paralog_db_ready = fc_consolidate_paralog_ks.initialize_paralog_db(paralog_ks_db_path)
+        if not paralog_db_ready:
+            trigger_exit = True
+
     if trigger_exit:
         logging.error("Please adjust the configuration file and rerun the analysis. Exiting.")
         sys.exit(1)
