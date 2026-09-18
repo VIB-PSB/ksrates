@@ -93,6 +93,7 @@ def exp_log_mixture(config_file, expert_config_file, paralog_tsv_file, correctio
     # Opportunistically populate the database with this species' paranome data, if enabled
     if use_paralog_ks_database:
       try:
+        logging.info(f"Storing paranome Ks data in paralog Ks database")
         ks_data = fc_consolidate_paralog_ks.extract_paralog_ks_from_tsv(species, paranome_enabled=True)
         fc_consolidate_paralog_ks.write_to_paralog_db(latinSpecies, ks_data, ks_list_paralog_db_path)
       except Exception as e:

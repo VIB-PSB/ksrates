@@ -254,6 +254,7 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
         ax_corr_include_rr.append(ax_corr_para_col_rr)
         ax_uncorr_list.append(ax_uncorr_para_col_rr)
         ax_corr_list.append(ax_corr_para_col_rr)
+    logging.info("")
 
     # PLOTTING THE BACKGROUND PARALOG DISTRIBUTION(S)
     if paranome_analysis:
@@ -272,6 +273,7 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
             # Opportunistically populate the database with this species' paranome data, if enabled
             if use_paralog_ks_database:
                 try:
+                    logging.info(f"Storing paranome Ks data in paralog Ks database")
                     ks_data = fc_consolidate_paralog_ks.extract_paralog_ks_from_tsv(species, paranome_enabled=True)
                     fc_consolidate_paralog_ks.write_to_paralog_db(latin_name, ks_data, ks_list_paralog_db_path)
                 except Exception as e:
@@ -300,6 +302,7 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
             # Opportunistically populate the database with this species' anchors data, if enabled
             if use_paralog_ks_database:
                 try:
+                    logging.info(f"Storing anchor pair Ks data in paralog Ks database")
                     ks_data = fc_consolidate_paralog_ks.extract_paralog_ks_from_tsv(species, anchors_enabled=True)
                     fc_consolidate_paralog_ks.write_to_paralog_db(latin_name, ks_data, ks_list_paralog_db_path)
                 except Exception as e:
@@ -332,6 +335,7 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
             # Opportunistically populate the database with this species' reciprocally retained data, if enabled
             if use_paralog_ks_database:
                 try:
+                    logging.info(f"Storing reciprocally retained Ks data in paralog Ks database")
                     ks_data = fc_consolidate_paralog_ks.extract_paralog_ks_from_tsv(
                         species, reciprocal_retention_enabled=True, num_gfs=num_gfs, rank_type=rank_type, bottom=bottom
                     )
