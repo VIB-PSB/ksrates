@@ -20,7 +20,7 @@ peak_database_path = ortholog_peak_db.tsv
 ks_list_database_path = ortholog_ks_list_db.tsv
 # filenames/paths of the ortholog data databases
 
-ks_list_paralog_database_path = config_files/paralog_ks_server_address.txt
+ks_list_paralog_database_path = database/paralog_ks_server_address.txt
 # filenames/paths of the paralog data databases
 
 

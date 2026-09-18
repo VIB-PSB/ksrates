@@ -55,17 +55,17 @@ jobs:
         # container's own writable layer) purely so it rides along with the "Test output
         # files" artifact upload below, which already captures the whole test/ directory.
         run: |
-          mkdir -p test/paralog_ks_database
+          mkdir -p test/database
           docker run -d --network host --name sqld_ci \
-            -v "$PWD/test/paralog_ks_database:/var/lib/sqld" \
+            -v "$PWD/test/database:/var/lib/sqld" \
             ghcr.io/tursodatabase/libsql-server:latest
           for i in $(seq 1 30); do
             curl -sf http://localhost:8080/health && break
             sleep 1
           done
           BRIDGE_GATEWAY=$(docker network inspect bridge --format '{{ (index .IPAM.Config 0).Gateway }}')
-          echo "${BRIDGE_GATEWAY}:8080" > test/config_files/paralog_ks_server_address.txt
-          cat test/config_files/paralog_ks_server_address.txt
+          echo "${BRIDGE_GATEWAY}:8080" > test/database/paralog_ks_server_address.txt
+          cat test/database/paralog_ks_server_address.txt
 
       - name: Running ksrates Nextflow pipeline
         run: |
@@ -80,7 +80,7 @@ jobs:
         if: ${{ always() }}
         run: |
           docker run --rm -v "$PWD:$PWD" -w "$PWD" ksrates \
-            ksrates inspect-paralog-ks-db test/config_files/paralog_ks_server_address.txt
+            ksrates inspect-paralog-ks-db test/database/paralog_ks_server_address.txt
 
       - name: Stop sqld server
         if: ${{ always() }}
