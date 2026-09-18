@@ -99,7 +99,14 @@ def initialize_paralog_db(db_path):
 		existing_columns = {row[0] for row in result.rows}
 		for column, col_type in _ALL_COLUMNS.items():
 			if column not in existing_columns:
-				client.execute(f"ALTER TABLE {_TABLE} ADD COLUMN {column} {col_type}")
+				try:
+					client.execute(f"ALTER TABLE {_TABLE} ADD COLUMN {column} {col_type}")
+				except Exception as e:
+					# Ignore "duplicate column" errors from concurrent ALTER TABLE calls:
+					# another process may have added this column between our pragma_table_info
+					# query and this ALTER statement. Any other error is real and should propagate.
+					if "duplicate column" not in str(e).lower():
+						raise
 		# No commit needed/possible here: outside of an explicit transaction, the sqld client
 		# has no .commit() method, since each execute() above is already committed by the
 		# server as soon as it returns.
