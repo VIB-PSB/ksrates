@@ -1,5 +1,6 @@
 import os
 import pickle
+import zlib
 import logging
 import libsql_client
 from pandas import read_csv
@@ -185,7 +186,7 @@ def read_analysis_data(db_path, latin_name, analysis_type):
 	row = result.rows[0] if result.rows else None
 	if row is None or row[0] is None:
 		return None
-	return pickle.loads(row[0])
+	return pickle.loads(zlib.decompress(row[0]))
 
 
 def read_anchor_iadhore_files(db_path, latin_name):
@@ -376,9 +377,9 @@ def write_to_paralog_db(latin_name, ks_data_dict, db_path):
 		return False
 
 	logging.info("  - Writing consolidated Ks lists to database")
-	blob_paranome = pickle.dumps(ks_paranome) if ks_paranome is not None else None
-	blob_anchors = pickle.dumps(ks_anchors) if ks_anchors is not None else None
-	blob_recret = pickle.dumps(ks_recret) if ks_recret is not None else None
+	blob_paranome = zlib.compress(pickle.dumps(ks_paranome)) if ks_paranome is not None else None
+	blob_anchors = zlib.compress(pickle.dumps(ks_anchors)) if ks_anchors is not None else None
+	blob_recret = zlib.compress(pickle.dumps(ks_recret)) if ks_recret is not None else None
 
 	client = _connect(db_path)
 	client.execute(f"""

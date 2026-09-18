@@ -129,4 +129,10 @@ echo "Data directory: $(realpath "$SQLD_DATA_DIR")"
 echo "Address file: $(realpath "$ADDRESS_FILE")"
 echo "Starting sqld..."
 
-exec "$SQLD_BIN" --http-listen-addr=0.0.0.0:$PORT --db-path="$SQLD_DATA_DIR" --auth-jwt-key-file="$PUBLIC_KEY"
+# --max-response-size / --max-total-response-size default to 10MB/32MB, well below what a
+# single species' pickled paranome Ks data can be for a large genome (real 1kp-scale species
+# can have tens of MB of paralog data) - raised generously here with headroom above anything
+# seen so far. If a species still exceeds these, the caller already treats every DB read/write
+# as best-effort with a TSV fallback, so it degrades gracefully rather than failing the run.
+exec "$SQLD_BIN" --http-listen-addr=0.0.0.0:$PORT --db-path="$SQLD_DATA_DIR" --auth-jwt-key-file="$PUBLIC_KEY" \
+    --max-response-size=200MB --max-total-response-size=500MB

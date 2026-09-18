@@ -1,6 +1,7 @@
 import csv
 import os
 import pickle
+import zlib
 from datetime import datetime
 import ksrates.fc_consolidate_paralog_ks as fc_consolidate_paralog_ks
 
@@ -57,7 +58,7 @@ def export_full_tsv(db_path, species_filter=None):
 			for analysis_type, blob in [("paranome", paranome_blob), ("anchors", anchors_blob), ("reciprocally_retained", recret_blob)]:
 				if blob is None:
 					continue
-				data = pickle.loads(blob)
+				data = pickle.loads(zlib.decompress(blob))
 				n = len(data.get('Ks', []))
 				for i in range(n):
 					writer.writerow([latin_name, analysis_type] + [data[col][i] for col in _PAIR_COLUMNS])
