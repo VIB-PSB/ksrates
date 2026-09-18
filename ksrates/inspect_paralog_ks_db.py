@@ -38,10 +38,10 @@ def export_full_tsv(db_path, species_filter=None):
 	output_tsv_path = os.path.join(os.path.dirname(db_path), f"{db_base}_{timestamp}.tsv")
 	iadhore_dir = os.path.join(os.path.dirname(db_path), f"{db_base}_{timestamp}_iadhore_files")
 
+	# Fetch species names first to avoid fetching all large BLOBs at once (exceeds websocket message limit).
 	client = fc_consolidate_paralog_ks._connect(db_path)
-	columns = ['latin_name', 'paranome', 'anchors', 'reciprocally_retained'] + _IADHORE_COLUMNS
-	result = client.execute(f"SELECT {', '.join(columns)} FROM {_TABLE} ORDER BY latin_name")
-	rows = result.rows
+	result = client.execute(f"SELECT latin_name FROM {_TABLE} ORDER BY latin_name")
+	species_list = [row[0] for row in result.rows]
 	client.close()
 
 	n_pairs = 0
@@ -51,20 +51,27 @@ def export_full_tsv(db_path, species_filter=None):
 		writer = csv.writer(outfile, delimiter="\t")
 		writer.writerow(['latin_name', 'analysis_type'] + _PAIR_COLUMNS)
 
-		for latin_name, paranome_blob, anchors_blob, recret_blob, *iadhore_texts in rows:
+		# Fetch each species' data one at a time using read functions (may handle large BLOBs better)
+		for latin_name in species_list:
 			if species_filter and species_filter.lower() not in latin_name.lower():
 				continue
+
 			n_species += 1
-			for analysis_type, blob in [("paranome", paranome_blob), ("anchors", anchors_blob), ("reciprocally_retained", recret_blob)]:
-				if blob is None:
+
+			# Fetch paranome, anchors, recret separately to avoid oversized messages
+			for analysis_key, display_name in [('paranome', 'paranome'), ('anchors', 'anchors'), ('recret', 'reciprocally_retained')]:
+				data = fc_consolidate_paralog_ks.read_analysis_data(db_path, latin_name, analysis_key)
+				if data is None:
 					continue
-				data = pickle.loads(zlib.decompress(blob))
 				n = len(data.get('Ks', []))
 				for i in range(n):
-					writer.writerow([latin_name, analysis_type] + [data[col][i] for col in _PAIR_COLUMNS])
+					writer.writerow([latin_name, display_name] + [data[col][i] for col in _PAIR_COLUMNS])
 					n_pairs += 1
 
-			for file_name, text in zip(_IADHORE_FILES, iadhore_texts):
+			# Fetch i-ADHoRe files separately
+			iadhore_texts = fc_consolidate_paralog_ks.read_anchor_iadhore_files(db_path, latin_name)
+			for file_name in _IADHORE_FILES:
+				text = iadhore_texts.get(file_name)
 				if text is None:
 					continue
 				species_dir = os.path.join(iadhore_dir, latin_name.replace(" ", "_"))
