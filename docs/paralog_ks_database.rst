@@ -35,6 +35,31 @@ immediately available (paranome, anchor pairs, reciprocally retained, and i-ADHo
 to every other dataset that later needs data for that same species, without recomputing it.
 
 
+Skipping already-computed pipelines
+====================================
+
+Whenever ``use_paralog_ks_database`` is active, ``paralogs-ks`` checks the shared database for
+each analysis type (paranome, anchor pairs, reciprocally retained) *before* launching the
+corresponding wgd pipeline step for the current species. If a type is already stored, that step
+is skipped entirely and the log reports e.g. ``Paranome Ks data already in database, skipping wgd
+whole-paranome Ks pipeline`` instead of re-running it. This is what actually avoids duplicate
+computation across datasets sharing the same species: without it, every dataset would still pay
+for its own full paranome/colinearity/reciprocal-retention run even though the result ends up
+identical to one another sharing species already stored by the database.
+
+One dependency is preserved even when paranome is skipped: the colinearity pipeline needs the
+local gene-family (mcl) files that only the paranome step produces, and those local files are
+never themselves stored in the database (only the final consolidated *K*:sub:`S` columns are). So
+if colinearity is requested and anchor pairs are *not* yet in the database, the paranome pipeline
+still runs regardless of whether paranome data is already stored - this both regenerates the
+local files colinearity needs, and (as a side effect) makes sure the paranome data ultimately
+written to the database always comes from the same underlying computation as the anchor pairs
+written alongside it, rather than mixing results from two unrelated runs.
+
+This skip logic only ever activates when ``use_paralog_ks_database`` is enabled; users relying
+solely on the local TSV output files see no change in behavior.
+
+
 How it works
 ============
 
