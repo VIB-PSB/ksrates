@@ -37,11 +37,37 @@ jobs:
           sudo apt-get install wget openjdk-17-jdk
           sudo wget -qO- https://get.nextflow.io | bash
           sudo mv nextflow /usr/bin
-            
+
+      - name: Start sqld server for the paralog Ks database test
+        # Runs with --network host (rather than GH Actions' "services:" feature) so that the
+        # containers Nextflow's docker executor spawns for each ksrates step - which sit on
+        # Docker's default bridge network, per test/nextflow.config's docker.runOptions, not
+        # whatever network "services:" would use - can still reach it, via the bridge gateway
+        # IP that a host-networked process is reachable at from any bridge-networked container.
+        #
+        # No auth is configured here, unlike the real cluster deployment's JWT setup: this
+        # server only lives for this one ephemeral CI job and isn't reachable by anyone else,
+        # so the "reachable by every job on a shared cluster network" risk that JWT auth exists
+        # for doesn't apply. fc_consolidate_paralog_ks.py already treats a missing second
+        # (token) line in the address file as "no auth needed".
+        run: |
+          docker run -d --network host --name sqld_ci ghcr.io/tursodatabase/libsql-server:latest
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8080/health && break
+            sleep 1
+          done
+          BRIDGE_GATEWAY=$(docker network inspect bridge --format '{{ (index .IPAM.Config 0).Gateway }}')
+          echo "${BRIDGE_GATEWAY}:8080" > test/config_files/paralog_ks_server_address.txt
+          cat test/config_files/paralog_ks_server_address.txt
+
       - name: Running ksrates Nextflow pipeline
         run: |
           cd test
           NXF_VER=24.10.5 nextflow run ../main.nf --test -profile docker --config config_files/config_elaeis.txt --expert config_files/config_expert.txt -with-docker ksrates
+
+      - name: Stop sqld server
+        if: ${{ always() }}
+        run: docker stop sqld_ci
 
       - name: Visualize output files
         if: ${{ always() }}
