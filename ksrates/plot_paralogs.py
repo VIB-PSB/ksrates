@@ -372,15 +372,15 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
         if colinearity_analysis and reciprocal_retention_analysis:
             fcPlot.set_mixed_plot_height(ax_uncorr_col_rr, y_lim, hist_anchors, hist_rec_ret)
             fcPlot.set_mixed_plot_height(ax_corr_col_rr, y_lim, hist_anchors, hist_rec_ret)
-
+    logging.info("")
 
     # PLOTTING THE ORTHOLOG DIVERGENCE LINES on the paralog distribution
     if correction_table_available:
         logging.info("Plotting ortholog divergence lines in the mixed plot")
         for ax_uncorr, ax_corr in zip(ax_uncorr_list, ax_corr_list):
             fcPlot.plot_divergences(correction_table, peak_stats, consensus_peak_for_multiple_outgroups, ax_uncorr, ax_corr, color_list, plot_correction_arrows)
-
     logging.info("")
+
     logging.info(f"Saving PDF figures of mixed plots")
     if paranome_analysis:
         fcPlot.save_mixed_plot(fig_corr_para, fig_uncorr_para, ax_corr_para, ax_uncorr_para, species, correction_table_available, paranome=paranome_analysis,
