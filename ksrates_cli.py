@@ -419,6 +419,38 @@ def orthologs_ks_cleanup(orthologs_dir_path, dry_run):
                 print('Please choose between "y" or "n". Cancelled.')
 
 
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Launches the shared paralog Ks database server (sqld).")
+@click.option('--location', type=click.Path(file_okay=False), required=True, help="Central directory to hold the server's data/keys directories and address file")
+@click.option('--port', type=int, default=8080, help="Port sqld listens on (default: 8080)")
+@click.option('--address-filename', default="paralog_ks_server_address.txt", help="Filename (not path) of the address file written under LOCATION (default: paralog_ks_server_address.txt)")
+def launch_paralog_ks_server(location, port, address_filename):
+	"""
+	Launches the sqld server that hosts the shared paralog Ks database, in the foreground. This
+	command never returns on success (it execs into sqld) - submit it once as a long-running job
+	(see setup_database_server.nf) and leave it running indefinitely; every ksrates analysis then becomes
+	a network client of it instead of opening a local database file directly.
+	Do not launch this from within a per-analysis pipeline run: the server's lifetime must outlive
+	any single analysis, and must not be duplicated by concurrent analyses sharing the same database.
+
+	Writes <LOCATION>/<ADDRESS_FILENAME>: point every dataset's ks_list_paralog_database_path
+	configuration field at this file (see the "Paralog Ks database server" section of the
+	documentation).
+
+	\b
+	Example:
+	  ksrates launch-paralog-ks-server --location /path/to/central/dir
+
+	\b
+	Example (custom address filename):
+	  ksrates launch-paralog-ks-server --location /path/to/central/dir --address-filename server1.txt
+	"""
+	from ksrates.launch_paralog_ks_server import launch_server
+
+	click.format_filename(location)
+	print(f"Launching paralog Ks database server in [{location}]...")
+	launch_server(location, port=port, address_filename=address_filename)
+
+
 @cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Populate paralog Ks database from existing data.")
 @click.argument('config_dir', type=click.Path(exists=True))
 @click.argument('paralog_distributions_dir', type=click.Path(exists=True))
