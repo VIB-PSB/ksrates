@@ -94,6 +94,28 @@ location from every dataset directory, which generally isn't the case once datas
 shared - the absolute path is what makes the setup independent of each dataset's own location.
 
 
+Inspecting and managing the database content
+==============================================
+
+The command ``inspect-paralog-ks-db ADDRESS_FILE`` dumps the full database content to a flat TSV
+(gene pairs) plus per-species i-ADHoRe files, for inspection outside of *ksrates* (Excel, pandas...).
+Two options change this behavior:
+
+* ``--list``: instead exports a TSV with one row per species and a True/False column per analysis
+  type (paranome, anchors, reciprocally retained, i-ADHoRe files) - a quick overview of what's in the
+  database.
+* ``--delete``: deletes every species matching the ``SPECIES_FILTER`` argument, after
+  listing the matches and asking for confirmation (e.g. to discard data written incompletely or now
+  considered outdated)
+
+``SPECIES_FILTER`` matches latin names as a case-insensitive substring; quote it if it includes
+spaces (latin names are multi-word, e.g. ``"Elaeis guineensis"``), otherwise the shell splits it
+into separate arguments::
+
+    ksrates inspect-paralog-ks-db paralog_ks_server_address.txt --list
+    ksrates inspect-paralog-ks-db paralog_ks_server_address.txt "Elaeis guineensis" --delete
+
+
 Restarting the shared server
 =============================
 
