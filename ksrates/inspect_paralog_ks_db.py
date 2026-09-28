@@ -33,6 +33,12 @@ def export_full_tsv(db_path, species_filter=None):
 	:param species_filter: if given, only export species whose latin name contains this substring
 	                        (case-insensitive)
 	"""
+	# Ensures the table exists (e.g. a fresh server that no paralogs-ks run has written to yet)
+	# before querying it, rather than letting the SELECT below fail with "no such table".
+	if not fc_consolidate_paralog_ks.initialize_paralog_db(db_path):
+		print(f"Could not use paralog Ks database [{db_path}].")
+		return
+
 	db_base = os.path.splitext(os.path.basename(db_path))[0]
 	timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 	output_tsv_path = os.path.join(os.path.dirname(db_path), f"{db_base}_{timestamp}.tsv")
@@ -95,6 +101,10 @@ def delete_species(db_path, species_filter):
 	:param species_filter: substring to match against latin names (case-insensitive); required, to
 	                        avoid accidentally deleting the entire database's content
 	"""
+	if not fc_consolidate_paralog_ks.initialize_paralog_db(db_path):
+		print(f"Could not use paralog Ks database [{db_path}].")
+		return
+
 	client = fc_consolidate_paralog_ks._connect(db_path)
 	result = client.execute(f"SELECT latin_name FROM {_TABLE} ORDER BY latin_name")
 	all_species = [row[0] for row in result.rows]
@@ -130,6 +140,10 @@ def list_species(db_path, species_filter=None):
 	:param species_filter: if given, only list species whose latin name contains this substring
 	                        (case-insensitive)
 	"""
+	if not fc_consolidate_paralog_ks.initialize_paralog_db(db_path):
+		print(f"Could not use paralog Ks database [{db_path}].")
+		return
+
 	db_base = os.path.splitext(os.path.basename(db_path))[0]
 	timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 	output_tsv_path = os.path.join(os.path.dirname(db_path), f"{db_base}_species_list_{timestamp}.tsv")
