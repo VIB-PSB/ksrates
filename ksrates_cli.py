@@ -12,7 +12,7 @@ def cli():
     """
 
 
-@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Generates configuration file.")
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Generate configuration file.")
 @click.argument('filename')
 def generate_config(filename):
     """
@@ -28,7 +28,7 @@ def generate_config(filename):
     generate_configfile(filename)
     
 
-@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Initializes rate-adjustment.")
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Initialize rate-adjustment.")
 @click.argument('config_file', type=click.Path(exists=True))
 @click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option("-n", "--nextflow", is_flag=True, help="Flag for Nextflow pipeline (Default: False)")
@@ -51,7 +51,7 @@ def init(config_file, expert, nextflow):
     setup_correction(config_file, expert, nextflow)
 
 
-@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Performs paralog Ks estimation.")
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Perform paralog Ks estimation.")
 @click.argument('config_file', type=click.Path(exists=True))
 @click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option("--n-threads", type=int, default=1, help="Number of threads (default: 1)")
@@ -85,7 +85,7 @@ def paralogs_ks(config_file, expert, n_threads, custom_recret_gfs, parsed_homolo
     wgd_paralogs(config_file, expert, n_threads, custom_recret_gfs, parsed_homology_table, test)
 
 
-@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Performs ortholog Ks estimation.")
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Perform ortholog Ks estimation.")
 @click.argument('config_file', type=click.Path(exists=True))
 @click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.argument("species1")
@@ -114,7 +114,7 @@ def orthologs_ks(config_file, expert, species1, species2, n_threads):
 
 
 @cli.command(context_settings={'help_option_names': ['-h', '--help']}, 
-             short_help="Computes ortholog divergence times Ks estimates.")
+             short_help="Compute ortholog divergence times Ks estimates.")
 @click.argument('config_file', type=click.Path(exists=True))
 @click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option('--ortholog-pairs', type=click.Path(exists=True), help="User-defined path to file containing the ortholog pairs with missing ortholog Ks peak in database (default: rate_adjustment/species/ortholog_pairs_species.tsv)")
@@ -141,7 +141,7 @@ def orthologs_analysis(config_file, expert, ortholog_pairs):
 
 
 @cli.command(context_settings={'help_option_names': ['-h', '--help']}, 
-             short_help="Performs ortholog substitution rate-adjustment.")
+             short_help="Perform ortholog substitution rate-adjustment.")
 @click.argument('config_file', type=click.Path(exists=True))
 @click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option("--trios", type=click.Path(exists=True), help="User-defined path to file containing the ortholog trios (default: rate_adjustment/species/orthologs_trios_species.tsv)")
@@ -167,7 +167,7 @@ def orthologs_adjustment(config_file, expert, trios):
     correct(config_file, expert, trios)
 
 
-@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Generates rate-adjusted mixed Ks plot.")
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Generate rate-adjusted mixed Ks plot.")
 @click.argument('config_file', type=click.Path(exists=True))
 @click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option("--adjustment-table", type=click.Path(exists=True), help="User-defined path to file containing adjustment results (default: rate_adjustment/species/adjustment_table_species.tsv)")
@@ -202,7 +202,7 @@ def plot_paralogs(config_file, expert, adjustment_table, paranome_table, anchors
     plot_paralogs_distr(config_file, expert, adjustment_table, paranome_table, anchors_table, reciprocal_retention_table)
 
 
-@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Generates phylogram with Ks-unit branch lengths.")
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Generate phylogram with Ks-unit branch lengths.")
 @click.argument('config_file', type=click.Path(exists=True))
 @click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option("--adjustment-table", type=click.Path(exists=True), help="User-defined path to file containing adjustment results (default: rate_adjustment/species/adjustment_table_species.tsv)")
@@ -230,7 +230,7 @@ def plot_tree(config_file, expert, adjustment_table, nextflow):
     plot_tree_rates(config_file, expert, adjustment_table, nextflow)
 
 
-@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Generates ortholog Ks distributions plot.")
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Generate ortholog Ks distributions plot.")
 @click.argument('config_file', type=click.Path(exists=True))
 @click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option("--trios", type=click.Path(exists=True), help="User-defined path to file containing the ortholog trios (default: rate_adjustment/species/orthologs_trios_species.tsv)")
@@ -256,7 +256,7 @@ def plot_orthologs(config_file, expert, trios):
     plot_orthologs_distr(config_file, expert, trios)
 
 
-@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Detects WGD signatures in paralog Ks distribution.")
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Detect WGD signatures in paralog Ks distribution.")
 @click.argument('config_file', type=click.Path(exists=True))
 @click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option("--paranome-table", type=click.Path(exists=True), help="User-defined path to file containing paranome Ks (default: paralog_distributions/wgd_species/species.ks.tsv)")
@@ -311,7 +311,7 @@ def paralogs_analyses(config_file, expert, paranome_table, anchors_table, recipr
                     adjustment_table, anchorpoints, multiplicons, segments, list_elements, multiplicon_pairs)
 
 
-@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Performs paralog Ks estimation for all species.")
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Perform paralog Ks estimation for all species.")
 @click.argument('config_sources', nargs=-1, required=True, type=click.Path(exists=True))
 @click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option("--n-threads", type=int, default=1, help="Number of threads (default: 1)")
@@ -419,7 +419,7 @@ def orthologs_ks_cleanup(orthologs_dir_path, dry_run):
                 print('Please choose between "y" or "n". Cancelled.')
 
 
-@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Populates paralog Ks database from config files and paralog distributions.")
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Populate paralog Ks database from existing data.")
 @click.argument('config_dir', type=click.Path(exists=True))
 @click.argument('paralog_distributions_dir', type=click.Path(exists=True))
 @click.option('-d', '--database', type=click.Path(), required=True, help="Path to the sqld server's address file (written by the server job at startup; the server must already be running)")
