@@ -464,7 +464,7 @@ def populate_paralog_ks_db(config_dir, paralog_distributions_dir, database, forc
 	populate_batch(config_dir, paralog_distributions_dir, database, force_overwrite=force, num_gfs=num_gfs)
 
 
-@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Dumps the full paralog Ks database content to a flat TSV file, lists its species, or deletes species from it.")
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Visualize or delete paralog Ks database content.")
 @click.argument('database', type=click.Path(exists=True))
 @click.argument('species_filter', required=False)
 @click.option('--delete', is_flag=True, help="Delete species matching SPECIES_FILTER (required) from the database. Lists matches and asks for confirmation before deleting.")
