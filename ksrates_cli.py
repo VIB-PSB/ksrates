@@ -464,10 +464,11 @@ def populate_paralog_ks_db(config_dir, paralog_distributions_dir, database, forc
 	populate_batch(config_dir, paralog_distributions_dir, database, force_overwrite=force, num_gfs=num_gfs)
 
 
-@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Dumps the full paralog Ks database content to a flat TSV file.")
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Dumps the full paralog Ks database content to a flat TSV file, or deletes species from it.")
 @click.argument('database', type=click.Path(exists=True))
 @click.argument('species_filter', required=False)
-def inspect_paralog_ks_db(database, species_filter):
+@click.option('--delete', is_flag=True, help="Delete species matching SPECIES_FILTER from the database instead of exporting. Lists matches and asks for confirmation before deleting. SPECIES_FILTER is required with this option.")
+def inspect_paralog_ks_db(database, species_filter, delete):
 	"""
 	Dumps the full content of the paralog Ks DATABASE, one row per gene pair: columns are
 	latin_name, analysis_type, Paralog1, Paralog2, Family, Node, Ks, AlignmentCoverage, AlignmentIdentity,
@@ -479,9 +480,13 @@ def inspect_paralog_ks_db(database, species_filter):
 	stores this data as binary blobs and text columns (for speed/size), so this is the way to actually
 	inspect its content (e.g. in Excel, VSCode, pandas...).
 
+	With --delete, instead deletes every species matching SPECIES_FILTER from the database (e.g. to
+	discard data written incompletely or now considered outdated), after listing the matches and
+	asking for confirmation.
+
 	\b
 	DATABASE: path to the sqld server's address file
-	SPECIES_FILTER: optional substring to only export matching species (case-insensitive)
+	SPECIES_FILTER: optional substring to only export matching species (case-insensitive); required when using --delete
 
 	\b
 	Example (dump all species):
@@ -490,11 +495,21 @@ def inspect_paralog_ks_db(database, species_filter):
 	\b
 	Example (dump only species whose latin name contains "guineensis"):
 	  ksrates inspect-paralog-ks-db paralog_ks_server_address.txt guineensis
-	"""
-	from ksrates.inspect_paralog_ks_db import export_full_tsv
 
+	\b
+	Example (delete species whose latin name contains "involucrata"):
+	  ksrates inspect-paralog-ks-db paralog_ks_server_address.txt involucrata --delete
+	"""
 	click.format_filename(database)
-	export_full_tsv(database, species_filter)
+
+	if delete:
+		if not species_filter:
+			raise click.UsageError("SPECIES_FILTER is required when using --delete (to avoid accidentally deleting the entire database).")
+		from ksrates.inspect_paralog_ks_db import delete_species
+		delete_species(database, species_filter)
+	else:
+		from ksrates.inspect_paralog_ks_db import export_full_tsv
+		export_full_tsv(database, species_filter)
 
 
 # For debugging

@@ -83,3 +83,38 @@ def export_full_tsv(db_path, species_filter=None):
 	print(f"Exported {n_pairs} gene pairs from {n_species} species to [{output_tsv_path}]")
 	if n_iadhore_files:
 		print(f"Exported {n_iadhore_files} i-ADHoRe output files to [{iadhore_dir}]")
+
+
+def delete_species(db_path, species_filter):
+	"""
+	Delete species matching species_filter (case-insensitive substring of their latin name) from
+	the paralog Ks database, after listing the matches and asking for confirmation. Used to discard
+	a species' stored data, e.g. after it was written incompletely or with now-outdated data.
+
+	:param db_path: path to the sqld server address file (see fc_consolidate_paralog_ks._connect)
+	:param species_filter: substring to match against latin names (case-insensitive); required, to
+	                        avoid accidentally deleting the entire database's content
+	"""
+	client = fc_consolidate_paralog_ks._connect(db_path)
+	result = client.execute(f"SELECT latin_name FROM {_TABLE} ORDER BY latin_name")
+	all_species = [row[0] for row in result.rows]
+
+	matches = [name for name in all_species if species_filter.lower() in name.lower()]
+	if not matches:
+		client.close()
+		print(f"No species matching '{species_filter}' found in database.")
+		return
+
+	print(f"The following {len(matches)} species will be deleted from the database:")
+	for name in matches:
+		print(f"  {name}")
+	text = input("Confirm deleting (y/N)? ").lower()
+	if text not in ("y", "yes"):
+		client.close()
+		print("Cancelled")
+		return
+
+	placeholders = ', '.join(['?'] * len(matches))
+	client.execute(f"DELETE FROM {_TABLE} WHERE latin_name IN ({placeholders})", tuple(matches))
+	client.close()
+	print(f"Deleted {len(matches)} species from database.")
