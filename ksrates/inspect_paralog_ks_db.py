@@ -118,3 +118,42 @@ def delete_species(db_path, species_filter):
 	client.execute(f"DELETE FROM {_TABLE} WHERE latin_name IN ({placeholders})", tuple(matches))
 	client.close()
 	print(f"Deleted {len(matches)} species from database.")
+
+
+def list_species(db_path, species_filter=None):
+	"""
+	Export a TSV listing which species are in the paralog Ks database and which analysis
+	types each has data for (paranome, anchors, reciprocally retained, i-ADHoRe files). Unlike
+	export_full_tsv, this only checks presence/absence and is meant for a quick overview.
+
+	:param db_path: path to the sqld server address file (see fc_consolidate_paralog_ks._connect)
+	:param species_filter: if given, only list species whose latin name contains this substring
+	                        (case-insensitive)
+	"""
+	db_base = os.path.splitext(os.path.basename(db_path))[0]
+	timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+	output_tsv_path = os.path.join(os.path.dirname(db_path), f"{db_base}_species_list_{timestamp}.tsv")
+
+	client = fc_consolidate_paralog_ks._connect(db_path)
+	iadhore_presence = " OR ".join(f"{col} IS NOT NULL" for col in _IADHORE_COLUMNS)
+	result = client.execute(f"""
+		SELECT latin_name, paranome IS NOT NULL, anchors IS NOT NULL, reciprocally_retained IS NOT NULL,
+		       ({iadhore_presence})
+		FROM {_TABLE} ORDER BY latin_name
+	""")
+	client.close()
+
+	n_species = 0
+	lines = ['\t'.join(['latin_name', 'paranome', 'anchors', 'reciprocally_retained', 'iadhore_files'])]
+	for latin_name, has_paranome, has_anchors, has_recret, has_iadhore in result.rows:
+		if species_filter and species_filter.lower() not in latin_name.lower():
+			continue
+		n_species += 1
+		lines.append('\t'.join([latin_name, str(bool(has_paranome)), str(bool(has_anchors)), str(bool(has_recret)), str(bool(has_iadhore))]))
+
+	# No trailing newline after the last row: a naive line-count on this file (e.g. wc -l, or
+	# splitting on "\n") should equal exactly 1 header + n_species data lines, not one more.
+	with open(output_tsv_path, "w") as outfile:
+		outfile.write('\n'.join(lines))
+
+	print(f"Listed {n_species} species to [{output_tsv_path}]")

@@ -464,49 +464,70 @@ def populate_paralog_ks_db(config_dir, paralog_distributions_dir, database, forc
 	populate_batch(config_dir, paralog_distributions_dir, database, force_overwrite=force, num_gfs=num_gfs)
 
 
-@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Dumps the full paralog Ks database content to a flat TSV file, or deletes species from it.")
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Dumps the full paralog Ks database content to a flat TSV file, lists its species, or deletes species from it.")
 @click.argument('database', type=click.Path(exists=True))
 @click.argument('species_filter', required=False)
-@click.option('--delete', is_flag=True, help="Delete species matching SPECIES_FILTER from the database instead of exporting. Lists matches and asks for confirmation before deleting. SPECIES_FILTER is required with this option.")
-def inspect_paralog_ks_db(database, species_filter, delete):
+@click.option('--delete', is_flag=True, help="Delete species matching SPECIES_FILTER (required) from the database. Lists matches and asks for confirmation before deleting.")
+@click.option('--list', 'list_only', is_flag=True, help="Export a TSV listing which species are in the database and which analysis types each has.")
+def inspect_paralog_ks_db(database, species_filter, delete, list_only):
 	"""
-	Dumps the full content of the paralog Ks DATABASE, one row per gene pair: columns are
-	latin_name, analysis_type, Paralog1, Paralog2, Family, Node, Ks, AlignmentCoverage, AlignmentIdentity,
-	AlignmentLength. The output filename is generated automatically next to the database, from its
+	Prints the full content of the paralog Ks database in a TSV file, one row per gene pair.
+    Columns are: latin_name, analysis_type, Paralog1, Paralog2, Family, Node, Ks, 
+	AlignmentCoverage, AlignmentIdentity, AlignmentLength.
+    The output filename is generated automatically next to the database, from its
 	basename with the current timestamp appended, e.g. "paralog_ks_server_address.txt" ->
-	"paralog_ks_db_YYYYMMDD_HHMMSS.tsv". The per-species i-ADHoRe output files (anchorpoints.txt,
-	multiplicons.txt, segments.txt, list_elements.txt, multiplicon_pairs.txt) are written back out
-	under a matching "..._iadhore_files" directory, one subdirectory per species. The database itself
-	stores this data as binary blobs and text columns (for speed/size), so this is the way to actually
+	"paralog_ks_db_YYYYMMDD_HHMMSS.tsv".
+    The per-species i-ADHoRe output files (anchorpoints.txt, multiplicons.txt, segments.txt, 
+    list_elements.txt, multiplicon_pairs.txt) are also printed to file under a matching
+	"..._iadhore_files" directory, one subdirectory per species. Since the database itself stores 
+	this data as binary blobs and text columns (for speed/size), this is the way to actually
 	inspect its content (e.g. in Excel, VSCode, pandas...).
 
-	With --delete, instead deletes every species matching SPECIES_FILTER from the database (e.g. to
-	discard data written incompletely or now considered outdated), after listing the matches and
-	asking for confirmation.
+	Add --list to instead export a TSV listing the species in the database, plus a True/False
+    column per analysis type (paranome, anchors, reciprocally retained, i-ADHoRe files).
+
+	Add --delete to instead delete every species matching SPECIES_FILTER from the database (e.g. to
+	discard data written incompletely or now considered outdated).
 
 	\b
 	DATABASE: path to the sqld server's address file
-	SPECIES_FILTER: optional substring to only export matching species (case-insensitive); required when using --delete
+	SPECIES_FILTER: optional substring to only export/list matching species (case-insensitive);
+                    required when using --delete. Multi-word (latin) names need to be provided
+                    with quotes, e.g. "Arabidopsis thaliana".
 
 	\b
 	Example (dump all species):
 	  ksrates inspect-paralog-ks-db paralog_ks_server_address.txt
 
 	\b
-	Example (dump only species whose latin name contains "guineensis"):
-	  ksrates inspect-paralog-ks-db paralog_ks_server_address.txt guineensis
+	Example (dump only species whose latin name contains the provided string):
+	  ksrates inspect-paralog-ks-db paralog_ks_server_address.txt Arabidopsis
 
 	\b
-	Example (delete species whose latin name contains "involucrata"):
-	  ksrates inspect-paralog-ks-db paralog_ks_server_address.txt involucrata --delete
+	Example (list which species are in the database, and what data they have):
+	  ksrates inspect-paralog-ks-db paralog_ks_server_address.txt --list
+
+	\b
+	Example (delete species whose latin name contains the provided string):
+	  ksrates inspect-paralog-ks-db paralog_ks_server_address.txt Arabidopsis --delete
+
+	\b
+	Example (delete a species by its complete name using quotes):
+	  ksrates inspect-paralog-ks-db paralog_ks_server_address.txt "Arabidopsis thaliana" --delete
 	"""
 	click.format_filename(database)
 
+	if delete and list_only:
+		raise click.UsageError("--delete and --list cannot be used together.")
+
 	if delete:
 		if not species_filter:
-			raise click.UsageError("SPECIES_FILTER is required when using --delete (to avoid accidentally deleting the entire database).")
+			raise click.UsageError("SPECIES_FILTER is required when using --delete.")
 		from ksrates.inspect_paralog_ks_db import delete_species
 		delete_species(database, species_filter)
+	elif list_only:
+		from ksrates.inspect_paralog_ks_db import list_species
+		list_species(database, species_filter)
 	else:
 		from ksrates.inspect_paralog_ks_db import export_full_tsv
 		export_full_tsv(database, species_filter)
