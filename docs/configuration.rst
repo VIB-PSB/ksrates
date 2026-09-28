@@ -123,7 +123,45 @@ server rather than a local file. This lets many independent analyses — even on
 nodes — safely share one central database, which a plain local database file cannot do reliably
 over a network filesystem.
 
-This means the server has to be running *before* any analysis that uses the database. To start it:
+This means the server has to be running *before* any analysis that uses the database. It is a
+single, long-running job, submitted **once** and then left running indefinitely — separately from
+any analysis pipeline run, and never from *within* one (multiple independent pipeline runs may
+share the same server, so its lifetime must not be tied to any single one of them).
+
+Starting it via the Nextflow pipeline (recommended)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``setup_database_server.nf`` runs the ``ksrates launch-paralog-ks-server`` command through the same
+container/profile machinery (e.g. ``-profile docker``, ``-c nextflow.config``)
+already used for regular analysis runs, but with other dedicated entry script and parameters:
+
+1. Submit it once, using the same ``nextflow.config`` as your analyses, but with the executor
+   overridden to ``local`` (see below)::
+
+       nextflow run VIB-PSB/ksrates -main-script setup_database_server.nf -profile singularity \\
+           -c nextflow.config -process.executor=local \\
+           --location /path/to/central/dir
+
+   ``--location`` is the central directory that will hold the server's data/keys directories and
+   address file; ``--port`` (default 8080) and ``--address-filename`` (default
+   ``paralog_ks_server_address.txt``) can also be overridden if needed.
+
+2. Point ``ks_list_paralog_database_path`` in your *ksrates* configuration file(s) at
+   ``<location>/<address_filename>``.
+
+This pipeline has a single process to be kept running as long as the analyses runs take (ideally,
+indefinitely, to be cancelled by user). The
+``-process.executor=local`` command-line prevents the process to be submitted as a job onto a compute cluster,
+so that the process just runs as a plain local subprocess of the ``nextflow run`` invocation itself.
+
+This requires the ``sqld`` binary to be baked into the *ksrates* container image (see the
+``Dockerfile``) rather than downloaded at runtime.
+
+Starting it without Nextflow
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+On a SLURM cluster, without going through Nextflow at all, ``cluster_scripts/run_paralog_ks_server.sbatch``
+downloads ``sqld`` itself at runtime and performs the same setup as the command above:
 
 1. Copy ``cluster_scripts/run_paralog_ks_server.sbatch`` and edit the variables at the top
    (install/data directories, address file path, port) for your own cluster.
@@ -132,7 +170,7 @@ This means the server has to be running *before* any analysis that uses the data
 3. Point ``ks_list_paralog_database_path`` in your *ksrates* configuration file(s) at the same
    address file the script writes.
 
-If the server isn't reachable (not yet started, or address file missing/stale), *ksrates*
+Either way, if the server isn't reachable (not yet started, or address file missing/stale), *ksrates*
 transparently falls back to reading/writing the original Ks TSV files instead — an analysis will
 still complete, just without the shared-database benefit for that run.
 
