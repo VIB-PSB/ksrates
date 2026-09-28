@@ -116,6 +116,25 @@ into separate arguments::
     ksrates inspect-paralog-ks-db paralog_ks_server_address.txt "Elaeis guineensis" --delete
 
 
+Backfilling from existing TSV output
+======================================
+
+Species processed *before* the database was set up (or by a run with ``use_paralog_ks_database``
+disabled) already have their Ks data stored in local TSV files, but nothing in the shared
+database yet. ``populate-paralog-ks-db`` backfills the database from that existing output,
+without re-running any wgd pipeline::
+
+    ksrates populate-paralog-ks-db configs/ paralog_distributions/ --database paralog_ks_server_address.txt
+
+``configs/`` is a directory of *ksrates* configuration files (used to resolve each species' latin
+name); ``paralog_distributions/`` is the directory containing the ``wgd_*`` subdirectories with the
+TSV output to extract from.
+
+Like the skip logic above, only analysis types a species doesn't already have in the database
+are added by default (add ``--force`` to re-extract and overwrite everything instead),
+so this command is safe to (re-)run any time.
+
+
 Restarting the shared server
 =============================
 
