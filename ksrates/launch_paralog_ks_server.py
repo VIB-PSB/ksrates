@@ -3,6 +3,7 @@ import os
 import socket
 import subprocess
 import sys
+import tempfile
 
 _SQLD_BIN = "/usr/local/bin/sqld"
 
@@ -42,10 +43,16 @@ def _generate_jwt(private_key):
 	header_b64 = _b64url(b'{"alg":"EdDSA","typ":"JWT"}')
 	payload_b64 = _b64url(b'{}')
 	signing_input = f"{header_b64}.{payload_b64}".encode('ascii')
-	result = subprocess.run(
-		["openssl", "pkeyutl", "-sign", "-inkey", private_key, "-rawin"],
-		input=signing_input, capture_output=True, check=True
-	)
+
+	# openssl's Ed25519 signer needs seekable input (it computes the message length up front),
+	# so the signing input has to go through a temp file rather than a pipe/stdin.
+	with tempfile.NamedTemporaryFile() as signing_input_file:
+		signing_input_file.write(signing_input)
+		signing_input_file.flush()
+		result = subprocess.run(
+			["openssl", "pkeyutl", "-sign", "-inkey", private_key, "-rawin", "-in", signing_input_file.name],
+			capture_output=True, check=True
+		)
 	signature_b64 = _b64url(result.stdout)
 	return f"{header_b64}.{payload_b64}.{signature_b64}"
 
