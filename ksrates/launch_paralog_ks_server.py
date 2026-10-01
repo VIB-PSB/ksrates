@@ -1,12 +1,117 @@
 import base64
 import os
+import platform
 import socket
 import sys
+import tarfile
+import tempfile
+import urllib.request
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-_SQLD_BIN = "/usr/local/bin/sqld"
+# Prefer a sqld binary already baked into a container image (see Dockerfile); fall back to a
+# user-level cache so a manually pip-installed ksrates (no container, likely no write access to
+# /usr/local/bin) can still download and reuse its own copy across projects.
+_SQLD_VERSION = "libsql-server-v0.24.32"
+_SQLD_BAKED_IN_BIN = "/usr/local/bin/sqld"
+_SQLD_ASSET_BY_ARCH = {
+	"x86_64": "libsql-server-x86_64-unknown-linux-gnu.tar.xz",
+	"aarch64": "libsql-server-aarch64-unknown-linux-gnu.tar.xz",
+}
+
+
+def _sqld_cache_dir():
+	"""
+	Resolve the user-level cache directory for a downloaded sqld binary ($XDG_CACHE_HOME, or
+	~/.cache otherwise). os.makedirs(..., exist_ok=True) at the call site creates every missing
+	directory in this path, including ~/.cache itself if it doesn't exist yet.
+
+	:return: absolute path to <cache base>/ksrates/sqld_bin
+	:raises RuntimeError: if neither $XDG_CACHE_HOME nor $HOME/a passwd entry is available to
+	                       resolve a real home directory (expanduser("~") then returns "~"
+	                       unexpanded, e.g. in some minimal/restricted container environments)
+	"""
+	base = os.environ.get("XDG_CACHE_HOME") or os.path.expanduser("~/.cache")
+	if not os.path.isabs(base):
+		raise RuntimeError(
+			"Could not resolve a cache directory for sqld: neither $XDG_CACHE_HOME nor $HOME is "
+			"set to a usable path. Set one of them, or place a sqld binary at "
+			f"{_SQLD_BAKED_IN_BIN} directly."
+		)
+	return os.path.join(base, "ksrates", "sqld_bin")
+
+
+def _download_sqld(target_path):
+	"""
+	Download and extract the sqld release binary to target_path. Used when sqld isn't already
+	baked into a container image.
+
+	:param target_path: final path to place the executable sqld binary at
+	:raises RuntimeError: on unsupported architecture or any download/extraction failure
+	"""
+	arch = platform.machine()
+	asset = _SQLD_ASSET_BY_ARCH.get(arch)
+	if asset is None:
+		raise RuntimeError(f"Unsupported architecture for sqld: {arch}")
+
+	url = f"https://github.com/tursodatabase/libsql/releases/download/{_SQLD_VERSION}/{asset}"
+	print(f"sqld binary not found, downloading {_SQLD_VERSION} for {arch} to {target_path}...")
+
+	cache_dir = os.path.dirname(target_path)
+	os.makedirs(cache_dir, exist_ok=True)
+	try:
+		with tempfile.TemporaryDirectory(dir=cache_dir) as tmp_dir:
+			tarball_path = os.path.join(tmp_dir, "sqld.tar.xz")
+			try:
+				urllib.request.urlretrieve(url, tarball_path)
+			except Exception as e:
+				raise RuntimeError(
+					f"Failed to download {asset}: {e}. This node may have no internet access; "
+					f"download it manually and place the 'sqld' binary at {target_path}."
+				) from e
+
+			extract_dir = os.path.join(tmp_dir, "extracted")
+			os.makedirs(extract_dir)
+			with tarfile.open(tarball_path, "r:xz") as tar:
+				tar.extractall(extract_dir)
+
+			for root, _, files in os.walk(extract_dir):
+				if "sqld" in files:
+					extracted_bin = os.path.join(root, "sqld")
+					break
+			else:
+				raise RuntimeError(f"No 'sqld' binary found inside downloaded {asset}")
+
+			# Write to a temp path in the cache dir, then atomically move into place, so a
+			# concurrent launch never sees a partially-written binary.
+			tmp_target = target_path + ".tmp"
+			with open(extracted_bin, "rb") as src, open(tmp_target, "wb") as dst:
+				dst.write(src.read())
+			os.chmod(tmp_target, 0o755)
+			os.replace(tmp_target, target_path)
+	except RuntimeError:
+		raise
+	except Exception as e:
+		raise RuntimeError(f"Failed to install sqld: {e}") from e
+
+
+def _resolve_sqld_bin():
+	"""
+	Find the sqld binary to run, downloading it to a user-level cache if it isn't already
+	available (e.g. baked into a container image).
+
+	:return: path to an executable sqld binary
+	:raises RuntimeError: if sqld can't be found or installed
+	"""
+	if os.path.isfile(_SQLD_BAKED_IN_BIN) and os.access(_SQLD_BAKED_IN_BIN, os.X_OK):
+		return _SQLD_BAKED_IN_BIN
+
+	cached_bin = os.path.join(_sqld_cache_dir(), "sqld")
+	if not (os.path.isfile(cached_bin) and os.access(cached_bin, os.X_OK)):
+		_download_sqld(cached_bin)
+
+	return cached_bin
 
 
 def _b64url(data):
@@ -97,10 +202,10 @@ def launch_server(location, port=8080, address_filename="paralog_ks_server_addre
 	os.makedirs(data_dir, exist_ok=True)
 	os.makedirs(key_dir, exist_ok=True)
 
-	if not os.path.isfile(_SQLD_BIN) or not os.access(_SQLD_BIN, os.X_OK):
-		print(f"ERROR: sqld binary not found or not executable at {_SQLD_BIN}.", file=sys.stderr)
-		print("This command expects sqld to be baked into the container image at build time; "
-			  "it does not download it. Use a ksrates image built from the current Dockerfile.", file=sys.stderr)
+	try:
+		sqld_bin = _resolve_sqld_bin()
+	except RuntimeError as e:
+		print(f"ERROR: {e}", file=sys.stderr)
 		sys.exit(1)
 
 	private_key, public_key = _generate_jwt_keys(key_dir)
@@ -121,8 +226,8 @@ def launch_server(location, port=8080, address_filename="paralog_ks_server_addre
 
 	# Replaces this process with sqld (rather than spawning a subprocess) so sqld becomes the
 	# container's main process, keeping signal handling/PID-1 semantics simple.
-	os.execv(_SQLD_BIN, [
-		_SQLD_BIN,
+	os.execv(sqld_bin, [
+		sqld_bin,
 		f"--http-listen-addr=0.0.0.0:{port}",
 		f"--db-path={data_dir}",
 		f"--auth-jwt-key-file={public_key}",

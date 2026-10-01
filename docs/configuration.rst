@@ -154,9 +154,6 @@ indefinitely, to be cancelled by user). The
 ``-process.executor=local`` command-line prevents the process to be submitted as a job onto a compute cluster,
 so that the process just runs as a plain local subprocess of the ``nextflow run`` invocation itself.
 
-This requires the ``sqld`` binary to be baked into the *ksrates* container image (see the
-``Dockerfile``) rather than downloaded at runtime.
-
 Starting it directly with the CLI command
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -175,23 +172,11 @@ Options:
 * ``--address-filename`` (default ``paralog_ks_server_address.txt``): filename (not path) of the
   address file written under ``--location``.
 
-Like the Nextflow path above, this requires the ``sqld`` binary to already be baked into the
-container image. The command never returns on success (it execs into ``sqld``), so submit it as
-its own long-running job, same as the other two options.
-
-Starting it without a container
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-On a SLURM cluster, without a container at all (e.g. for a manually pip-installed *ksrates*),
-``cluster_scripts/run_paralog_ks_server.sbatch`` downloads ``sqld`` itself at runtime and performs
-the same setup as the two options above:
-
-1. Copy ``cluster_scripts/run_paralog_ks_server.sbatch`` and edit the variables at the top
-   (install/data directories, address file path, port) for your own cluster.
-2. Submit it once: ``sbatch run_paralog_ks_server.sbatch``. With unlimited job walltime, this can
-   then keep running indefinitely — no need to resubmit it for every analysis.
-3. Point ``ks_list_paralog_database_path`` in your *ksrates* configuration file(s) at the same
-   address file the script writes.
+The command uses a ``sqld`` binary already baked into the container image if present (see the
+``Dockerfile``), or otherwise downloads one on first launch to ``$XDG_CACHE_HOME/ksrates/sqld_bin``
+(``~/.cache/ksrates/sqld_bin`` by default) and reuses it from there afterward - so this same
+command also works for a manually pip-installed *ksrates* with no container at all. The command
+keeps running indefinitely, so submit it as its own long-lasting job.
 
 Either way, if the server isn't reachable (not yet started, or address file missing/stale), *ksrates*
 transparently falls back to reading/writing the original Ks TSV files instead — an analysis will
