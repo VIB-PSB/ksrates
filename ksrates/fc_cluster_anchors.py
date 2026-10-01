@@ -33,6 +33,22 @@ _ANCHOR_CLUSTERS_MEDIANS = "anchor_clusters_{}_medians.pdf"
 _ANCHOR_CLUSTERS_UNFILTERED = "mixed_{}_anchor_clusters_unfiltered.pdf"
 _ANCHOR_CLUSTERS_FILTERED = "mixed_{}_anchor_clusters.pdf"
 
+def _read_lines(path_or_stream):
+    """
+    Returns a readable, line-iterable object from either a file path (str) or an already-open
+    file-like stream (e.g. an io.StringIO wrapping text read back from the paralog Ks database),
+    so the line-based parsers below can accept either source transparently.
+
+    :param path_or_stream: either a path (str) to an i-ADHoRe output file, or an already-open
+                            readable stream containing the same content
+    :return: readable, line-iterable object (caller is responsible for closing it)
+    """
+    if isinstance(path_or_stream, str):
+        return open(path_or_stream, "r+")
+    path_or_stream.seek(0)
+    return path_or_stream
+
+
 def parse_segments_file(path_segments_txt):
     """
     Gets from segments.txt all the segments associated to each multiplicon.
@@ -40,7 +56,8 @@ def parse_segments_file(path_segments_txt):
     :param path_segments_txt: path to the i-ADHoRe output file "segments.txt"
     :return segments_per_multip: dictionary assigning to each multiplicon all its segments
     """
-    with open(path_segments_txt, "r+") as segments_file:
+    segments_file = _read_lines(path_segments_txt)
+    try:
         segments_per_multip = {}
         for line in segments_file:
             line = line.rstrip().split("\t")
@@ -50,6 +67,8 @@ def parse_segments_file(path_segments_txt):
                     segments_per_multip[multipl_id].append(int(line[0]))
                 else:
                     segments_per_multip[multipl_id] = [int(line[0])]
+    finally:
+        segments_file.close()
     return segments_per_multip
 
 
@@ -60,7 +79,8 @@ def parse_list_elements(path_list_elements_txt):
     :param path_list_elements_txt: path to the i-ADHoRe output file 
     :return segments_from_gene: dictionary assigning to each gene the segment(s) where it lies on 
     """
-    with open(path_list_elements_txt, "r+") as list_elements_file:
+    list_elements_file = _read_lines(path_list_elements_txt)
+    try:
         segments_from_gene = {}
         for line in list_elements_file:
             line = line.rstrip().split("\t")
@@ -70,7 +90,9 @@ def parse_list_elements(path_list_elements_txt):
                     segments_from_gene[gene_id].append(int(line[1]))
                 else:
                     segments_from_gene[gene_id] = [int(line[1])]
-    return segments_from_gene   
+    finally:
+        list_elements_file.close()
+    return segments_from_gene
 
 
 def parse_ks_anchors_tsv_file(path_ks_anchor_file):
@@ -93,6 +115,23 @@ def parse_ks_anchors_tsv_file(path_ks_anchor_file):
     return ks_anchors
 
 
+def parse_ks_anchors_from_df(df):
+    """
+    Same as parse_ks_anchors_tsv_file, but builds the anchor-pair-to-Ks mapping from an
+    already-loaded DataFrame (e.g. reconstructed from the paralog Ks database) instead of
+    reading the wgd ks_anchors.tsv file from disk.
+
+    :param df: DataFrame with at least Paralog1, Paralog2 and Ks columns
+    :return ks_anchors: dictionary assigning to each anchor pair its Ks value (as string,
+                         matching parse_ks_anchors_tsv_file's return type)
+    """
+    ks_anchors = {}
+    for anchor1, anchor2, ks in zip(df["Paralog1"], df["Paralog2"], df["Ks"]):
+        anchor_pair_sorted = tuple(sorted((anchor1, anchor2)))
+        if anchor_pair_sorted not in ks_anchors:
+            ks_anchors[anchor_pair_sorted] = str(ks)
+    return ks_anchors
+
 def parse_multiplicons_file(path_multiplicons_txt):
     """
     Gets from multiplicons.txt info about multiplicon levels.
@@ -104,7 +143,8 @@ def parse_multiplicons_file(path_multiplicons_txt):
     :return level_list: list containing the level of each multiplicon
     :return level_list_filtered: list containing te level of long multiplicons (column 8 of input file)
     """
-    with open(path_multiplicons_txt, "r+") as multiplicons_file:
+    multiplicons_file = _read_lines(path_multiplicons_txt)
+    try:
         multipl_per_level = {}
         level_of_each_multipl = {} 
         level_list, level_list_filtered = [], []
@@ -136,6 +176,8 @@ def parse_multiplicons_file(path_multiplicons_txt):
                 else:
                     multipl_length_big[level] = [length]
         max_level = max(multipl_per_level.keys())
+    finally:
+        multiplicons_file.close()
     return multipl_per_level, level_of_each_multipl, max_level, level_list, level_list_filtered
 
 
@@ -148,7 +190,8 @@ def parse_multiplicon_pairs_file(path_multiplicon_pair_txt, level_of_each_multip
     :return anchors_per_multipl: dictionary assigning to each multiplicon all its anchor pairs 
     :return levels_of_each_anchor: dictionary assigning to each anchor pairs the level of the multiplicon which it lies on
     """
-    with open(path_multiplicon_pair_txt, "r+") as multiplicon_pairs_file:
+    multiplicon_pairs_file = _read_lines(path_multiplicon_pair_txt)
+    try:
         anchors_per_multipl = {}
         levels_of_each_anchor = {} # key = anchor pair, value = all levels in which it is found; let's plot it in the highest level bar.
         # Get from multiplicon_pairs.txt all the anchor pairs found in each multiplicon (complete set of anchors, right?)
@@ -179,6 +222,8 @@ def parse_multiplicon_pairs_file(path_multiplicon_pair_txt, level_of_each_multip
                 if level_of_current_multipl not in levels_of_each_anchor[anchor_pair_sorted]:
                     levels_of_each_anchor[anchor_pair_sorted].append(level_of_current_multipl)
             # Note: length of levels_of_each_anchor is the number of unique anchor pairs from the file (because of ignoring reversed repetitions)
+    finally:
+        multiplicon_pairs_file.close()
     return anchors_per_multipl, levels_of_each_anchor
 
 
@@ -192,7 +237,8 @@ def parse_anchorpoints_file(path_anchorpoints_txt, level_of_each_multipl):
     :return multipl_per_anchorpoint: dictionary assigning to each anchorpoints the multiplicon(s) it lies in
     :return levels_of_anchorpoints: dictionary assigning to each anchorpoint its level
     """
-    with open(path_anchorpoints_txt, "r+") as anchorpoints_file:
+    anchorpoints_file = _read_lines(path_anchorpoints_txt)
+    try:
         anchorpoints_per_multipl = {}
         multipl_per_anchorpoint = {}
 
@@ -219,6 +265,8 @@ def parse_anchorpoints_file(path_anchorpoints_txt, level_of_each_multipl):
                 levels_of_anchorpoints[sorted_anchorpoints] = [multipl_level]
             else:
                 levels_of_anchorpoints[sorted_anchorpoints].append(multipl_level)
+    finally:
+        anchorpoints_file.close()
     return anchorpoints_per_multipl, multipl_per_anchorpoint, levels_of_anchorpoints
 
 

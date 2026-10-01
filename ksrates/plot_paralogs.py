@@ -7,9 +7,11 @@ import ksrates.fc_plotting as fcPlot
 import ksrates.fc_extract_ks_list as fc_extract_ks_list
 import ksrates.fc_check_input as fcCheck
 import ksrates.fc_configfile as fcConf
+import ksrates.fc_consolidate_paralog_ks as fc_consolidate_paralog_ks
 from ksrates.fc_rrt_correction import _ADJUSTMENT_TABLE
 from ksrates.fc_plotting import _MIXED_ADJUSTED_PLOT_FILENAME, _MIXED_UNADJUSTED_PLOT_FILENAME, _OTHER_MIXED_PLOTS_SUBDIR
 from ksrates.fc_wgd import _OUTPUT_KS_FILE_PATTERN_PARA, _OUTPUT_KS_FILE_PATTERN_ANCHORS, _OUTPUT_KS_FILE_PATTERN_RR_OMCL
+from wgd_ksrates.viz import filter_compute_weights
 
 def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, paralog_tsv_file, anchors_ks_tsv_file, rec_ret_tsv_file):
     # INPUT
@@ -19,7 +21,7 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
 
     # GET PARAMETERS and INPUT FILES
     species = config.get_species()
-    latin_names = config.get_latin_names()
+    latin_name = config.get_latin_names().get(species)
     # Get analysis type
     paranome_analysis = config.get_paranome()
     colinearity_analysis = config.get_colinearity()
@@ -27,7 +29,9 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
     # Get parameters related to reciprocal retention pipeline
     num_gfs = config.get_num_reciprocal_retention_gfs(reciprocal_retention_analysis) # Number of top gene families
     bottom = config.use_bottom_gfs_instead_of_top(reciprocal_retention_analysis) # Use actually the BOTTOM GFs instead of the top ones (number of bottom GFs remains defined by "top" variable)
-    rank_type = config.get_reciprocal_retention_rank_type(reciprocal_retention_analysis) # Rank type (only "lambda" supported)  
+    rank_type = config.get_reciprocal_retention_rank_type(reciprocal_retention_analysis) # Rank type (only "lambda" supported)
+    use_paralog_ks_database = config.use_paralog_ks_database() # Whether to use the collective paralog Ks database (default: no)
+    ks_list_paralog_db_path = config.get_paralog_ks_database() # SQLite database consolidating paralog Ks data across species
 
     # By default the pipeline uses the TOP-ranked reciprocally retained GFs.
     # However, for comparison purposes, the user might want to use the BOTTOM GFs (e.g. the bottom 2000 ones)
@@ -41,28 +45,53 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
         logging.error("Exiting.")
         sys.exit(1)
 
-    # Get paralog and anchors TSV files
-    # If a Ks file is not required, it will be equal to "None"
-    # If the required input Ks file (paranome or anchor pairs or both) is missing, its path will be qual to an empty string ("") and the script will exit
-    if paranome_analysis:
+    # GET PARALOG KS DATA, EITHER FROM DATABASE OF FROM ORIGINAL KS TSV FILES
+
+    # Assume there is no database data for any analysis type, until proven otherwise below
+    db_paranome_data = None
+    db_anchors_data = None
+    db_recret_data = None
+
+    # If database usage was enabled in expert config, look up this species' data for each analysis type.
+    # Each lookup is an indexed single-row read: it doesn't load data for any other species.
+    if use_paralog_ks_database:
+        try:
+            fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path)
+            if paranome_analysis:
+                db_paranome_data = fc_consolidate_paralog_ks.read_analysis_data(ks_list_paralog_db_path, latin_name, 'paranome')
+            if colinearity_analysis:
+                db_anchors_data = fc_consolidate_paralog_ks.read_analysis_data(ks_list_paralog_db_path, latin_name, 'anchors')
+            if reciprocal_retention_analysis:
+                db_recret_data = fc_consolidate_paralog_ks.read_analysis_data(ks_list_paralog_db_path, latin_name, 'recret')
+        except Exception as e:
+            logging.warning(f"Could not use paralog Ks database [{ks_list_paralog_db_path}]: {str(e)}. Will read TSV files instead.")
+
+    # If the species' Ks data is not available in the database, use the original paralog TSV files as fallback
+    paralog_tsv_file_required = paranome_analysis and db_paranome_data is None
+    anchors_tsv_file_required = colinearity_analysis and db_anchors_data is None
+    recret_tsv_file_required = reciprocal_retention_analysis and db_recret_data is None
+
+    if paralog_tsv_file_required:
         default_path_paralog_tsv_file = os.path.join("paralog_distributions", f"wgd_{species}", _OUTPUT_KS_FILE_PATTERN_PARA.format(species))
         paralog_tsv_file = fcCheck.get_argument_path(paralog_tsv_file, default_path_paralog_tsv_file, "Paralog Ks TSV file")
         if paralog_tsv_file == "":
             logging.error(f"Paralog Ks TSV file not found at default position [{default_path_paralog_tsv_file}].")
-    if colinearity_analysis:
+    if anchors_tsv_file_required:
         default_path_anchors_tsv_file = os.path.join("paralog_distributions", f"wgd_{species}", _OUTPUT_KS_FILE_PATTERN_ANCHORS.format(species))
         anchors_ks_tsv_file = fcCheck.get_argument_path(anchors_ks_tsv_file, default_path_anchors_tsv_file, "Anchor pair Ks TSV file")
         if anchors_ks_tsv_file == "":
             logging.error(f"Anchor pair Ks TSV file not found at default position [{default_path_anchors_tsv_file}].")
-    if reciprocal_retention_analysis:
+    if recret_tsv_file_required:
         default_path_rec_ret_tsv_file = os.path.join("paralog_distributions", f"wgd_{species}", _OUTPUT_KS_FILE_PATTERN_RR_OMCL.format(species, top_or_bottom, num_gfs))
         rec_ret_tsv_file = fcCheck.get_argument_path(rec_ret_tsv_file, default_path_rec_ret_tsv_file, "Reciprocally retained paralog Ks TSV file")
         if rec_ret_tsv_file == "":
             logging.error(f"Reciprocally retained paralog Ks TSV file not found at default position [{default_path_rec_ret_tsv_file}].")
-       
-    if paralog_tsv_file == "" or anchors_ks_tsv_file == "" or rec_ret_tsv_file == "":
+
+    # Exit if both the database source and the original Ks TSV source have failed
+    if (paralog_tsv_file_required and paralog_tsv_file == "") or (anchors_tsv_file_required and anchors_ks_tsv_file == "") or (recret_tsv_file_required and rec_ret_tsv_file == ""):
         logging.error("Exiting")
         sys.exit(1)
+
 
     # Creating folders for output files
     output_folder = os.path.join("rate_adjustment", f"{species}")
@@ -117,10 +146,10 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
     # Generate the mixed plot with a single data type (e.g. paranome) for any required data_type
     if paranome_analysis:
         logging.info(f"Plotting paranome Ks distribution for species [{species}]")
-        fig_uncorr_para, ax_uncorr_para = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
+        fig_uncorr_para, ax_uncorr_para = fcPlot.generate_mixed_plot_figure(latin_name, x_max_lim, y_lim, 
                                     "un-corrected", correction_table_available, plot_correction_arrows,
                                     paranome_data=paranome_analysis, num_gfs=num_gfs, rank_type=rank_type)
-        fig_corr_para, ax_corr_para = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
+        fig_corr_para, ax_corr_para = fcPlot.generate_mixed_plot_figure(latin_name, x_max_lim, y_lim, 
                                     "corrected", correction_table_available, plot_correction_arrows,
                                     paranome_data=paranome_analysis, num_gfs=num_gfs, rank_type=rank_type)
         ax_uncorr_include_para.append(ax_uncorr_para)
@@ -130,10 +159,10 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
 
     if colinearity_analysis:
         logging.info(f"Plotting anchor pair Ks distribution for species [{species}]")
-        fig_uncorr_col, ax_uncorr_col = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
+        fig_uncorr_col, ax_uncorr_col = fcPlot.generate_mixed_plot_figure(latin_name, x_max_lim, y_lim, 
                                     "un-corrected", correction_table_available, plot_correction_arrows,
                                     colinearity_data=colinearity_analysis, num_gfs=num_gfs, rank_type=rank_type)
-        fig_corr_col, ax_corr_col = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
+        fig_corr_col, ax_corr_col = fcPlot.generate_mixed_plot_figure(latin_name, x_max_lim, y_lim, 
                                     "corrected", correction_table_available, plot_correction_arrows,
                                     colinearity_data=colinearity_analysis, num_gfs=num_gfs, rank_type=rank_type)
         ax_uncorr_include_col.append(ax_uncorr_col)
@@ -143,10 +172,10 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
 
     if reciprocal_retention_analysis:
         logging.info(f"Plotting reciprocally retained paralog Ks distribution for species [{species}]")
-        fig_uncorr_rr, ax_uncorr_rr = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
+        fig_uncorr_rr, ax_uncorr_rr = fcPlot.generate_mixed_plot_figure(latin_name, x_max_lim, y_lim, 
                                     "un-corrected", correction_table_available, plot_correction_arrows,
                                     reciprocal_retention_data=reciprocal_retention_analysis, num_gfs=num_gfs, rank_type=rank_type)
-        fig_corr_rr, ax_corr_rr = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
+        fig_corr_rr, ax_corr_rr = fcPlot.generate_mixed_plot_figure(latin_name, x_max_lim, y_lim, 
                                     "corrected", correction_table_available, plot_correction_arrows,
                                     reciprocal_retention_data=reciprocal_retention_analysis, num_gfs=num_gfs, rank_type=rank_type)
         ax_uncorr_include_rr.append(ax_uncorr_rr)
@@ -157,11 +186,11 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
     # Generate the mixed plot for any required pair of data types (e.g. paranome and anchors)
     if paranome_analysis and colinearity_analysis:
         logging.info(f"Plotting paranome and anchor pairs Ks distributions for species [{species}]")
-        fig_uncorr_para_col, ax_uncorr_para_col = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
+        fig_uncorr_para_col, ax_uncorr_para_col = fcPlot.generate_mixed_plot_figure(latin_name, x_max_lim, y_lim, 
                                     "un-corrected", correction_table_available, plot_correction_arrows,
                                     paranome_data=paranome_analysis, colinearity_data=colinearity_analysis,
                                     num_gfs=num_gfs, rank_type=rank_type)
-        fig_corr_para_col, ax_corr_para_col = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
+        fig_corr_para_col, ax_corr_para_col = fcPlot.generate_mixed_plot_figure(latin_name, x_max_lim, y_lim, 
                                     "corrected", correction_table_available, plot_correction_arrows,
                                     paranome_data=paranome_analysis, colinearity_data=colinearity_analysis,
                                     num_gfs=num_gfs, rank_type=rank_type)
@@ -174,11 +203,11 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
 
     if paranome_analysis and reciprocal_retention_analysis:
         logging.info(f"Plotting paranome and reciprocally retained paralog Ks distributions for species [{species}]")
-        fig_uncorr_para_rr, ax_uncorr_para_rr = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
+        fig_uncorr_para_rr, ax_uncorr_para_rr = fcPlot.generate_mixed_plot_figure(latin_name, x_max_lim, y_lim, 
                                     "un-corrected", correction_table_available, plot_correction_arrows,
                                     paranome_data=paranome_analysis, reciprocal_retention_data=reciprocal_retention_analysis,
                                     num_gfs=num_gfs, rank_type=rank_type)
-        fig_corr_para_rr, ax_corr_para_rr = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
+        fig_corr_para_rr, ax_corr_para_rr = fcPlot.generate_mixed_plot_figure(latin_name, x_max_lim, y_lim, 
                                     "corrected", correction_table_available, plot_correction_arrows,
                                     paranome_data=paranome_analysis, reciprocal_retention_data=reciprocal_retention_analysis,
                                     num_gfs=num_gfs, rank_type=rank_type)
@@ -191,11 +220,11 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
 
     if colinearity_analysis and reciprocal_retention_analysis:
         logging.info(f"Plotting anchor pairs and reciprocally retained paralog Ks distributions for species [{species}]")
-        fig_uncorr_col_rr, ax_uncorr_col_rr = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
+        fig_uncorr_col_rr, ax_uncorr_col_rr = fcPlot.generate_mixed_plot_figure(latin_name, x_max_lim, y_lim, 
                                     "un-corrected", correction_table_available, plot_correction_arrows,
                                     colinearity_data=colinearity_analysis, reciprocal_retention_data=reciprocal_retention_analysis,
                                     num_gfs=num_gfs, rank_type=rank_type)
-        fig_corr_col_rr, ax_corr_col_rr = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
+        fig_corr_col_rr, ax_corr_col_rr = fcPlot.generate_mixed_plot_figure(latin_name, x_max_lim, y_lim, 
                                     "corrected", correction_table_available, plot_correction_arrows,
                                     colinearity_data=colinearity_analysis, reciprocal_retention_data=reciprocal_retention_analysis,
                                     num_gfs=num_gfs, rank_type=rank_type)
@@ -209,11 +238,11 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
     # Generate the mixed plot for the three data types altogether if required by configuration
     if paranome_analysis and colinearity_analysis and reciprocal_retention_analysis:
         logging.info(f"Plotting paranome, anchor pairs and reciprocally retained paralog Ks distributions for species [{species}]")
-        fig_uncorr_para_col_rr, ax_uncorr_para_col_rr = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
+        fig_uncorr_para_col_rr, ax_uncorr_para_col_rr = fcPlot.generate_mixed_plot_figure(latin_name, x_max_lim, y_lim, 
                                     "un-corrected", correction_table_available, plot_correction_arrows,
                                     paranome_data=paranome_analysis, colinearity_data=colinearity_analysis,
                                     reciprocal_retention_data=reciprocal_retention_analysis, num_gfs=num_gfs, rank_type=rank_type)
-        fig_corr_para_col_rr, ax_corr_para_col_rr = fcPlot.generate_mixed_plot_figure(latin_names.get(species), x_max_lim, y_lim, 
+        fig_corr_para_col_rr, ax_corr_para_col_rr = fcPlot.generate_mixed_plot_figure(latin_name, x_max_lim, y_lim, 
                                     "corrected", correction_table_available, plot_correction_arrows,
                                     paranome_data=paranome_analysis, colinearity_data=colinearity_analysis,
                                     reciprocal_retention_data=reciprocal_retention_analysis, num_gfs=num_gfs, rank_type=rank_type)
@@ -225,11 +254,31 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
         ax_corr_include_rr.append(ax_corr_para_col_rr)
         ax_uncorr_list.append(ax_uncorr_para_col_rr)
         ax_corr_list.append(ax_corr_para_col_rr)
+    logging.info("")
 
     # PLOTTING THE BACKGROUND PARALOG DISTRIBUTION(S)
     if paranome_analysis:
-        # Get paranome Ks values within the requested range and recalculate their associated weight
-        paranome_list, paranome_weights = fc_extract_ks_list.ks_list_from_tsv(paralog_tsv_file, max_ks_para, "paralogs")
+        paranome_list = None
+        paranome_weights = None
+        if db_paranome_data is not None:
+            # Reconstruct dataframe from database and recalculate weights
+            paranome_df = filter_compute_weights(pandas.DataFrame(db_paranome_data), min_ks=0.005, max_ks=max_ks_para)
+            paranome_list = paranome_df["Ks"].to_list()
+            paranome_weights = paranome_df["WeightOutliersExcluded"].to_list()
+            logging.info(f"Using paranome Ks list from database for [{species}] (weights recalculated for Ks <= {max_ks_para})")
+        else:
+            # Fall back to TSV file if database not available or empty
+            # Get paranome Ks values within the requested range and recalculate their associated weight
+            paranome_list, paranome_weights = fc_extract_ks_list.ks_list_from_tsv(paralog_tsv_file, max_ks_para, "paralogs")
+            # Opportunistically populate the database with this species' paranome data, if enabled
+            if use_paralog_ks_database:
+                try:
+                    logging.info(f"Storing paranome Ks data in paralog Ks database")
+                    ks_data = fc_consolidate_paralog_ks.extract_paralog_ks_from_tsv(species, paranome_enabled=True)
+                    fc_consolidate_paralog_ks.write_to_paralog_db(latin_name, ks_data, ks_list_paralog_db_path)
+                except Exception as e:
+                    logging.warning(f"Could not populate paralog Ks database: {str(e)}")
+
         for ax_uncorr in ax_uncorr_include_para:
             hist_paranome = fcPlot.plot_histogram("Whole-paranome", ax_uncorr, paranome_list, bin_list, bin_width_para,
                                 max_ks_para, kde_bandwidth_modifier, weight_list=paranome_weights)
@@ -238,26 +287,62 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
                             max_ks_para, kde_bandwidth_modifier, weight_list=paranome_weights)
 
     if colinearity_analysis:
-        # Remove anchor Ks values that are smaller than min_ks_anchors
-        min_ks_anchors = config.get_min_ks_anchors()
-        
-        # Get anchor pair Ks values within the requested range and recalculate their associated weight
-        anchors_list_filtered, anchors_weights_filtered = fc_extract_ks_list.ks_list_from_tsv(anchors_ks_tsv_file, max_ks_para, "anchor pairs", min_ks=min_ks_anchors)
+        anchors_list = None
+        anchors_weights = None
+        if db_anchors_data is not None:
+            # Reconstruct dataframe from database and recalculate weights
+            anchors_df = filter_compute_weights(pandas.DataFrame(db_anchors_data), min_ks=min_ks_anchors, max_ks=max_ks_para)
+            anchors_list = anchors_df["Ks"].to_list()
+            anchors_weights = anchors_df["WeightOutliersExcluded"].to_list()
+            logging.info(f"Using anchor Ks list from database for [{species}] (weights recalculated for {min_ks_anchors} <= Ks <= {max_ks_para})")
+        else:
+            # Fall back to TSV file if database not available or empty
+            # Get anchor pair Ks values within the requested range (using min_ks_anchors) and recalculate their associated weight
+            anchors_list, anchors_weights = fc_extract_ks_list.ks_list_from_tsv(anchors_ks_tsv_file, max_ks_para, "anchor pairs", min_ks=min_ks_anchors)
+            # Opportunistically populate the database with this species' anchors data, if enabled
+            if use_paralog_ks_database:
+                try:
+                    logging.info(f"Storing anchor pair Ks data in paralog Ks database")
+                    ks_data = fc_consolidate_paralog_ks.extract_paralog_ks_from_tsv(species, anchors_enabled=True)
+                    fc_consolidate_paralog_ks.write_to_paralog_db(latin_name, ks_data, ks_list_paralog_db_path)
+                except Exception as e:
+                    logging.warning(f"Could not populate paralog Ks database: {str(e)}")
 
-        if len(anchors_list_filtered) == 0:
+        if len(anchors_list) == 0:
             logging.warning(f"No anchor pairs found! Maybe check your (gene) IDs between "
                             f"anchor pairs file [{_OUTPUT_KS_FILE_PATTERN_ANCHORS.format(species)}] and"
                             f"whole-paranome file [{_OUTPUT_KS_FILE_PATTERN_PARA.format(species)}]")
         for ax_uncorr in ax_uncorr_include_col:
-            hist_anchors = fcPlot.plot_histogram("Anchor pairs", ax_uncorr, anchors_list_filtered, bin_list, bin_width_para, max_ks_para,
-                                kde_bandwidth_modifier, color=fcPlot.COLOR_ANCHOR_HISTOGRAM, weight_list=anchors_weights_filtered)
+            hist_anchors = fcPlot.plot_histogram("Anchor pairs", ax_uncorr, anchors_list, bin_list, bin_width_para, max_ks_para,
+                                kde_bandwidth_modifier, color=fcPlot.COLOR_ANCHOR_HISTOGRAM, weight_list=anchors_weights)
         for ax_corr in ax_corr_include_col:
-            fcPlot.plot_histogram("Anchor pairs", ax_corr, anchors_list_filtered, bin_list, bin_width_para, max_ks_para,
-                                kde_bandwidth_modifier, color=fcPlot.COLOR_ANCHOR_HISTOGRAM, weight_list=anchors_weights_filtered)
+            fcPlot.plot_histogram("Anchor pairs", ax_corr, anchors_list, bin_list, bin_width_para, max_ks_para,
+                                kde_bandwidth_modifier, color=fcPlot.COLOR_ANCHOR_HISTOGRAM, weight_list=anchors_weights)
 
     if reciprocal_retention_analysis:
-        # Get recret Ks values within the requested range and recalculate their associated weight
-        rec_ret_list, rec_ret_weights = fc_extract_ks_list.ks_list_from_tsv(rec_ret_tsv_file, max_ks_para, "reciprocally retained")
+        rec_ret_list = None
+        rec_ret_weights = None
+        if db_recret_data is not None:
+            # Reconstruct dataframe from database and recalculate weights
+            recret_df = filter_compute_weights(pandas.DataFrame(db_recret_data), min_ks=0.005, max_ks=max_ks_para)
+            rec_ret_list = recret_df["Ks"].to_list()
+            rec_ret_weights = recret_df["WeightOutliersExcluded"].to_list()
+            logging.info(f"Using reciprocally retained Ks list from database for [{species}] (weights recalculated for 0.005 <= Ks <= {max_ks_para})")
+        else:
+            # Fall back to TSV file if database not available or empty
+            # Get recret Ks values within the requested range and recalculate their associated weight
+            rec_ret_list, rec_ret_weights = fc_extract_ks_list.ks_list_from_tsv(rec_ret_tsv_file, max_ks_para, "reciprocally retained")
+            # Opportunistically populate the database with this species' reciprocally retained data, if enabled
+            if use_paralog_ks_database:
+                try:
+                    logging.info(f"Storing reciprocally retained Ks data in paralog Ks database")
+                    ks_data = fc_consolidate_paralog_ks.extract_paralog_ks_from_tsv(
+                        species, reciprocal_retention_enabled=True, num_gfs=num_gfs, rank_type=rank_type, bottom=bottom
+                    )
+                    fc_consolidate_paralog_ks.write_to_paralog_db(latin_name, ks_data, ks_list_paralog_db_path)
+                except Exception as e:
+                    logging.warning(f"Could not populate paralog Ks database: {str(e)}")
+        
         for ax_uncorr in ax_uncorr_include_rr:
             hist_rec_ret = fcPlot.plot_histogram("Reciprocally retained paralogs", ax_uncorr, rec_ret_list, bin_list, bin_width_para,
                                 max_ks_para, kde_bandwidth_modifier, color=fcPlot.COLOR_REC_RET_HISTOGRAM, weight_list=rec_ret_weights)
@@ -287,15 +372,15 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
         if colinearity_analysis and reciprocal_retention_analysis:
             fcPlot.set_mixed_plot_height(ax_uncorr_col_rr, y_lim, hist_anchors, hist_rec_ret)
             fcPlot.set_mixed_plot_height(ax_corr_col_rr, y_lim, hist_anchors, hist_rec_ret)
-
+    logging.info("")
 
     # PLOTTING THE ORTHOLOG DIVERGENCE LINES on the paralog distribution
     if correction_table_available:
         logging.info("Plotting ortholog divergence lines in the mixed plot")
         for ax_uncorr, ax_corr in zip(ax_uncorr_list, ax_corr_list):
             fcPlot.plot_divergences(correction_table, peak_stats, consensus_peak_for_multiple_outgroups, ax_uncorr, ax_corr, color_list, plot_correction_arrows)
-
     logging.info("")
+
     logging.info(f"Saving PDF figures of mixed plots")
     if paranome_analysis:
         fcPlot.save_mixed_plot(fig_corr_para, fig_uncorr_para, ax_corr_para, ax_uncorr_para, species, correction_table_available, paranome=paranome_analysis,

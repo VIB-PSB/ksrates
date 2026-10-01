@@ -1,5 +1,6 @@
 import click
 import logging
+import sys
 from sys import argv
 from ksrates._version import __version__
 
@@ -11,7 +12,7 @@ def cli():
     """
 
 
-@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Generates configuration file.")
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Generate configuration file.")
 @click.argument('filename')
 def generate_config(filename):
     """
@@ -27,7 +28,7 @@ def generate_config(filename):
     generate_configfile(filename)
     
 
-@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Initializes rate-adjustment.")
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Initialize rate-adjustment.")
 @click.argument('config_file', type=click.Path(exists=True))
 @click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option("-n", "--nextflow", is_flag=True, help="Flag for Nextflow pipeline (Default: False)")
@@ -50,7 +51,7 @@ def init(config_file, expert, nextflow):
     setup_correction(config_file, expert, nextflow)
 
 
-@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Performs paralog Ks estimation.")
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Perform paralog Ks estimation.")
 @click.argument('config_file', type=click.Path(exists=True))
 @click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option("--n-threads", type=int, default=1, help="Number of threads (default: 1)")
@@ -84,7 +85,7 @@ def paralogs_ks(config_file, expert, n_threads, custom_recret_gfs, parsed_homolo
     wgd_paralogs(config_file, expert, n_threads, custom_recret_gfs, parsed_homology_table, test)
 
 
-@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Performs ortholog Ks estimation.")
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Perform ortholog Ks estimation.")
 @click.argument('config_file', type=click.Path(exists=True))
 @click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.argument("species1")
@@ -113,7 +114,7 @@ def orthologs_ks(config_file, expert, species1, species2, n_threads):
 
 
 @cli.command(context_settings={'help_option_names': ['-h', '--help']}, 
-             short_help="Computes ortholog divergence times Ks estimates.")
+             short_help="Compute ortholog divergence times Ks estimates.")
 @click.argument('config_file', type=click.Path(exists=True))
 @click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option('--ortholog-pairs', type=click.Path(exists=True), help="User-defined path to file containing the ortholog pairs with missing ortholog Ks peak in database (default: rate_adjustment/species/ortholog_pairs_species.tsv)")
@@ -140,7 +141,7 @@ def orthologs_analysis(config_file, expert, ortholog_pairs):
 
 
 @cli.command(context_settings={'help_option_names': ['-h', '--help']}, 
-             short_help="Performs ortholog substitution rate-adjustment.")
+             short_help="Perform ortholog substitution rate-adjustment.")
 @click.argument('config_file', type=click.Path(exists=True))
 @click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option("--trios", type=click.Path(exists=True), help="User-defined path to file containing the ortholog trios (default: rate_adjustment/species/orthologs_trios_species.tsv)")
@@ -166,7 +167,7 @@ def orthologs_adjustment(config_file, expert, trios):
     correct(config_file, expert, trios)
 
 
-@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Generates rate-adjusted mixed Ks plot.")
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Generate rate-adjusted mixed Ks plot.")
 @click.argument('config_file', type=click.Path(exists=True))
 @click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option("--adjustment-table", type=click.Path(exists=True), help="User-defined path to file containing adjustment results (default: rate_adjustment/species/adjustment_table_species.tsv)")
@@ -201,7 +202,7 @@ def plot_paralogs(config_file, expert, adjustment_table, paranome_table, anchors
     plot_paralogs_distr(config_file, expert, adjustment_table, paranome_table, anchors_table, reciprocal_retention_table)
 
 
-@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Generates phylogram with Ks-unit branch lengths.")
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Generate phylogram with Ks-unit branch lengths.")
 @click.argument('config_file', type=click.Path(exists=True))
 @click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option("--adjustment-table", type=click.Path(exists=True), help="User-defined path to file containing adjustment results (default: rate_adjustment/species/adjustment_table_species.tsv)")
@@ -229,7 +230,7 @@ def plot_tree(config_file, expert, adjustment_table, nextflow):
     plot_tree_rates(config_file, expert, adjustment_table, nextflow)
 
 
-@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Generates ortholog Ks distributions plot.")
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Generate ortholog Ks distributions plot.")
 @click.argument('config_file', type=click.Path(exists=True))
 @click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option("--trios", type=click.Path(exists=True), help="User-defined path to file containing the ortholog trios (default: rate_adjustment/species/orthologs_trios_species.tsv)")
@@ -255,7 +256,7 @@ def plot_orthologs(config_file, expert, trios):
     plot_orthologs_distr(config_file, expert, trios)
 
 
-@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Detects WGD signatures in paralog Ks distribution.")
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Detect WGD signatures in paralog Ks distribution.")
 @click.argument('config_file', type=click.Path(exists=True))
 @click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option("--paranome-table", type=click.Path(exists=True), help="User-defined path to file containing paranome Ks (default: paralog_distributions/wgd_species/species.ks.tsv)")
@@ -310,7 +311,7 @@ def paralogs_analyses(config_file, expert, paranome_table, anchors_table, recipr
                     adjustment_table, anchorpoints, multiplicons, segments, list_elements, multiplicon_pairs)
 
 
-@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Performs paralog Ks estimation for all species.")
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Perform paralog Ks estimation for all species.")
 @click.argument('config_sources', nargs=-1, required=True, type=click.Path(exists=True))
 @click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option("--n-threads", type=int, default=1, help="Number of threads (default: 1)")
@@ -418,7 +419,153 @@ def orthologs_ks_cleanup(orthologs_dir_path, dry_run):
                 print('Please choose between "y" or "n". Cancelled.')
 
 
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Launches the shared paralog Ks database server (sqld).")
+@click.option('--location', type=click.Path(file_okay=False), required=True, help="Central directory to hold the server's data/keys directories and address file")
+@click.option('--port', type=int, default=8080, help="Port sqld listens on (default: 8080)")
+@click.option('--address-filename', default="paralog_ks_server_address.txt", help="Filename (not path) of the address file written under LOCATION (default: paralog_ks_server_address.txt)")
+def launch_paralog_ks_server(location, port, address_filename):
+	"""
+	Launches the sqld server that hosts the shared paralog Ks database, in the foreground. This
+	command never returns on success (it execs into sqld) - submit it once as a long-running job
+	(see setup_database_server.nf) and leave it running indefinitely; every ksrates analysis then becomes
+	a network client of it instead of opening a local database file directly.
+	Do not launch this from within a per-analysis pipeline run: the server's lifetime must outlive
+	any single analysis, and must not be duplicated by concurrent analyses sharing the same database.
+
+	Writes <LOCATION>/<ADDRESS_FILENAME>: point every dataset's ks_list_paralog_database_path
+	configuration field at this file (see the "Paralog Ks database server" section of the
+	documentation).
+
+	\b
+	Example:
+	  ksrates launch-paralog-ks-server --location /path/to/central/dir
+
+	\b
+	Example (custom address filename):
+	  ksrates launch-paralog-ks-server --location /path/to/central/dir --address-filename server1.txt
+	"""
+	from ksrates.launch_paralog_ks_server import launch_server
+
+	click.format_filename(location)
+	print(f"Launching paralog Ks database server in [{location}]...")
+	launch_server(location, port=port, address_filename=address_filename)
+
+
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Populate paralog Ks database from existing data.")
+@click.argument('config_dir', type=click.Path(exists=True))
+@click.argument('paralog_distributions_dir', type=click.Path(exists=True))
+@click.option('-d', '--database', type=click.Path(), required=True, help="Path to the sqld server's address file (written by the server job at startup; the server must already be running)")
+@click.option('--force', is_flag=True, help="Re-extract and overwrite analysis types a species already has data for (by default only what's missing is added)")
+@click.option('--num-gfs', type=int, default=2000, help="Number of gene families for reciprocally retained (default: 2000)")
+def populate_paralog_ks_db(config_dir, paralog_distributions_dir, database, force, num_gfs):
+	"""
+	Populates the paralog Ks database (served by a running sqld server) from config files and existing paralog TSV files.
+
+	Reads config files in CONFIG_DIR to extract species information (informal and latin names),
+	then consolidates paralog Ks data from matching directories in PARALOG_DISTRIBUTIONS_DIR.
+
+	\b
+	CONFIG_DIR: path to directory containing config files for species to consolidate
+	PARALOG_DISTRIBUTIONS_DIR: path to directory containing wgd_* subdirectories
+
+	\b
+	If a species is already in the database, only analysis types (paranome/anchors/reciprocally
+	retained) and i-ADHoRe files it doesn't have data for yet are extracted and added - e.g. if
+	reciprocal retention finishes days after paranome/anchors were first stored, a later run of
+	this command picks it up automatically, without disturbing what's already there. Use --force
+	to instead re-extract and overwrite everything, including types the species already has.
+
+	\b
+	Example (process all species with configs in configs/ directory):
+	  ksrates populate-paralog-ks-db configs/ paralog_distributions/ --database paralog_ks_server_address.txt
+
+	\b
+	Re-extract and overwrite everything, even already-populated types:
+	  ksrates populate-paralog-ks-db configs/ paralog_distributions/ --database paralog_ks_server_address.txt --force
+
+	\b
+	Use different recret GF number:
+	  ksrates populate-paralog-ks-db configs/ paralog_distributions/ --database paralog_ks_server_address.txt --num-gfs 4000
+	"""
+	from ksrates.populate_paralog_ks_db import populate_paralog_ks_db_batch as populate_batch
+
+	click.format_filename(config_dir)
+	click.format_filename(paralog_distributions_dir)
+	click.format_filename(database)
+
+	populate_batch(config_dir, paralog_distributions_dir, database, force_overwrite=force, num_gfs=num_gfs)
+
+
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Visualize or delete paralog Ks database content.")
+@click.argument('database', type=click.Path(exists=True))
+@click.argument('species_filter', required=False)
+@click.option('--delete', is_flag=True, help="Delete species matching SPECIES_FILTER (required) from the database. Lists matches and asks for confirmation before deleting.")
+@click.option('--list', 'list_only', is_flag=True, help="Export a TSV listing which species are in the database and which analysis types each has.")
+def inspect_paralog_ks_db(database, species_filter, delete, list_only):
+	"""
+	Prints the full content of the paralog Ks database in a TSV file, one row per gene pair.
+    Columns are: latin_name, analysis_type, Paralog1, Paralog2, Family, Node, Ks, 
+	AlignmentCoverage, AlignmentIdentity, AlignmentLength.
+    The output filename is generated automatically next to the database, from its
+	basename with the current timestamp appended, e.g. "paralog_ks_server_address.txt" ->
+	"paralog_ks_db_YYYYMMDD_HHMMSS.tsv".
+    The per-species i-ADHoRe output files (anchorpoints.txt, multiplicons.txt, segments.txt, 
+    list_elements.txt, multiplicon_pairs.txt) are also printed to file under a matching
+	"..._iadhore_files" directory, one subdirectory per species. Since the database itself stores 
+	this data as binary blobs and text columns (for speed/size), this is the way to actually
+	inspect its content (e.g. in Excel, VSCode, pandas...).
+
+	Add --list to instead export a TSV listing the species in the database, plus a True/False
+    column per analysis type (paranome, anchors, reciprocally retained, i-ADHoRe files).
+
+	Add --delete to instead delete every species matching SPECIES_FILTER from the database (e.g. to
+	discard data written incompletely or now considered outdated).
+
+	\b
+	DATABASE: path to the sqld server's address file
+	SPECIES_FILTER: optional substring to only export/list matching species (case-insensitive);
+                    required when using --delete. Multi-word (latin) names need to be provided
+                    with quotes, e.g. "Arabidopsis thaliana".
+
+	\b
+	Example (dump all species):
+	  ksrates inspect-paralog-ks-db paralog_ks_server_address.txt
+
+	\b
+	Example (dump only species whose latin name contains the provided string):
+	  ksrates inspect-paralog-ks-db paralog_ks_server_address.txt Arabidopsis
+
+	\b
+	Example (list which species are in the database, and what data they have):
+	  ksrates inspect-paralog-ks-db paralog_ks_server_address.txt --list
+
+	\b
+	Example (delete species whose latin name contains the provided string):
+	  ksrates inspect-paralog-ks-db paralog_ks_server_address.txt Arabidopsis --delete
+
+	\b
+	Example (delete a species by its complete name using quotes):
+	  ksrates inspect-paralog-ks-db paralog_ks_server_address.txt "Arabidopsis thaliana" --delete
+	"""
+	click.format_filename(database)
+
+	if delete and list_only:
+		raise click.UsageError("--delete and --list cannot be used together.")
+
+	if delete:
+		if not species_filter:
+			raise click.UsageError("SPECIES_FILTER is required when using --delete.")
+		from ksrates.inspect_paralog_ks_db import delete_species
+		delete_species(database, species_filter)
+	elif list_only:
+		from ksrates.inspect_paralog_ks_db import list_species
+		list_species(database, species_filter)
+	else:
+		from ksrates.inspect_paralog_ks_db import export_full_tsv
+		export_full_tsv(database, species_filter)
+
+
 # For debugging
 # Syntax: python3 ksrates_cli.py [command] [args]
 if __name__ == "__main__":
-    cli(argv[1:])
+	cli(argv[1:])

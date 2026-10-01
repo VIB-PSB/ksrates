@@ -1,5 +1,5 @@
 import os
-from pandas import read_csv
+from pandas import read_csv, DataFrame
 import matplotlib.pyplot as plt
 from ksrates.utils import init_logging
 import logging
@@ -10,6 +10,7 @@ import ksrates.fc_check_input as fcCheck
 import ksrates.fc_plotting as fcPlot
 import ksrates.fc_extract_ks_list as fc_extract_ks_list
 import ksrates.fc_exp_log_mixture as fcEM
+import ksrates.fc_consolidate_paralog_ks as fc_consolidate_paralog_ks
 from ksrates.fc_cluster_anchors import subfolder
 from ksrates.fc_rrt_correction import _ADJUSTMENT_TABLE, interpretation_adjusted_plot
 
@@ -56,20 +57,50 @@ def exp_log_mixture(config_file, expert_config_file, paralog_tsv_file, correctio
     logging.info(f" - Ks range considered for the mixture modeling: up to {max_ks_EM} Ks.")
   logging.info("")
 
-  if paranome_analysis:
+  if not paranome_analysis:
+    logging.error("Mixture modeling is not performed since paranome analysis is not required in configuration file")
+    logging.error("Exiting")
+    sys.exit(0) # exit code 0 because no actual errors were thrown
+
+  use_paralog_ks_database = config.use_paralog_ks_database() # Whether to use the collective paralog Ks database (default: no)
+  ks_list_paralog_db_path = config.get_paralog_ks_database() # SQLite database consolidating paralog Ks data across species
+
+  # Get paranome Ks data as a DataFrame, either from the consolidated database first (if enabled in
+  # expert config; an indexed single-row lookup that doesn't load data for any other species) or by
+  # reading the wgd output TSV file. Read once here and reuse the same DataFrame for every extraction
+  # below, instead of each helper independently re-reading the same file from disk.
+  paranome_from_db = None
+  if use_paralog_ks_database:
+    try:
+      fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path)
+      paranome_from_db = fc_consolidate_paralog_ks.read_analysis_data(ks_list_paralog_db_path, latinSpecies, 'paranome')
+    except Exception as e:
+      logging.warning(f"Could not use paralog Ks database [{ks_list_paralog_db_path}]: {str(e)}. Will read TSV file instead.")
+
+  if paranome_from_db is not None:
+    logging.info(f"Using paranome Ks data from database for [{species}]")
+    paralog_df = DataFrame(paranome_from_db)
+  else:
     default_path_paralog_tsv_file = os.path.join("paralog_distributions", f"wgd_{species}", f"{species}.ks.tsv")
     paralog_tsv_file = fcCheck.get_argument_path(paralog_tsv_file, default_path_paralog_tsv_file, "Paralog Ks TSV file")
     if paralog_tsv_file == "":
       logging.error(f"Paralog Ks TSV file not found at default position [{default_path_paralog_tsv_file}].")
       logging.error("Exiting")
       sys.exit(1)
-  else:
-    logging.error("Mixture modeling is not performed since paranome analysis is not required in configuration file")
-    logging.error("Exiting")
-    sys.exit(0) # exit code 0 because no actual errors were thrown
+    with open(paralog_tsv_file, "r") as f:
+      paralog_df = read_csv(f, sep="\t")
+
+    # Opportunistically populate the database with this species' paranome data, if enabled
+    if use_paralog_ks_database:
+      try:
+        logging.info(f"Storing paranome Ks data in paralog Ks database")
+        ks_data = fc_consolidate_paralog_ks.extract_paralog_ks_from_tsv(species, paranome_enabled=True)
+        fc_consolidate_paralog_ks.write_to_paralog_db(latinSpecies, ks_data, ks_list_paralog_db_path)
+      except Exception as e:
+        logging.warning(f"Could not populate paralog Ks database: {str(e)}")
 
   # Get paranome Ks values within the requested range and recalculate their associated weight
-  ks_data, ks_weights = fc_extract_ks_list.ks_list_from_tsv(paralog_tsv_file, max_ks_para, "paralogs")
+  ks_data, ks_weights = fc_extract_ks_list.ks_list_from_df(paralog_df, max_ks_para, "paralogs")
 
   # Get adjustment results TSV file
   # If correction_table is (still) missing, it will be equal to empty string (""), but the script will not exit
@@ -101,11 +132,11 @@ def exp_log_mixture(config_file, expert_config_file, paralog_tsv_file, correctio
                                                                correction_table_available, plot_correction_arrows)
 
   # Generating a proxy dataset for the weighted Ks paranome (deconvoluting the histogram)
-  deconvoluted_data = fcEM.deconvolute_data(paralog_tsv_file, max_ks_EM, "paralogs")
+  deconvoluted_data = fcEM.deconvolute_data_from_df(paralog_df, max_ks_EM, "paralogs")
   # Log-transformation of Ks paranome
-  ks_data_log, ks_weights_log = fcEM.logtransformation(paralog_tsv_file, max_ks_EM)
+  ks_data_log, ks_weights_log = fcEM.logtransformation_from_df(paralog_df, max_ks_EM)
 
-  bic_dict, parameters_list = {}, {} # will contain BIC scores and parameters of all models 
+  bic_dict, parameters_list = {}, {} # will contain BIC scores and parameters of all models
   all_models_init_parameters = {} # will contain the initial parameters of all models (for plotting purpose)
   all_models_fitted_parameters = {} # will contain the fitted parameters of all models (for plotting purpose)
   parameter_table = [] # will contain parameters for every model iteration for tabular output text file
