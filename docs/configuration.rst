@@ -157,11 +157,34 @@ so that the process just runs as a plain local subprocess of the ``nextflow run`
 This requires the ``sqld`` binary to be baked into the *ksrates* container image (see the
 ``Dockerfile``) rather than downloaded at runtime.
 
-Starting it without Nextflow
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Starting it directly with the CLI command
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-On a SLURM cluster, without going through Nextflow at all, ``cluster_scripts/run_paralog_ks_server.sbatch``
-downloads ``sqld`` itself at runtime and performs the same setup as the command above:
+``setup_database_server.nf`` above is a thin wrapper around a ``ksrates`` CLI command,
+``launch-paralog-ks-server``, which can also be invoked directly against the container (e.g. from
+your own SLURM job) without going through Nextflow at all::
+
+    singularity exec <path/to/ksrates.sif> ksrates launch-paralog-ks-server \\
+        --location /path/to/central/dir
+
+Options:
+
+* ``--location`` (required): central directory to hold the server's data/keys directories and
+  address file.
+* ``--port`` (default ``8080``): port ``sqld`` listens on.
+* ``--address-filename`` (default ``paralog_ks_server_address.txt``): filename (not path) of the
+  address file written under ``--location``.
+
+Like the Nextflow path above, this requires the ``sqld`` binary to already be baked into the
+container image. The command never returns on success (it execs into ``sqld``), so submit it as
+its own long-running job, same as the other two options.
+
+Starting it without a container
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+On a SLURM cluster, without a container at all (e.g. for a manually pip-installed *ksrates*),
+``cluster_scripts/run_paralog_ks_server.sbatch`` downloads ``sqld`` itself at runtime and performs
+the same setup as the two options above:
 
 1. Copy ``cluster_scripts/run_paralog_ks_server.sbatch`` and edit the variables at the top
    (install/data directories, address file path, port) for your own cluster.
