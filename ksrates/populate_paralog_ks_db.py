@@ -106,10 +106,8 @@ def populate_paralog_ks_db_batch(config_dir_path, paralog_distributions_path, db
 
 	for informal_name, latin_name in species_info.items():
 		# Check if species already exists in database (by latin name), and if so which analysis
-		# types/i-ADHoRe bundle it already has data for (e.g. paranome and anchors were stored on
-		# a first pass, and reciprocal retention only finished days later): without --force, only
-		# what's actually missing gets extracted and written, so an already-populated type is
-		# never touched, but a species isn't skipped wholesale just because it exists.
+		# types/i-ADHoRe bundle it already has data for. Without --force, only what's missing
+		# gets extracted and written, instead of skipping the species wholesale.
 		exists = fc_consolidate_paralog_ks.species_exists(db_path, latin_name)
 		if exists and not force_overwrite:
 			existing_types = fc_consolidate_paralog_ks.existing_data_types(db_path, latin_name)
@@ -170,11 +168,8 @@ def populate_paralog_ks_db_batch(config_dir_path, paralog_distributions_path, db
 			# above or nothing was actually found on disk for the enabled types)
 			wrote_ks_data = fc_consolidate_paralog_ks.write_to_paralog_db(latin_name, ks_data, db_path)
 
-			# Also pick up the i-ADHoRe output files if present on disk and enabled above, same as
-			# wgd_paralogs.py does right after a fresh colinearity run: extract_paralog_ks_from_tsv()
-			# above only ever reads the three Ks TSVs, so without this the accessory files a past
-			# colinearity run already produced would never make it into the database via this batch
-			# command.
+			# Also pick up the i-ADHoRe output files if present on disk and enabled above -
+			# extract_paralog_ks_from_tsv() above only reads the three Ks TSVs, not these.
 			if iadhore_enabled:
 				iadhore_texts = fc_consolidate_paralog_ks.extract_anchor_iadhore_files(informal_name)
 				wrote_iadhore = any(text is not None for text in iadhore_texts.values())
@@ -183,9 +178,8 @@ def populate_paralog_ks_db_batch(config_dir_path, paralog_distributions_path, db
 			else:
 				wrote_iadhore = False
 
-			# Final status shown in the summary table below: the union of what the species already
-			# had before this run and whatever was freshly written just now (rather than only what
-			# this run itself touched), so an already-populated type isn't shown as missing.
+			# Union of what the species already had and what was freshly written this run, so an
+			# already-populated type isn't shown as missing in the summary table below.
 			data_types_found[informal_name] = [
 				t for t, already, fresh in [
 					('paranome', existing_types["paranome"], ks_data['paranome'] is not None),

@@ -20,10 +20,9 @@ def _generate_jwt_keys(key_dir):
 	clients. The private key persists across server restarts (kept in key_dir, next to the data
 	directory) so tokens already handed out in old address files keep working.
 
-	Uses the `cryptography` package directly rather than shelling out to the openssl CLI: the
-	CLI's raw-Ed25519-signing support (pkeyutl -rawin) was only added in OpenSSL 3.0, so shelling
-	out is fragile across container images with older OpenSSL builds (seen firsthand: OpenSSL
-	1.1.1f, common on Debian-buster-era base images, has no -rawin at all).
+	Uses the `cryptography` package rather than shelling out to openssl: openssl's raw-Ed25519
+	signing (pkeyutl -rawin) is only available from OpenSSL 3.0 onward and varies across
+	container base images.
 
 	:param key_dir: directory to hold jwt_private.pem/jwt_public.pem
 	:return: (private_key, public_key_path) - private_key is an Ed25519PrivateKey object
@@ -120,9 +119,8 @@ def launch_server(location, port=8080, address_filename="paralog_ks_server_addre
 	print("Starting sqld...")
 	sys.stdout.flush()
 
-	# Replaces this process with sqld (rather than spawning a subprocess), so the container's
-	# main process is sqld itself - matching the sbatch script's "exec sqld" and keeping signal
-	# handling/PID-1 semantics simple, whether launched by SLURM, a container runtime, or Nextflow.
+	# Replaces this process with sqld (rather than spawning a subprocess) so sqld becomes the
+	# container's main process, keeping signal handling/PID-1 semantics simple.
 	os.execv(_SQLD_BIN, [
 		_SQLD_BIN,
 		f"--http-listen-addr=0.0.0.0:{port}",

@@ -34,11 +34,9 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
     use_paralog_ks_database = config.use_paralog_ks_database() # Whether to also copy the Ks data into a collective SQLite database (default: no)
 
     # Check what's already stored in the shared database before running any (expensive) wgd
-    # pipeline step: two independent ksrates runs analysing the same species from different
-    # phylogenetic trees would otherwise both pay for identical computation, with only one
-    # result surviving in the shared database (the second write wins via the COALESCE upsert).
-    # initialize_paralog_db() (CREATE TABLE IF NOT EXISTS) runs first so a brand new database
-    # doesn't log a spurious "no such table" warning on the existing_data_types() read below.
+    # pipeline step, to avoid recomputing data another run already produced for this species.
+    # initialize_paralog_db() runs first so a brand new database doesn't log a spurious
+    # "no such table" warning on the existing_data_types() read below.
     paralog_db_ready = False
     paranome_in_db = False
     anchors_in_db = False
@@ -112,14 +110,10 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
     # ESTIMATING PARANOME Ks VALUES
     logging.info(datetime.datetime.today().ctime())
     
-    # ks_paralogs() is needed if paranome data itself is wanted and not yet in the database, OR
-    # if colinearity is enabled and about to run below (its prerequisite local mcl/Ks files are
-    # never stored in the database, only the final consolidated columns are, so colinearity needs
-    # ks_paralogs() to have produced them locally in THIS tree's directory regardless of whether
-    # paranome data happens to already be in the database from a different tree's earlier run).
-    # When use_paralog_ks_database is off, paranome_in_db/anchors_in_db/recret_in_db are all False
-    # (never queried), so this reduces to the original unconditional "paranome or colinearity"
-    # behavior - the skip logic only ever activates when the database feature is actually on.
+    # ks_paralogs() is needed if paranome data is wanted and not yet in the database, OR if
+    # colinearity is enabled: colinearity needs the local mcl/Ks files ks_paralogs() produces,
+    # which are never stored in the database themselves, regardless of whether paranome data is
+    # already there from a different tree's earlier run.
     need_paranome_pipeline = (paranome and not paranome_in_db) or (colinearity and not anchors_in_db)
 
     if paranome or colinearity:
@@ -183,11 +177,9 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
         if anything_to_consolidate and paralog_db_ready:
             logging.info("---")
             logging.info(f"Consolidating paralog Ks lists into database [{ks_list_paralog_db_path}]")
-            # paranome_enabled uses need_paranome_pipeline (not just "paranome and not paranome_in_db"):
-            # whenever ks_paralogs() actually ran above - whether paranome was independently requested,
-            # or colinearity forced it - its fresh output should overwrite whatever paranome is already
-            # stored, so the database's paranome and anchors for this species always come from the same
-            # underlying computation rather than two unrelated runs.
+            # paranome_enabled uses need_paranome_pipeline, not just "paranome and not paranome_in_db":
+            # whenever ks_paralogs() actually ran above, its fresh output should be stored, keeping
+            # paranome and anchors for this species from the same underlying computation.
             fc_consolidate_paralog_ks.consolidate_paralog_ks_lists(species, latin_name, ks_list_paralog_db_path,
                                                                     paranome_enabled=paranome_enabled,
                                                                     anchors_enabled=anchors_enabled,

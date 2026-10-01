@@ -31,12 +31,10 @@ SQLD_BIN="$SQLD_INSTALL_DIR/bin/sqld"
 # download/extract steps by hand on a node that does have internet access, pointed at the same
 # SQLD_INSTALL_DIR, before submitting this job.
 #
-# Fetches the release tarball directly rather than going through the official
-# libsql-server-installer.sh: that installer refuses to use the glibc build on any system with
-# glibc older than 2.35 and falls back to requesting a "musl-static" asset instead — but no such
-# asset is actually published for Linux, so on a node with (for example) glibc 2.34 the installer
-# always fails outright. The glibc build is normally compatible one or two point releases below
-# its build target, so it's still worth trying directly here instead of trusting that gate.
+# Fetches the release tarball directly rather than using the official libsql-server-installer.sh:
+# that installer rejects the glibc build below glibc 2.35 and falls back to a "musl-static" asset
+# that isn't actually published, so it fails outright on slightly older systems even though the
+# glibc build is normally still compatible.
 if [ ! -x "$SQLD_BIN" ]; then
     echo "sqld binary not found at $SQLD_BIN, downloading $SQLD_VERSION..."
     mkdir -p "$SQLD_INSTALL_DIR/bin"
@@ -81,15 +79,10 @@ fi
 
 mkdir -p "$SQLD_DATA_DIR"
 
-# Authentication: every client on the network can reach this port, so the server requires a
-# JWT on every request. Kept deliberately simple: one shared, non-expiring,
-# full-access token generated once and reused by every client job. This is safe because the
-# key pair (and thus the token) lives in KEY_DIR, next to the data directory, not in this
-# script or in version control, and is never printed to the job log.
-#
-# The private key is generated once and kept persistent across server restarts so old tokens
-# (already handed out in old address files) keep working; the public key is what sqld itself
-# uses to verify tokens (--auth-jwt-key-file).
+# Authentication: every client on the network can reach this port, so the server requires a JWT
+# on every request. One shared, non-expiring, full-access token is generated once and reused by
+# every client job; the key pair lives in KEY_DIR (not in this script or version control) and
+# persists across server restarts so already-issued tokens keep working.
 mkdir -p "$KEY_DIR"
 PRIVATE_KEY="$KEY_DIR/jwt_private.pem"
 PUBLIC_KEY="$KEY_DIR/jwt_public.pem"
@@ -130,9 +123,8 @@ echo "Address file: $(realpath "$ADDRESS_FILE")"
 echo "Starting sqld..."
 
 # --max-response-size / --max-total-response-size default to 10MB/32MB, well below what a
-# single species' pickled paranome Ks data can be for a large genome (real 1kp-scale species
-# can have tens of MB of paralog data) - raised generously here with headroom above anything
-# seen so far. If a species still exceeds these, the caller already treats every DB read/write
-# as best-effort with a TSV fallback, so it degrades gracefully rather than failing the run.
+# single species' pickled paranome Ks data can reach for a large genome - raised here with
+# headroom. Callers already treat every DB read/write as best-effort with a TSV fallback, so
+# exceeding even this raised limit degrades gracefully rather than failing the run.
 exec "$SQLD_BIN" --http-listen-addr=0.0.0.0:$PORT --db-path="$SQLD_DATA_DIR" --auth-jwt-key-file="$PUBLIC_KEY" \
     --max-response-size=200MB --max-total-response-size=500MB

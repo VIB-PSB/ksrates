@@ -8,19 +8,16 @@
  * "Paralog Ks database server", for the full setup instructions.
  *
  * Uses the same container/profile settings (-profile docker/apptainer/singularity, -c nextflow.config)
- * as main.nf, so no new container-invocation syntax to learn - only the entry script and params differ.
- * Unlike main.nf's processes, this single process never benefits from being distributed as its own
- * cluster job (it just needs to keep running) - so if nextflow.config sets executor.name to a
- * cluster scheduler (e.g. 'slurm'), override it back to 'local' for this run with -process.executor,
- * avoiding a nested job that would otherwise inherit the cluster's default walltime and get killed:
+ * as main.nf - only the entry script and params differ. If nextflow.config sets executor.name to a
+ * cluster scheduler (e.g. 'slurm'), override it back to 'local' with -process.executor, so this
+ * single always-running process isn't submitted as its own nested job subject to the cluster's
+ * default walltime:
  *
  *   nextflow run VIB-PSB/ksrates -main-script setup_database_server.nf -profile singularity \
  *       -c nextflow.config -process.executor=local \
  *       --location /path/to/central/dir
  *
- * Submit the command above as (or from within) your own long-running/walltime-unlimited job -
- * Nextflow then runs this process as a plain local subprocess of that job, exactly like
- * cluster_scripts/run_paralog_ks_server.sbatch's "exec sqld" model.
+ * Submit the command above as (or from within) your own long-running/walltime-unlimited job.
  */
 
 // Central directory to hold the server's data/keys directories and address file (required)
