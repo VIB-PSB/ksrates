@@ -443,4 +443,5 @@ def consolidate_paralog_ks_lists(species_name, latin_name, ks_list_paralog_db_pa
 										reciprocal_retention_enabled, num_gfs, rank_type, bottom)
 
 	write_to_paralog_db(latin_name, ks_data, ks_list_paralog_db_path)
+	logging.info("Done")
 	return
