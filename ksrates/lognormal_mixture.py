@@ -113,7 +113,8 @@ def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors
         db_data = None
         if use_paralog_ks_database:
             try:
-                fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path)
+                if not fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path):
+                    raise RuntimeError("database unreachable")
                 db_data = fc_consolidate_paralog_ks.read_analysis_data(ks_list_paralog_db_path, latinSpecies, 'paranome')
             except Exception as e:
                 logging.warning(f"Could not use paralog Ks database [{ks_list_paralog_db_path}]: {str(e)}. Will read TSV file instead.")
@@ -140,7 +141,8 @@ def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors
         db_data = None
         if use_paralog_ks_database:
             try:
-                fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path)
+                if not fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path):
+                    raise RuntimeError("database unreachable")
                 db_data = fc_consolidate_paralog_ks.read_analysis_data(ks_list_paralog_db_path, latinSpecies, 'anchors')
             except Exception as e:
                 logging.warning(f"Could not use paralog Ks database [{ks_list_paralog_db_path}]: {str(e)}. Will read TSV file instead.")
@@ -167,7 +169,8 @@ def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors
         db_data = None
         if use_paralog_ks_database:
             try:
-                fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path)
+                if not fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path):
+                    raise RuntimeError("database unreachable")
                 db_data = fc_consolidate_paralog_ks.read_analysis_data(ks_list_paralog_db_path, latinSpecies, 'recret')
             except Exception as e:
                 logging.warning(f"Could not use paralog Ks database [{ks_list_paralog_db_path}]: {str(e)}. Will read TSV file instead.")

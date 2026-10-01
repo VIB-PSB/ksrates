@@ -56,7 +56,8 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
     # Each lookup is an indexed single-row read: it doesn't load data for any other species.
     if use_paralog_ks_database:
         try:
-            fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path)
+            if not fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path):
+                raise RuntimeError("database unreachable")
             if paranome_analysis:
                 db_paranome_data = fc_consolidate_paralog_ks.read_analysis_data(ks_list_paralog_db_path, latin_name, 'paranome')
             if colinearity_analysis:

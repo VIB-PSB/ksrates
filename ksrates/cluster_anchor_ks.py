@@ -76,7 +76,8 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
     iadhore_texts = None
     if use_paralog_ks_database:
         try:
-            fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path)
+            if not fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path):
+                raise RuntimeError("database unreachable")
             db_iadhore = fc_consolidate_paralog_ks.read_anchor_iadhore_files(ks_list_paralog_db_path, latin_names[species])
             if all(db_iadhore[key] is not None for key in iadhore_keys):
                 iadhore_texts = db_iadhore
@@ -154,7 +155,8 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
     anchors_df = None
     if use_paralog_ks_database:
         try:
-            fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path)
+            if not fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path):
+                raise RuntimeError("database unreachable")
             db_data = fc_consolidate_paralog_ks.read_analysis_data(ks_list_paralog_db_path, latin_names[species], 'anchors')
             if db_data is not None:
                 anchors_df = DataFrame(db_data)
