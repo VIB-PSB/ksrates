@@ -81,9 +81,16 @@ def populate_paralog_ks_db_batch(config_dir_path, paralog_distributions_path, db
 	logging.info("")
 
 	logging.info("Checking paralog Ks database from input path")
-	# Initialize database
-	fc_consolidate_paralog_ks.initialize_paralog_db(db_path)
+	# Initialize database; also fail fast here if it's unreachable (e.g. server down, stale address file)
+	if not fc_consolidate_paralog_ks.initialize_paralog_db(db_path):
+		logging.error(f"Could not initialize paralog Ks database [{db_path}]")
+		trigger_exit = True
 	logging.info("")
+
+	# Exit if issues with config dir/files, distributions dir/wgd dirs, database reachability
+	if trigger_exit:
+		logging.error("Please fix the issue(s) above and rerun. Exiting.")
+		sys.exit(1)
 
 	logging.info(f"Processing {len(species_info)} species:")
 
