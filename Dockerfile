@@ -54,7 +54,7 @@ RUN wget https://raw.githubusercontent.com/VIB-PSB/OrthoMCLight/main/orthomcligh
 # official installer script, which rejects the glibc build below glibc 2.35 and falls back to a
 # "musl-static" asset that isn't actually published.
 ARG SQLD_VERSION=libsql-server-v0.24.32
-RUN apt-get update && apt-get install -yq xz-utils openssl && rm -rf /var/lib/apt/lists/* && \
+RUN apt-get update && apt-get install -yq xz-utils && rm -rf /var/lib/apt/lists/* && \
     ARCH=$(uname -m) && \
     case "$ARCH" in \
         x86_64)  SQLD_ASSET="libsql-server-x86_64-unknown-linux-gnu.tar.xz" ;; \
