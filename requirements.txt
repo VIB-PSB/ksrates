@@ -18,3 +18,4 @@ bokeh==1.4.0
 fastcluster==1.2.2
 libsql-client==0.3.1
 cryptography==41.0.7
+certifi>=2023.0.0

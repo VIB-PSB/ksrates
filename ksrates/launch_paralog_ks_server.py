@@ -1,12 +1,15 @@
 import base64
 import os
 import platform
+import shutil
 import socket
+import ssl
 import sys
 import tarfile
 import tempfile
 import urllib.request
 
+import certifi
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
@@ -64,11 +67,18 @@ def _download_sqld(target_path):
 		with tempfile.TemporaryDirectory(dir=cache_dir) as tmp_dir:
 			tarball_path = os.path.join(tmp_dir, "sqld.tar.xz")
 			try:
-				urllib.request.urlretrieve(url, tarball_path)
+				# Explicitly use certifi's CA bundle rather than relying on urllib's default
+				# system trust store lookup, which fails with CERTIFICATE_VERIFY_FAILED on some
+				# module-system/custom-built Python installs (seen on real HPC clusters) even
+				# when the network connection itself is fine.
+				ssl_context = ssl.create_default_context(cafile=certifi.where())
+				with urllib.request.urlopen(url, context=ssl_context) as response, open(tarball_path, "wb") as out_file:
+					shutil.copyfileobj(response, out_file)
 			except Exception as e:
 				raise RuntimeError(
-					f"Failed to download {asset}: {e}. This node may have no internet access; "
-					f"download it manually and place the 'sqld' binary at {target_path}."
+					f"Failed to download {asset}: {e}. This node may have no internet access, or a "
+					f"certificate/proxy issue; download it manually and place the 'sqld' binary at "
+					f"{target_path}."
 				) from e
 
 			extract_dir = os.path.join(tmp_dir, "extracted")
