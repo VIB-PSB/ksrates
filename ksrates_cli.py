@@ -565,6 +565,112 @@ def inspect_paralog_ks_db(database, species_filter, delete, list_only):
 		export_full_tsv(database, species_filter)
 
 
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Check whether the focal species already has data in the paralog Ks database.")
+@click.argument('config_file', type=click.Path(exists=True))
+@click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
+@click.option('--type', 'analysis_type', type=click.Choice(['paranome', 'anchors', 'recret']), required=True, help="Which analysis type to check for")
+def check_paralog_db(config_file, expert, analysis_type):
+	"""
+	Checks whether CONFIG_FILE's focal species already has data for ANALYSIS_TYPE in the
+	paralog Ks database, without loading any of the actual Ks data. Intended for
+	non-interactive use from scripts (e.g. main.nf's own skip-recomputation checks), not for
+	routine interactive use - see inspect-paralog-ks-db --list for a human-readable overview.
+
+	If the database is disabled in CONFIG_FILE (use_paralog_ks_database = no), always reports
+	"not present", so a caller can use this check unconditionally regardless of whether the
+	database is enabled for this dataset.
+
+	Exits with status 0 and prints "yes" if the data is already present, or status 1 and
+	prints "no" if it's missing, the database is disabled, or the database can't be reached
+	(all treated the same way, so a caller always safely falls through to recomputation on
+	any doubt).
+
+	\b
+	CONFIG_FILE: configuration file to set up the rate-adjustment relative to the focal species
+
+	\b
+	Example: ksrates check-paralog-db config_file.txt --type paranome
+	"""
+	from ksrates.fc_configfile import Configuration
+	from ksrates.fc_consolidate_paralog_ks import existing_data_types
+
+	click.format_filename(config_file)
+	if expert:
+		click.format_filename(expert)
+	else:
+		expert = ""
+
+	config = Configuration(config_file, expert)
+	present = False
+	if config.use_paralog_ks_database():
+		species = config.get_species()
+		latin_name = config.get_latin_names()[species]
+		db_path = config.get_paralog_ks_database()
+		present = existing_data_types(db_path, latin_name)[analysis_type]
+
+	if present:
+		print("yes")
+		sys.exit(0)
+	else:
+		print("no")
+		sys.exit(1)
+
+
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Check whether a species pair already has ortholog peak/Ks-list data in the shared TSV databases.")
+@click.argument('config_file', type=click.Path(exists=True))
+@click.argument('species1')
+@click.argument('species2')
+@click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
+def check_ortholog_db(config_file, species1, species2, expert):
+	"""
+	Checks whether SPECIES1/SPECIES2 (species labels as used in CONFIG_FILE) already have both
+	an ortholog peak and a full Ks list stored in the shared peak_database_path/
+	ks_list_database_path TSVs, without loading any of the actual Ks data. Intended for
+	non-interactive use from scripts (e.g. main.nf's own skip-recomputation checks).
+
+	Exits with status 0 and prints "yes" only if BOTH the peak and the Ks list are already
+	present for this pair, or status 1 and prints "no" otherwise (missing either one, or the
+	database files can't be read) - a caller always safely falls through to recomputation on
+	any doubt.
+
+	\b
+	CONFIG_FILE: configuration file to set up the rate-adjustment relative to the focal species
+	SPECIES1, SPECIES2: the two species labels (as used in CONFIG_FILE) making up the pair
+
+	\b
+	Example: ksrates check-ortholog-db config_file.txt SP1 SP2
+	"""
+	import pandas
+	from ksrates.fc_configfile import Configuration
+
+	click.format_filename(config_file)
+	if expert:
+		click.format_filename(expert)
+	else:
+		expert = ""
+
+	config = Configuration(config_file, expert)
+	present = False
+	try:
+		latin_names = config.get_latin_names()
+		pair = sorted([species1, species2], key=str.lower)
+		latin_pair = sorted([latin_names[pair[0]], latin_names[pair[1]]], key=str.casefold)
+		pair_key = f"{latin_pair[0]}_{latin_pair[1]}"
+
+		peak_db = pandas.read_csv(config.get_ortho_db(), sep="\t", index_col=0)
+		ks_list_db = pandas.read_csv(config.get_ks_db(), sep="\t", index_col=0)
+		present = pair_key in peak_db.index and pair_key in ks_list_db.index
+	except Exception:
+		present = False
+
+	if present:
+		print("yes")
+		sys.exit(0)
+	else:
+		print("no")
+		sys.exit(1)
+
+
 # For debugging
 # Syntax: python3 ksrates_cli.py [command] [args]
 if __name__ == "__main__":
