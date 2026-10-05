@@ -601,36 +601,39 @@ process setParalogAnalysis {
     colinearity_status="not_required"
     recret_status="not_required"
     
-    # Triggering wgdParalog process only if ".ks.tsv" (and/or ".ks_anchors.tsv", ks_recret_topX.tsv) files are missing
+    # Triggering wgdParalog process only if ".ks.tsv" (and/or ".ks_anchors.tsv", ks_recret_topX.tsv) files
+    # are missing locally AND the shared paralog Ks database (if enabled) doesn't have the data either -
+    # "ksrates check-paralog-db" always reports "not present" when the database is disabled, so it can
+    # be called unconditionally here regardless of whether this dataset uses it.
 
     if [ ${paranome} = "yes" ]; then
-        if [ ! -f paralog_distributions/wgd_${species}/${species}.ks.tsv ]; then
+        if [ -f paralog_distributions/wgd_${species}/${species}.ks.tsv ] || ksrates check-paralog-db ${config_args} --type paranome > /dev/null 2>&1; then
+            paranome_status="already_done"
+        else
             echo "[${species}] Will run whole-paranome wgd analysis"
-            echo "[${species}] Paralog TSV file not found [${species}.ks.tsv]" >> ${logs_folder}/${logs_names["setParalogAnalysis"]}
+            echo "[${species}] Paralog TSV file not found [${species}.ks.tsv], and not in the paralog Ks database" >> ${logs_folder}/${logs_names["setParalogAnalysis"]}
             echo "[${species}] Whole-paranome wgd pipeline will be started\n" >> ${logs_folder}/${logs_names["setParalogAnalysis"]}
             paranome_status="todo"
-        else
-            paranome_status="already_done"
         fi
     fi
     if [ ${colinearity} = "yes" ]; then
-        if [ ! -f paralog_distributions/wgd_${species}/${species}.ks_anchors.tsv ]; then
+        if [ -f paralog_distributions/wgd_${species}/${species}.ks_anchors.tsv ] || ksrates check-paralog-db ${config_args} --type anchors > /dev/null 2>&1; then
+            colinearity_status="already_done"
+        else
             echo "[${species}] Will run anchor-pair (collinearity) wgd analysis"
-            echo "[${species}] Anchor pairs TSV file not found [${species}.ks_anchors.tsv]" >> ${logs_folder}/${logs_names["setParalogAnalysis"]}
+            echo "[${species}] Anchor pairs TSV file not found [${species}.ks_anchors.tsv], and not in the paralog Ks database" >> ${logs_folder}/${logs_names["setParalogAnalysis"]}
             echo "[${species}] Collinearity wgd pipeline will be started\n" >> ${logs_folder}/${logs_names["setParalogAnalysis"]}
             colinearity_status="todo"
-        else
-            colinearity_status="already_done"
         fi
     fi
     if [ ${recret} = "yes" ]; then
-        if [ ! -f paralog_distributions/wgd_${species}/${species}.ks_recret_top${recret_top}.tsv ]; then
+        if [ -f paralog_distributions/wgd_${species}/${species}.ks_recret_top${recret_top}.tsv ] || ksrates check-paralog-db ${config_args} --type recret > /dev/null 2>&1; then
+            recret_status="already_done"
+        else
             echo "[${species}] Will run reciprocal retention analysis"
-            echo "[${species}] Reciprocally retained paralog TSV file not found [${species}.ks_recret_top${recret_top}.tsv]" >> ${logs_folder}/${logs_names["setParalogAnalysis"]}
+            echo "[${species}] Reciprocally retained paralog TSV file not found [${species}.ks_recret_top${recret_top}.tsv], and not in the paralog Ks database" >> ${logs_folder}/${logs_names["setParalogAnalysis"]}
             echo "[${species}] Reciprocal retention pipeline will be started\n" >> ${logs_folder}/${logs_names["setParalogAnalysis"]}
             recret_status="todo"
-        else
-            recret_status="already_done"
         fi
     fi
 
@@ -697,7 +700,15 @@ process setOrthologAnalysis {
     fi 
 
     while read -r species1 species2 || [ -n "\${species1}" ]; do
-        if [ ! -f ortholog_distributions/wgd_\${species1}_\${species2}/\${species1}_\${species2}.ks.tsv ]; then
+        if ksrates check-ortholog-db ${config_args} \${species1} \${species2} > /dev/null 2>&1; then
+            # Already fully present in the shared peak/Ks-list databases - skip both wgdOrthologs
+            # (BLAST+codeml, expensive) and estimatePeaks entirely, rather than only discovering
+            # this later inside compute_peaks(). Checked before the local-disk check below so a
+            # pair already shared across datasets never gets recomputed just because this
+            # particular focal species' own ortholog_distributions/ directory doesn't have it.
+            echo "[\${species1} – \${species2}] Already present in shared ortholog database(s); skipping"
+            echo "[\${species1} – \${species2}] Pair already present in shared ortholog peak/Ks-list database(s); skipping wgd and peak analyses" >> ${logs_folder}/${logs_names["setOrthologAnalysis"]}
+        elif [ ! -f ortholog_distributions/wgd_\${species1}_\${species2}/\${species1}_\${species2}.ks.tsv ]; then
             echo "\${species1}\t\${species2}" >> \${processDir}/tmp_species_pairs_for_wgdOrtholog.txt
             echo "[\${species1} – \${species2}] Will run ortholog wgd analysis"
             echo "[\${species1} – \${species2}] Ortholog TSV file not present [\${species1}_\${species2}.ks.tsv]" >> ${logs_folder}/${logs_names["setOrthologAnalysis"]}
@@ -982,16 +993,20 @@ process doRateAdjustment {
     """
     echo ""
 
+    # A data type counts as available either as a local TSV file (just produced by wgdParalogs
+    # in this run) or already present in the shared paralog Ks database (if enabled) - see the
+    # equivalent check in setParalogAnalysis.
+
     missing_paranome=false
-    if [ ${paranome} = "yes" ] && [ ! -s ${PWD}/paralog_distributions/wgd_${species}/${species}.ks.tsv ]; then
+    if [ ${paranome} = "yes" ] && [ ! -s ${PWD}/paralog_distributions/wgd_${species}/${species}.ks.tsv ] && ! ksrates check-paralog-db ${config_args} --type paranome > /dev/null 2>&1; then
         missing_paranome=true
     fi
     missing_anchorpairs=false
-    if [ ${colinearity} = "yes" ] && [ ! -s ${PWD}/paralog_distributions/wgd_${species}/${species}.ks_anchors.tsv ]; then
+    if [ ${colinearity} = "yes" ] && [ ! -s ${PWD}/paralog_distributions/wgd_${species}/${species}.ks_anchors.tsv ] && ! ksrates check-paralog-db ${config_args} --type anchors > /dev/null 2>&1; then
         missing_anchorpairs=true
     fi
     missing_recret=false
-    if [ ${recret} = "yes" ] && [ ! -s ${PWD}/paralog_distributions/wgd_${species}/${species}.ks_recret_top${recret_top}.tsv ]; then
+    if [ ${recret} = "yes" ] && [ ! -s ${PWD}/paralog_distributions/wgd_${species}/${species}.ks_recret_top${recret_top}.tsv ] && ! ksrates check-paralog-db ${config_args} --type recret > /dev/null 2>&1; then
         missing_recret=true
     fi
 
