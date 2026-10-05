@@ -33,22 +33,6 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
     use_original_orthomcl_version = config.get_orthomcl_version() # Whether to use the original or edited OrthoMCL version (default: edited)
     use_paralog_ks_database = config.use_paralog_ks_database() # Whether to also copy the Ks data into a collective SQLite database (default: no)
 
-    # Check what's already stored in the shared database before running any (expensive) wgd
-    # pipeline step, to avoid recomputing data another run already produced for this species.
-    # initialize_paralog_db() runs first so a brand new database doesn't log a spurious
-    # "no such table" warning on the existing_data_types() read below.
-    paralog_db_ready = False
-    paranome_in_db = False
-    anchors_in_db = False
-    recret_in_db = False
-    if use_paralog_ks_database:
-        paralog_db_ready = fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path)
-        if paralog_db_ready:
-            existing = fc_consolidate_paralog_ks.existing_data_types(ks_list_paralog_db_path, latin_name)
-            paranome_in_db = existing["paranome"]
-            anchors_in_db = existing["anchors"]
-            recret_in_db = existing["recret"]
-
     if not paranome and not colinearity and not reciprocal_retention:
         logging.error('At least one of the "paranome", "collinearity" or "reciprocal retention" parameters in the configuration file needs to be set to "yes".')
         logging.error("Exiting.")
@@ -109,92 +93,67 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
 
     # ESTIMATING PARANOME Ks VALUES
     logging.info(datetime.datetime.today().ctime())
-    
-    # ks_paralogs() is needed if paranome data is wanted and not yet in the database, OR if
-    # colinearity is enabled: colinearity needs the local mcl/Ks files ks_paralogs() produces,
-    # which are never stored in the database themselves, regardless of whether paranome data is
-    # already there from a different tree's earlier run.
-    need_paranome_pipeline = (paranome and not paranome_in_db) or (colinearity and not anchors_in_db)
 
     if paranome or colinearity:
-        if need_paranome_pipeline:
-            # Prerequisite for colinearity pipeline, but not for reciprocally retention pipeline
-            logging.info("Running wgd whole-paranome Ks pipeline...")
-            fc_wgd.ks_paralogs(species, species_fasta_file, max_gene_family_size=max_gene_family_size,
-                            base_dir=paralog_dists_dir, n_threads=n_threads, logging_level=logging_level,
-                            preserve=preserve)
-            logging.info(datetime.datetime.today().ctime())
-            logging.info("")
-        else:
-            logging.info("Paranome Ks data already in database, skipping wgd whole-paranome Ks pipeline")
-            logging.info("")
+        # Prerequisite for colinearity pipeline, but not for reciprocal retention pipeline
+        logging.info("Running wgd whole-paranome Ks pipeline...")
+        fc_wgd.ks_paralogs(species, species_fasta_file, max_gene_family_size=max_gene_family_size,
+                        base_dir=paralog_dists_dir, n_threads=n_threads, logging_level=logging_level,
+                        preserve=preserve)
+        logging.info(datetime.datetime.today().ctime())
+        logging.info("")
 
     # EXTRACTING ANCHOR PAIRS Ks VALUES for COLINEARITY ANALYSIS
     if colinearity:
-        if not anchors_in_db:
-            logging.info('---')
-            logging.info("Running wgd colinearity Ks pipeline...")
+        logging.info('---')
+        logging.info("Running wgd colinearity Ks pipeline...")
 
-            min_ks_anchors = config.get_min_ks_anchors()
-            logging.info(f" - minimum anchor pair Ks value accepted: {min_ks_anchors}")
+        min_ks_anchors = config.get_min_ks_anchors()
+        logging.info(f" - minimum anchor pair Ks value accepted: {min_ks_anchors}")
 
-            fc_wgd.ks_colinearity(species, gff, base_dir=paralog_dists_dir, gff_feature=gff_feature,
-                                gff_gene_attribute=gff_gene_attribute, n_threads=n_threads, min_ks_anchors=min_ks_anchors)
-            logging.info(datetime.datetime.today().ctime())
-            logging.info("")
-        else:
-            logging.info("Anchor pair Ks data already in database, skipping wgd colinearity Ks pipeline")
-            logging.info("")
+        fc_wgd.ks_colinearity(species, gff, base_dir=paralog_dists_dir, gff_feature=gff_feature,
+                            gff_gene_attribute=gff_gene_attribute, n_threads=n_threads, min_ks_anchors=min_ks_anchors)
+        logging.info(datetime.datetime.today().ctime())
+        logging.info("")
 
     # ESTIMATING RECIPROCALLY RETAINED GENE FAMILIES Ks VALUES
     if reciprocal_retention:
-        if not recret_in_db:
-            logging.info('---')
-            logging.info(f"Running wgd reciprocal retention Ks pipeline...")
-            fc_wgd.ks_paralogs_rec_ret(species, species_fasta_file, latin_name, custom_recret_gfs, parsed_homology_table,
-                                       num_gfs=num_gfs, bottom=bottom, rank_type=rank_type,
-                                       orthomcl_inflation=orthomcl_inflation, use_original_orthomcl_version=use_original_orthomcl_version,
-                                       max_extra_original_genes_in_new_gfs=max_extra_original_genes_in_new_gfs,
-                                       min_common_old_genes_in_new_gfs=min_common_old_genes_in_new_gfs,
-                                       base_dir=paralog_dists_dir,
-                                       max_gene_family_size=max_gene_family_size,
-                                       n_threads=n_threads, overwrite=False, preserve=preserve,
-                                       is_test_run=test, logging_level=logging_level)
-            logging.info(datetime.datetime.today().ctime())
-            logging.info("")
-        else:
-            logging.info("Reciprocally retained Ks data already in database, skipping wgd reciprocal retention Ks pipeline")
-            logging.info("")
+        logging.info('---')
+        logging.info(f"Running wgd reciprocal retention Ks pipeline...")
+        fc_wgd.ks_paralogs_rec_ret(species, species_fasta_file, latin_name, custom_recret_gfs, parsed_homology_table,
+                                   num_gfs=num_gfs, bottom=bottom, rank_type=rank_type,
+                                   orthomcl_inflation=orthomcl_inflation, use_original_orthomcl_version=use_original_orthomcl_version,
+                                   max_extra_original_genes_in_new_gfs=max_extra_original_genes_in_new_gfs,
+                                   min_common_old_genes_in_new_gfs=min_common_old_genes_in_new_gfs,
+                                   base_dir=paralog_dists_dir,
+                                   max_gene_family_size=max_gene_family_size,
+                                   n_threads=n_threads, overwrite=False, preserve=preserve,
+                                   is_test_run=test, logging_level=logging_level)
+        logging.info(datetime.datetime.today().ctime())
+        logging.info("")
 
     # CONSOLIDATING PARALOG Ks VALUES INTO DATABASE (if database is configured)
     if use_paralog_ks_database:
-        # Check if any analysis type actually needs to be consolidated this run (not already in DB).
-        paranome_enabled = need_paranome_pipeline
-        anchors_enabled = colinearity and not anchors_in_db
-        recret_enabled = reciprocal_retention and not recret_in_db
-        anything_to_consolidate = paranome_enabled or anchors_enabled or recret_enabled
-
-        if anything_to_consolidate and paralog_db_ready:
+        if fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path):
             logging.info("---")
             logging.info(f"Consolidating paralog Ks lists into database [{ks_list_paralog_db_path}]")
-            # paranome_enabled uses need_paranome_pipeline, not just "paranome and not paranome_in_db":
-            # whenever ks_paralogs() actually ran above, its fresh output should be stored, keeping
-            # paranome and anchors for this species from the same underlying computation.
+            # paranome_enabled covers both "paranome" and "colinearity": ks_paralogs() runs
+            # whenever either is requested, since colinearity depends on its output.
             fc_consolidate_paralog_ks.consolidate_paralog_ks_lists(species, latin_name, ks_list_paralog_db_path,
-                                                                    paranome_enabled=paranome_enabled,
-                                                                    anchors_enabled=anchors_enabled,
-                                                                    reciprocal_retention_enabled=recret_enabled,
+                                                                    paranome_enabled=paranome or colinearity,
+                                                                    anchors_enabled=colinearity,
+                                                                    reciprocal_retention_enabled=reciprocal_retention,
                                                                     num_gfs=num_gfs, rank_type=rank_type, bottom=bottom)
 
             # Also store the i-ADHoRe output files just generated by the colinearity pipeline, so
             # cluster_anchor_ks.py can later read them from the database instead of from disk.
-            if anchors_enabled:
+            if colinearity:
                 logging.info("  - Storing i-ADHoRe output files into database")
                 iadhore_texts = fc_consolidate_paralog_ks.extract_anchor_iadhore_files(species)
                 fc_consolidate_paralog_ks.write_anchor_iadhore_files(latin_name, iadhore_texts, ks_list_paralog_db_path)
-        elif not paralog_db_ready:
+        else:
             logging.warning(f"Could not use paralog Ks database [{ks_list_paralog_db_path}].")
             logging.warning("Skipping.")
-    
+
     logging.info("")
     logging.info("Done")
