@@ -7,6 +7,15 @@ from scipy import stats
 import ksrates.fc_check_input as fcCheck
 import ksrates.fc_extract_ks_list as fc_extract_ks_list
 
+# Below this many Ks values (after the max_ks_ortho cutoff), a bootstrap KDE is both statistically
+# meaningless and numerically unstable - scipy.stats.gaussian_kde can raise LinAlgError ("singular
+# data covariance matrix") when a bootstrap resample happens to have near-zero variance, which is
+# far more likely with only a handful of points. Pairs this divergent (most/all true orthologs
+# saturated past max_ks_ortho) are a real, expected outcome, not a bug - treated the same as a
+# missing input file: skip the peak estimate and log a warning, rather than letting the exception
+# propagate and crash the whole task.
+MIN_KS_VALUES_FOR_PEAK_ESTIMATE = 5
+
 
 def compute_kde(ks_list, max_ks, bin_width, bandwidth_scaling=None):
     """
@@ -136,7 +145,8 @@ def estimate_peak(species1, species2, latinSp1, latinSp2, max_ks_ortho, n_iter, 
     :param db_path: filename/path to the database of ortholog peaks
     :param flag_not_in_peak_db: flag for the presence/absence of the species pair in the ortholog peak database (True/False)
     :param flag_not_in_ks_db: flag for the presence/absence of the species pair in the ortholog Ks list database (True/False)
-    :return: a flag to state if the current peak computation failed due to missing ortholog Ks TSV file (True/False)
+    :return: a flag to state if the current peak computation failed due to missing ortholog Ks TSV file,
+        too few Ks values to estimate a reliable peak, or a numerically degenerate bootstrap sample (True/False)
     """
     compute_peak_failed = False
 
@@ -148,14 +158,28 @@ def estimate_peak(species1, species2, latinSp1, latinSp2, max_ks_ortho, n_iter, 
         ks_list = fc_extract_ks_list.ks_list_from_tsv(tsv_path, max_ks_ortho, "orthologs")
 
         if flag_not_in_peak_db:    # if the pair is missing in the ortholog peak database
-            logging.info(f"- Computing distribution peak through bootstrap ({n_iter} iterations)")
-            mean_peak, std_peak, mean_median, std_median = bootstrap_peak(ks_list, n_iter, x_lim_ortho,
-                                                                                bin_width_ortho)
-            db_new_row = DataFrame([[latinSp1, latinSp2, mean_peak, std_peak]],
-                                    index=[f"{latinSp1}_{latinSp2}"])
-            with open(db_path, "a+") as outfile_db:
-                logging.info("- Adding peak to ortholog peak database")
-                outfile_db.write(db_new_row.to_csv(sep="\t", header=None))
+            if len(ks_list) < MIN_KS_VALUES_FOR_PEAK_ESTIMATE:
+                logging.warning(f"- Skipping peak estimate: there are only {len(ks_list)} Ks value(s) below max_ks_ortho={max_ks_ortho} for [{species1}_{species2}],")
+                logging.warning(f"  which is too few for a reliable bootstrap peak estimate (minimum: {MIN_KS_VALUES_FOR_PEAK_ESTIMATE}).")
+                logging.warning(f"  This might be a highly divergent species pair whose orthologs are mostly saturated past the cutoff.")
+                compute_peak_failed = True
+            else:
+                logging.info(f"- Computing distribution peak through bootstrap ({n_iter} iterations)")
+                try:
+                    mean_peak, std_peak, mean_median, std_median = bootstrap_peak(ks_list, n_iter, x_lim_ortho,
+                                                                                        bin_width_ortho)
+                except np.linalg.LinAlgError as error:
+                    logging.warning(
+                        f"  Bootstrap peak estimate failed for [{species1}_{species2}]: {error}. "
+                        f"Skipping peak estimate."
+                    )
+                    compute_peak_failed = True
+                else:
+                    db_new_row = DataFrame([[latinSp1, latinSp2, mean_peak, std_peak]],
+                                            index=[f"{latinSp1}_{latinSp2}"])
+                    with open(db_path, "a+") as outfile_db:
+                        logging.info("- Adding peak to ortholog peak database")
+                        outfile_db.write(db_new_row.to_csv(sep="\t", header=None))
 
         if flag_not_in_ks_db:      # if the pair is missing in the ks list database
             logging.info("- Adding Ks list to ortholog Ks list database")
