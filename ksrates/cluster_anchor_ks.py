@@ -70,8 +70,7 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
     # as in-memory text, either from the consolidated database first (if enabled; an indexed single-row
     # lookup that doesn't load data for any other species) or by reading them from disk. These 5 files
     # are always generated together by the same i-ADHoRe run, so they are resolved as one bundle: either
-    # the database already has the full set for this species, or all 5 are read from disk and the whole
-    # bundle is opportunistically stored.
+    # the database already has the full set for this species, or all 5 are read from disk.
     iadhore_keys = ['anchorpoints', 'multiplicons', 'segments', 'list_elements', 'multiplicon_pairs']
     iadhore_texts = None
     if use_paralog_ks_database:
@@ -139,14 +138,6 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
                 'list_elements': list_elements_text,
                 'multiplicon_pairs': multiplicon_pairs_text,
             }
-
-            if use_paralog_ks_database:
-                # Opportunistically populate the paralog Ks database with I-ADHoRe output files
-                try:
-                    logging.info(f"Storing i-ADHoRe output files in paralog Ks database")
-                    fc_consolidate_paralog_ks.write_anchor_iadhore_files(latin_names[species], iadhore_texts, ks_list_paralog_db_path)
-                except Exception as e:
-                    logging.warning(f"Could not populate paralog Ks database with i-ADHoRe output files: {str(e)}")
     logging.info("")
 
     # Get anchor pair Ks data as a DataFrame, either from the consolidated database first (if
@@ -175,14 +166,6 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
         else:
             with open(path_ks_anchor_file, "r") as f:
                 anchors_df = read_csv(f, sep="\t")
-            if use_paralog_ks_database:
-                # Opportunistically populate the paralog Ks database with anchor pair Ks data
-                try:
-                    logging.info(f"Storing anchor pair Ks data in paralog Ks database")
-                    ks_data = fc_consolidate_paralog_ks.extract_paralog_ks_from_tsv(species, anchors_enabled=True)
-                    fc_consolidate_paralog_ks.write_to_paralog_db(latin_names[species], ks_data, ks_list_paralog_db_path)
-                except Exception as e:
-                    logging.warning(f"Could not populate paralog Ks database: {str(e)}")
 
     if iadhore_resolution_failed or anchors_df is None:
         logging.error("Exiting")

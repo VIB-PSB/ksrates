@@ -271,14 +271,6 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
             # Fall back to TSV file if database not available or empty
             # Get paranome Ks values within the requested range and recalculate their associated weight
             paranome_list, paranome_weights = fc_extract_ks_list.ks_list_from_tsv(paralog_tsv_file, max_ks_para, "paralogs")
-            # Opportunistically populate the database with this species' paranome data, if enabled
-            if use_paralog_ks_database:
-                try:
-                    logging.info(f"Storing paranome Ks data in paralog Ks database")
-                    ks_data = fc_consolidate_paralog_ks.extract_paralog_ks_from_tsv(species, paranome_enabled=True)
-                    fc_consolidate_paralog_ks.write_to_paralog_db(latin_name, ks_data, ks_list_paralog_db_path)
-                except Exception as e:
-                    logging.warning(f"Could not populate paralog Ks database: {str(e)}")
 
         for ax_uncorr in ax_uncorr_include_para:
             hist_paranome = fcPlot.plot_histogram("Whole-paranome", ax_uncorr, paranome_list, bin_list, bin_width_para,
@@ -300,14 +292,6 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
             # Fall back to TSV file if database not available or empty
             # Get anchor pair Ks values within the requested range (using min_ks_anchors) and recalculate their associated weight
             anchors_list, anchors_weights = fc_extract_ks_list.ks_list_from_tsv(anchors_ks_tsv_file, max_ks_para, "anchor pairs", min_ks=min_ks_anchors)
-            # Opportunistically populate the database with this species' anchors data, if enabled
-            if use_paralog_ks_database:
-                try:
-                    logging.info(f"Storing anchor pair Ks data in paralog Ks database")
-                    ks_data = fc_consolidate_paralog_ks.extract_paralog_ks_from_tsv(species, anchors_enabled=True)
-                    fc_consolidate_paralog_ks.write_to_paralog_db(latin_name, ks_data, ks_list_paralog_db_path)
-                except Exception as e:
-                    logging.warning(f"Could not populate paralog Ks database: {str(e)}")
 
         if len(anchors_list) == 0:
             logging.warning(f"No anchor pairs found! Maybe check your (gene) IDs between "
@@ -333,17 +317,7 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
             # Fall back to TSV file if database not available or empty
             # Get recret Ks values within the requested range and recalculate their associated weight
             rec_ret_list, rec_ret_weights = fc_extract_ks_list.ks_list_from_tsv(rec_ret_tsv_file, max_ks_para, "reciprocally retained")
-            # Opportunistically populate the database with this species' reciprocally retained data, if enabled
-            if use_paralog_ks_database:
-                try:
-                    logging.info(f"Storing reciprocally retained Ks data in paralog Ks database")
-                    ks_data = fc_consolidate_paralog_ks.extract_paralog_ks_from_tsv(
-                        species, reciprocal_retention_enabled=True, num_gfs=num_gfs, rank_type=rank_type, bottom=bottom
-                    )
-                    fc_consolidate_paralog_ks.write_to_paralog_db(latin_name, ks_data, ks_list_paralog_db_path)
-                except Exception as e:
-                    logging.warning(f"Could not populate paralog Ks database: {str(e)}")
-        
+
         for ax_uncorr in ax_uncorr_include_rr:
             hist_rec_ret = fcPlot.plot_histogram("Reciprocally retained paralogs", ax_uncorr, rec_ret_list, bin_list, bin_width_para,
                                 max_ks_para, kde_bandwidth_modifier, color=fcPlot.COLOR_REC_RET_HISTOGRAM, weight_list=rec_ret_weights)

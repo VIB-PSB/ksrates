@@ -129,13 +129,6 @@ def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors
             else:
                 with open(paralog_tsv_file, "r") as f:
                     paranome_df = read_csv(f, sep="\t")
-                if use_paralog_ks_database:
-                    try:
-                        logging.info(f"Storing paranome Ks data in paralog Ks database")
-                        ks_data = fc_consolidate_paralog_ks.extract_paralog_ks_from_tsv(species, paranome_enabled=True)
-                        fc_consolidate_paralog_ks.write_to_paralog_db(latinSpecies, ks_data, ks_list_paralog_db_path)
-                    except Exception as e:
-                        logging.warning(f"Could not populate paralog Ks database: {str(e)}")
 
     if colinearity_analysis:
         db_data = None
@@ -157,13 +150,6 @@ def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors
             else:
                 with open(anchors_ks_tsv_file, "r") as f:
                     anchors_df = read_csv(f, sep="\t")
-                if use_paralog_ks_database:
-                    try:
-                        logging.info(f"Storing anchor pair Ks data in paralog Ks database")
-                        ks_data = fc_consolidate_paralog_ks.extract_paralog_ks_from_tsv(species, anchors_enabled=True)
-                        fc_consolidate_paralog_ks.write_to_paralog_db(latinSpecies, ks_data, ks_list_paralog_db_path)
-                    except Exception as e:
-                        logging.warning(f"Could not populate paralog Ks database: {str(e)}")
 
     if reciprocal_retention_analysis:
         db_data = None
@@ -185,15 +171,6 @@ def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors
             else:
                 with open(rec_ret_tsv_file, "r") as f:
                     recret_df = read_csv(f, sep="\t")
-                if use_paralog_ks_database:
-                    try:
-                        logging.info(f"Storing reciprocally retained Ks data in paralog Ks database")
-                        ks_data = fc_consolidate_paralog_ks.extract_paralog_ks_from_tsv(
-                            species, reciprocal_retention_enabled=True, num_gfs=num_gfs, rank_type=rank_type, bottom=bottom
-                        )
-                        fc_consolidate_paralog_ks.write_to_paralog_db(latinSpecies, ks_data, ks_list_paralog_db_path)
-                    except Exception as e:
-                        logging.warning(f"Could not populate paralog Ks database: {str(e)}")
 
     if resolution_failed:
         logging.error("Exiting")

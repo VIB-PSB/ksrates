@@ -91,15 +91,6 @@ def exp_log_mixture(config_file, expert_config_file, paralog_tsv_file, correctio
     with open(paralog_tsv_file, "r") as f:
       paralog_df = read_csv(f, sep="\t")
 
-    # Opportunistically populate the database with this species' paranome data, if enabled
-    if use_paralog_ks_database:
-      try:
-        logging.info(f"Storing paranome Ks data in paralog Ks database")
-        ks_data = fc_consolidate_paralog_ks.extract_paralog_ks_from_tsv(species, paranome_enabled=True)
-        fc_consolidate_paralog_ks.write_to_paralog_db(latinSpecies, ks_data, ks_list_paralog_db_path)
-      except Exception as e:
-        logging.warning(f"Could not populate paralog Ks database: {str(e)}")
-
   # Get paranome Ks values within the requested range and recalculate their associated weight
   ks_data, ks_weights = fc_extract_ks_list.ks_list_from_df(paralog_df, max_ks_para, "paralogs")
 
