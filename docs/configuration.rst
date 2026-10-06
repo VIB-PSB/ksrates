@@ -76,7 +76,7 @@ The [SPECIES] section includes:
 * **gff_filename**: association between the focal species as named in parameter `focal_species` and the path to the GFF3 file for the focal species (only required for collinearity analysis). The association is made with a colon (':').
 * **peak_database_path**: path to the database of ortholog *K*:sub:`S` distribution peaks. If the file is not present yet, it will be automatically generated.
 * **ks_list_database_path**: path to the database of ortholog *K*:sub:`S` lists. If the file is not present, it will be automatically generated.
-* **ks_list_paralog_database_path**: path to the address file of the paralog *K*:sub:`S` database server; this a small text file, written once by a long-running server process at startup, that tells ksrates where to reach it over the network. Consitioned on expert **use_paralog_ks_database** being active. Its content can be inspected with command ``inspect-paralog-ks-db``.
+* **ks_list_paralog_database_path**: path to the address file of the paralog *K*:sub:`S` database server, pointing to where to reach it over the network (see :ref:`paralog_ks_database`).
 
 The [ANALYSIS SETTING] section includes:
 
@@ -110,90 +110,6 @@ The [PARAMETERS] section includes:
 
     * **max_ks_paralogs**: maximum value accepted for paralog *K*:sub:`S` from data table. [Default: 5]
     * **max_ks_orthologs**: maximum value accepted for ortholog *K*:sub:`S` from data table. [Default: 10]
-
-
-.. _`paralog_ks_database_server`:
-
-Paralog Ks database server
----------------------------
-
-The paralog *K*:sub:`S` database (``ks_list_paralog_database_path``, enabled with expert parameter
-``use_paralog_ks_database``) is served by a small, self-hosted `sqld <https://github.com/tursodatabase/libsql>`__
-server rather than a local file. This lets many independent analyses — even on different compute
-nodes — safely share one central database, which a plain local database file cannot do reliably
-over a network filesystem.
-
-This means the server has to be running *before* any analysis that uses the database. It is a
-single, long-running job, submitted **once** and then left running indefinitely — separately from
-any analysis pipeline run, and never from *within* one (multiple independent pipeline runs may
-share the same server, so its lifetime must not be tied to any single one of them).
-
-Starting it via the Nextflow pipeline (recommended)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-``setup_database_server.nf`` runs the ``ksrates launch-paralog-ks-server`` command through the same
-container/profile machinery (e.g. ``-profile docker``, ``-c nextflow.config``)
-already used for regular analysis runs, but with other dedicated entry script and parameters:
-
-1. Submit it once, using the same ``nextflow.config`` as your analyses, but with the executor
-   overridden to ``local`` (see below)::
-
-       nextflow run VIB-PSB/ksrates -main-script setup_database_server.nf -profile singularity \\
-           -c nextflow.config -process.executor=local \\
-           --location /path/to/central/dir
-
-   ``--location`` is the central directory that will hold the server's data/keys directories and
-   address file; ``--port`` (default 8080) and ``--address-filename`` (default
-   ``paralog_ks_server_address.txt``) can also be overridden if needed.
-
-2. Point ``ks_list_paralog_database_path`` in your *ksrates* configuration file(s) at
-   ``<location>/<address_filename>``.
-
-This pipeline has a single process to be kept running as long as the analyses runs take (ideally,
-indefinitely, to be cancelled by user). The
-``-process.executor=local`` command-line prevents the process to be submitted as a job onto a compute cluster,
-so that the process just runs as a plain local subprocess of the ``nextflow run`` invocation itself.
-
-Starting it directly with the CLI command
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-``setup_database_server.nf`` above is a thin wrapper around a ``ksrates`` CLI command,
-``launch-paralog-ks-server``, which can also be invoked directly against the container (e.g. from
-your own SLURM job) without going through Nextflow at all::
-
-    singularity exec <path/to/ksrates.sif> ksrates launch-paralog-ks-server \\
-        --location /path/to/central/dir
-
-Options:
-
-* ``--location`` (required): central directory to hold the server's data/keys directories and
-  address file.
-* ``--port`` (default ``8080``): port ``sqld`` listens on.
-* ``--address-filename`` (default ``paralog_ks_server_address.txt``): filename (not path) of the
-  address file written under ``--location``.
-
-The command uses a ``sqld`` binary already baked into the container image if present (see the
-``Dockerfile``), or otherwise downloads one on first launch to ``$XDG_CACHE_HOME/ksrates/sqld_bin``
-(``~/.cache/ksrates/sqld_bin`` by default) and reuses it from there afterward - so this same
-command also works for a manually pip-installed *ksrates* with no container at all. The command
-keeps running indefinitely, so submit it as its own long-lasting job.
-
-Either way, if the server isn't reachable (not yet started, or address file missing/stale), *ksrates*
-transparently falls back to reading/writing the original Ks TSV files instead — an analysis will
-still complete, just without the shared-database benefit for that run.
-
-The server requires every client to authenticate, since the port it listens on is reachable by
-any job on the cluster network, not just *ksrates* ones. This needs no setup on the user's side:
-the launch script generates a signing key the first time it runs (kept in ``paralog_ks_sqld_keys``
-next to the database, untouched on later restarts) and writes the matching access token as the
-address file's second line, right below the ``host:port`` line. Every *ksrates* client reads both
-lines from the same file it already needed for the server's address, so there is no separate
-token to configure or keep track of.
-
-.. seealso::
-    The same running server, and the same underlying database, can be shared by any number of
-    independent *ksrates* runs/datasets rather than just one - see
-    :ref:`paralog_ks_database_centralization`.
 
 Guidelines to set the maximum number of outgroups per rate-adjustment
 ---------------------------------------------------------------------
@@ -347,4 +263,4 @@ The following can be used as a template (default values)::
 * **num_reciprocally_retained_gfs**: number of gene families at the top of the reciprocal retention ranking that will be used to build the related *K*:sub:`S` distribution. [Default: 2000]
 * **use_bottom_gfs_instead_of_top**: use the bottom-ranked reciprocally retained GFs instead of the top-ranked ones (not recommended; only meant for comparison purposes with top-ranked GFs) 
 * **use_original_orthomcl_version**: allows compatibility with the original OrthoMCL v1.4 version; by default it is used a modified faster version called OrthoMCLight. [Default: "no"]
-* **use_paralog_ks_database**: also store the *K*:sub:`S` data into the shared paralog *K*:sub:`S` database (see :ref:`paralog_ks_database_server`), in addition to the standard *K*:sub:`S` TSV files; useful to centralize multiple analyses
+* **use_paralog_ks_database**: also store the *K*:sub:`S` data into the shared paralog *K*:sub:`S` database (see :ref:`paralog_ks_database`), in addition to the standard *K*:sub:`S` TSV files; useful to centralize multiple analyses
