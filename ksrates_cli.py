@@ -664,10 +664,10 @@ def check_ortholog_db(config_file, species1, species2, expert):
 		present = False
 
 	if present:
-		print("yes")
+		click.echo("yes")
 		sys.exit(0)
 	else:
-		print("no")
+		click.echo("no")
 		sys.exit(1)
 
 

@@ -26,6 +26,10 @@ jobs:
         # Builds here the Docker container
         run: docker build . --file Dockerfile --tag ksrates
 
+      - name: Run Python unit tests
+        # Fast, no-dependency-on-sqld unit tests
+        run: docker run --rm -v "$PWD:$PWD" -w "$PWD" ksrates python3.9 -m pytest unit_tests/ -v
+
       - name: Set Java 17 Environment
         run: |
           echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
