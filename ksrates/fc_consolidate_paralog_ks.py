@@ -443,6 +443,6 @@ def consolidate_paralog_ks_lists(species_name, latin_name, ks_list_paralog_db_pa
 	ks_data = extract_paralog_ks_from_tsv(species_name, paranome_enabled, anchors_enabled,
 										reciprocal_retention_enabled, num_gfs, rank_type, bottom)
 
-	write_to_paralog_db(latin_name, ks_data, ks_list_paralog_db_path)
+	write_succeeded = write_to_paralog_db(latin_name, ks_data, ks_list_paralog_db_path)
 	logging.info("Done")
-	return
+	return not write_succeeded
