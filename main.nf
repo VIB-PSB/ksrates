@@ -701,13 +701,12 @@ process setOrthologAnalysis {
 
     while read -r species1 species2 || [ -n "\${species1}" ]; do
         if ksrates check-ortholog-db ${config_args} \${species1} \${species2} > /dev/null 2>&1; then
-            # Already fully present in the shared peak/Ks-list databases - skip both wgdOrthologs
-            # (BLAST+codeml, expensive) and estimatePeaks entirely, rather than only discovering
-            # this later inside compute_peaks(). Checked before the local-disk check below so a
-            # pair already shared across datasets never gets recomputed just because this
-            # particular focal species' own ortholog_distributions/ directory doesn't have it.
-            echo "[\${species1} – \${species2}] Already present in shared ortholog database(s); skipping"
-            echo "[\${species1} – \${species2}] Pair already present in shared ortholog peak/Ks-list database(s); skipping wgd and peak analyses" >> ${logs_folder}/${logs_names["setOrthologAnalysis"]}
+            # Already fully present in the peak/Ks-list databases - skip both wgdOrthologs (BLAST+codeml, expensive)
+            # and estimatePeaks entirely. This is checked before the local-disk check below,
+            # so a pair already in the database never gets recomputed just because this particular
+            # focal species' own ortholog_distributions/ directory doesn't have it.
+            echo "[\${species1} – \${species2}] Already present in ortholog database(s); skipping"
+            echo "[\${species1} – \${species2}] Pair already present in ortholog peak/Ks-list database(s); skipping wgd and peak analyses" >> ${logs_folder}/${logs_names["setOrthologAnalysis"]}
         elif [ ! -f ortholog_distributions/wgd_\${species1}_\${species2}/\${species1}_\${species2}.ks.tsv ]; then
             echo "\${species1}\t\${species2}" >> \${processDir}/tmp_species_pairs_for_wgdOrtholog.txt
             echo "[\${species1} – \${species2}] Will run ortholog wgd analysis"
@@ -994,7 +993,7 @@ process doRateAdjustment {
     echo ""
 
     # A data type counts as available either as a local TSV file (just produced by wgdParalogs
-    # in this run) or already present in the shared paralog Ks database (if enabled) - see the
+    # in this run) or already present in the paralog Ks database (if enabled) - see the
     # equivalent check in setParalogAnalysis.
 
     missing_paranome=false
