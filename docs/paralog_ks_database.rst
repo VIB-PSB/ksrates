@@ -23,22 +23,23 @@ retained and i-ADHoRe computations then get needlessly repeated every time::
     ├── dataset3/
     └── ...
 
-Pointing every dataset at the same running server removes this redundancy: *K*:sub:`S` data for a
-species, once computed by any one dataset, becomes immediately available to every other dataset
-that later needs it. This check is done separately per requested analysis type (paranome, colinearity, reciprocally retained), so only whichever types aren't yet in the database computed, not necessarily all of them.
+Pointing every dataset at the same running server removes this redundancy: once *K*:sub:`S` data
+for a species has been computed by any one dataset, it's available to every other dataset that
+later needs it.
+If a later request asks for an additional analysis type for a species already in the database,
+the workflow attempts to compute only that new type and reuse the rest. 
 
 .. note::
-    ``colinearity`` is the one exception: the underlying tool reads paranome's output directly
-    from local files (e.g. the MCL gene-family output in ``paralog_distributions``), not from the
-    database - so a local copy is required regardless of what's already stored. If colinearity is
-    requested from a directory lacking those files (e.g. cleaned up locally, or because paranome
-    was originally computed by another dataset), the paranome step reruns to regenerate them, even
-    though paranome data is already in the database. The recomputed data replaces the old
+    ``colinearity`` is the one common exception: it requires paranome's output as local files
+    (e.g. the MCL gene-family output in ``paralog_distributions``), not from the database, so a
+    local copy is required regardless of what's already stored. If a directory lacks those files -
+    e.g. because they were cleaned up locally, or because paranome was originally computed by
+    another dataset - the paranome step reruns to regenerate them, even though paranome
+    *K*:sub:`S` data is already in the database. The recomputed data then replaces the old
     database entry for consistency.
 
-    Requesting ``paranome`` and ``collinearity`` together the *first* time a species is processed
-    avoids this redundant recomputation, since both then run locally in the same invocation - but only preventively, not
-    retroactively for a species already processed paranome-only.
+    To avoid this, request ``paranome`` and ``colinearity`` together the *first* time a species is
+    processed, where possible.
 
 
 .. _`paralog_ks_database_setup`:
