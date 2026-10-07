@@ -65,7 +65,7 @@ Start the server with one of the methods below, providing the chosen directory v
 Starting it via the Nextflow pipeline (recommended)
 ---------------------------------------------------
 
-A separate Nextflow pipeline (``setup_database_server.nf``) is available::
+Launch the database server through a Nextflow pipeline (``setup_database_server.nf``)::
 
     nextflow run VIB-PSB/ksrates -main-script setup_database_server.nf \
         -c nextflow.config \
@@ -76,9 +76,8 @@ A separate Nextflow pipeline (``setup_database_server.nf``) is available::
 Provide via ``-c nextflow.config`` the Nextflow configuration of a *ksrates* analysis, to make it use the container;
 configure ``-profile`` with the container engine in use (e.g. ``apptainer``);
 with ``-process.executor=local``, the pipeline steps are not further submitted to the cluster and remain instead local to the ``nextflow run`` invocation itself;
-``--location`` is the central directory that will hold the server's data/keys directories and
-address file;
-``--port`` (port ``sqld`` listens on, default 8080) and ``--address-filename`` (``paralog_ks_server_address.txt`` by default) can also be overridden if needed.
+``--location`` is the chosen database directory;
+``--port`` (port ``sqld`` listens on, default 8080) and ``--address-filename`` (by default ``paralog_ks_server_address.txt``) can also be overridden if needed.
 
 
 Starting it via the CLI command
@@ -90,7 +89,7 @@ optionally leveraging a container as shown in :ref:`manual_pipeline`::
     ksrates launch-paralog-ks-server \
         --location /path/to/ks_analaysis_dir/paralog_ks_database
 
-The same options explined above apply here (``--location``, ``--port`` and ``--address-filename``).
+The same options explained above apply here (``--location``, ``--port`` and ``--address-filename``).
 When running outside of a container, this command downloads the ``sqld`` binary on first launch to ``$XDG_CACHE_HOME/ksrates/sqld_bin``
 (by default ``~/.cache/ksrates/sqld_bin``), and reuses it from there afterward.
 
@@ -109,37 +108,42 @@ working), and simply writes a fresh ``host:port`` to the address file. Every dat
 Inspecting and managing the database content
 ==============================================
 
-The command ``inspect-paralog-ks-db`` dumps the full database content to a TSV
-(gene pairs) plus per-species i-ADHoRe files, for inspection outside of *ksrates* (Excel, pandas...).
-Two options change this behavior:
+The command ``inspect-paralog-ks-db`` dumps the full database content to a TSV file,
+plus per-species i-ADHoRe files, for inspection outside of *ksrates*.
+The address file path must be passed as argument; an optional ``SPECIES_FILTER`` argument can be
+added to restrict the action to species whose latin name contains that
+(case-insensitive) substring - quote it if it includes spaces (e.g. ``"Elaeis guineensis"``)::
+
+    ksrates inspect-paralog-ks-db \
+                paralog_ks_server_address.txt
+
+Two options change the command behavior:
 
 * ``--list``: for a quick overview of what's in the
   database, instead exports a TSV with one row per species and a True/False column per analysis
-  type (paranome, anchors, reciprocally retained, i-ADHoRe files).
-* ``--delete``: deletes every species matching the ``SPECIES_FILTER`` argument, after
-  listing the matches and asking for confirmation; useful to discard incomplete or outdated data.
+  type (paranome, anchors, reciprocally retained, i-ADHoRe files)::
 
-  .. note ::
-        ``SPECIES_FILTER`` matches latin names as a case-insensitive substring; quote it if it includes
-        spaces (e.g. ``"Elaeis guineensis"``)::
+            ksrates inspect-paralog-ks-db \
+                paralog_ks_server_address.txt --list
 
-            ksrates inspect-paralog-ks-db paralog_ks_server_address.txt --list
-            ksrates inspect-paralog-ks-db paralog_ks_server_address.txt "Elaeis guineensis" --delete
+* ``--delete``: instead deletes every species matching ``SPECIES_FILTER`` (required), 
+  after listing the matches and asking for confirmation::
+
+            ksrates inspect-paralog-ks-db \
+                paralog_ks_server_address.txt "Elaeis guineensis" --delete
 
 
 Backfilling from existing TSV output
 ======================================
 
-Species processed without making use of the database already have their *K*:sub:`S` data stored in local TSV files, but nothing in the shared
+Species processed without making use of the database already have their *K*:sub:`S` data available in local TSV files, but nothing stored in the
 database yet. Command ``populate-paralog-ks-db`` backfills the database from that existing output,
 without re-running any pipeline::
 
-    ksrates populate-paralog-ks-db configs/ paralog_distributions/ --database paralog_ks_server_address.txt
+    ksrates populate-paralog-ks-db \
+        configs/ paralog_distributions/ --database paralog_ks_server_address.txt
 
-Here, ``configs/`` is a directory of *ksrates* configuration files (used to resolve each species' latin
+Here, ``configs/`` is a directory containing at least one *ksrates* configuration file (used to resolve each species' latin
 name); ``paralog_distributions/`` is the directory containing the ``wgd_*`` subdirectories with the
-TSV output to extract from.
-
-Like the skip logic above, only analysis types a species doesn't already have in the database
-are added by default (add ``--force`` to re-extract and overwrite everything instead),
-so this command is safe to (re-)run any time.
+TSV output to extract from; ``--database`` is the path to the address file. Since only analysis types a species
+doesn't already have in the database are added by default, use ``--force`` to re-extract and overwrite everything instead.
