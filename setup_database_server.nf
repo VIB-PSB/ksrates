@@ -2,22 +2,16 @@
 
 /*
  * Launches the shared paralog Ks database server (sqld) via "ksrates launch-paralog-ks-server".
- * This never finishes on success - the underlying process execs into sqld and runs indefinitely -
- * so submit this once, as its own long-running job, separately from any analysis pipeline run
- * (e.g. via main.nf), and leave it running. See docs/configuration.rst, section
- * "Paralog Ks database server", for the full setup instructions.
+ * Never finishes on success - execs into sqld and runs indefinitely - so submit this once, as its
+ * own long-running job separate from any analysis run. See docs/paralog_ks_database.rst,
+ * "Setting up the database server", for full setup instructions.
  *
- * Uses the same container/profile settings (-profile docker/apptainer/singularity, -c nextflow.config)
- * as main.nf - only the entry script and params differ. If nextflow.config sets executor.name to a
- * cluster scheduler (e.g. 'slurm'), override it back to 'local' with -process.executor, so this
- * single always-running process isn't submitted as its own nested job subject to the cluster's
- * default walltime:
+ * Override executor.name back to 'local' via -process.executor if nextflow.config sets it to a
+ * cluster scheduler, so this always-running process isn't itself submitted as a nested job
+ * subject to the cluster's default walltime:
  *
  *   nextflow run VIB-PSB/ksrates -main-script setup_database_server.nf -profile singularity \
- *       -c nextflow.config -process.executor=local \
- *       --location /path/to/central/dir
- *
- * Submit the command above as (or from within) your own long-running/walltime-unlimited job.
+ *       -c nextflow.config -process.executor=local --location /path/to/central/dir
  */
 
 // Central directory to hold the server's data/keys directories and address file (required)
