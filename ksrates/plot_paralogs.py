@@ -31,7 +31,7 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
     bottom = config.use_bottom_gfs_instead_of_top(reciprocal_retention_analysis) # Use actually the BOTTOM GFs instead of the top ones (number of bottom GFs remains defined by "top" variable)
     rank_type = config.get_reciprocal_retention_rank_type(reciprocal_retention_analysis) # Rank type (only "lambda" supported)
     use_paralog_ks_database = config.use_paralog_ks_database() # Whether to use the collective paralog Ks database (default: no)
-    ks_list_paralog_db_path = config.get_paralog_ks_database() # SQLite database consolidating paralog Ks data across species
+    ks_list_paralog_db_path = config.get_paralog_ks_database() # address file for the shared sqld-backed paralog Ks database
 
     # By default the pipeline uses the TOP-ranked reciprocally retained GFs.
     # However, for comparison purposes, the user might want to use the BOTTOM GFs (e.g. the bottom 2000 ones)
@@ -45,7 +45,7 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
         logging.error("Exiting.")
         sys.exit(1)
 
-    # GET PARALOG KS DATA, EITHER FROM DATABASE OF FROM ORIGINAL KS TSV FILES
+    # GET PARALOG KS DATA, EITHER FROM DATABASE OR FROM ORIGINAL KS TSV FILES
 
     # Assume there is no database data for any analysis type, until proven otherwise below
     db_paranome_data = None

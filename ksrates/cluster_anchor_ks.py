@@ -64,12 +64,11 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
             correction_table_available = True
 
     use_paralog_ks_database = config.use_paralog_ks_database() # Whether to use the collective paralog Ks database (default: no)
-    ks_list_paralog_db_path = config.get_paralog_ks_database() # SQLite database consolidating paralog Ks data across species
+    ks_list_paralog_db_path = config.get_paralog_ks_database() # Path to the sqld server address file
 
     # Get the i-ADHoRe output files (anchorpoints/multiplicons/segments/list_elements/multiplicon_pairs)
-    # as in-memory text, either from the consolidated database first (if enabled; an indexed single-row
-    # lookup that doesn't load data for any other species) or by reading them from disk. These 5 files
-    # are always generated together by the same i-ADHoRe run, so they are resolved as one bundle: either
+    # as in-memory text, either from the database first (if enabled) or from disk. These 5 files are
+    # always generated together by the same i-ADHoRe run, so they are resolved as one bundle: either
     # the database already has the full set for this species, or all 5 are read from disk.
     iadhore_keys = ['anchorpoints', 'multiplicons', 'segments', 'list_elements', 'multiplicon_pairs']
     iadhore_texts = None
@@ -140,9 +139,8 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
             }
     logging.info("")
 
-    # Get anchor pair Ks data as a DataFrame, either from the consolidated database first (if
-    # enabled; an indexed single-row lookup that doesn't load data for any other species) or by
-    # reading the wgd output TSV file. Read once here and reuse the same DataFrame everywhere below.
+    # Same database-first/TSV-fallback pattern as above, for the anchor pair Ks data. Read once
+    # here and reuse the same DataFrame everywhere below.
     anchors_df = None
     if use_paralog_ks_database:
         try:

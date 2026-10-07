@@ -68,8 +68,9 @@ def _connect(db_path):
 	:raises: any error reading/parsing the address file, or (on the first query issued against
 	         the returned client, since the connection itself is opened lazily) any error
 	         reaching the server, exactly as sqlite3.connect() used to raise on a bad local path.
-	         Every caller already wraps its database calls in a broad except Exception, so this
-	         requires no changes on the caller side.
+	         Read-side callers in this module all catch this with a broad except Exception;
+	         write_to_paralog_db and write_anchor_iadhore_files do not, so a connection failure
+	         there propagates to their own callers.
 	"""
 	address, token = _read_address_file(db_path)
 	# ws:// (not http://) since http:// explicitly can't support transactions; note that

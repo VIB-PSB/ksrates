@@ -100,7 +100,7 @@ def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors
             correction_table_available = True
 
     use_paralog_ks_database = config.use_paralog_ks_database() # Whether to use the collective paralog Ks database (default: no)
-    ks_list_paralog_db_path = config.get_paralog_ks_database() # SQLite database consolidating paralog Ks data across species
+    ks_list_paralog_db_path = config.get_paralog_ks_database() # address file for the shared sqld-backed paralog Ks database
 
     # Get paralog/anchors/recret Ks data as DataFrames, either from the consolidated database first
     # (if enabled; an indexed single-row lookup that doesn't load data for any other species) or by

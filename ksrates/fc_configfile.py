@@ -585,7 +585,7 @@ class Configuration:
     def use_paralog_ks_database(self):
         """
         Checks whether "use_paralog_ks_database" is requested or not in the expert configuration file.
-        If set to "yes", a database TSV file hosting paralog Ks data will be generated and used.
+        If set to "yes", the shared paralog Ks database is used instead of reading the paralog Ks TSV file.
         Default is "no", i.e. using directly the Ks TSV file, for legacy purposes.
 
         :return use_paralog_ks_database: boolean for using the database (True) or the paralog Ks TSV file (False)

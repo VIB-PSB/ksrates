@@ -63,12 +63,11 @@ def exp_log_mixture(config_file, expert_config_file, paralog_tsv_file, correctio
     sys.exit(0) # exit code 0 because no actual errors were thrown
 
   use_paralog_ks_database = config.use_paralog_ks_database() # Whether to use the collective paralog Ks database (default: no)
-  ks_list_paralog_db_path = config.get_paralog_ks_database() # SQLite database consolidating paralog Ks data across species
+  ks_list_paralog_db_path = config.get_paralog_ks_database() # Path to the sqld server address file
 
-  # Get paranome Ks data as a DataFrame, either from the consolidated database first (if enabled in
-  # expert config; an indexed single-row lookup that doesn't load data for any other species) or by
-  # reading the wgd output TSV file. Read once here and reuse the same DataFrame for every extraction
-  # below, instead of each helper independently re-reading the same file from disk.
+  # Get paranome Ks data as a DataFrame, either from the database first (if enabled) or from the
+  # wgd output TSV file. Read once here and reuse the same DataFrame for every extraction below,
+  # instead of each helper independently re-reading the same file from disk.
   paranome_from_db = None
   if use_paralog_ks_database:
     try:

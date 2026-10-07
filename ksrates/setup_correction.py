@@ -75,9 +75,9 @@ def setup_correction(config_file, expert_config_file, nextflow_flag):
     if check_recret_name_compatibility(tree.get_leaf_names(), reciprocal_retention):
         trigger_exit = True
 
-    # Fail fast if the paralog Ks database is enabled but its path is invalid
+    # Fail fast if the paralog Ks database is enabled but unreachable or its address file is invalid
     if use_paralog_ks_db:
-        # Initialize the dabatase
+        # Initialize the database
         paralog_db_ready = fc_consolidate_paralog_ks.initialize_paralog_db(paralog_ks_db_path)
         if not paralog_db_ready:
             trigger_exit = True
