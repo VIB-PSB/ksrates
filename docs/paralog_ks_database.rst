@@ -38,7 +38,7 @@ the workflow attempts to compute only that new type and reuse the rest.
     *K*:sub:`S` data is already in the database. The recomputed data then replaces the old
     database entry for consistency.
 
-    To avoid this, request ``paranome`` and ``colinearity`` together the *first* time a species is
+    To prevent this, request ``paranome`` and ``colinearity`` together the *first* time a species is
     processed, where possible.
 
 
