@@ -429,16 +429,11 @@ def launch_paralog_ks_server(location, port, address_filename):
 	command never returns on success (it execs into sqld) - submit it once as a long-running job
 	(see setup_database_server.nf) and leave it running indefinitely; every ksrates analysis then becomes
 	a network client of it instead of opening a local database file directly.
-
-	Writes <LOCATION>/<ADDRESS_FILENAME>.
-
-	\b
-	Example:
-	  ksrates launch-paralog-ks-server --location /path/to/central/dir
+	Writes file <LOCATION>/<ADDRESS_FILENAME>.
 
 	\b
-	Example (custom address filename):
-	  ksrates launch-paralog-ks-server --location /path/to/central/dir --address-filename server1.txt
+	Example 1: ksrates launch-paralog-ks-server --location /path/to/central/dir
+	Example 2: ksrates launch-paralog-ks-server --location /path/to/central/dir --address-filename myaddress.txt
 	"""
 	from ksrates.launch_paralog_ks_server import launch_server
 
@@ -459,27 +454,14 @@ def populate_paralog_ks_db(config_dir, paralog_distributions_dir, database, forc
 
 	Reads config files in CONFIG_DIR to extract species information (informal and latin names),
 	then consolidates paralog Ks data from matching directories in PARALOG_DISTRIBUTIONS_DIR.
+	By default, if a species is already in database, only data it doesn't have yet are added.
 
 	\b
 	CONFIG_DIR: path to directory containing config files for species to consolidate
 	PARALOG_DISTRIBUTIONS_DIR: path to directory containing wgd_* subdirectories
-
 	\b
-	If a species is already in the database, only analysis types (paranome/anchors/reciprocally
-	retained) and i-ADHoRe files it doesn't have data for yet are extracted and added. Use --force
-	to instead re-extract and overwrite everything.
-
-	\b
-	Example (process all species with configuration files in configs/ directory):
-	  ksrates populate-paralog-ks-db configs/ paralog_distributions/ --database paralog_ks_server_address.txt
-
-	\b
-	Re-extract and overwrite everything, even already-populated types:
-	  ksrates populate-paralog-ks-db configs/ paralog_distributions/ --database paralog_ks_server_address.txt --force
-
-	\b
-	Use different recret GF number:
-	  ksrates populate-paralog-ks-db configs/ paralog_distributions/ --database paralog_ks_server_address.txt --num-gfs 4000
+	Example 1: ksrates populate-paralog-ks-db configs/ paralog_distributions/ --database paralog_ks_server_address.txt
+    Example 2: ksrates populate-paralog-ks-db configs/ paralog_distributions/ --database paralog_ks_server_address.txt --force
 	"""
 	from ksrates.populate_paralog_ks_db import populate_paralog_ks_db_batch as populate_batch
 
@@ -516,26 +498,11 @@ def inspect_paralog_ks_db(database, species_filter, delete, list_only):
 	DATABASE: path to the sqld server's address file
 	SPECIES_FILTER: optional substring to only export/list matching species (case-insensitive);
                     required when using --delete. Multi-word (latin) names need to be quoted.
-
 	\b
-	Example (dump all species):
-	  ksrates inspect-paralog-ks-db paralog_ks_server_address.txt
-
-	\b
-	Example (dump only species whose latin name contains the provided string):
-	  ksrates inspect-paralog-ks-db paralog_ks_server_address.txt Arabidopsis
-
-	\b
-	Example (list which species are in the database, and what data they have):
-	  ksrates inspect-paralog-ks-db paralog_ks_server_address.txt --list
-
-	\b
-	Example (delete species whose latin name contains the provided string):
-	  ksrates inspect-paralog-ks-db paralog_ks_server_address.txt Arabidopsis --delete
-
-	\b
-	Example (delete a species by its complete name using quotes):
-	  ksrates inspect-paralog-ks-db paralog_ks_server_address.txt "Arabidopsis thaliana" --delete
+	Example 1: ksrates inspect-paralog-ks-db paralog_ks_server_address.txt
+	Example 2: ksrates inspect-paralog-ks-db paralog_ks_server_address.txt Elaeis
+	Example 3: ksrates inspect-paralog-ks-db paralog_ks_server_address.txt --list
+	Example 4: ksrates inspect-paralog-ks-db paralog_ks_server_address.txt "Elaeis guineensis" --delete
 	"""
 	click.format_filename(database)
 
@@ -576,7 +543,6 @@ def check_paralog_db(config_file, expert, analysis_type):
 
 	\b
 	CONFIG_FILE: configuration file to set up the rate-adjustment relative to the focal species
-
 	\b
 	Example: ksrates check-paralog-db config_file.txt --type paranome
 	"""
@@ -624,7 +590,6 @@ def check_ortholog_db(config_file, species1, species2, expert):
 	\b
 	CONFIG_FILE: configuration file to set up the rate-adjustment relative to the focal species
 	SPECIES1, SPECIES2: the two species labels (as used in CONFIG_FILE) making up the pair
-
 	\b
 	Example: ksrates check-ortholog-db config_file.txt SPECIES1 SPECIES2
 	"""
