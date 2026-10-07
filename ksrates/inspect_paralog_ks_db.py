@@ -45,10 +45,9 @@ def export_full_tsv(db_path, species_filter=None):
 	iadhore_dir = os.path.join(os.path.dirname(db_path), f"{db_base}_{timestamp}_iadhore_files")
 
 	# Fetch species names first to avoid fetching all large BLOBs at once (exceeds websocket message limit).
-	client = fc_consolidate_paralog_ks._connect(db_path)
-	result = client.execute(f"SELECT latin_name FROM {_TABLE} ORDER BY latin_name")
-	species_list = [row[0] for row in result.rows]
-	client.close()
+	with fc_consolidate_paralog_ks._connect(db_path) as client:
+		result = client.execute(f"SELECT latin_name FROM {_TABLE} ORDER BY latin_name")
+		species_list = [row[0] for row in result.rows]
 
 	n_pairs = 0
 	n_species = 0
@@ -105,29 +104,26 @@ def delete_species(db_path, species_filter):
 		print(f"Could not use paralog Ks database [{db_path}].")
 		return
 
-	client = fc_consolidate_paralog_ks._connect(db_path)
-	result = client.execute(f"SELECT latin_name FROM {_TABLE} ORDER BY latin_name")
-	all_species = [row[0] for row in result.rows]
+	with fc_consolidate_paralog_ks._connect(db_path) as client:
+		result = client.execute(f"SELECT latin_name FROM {_TABLE} ORDER BY latin_name")
+		all_species = [row[0] for row in result.rows]
 
-	matches = [name for name in all_species if species_filter.lower() in name.lower()]
-	if not matches:
-		client.close()
-		print(f"No species matching '{species_filter}' found in database.")
-		return
+		matches = [name for name in all_species if species_filter.lower() in name.lower()]
+		if not matches:
+			print(f"No species matching '{species_filter}' found in database.")
+			return
 
-	print(f"The following {len(matches)} species will be deleted from the database:")
-	for name in matches:
-		print(f"  {name}")
-	text = input("Confirm deleting (y/N)? ").lower()
-	if text not in ("y", "yes"):
-		client.close()
-		print("Cancelled")
-		return
+		print(f"The following {len(matches)} species will be deleted from the database:")
+		for name in matches:
+			print(f"  {name}")
+		text = input("Confirm deleting (y/N)? ").lower()
+		if text not in ("y", "yes"):
+			print("Cancelled")
+			return
 
-	placeholders = ', '.join(['?'] * len(matches))
-	client.execute(f"DELETE FROM {_TABLE} WHERE latin_name IN ({placeholders})", tuple(matches))
-	client.close()
-	print(f"Deleted {len(matches)} species from database.")
+		placeholders = ', '.join(['?'] * len(matches))
+		client.execute(f"DELETE FROM {_TABLE} WHERE latin_name IN ({placeholders})", tuple(matches))
+		print(f"Deleted {len(matches)} species from database.")
 
 
 def list_species(db_path, species_filter=None):
@@ -148,14 +144,13 @@ def list_species(db_path, species_filter=None):
 	timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 	output_tsv_path = os.path.join(os.path.dirname(db_path), f"{db_base}_species_list_{timestamp}.tsv")
 
-	client = fc_consolidate_paralog_ks._connect(db_path)
-	iadhore_presence = " AND ".join(f"{col} IS NOT NULL" for col in _IADHORE_COLUMNS)
-	result = client.execute(f"""
-		SELECT latin_name, paranome IS NOT NULL, anchors IS NOT NULL, reciprocally_retained IS NOT NULL,
-		       ({iadhore_presence})
-		FROM {_TABLE} ORDER BY latin_name
-	""")
-	client.close()
+	with fc_consolidate_paralog_ks._connect(db_path) as client:
+		iadhore_presence = " AND ".join(f"{col} IS NOT NULL" for col in _IADHORE_COLUMNS)
+		result = client.execute(f"""
+			SELECT latin_name, paranome IS NOT NULL, anchors IS NOT NULL, reciprocally_retained IS NOT NULL,
+			       ({iadhore_presence})
+			FROM {_TABLE} ORDER BY latin_name
+		""")
 
 	n_species = 0
 	lines = ['\t'.join(['latin_name', 'paranome', 'anchors', 'reciprocally_retained', 'iadhore_files'])]

@@ -91,27 +91,26 @@ def initialize_paralog_db(db_path):
 	         acting on failure.
 	"""
 	try:
-		client = _connect(db_path)
-		client.execute(f"CREATE TABLE IF NOT EXISTS {_TABLE} (latin_name TEXT PRIMARY KEY)")
-		# Ordinary SELECT against the pragma_table_info table-valued function, rather than a
-		# bare "PRAGMA table_info(...)" statement: some PRAGMA statement forms are known to be
-		# rejected over sqld's remote/Hrana protocol, while this SELECT form is not.
-		result = client.execute(f"SELECT name FROM pragma_table_info('{_TABLE}')")
-		existing_columns = {row[0] for row in result.rows}
-		for column, col_type in _ALL_COLUMNS.items():
-			if column not in existing_columns:
-				try:
-					client.execute(f"ALTER TABLE {_TABLE} ADD COLUMN {column} {col_type}")
-				except Exception as e:
-					# Ignore "duplicate column" errors from concurrent ALTER TABLE calls:
-					# another process may have added this column between our pragma_table_info
-					# query and this ALTER statement. Any other error is real and should propagate.
-					if "duplicate column" not in str(e).lower():
-						raise
-		# No commit needed/possible here: outside of an explicit transaction, the sqld client
-		# has no .commit() method, since each execute() above is already committed by the
-		# server as soon as it returns.
-		client.close()
+		with _connect(db_path) as client:
+			client.execute(f"CREATE TABLE IF NOT EXISTS {_TABLE} (latin_name TEXT PRIMARY KEY)")
+			# Ordinary SELECT against the pragma_table_info table-valued function, rather than a
+			# bare "PRAGMA table_info(...)" statement: some PRAGMA statement forms are known to be
+			# rejected over sqld's remote/Hrana protocol, while this SELECT form is not.
+			result = client.execute(f"SELECT name FROM pragma_table_info('{_TABLE}')")
+			existing_columns = {row[0] for row in result.rows}
+			for column, col_type in _ALL_COLUMNS.items():
+				if column not in existing_columns:
+					try:
+						client.execute(f"ALTER TABLE {_TABLE} ADD COLUMN {column} {col_type}")
+					except Exception as e:
+						# Ignore "duplicate column" errors from concurrent ALTER TABLE calls:
+						# another process may have added this column between our pragma_table_info
+						# query and this ALTER statement. Any other error is real and should propagate.
+						if "duplicate column" not in str(e).lower():
+							raise
+			# No commit needed/possible here: outside of an explicit transaction, the sqld client
+			# has no .commit() method, since each execute() above is already committed by the
+			# server as soon as it returns.
 		return True
 	except Exception as e:
 		logging.error(f"Could not create/open paralog Ks database at [{db_path}]: {str(e)}")
@@ -128,9 +127,8 @@ def species_exists(db_path, latin_name):
 	:return: True if the species has a row, False otherwise (including on any read error)
 	"""
 	try:
-		client = _connect(db_path)
-		result = client.execute(f"SELECT 1 FROM {_TABLE} WHERE latin_name = ? LIMIT 1", (latin_name,))
-		client.close()
+		with _connect(db_path) as client:
+			result = client.execute(f"SELECT 1 FROM {_TABLE} WHERE latin_name = ? LIMIT 1", (latin_name,))
 		return len(result.rows) > 0
 	except Exception:
 		return False
@@ -153,9 +151,8 @@ def existing_data_types(db_path, latin_name):
 	empty = {"paranome": False, "anchors": False, "recret": False, "iadhore": False}
 	columns = ["paranome", "anchors", "reciprocally_retained"] + [_IADHORE_COLUMN[key] for key in _IADHORE_FILES]
 	try:
-		client = _connect(db_path)
-		result = client.execute(f"SELECT {', '.join(columns)} FROM {_TABLE} WHERE latin_name = ?", (latin_name,))
-		client.close()
+		with _connect(db_path) as client:
+			result = client.execute(f"SELECT {', '.join(columns)} FROM {_TABLE} WHERE latin_name = ?", (latin_name,))
 	except Exception as e:
 		logging.warning(f"Could not read from paralog Ks database [{db_path}]: {str(e)}")
 		return empty
@@ -185,9 +182,8 @@ def read_analysis_data(db_path, latin_name, analysis_type):
 	"""
 	column = _ANALYSIS_TYPE_TO_COLUMN[analysis_type]
 	try:
-		client = _connect(db_path)
-		result = client.execute(f"SELECT {column} FROM {_TABLE} WHERE latin_name = ?", (latin_name,))
-		client.close()
+		with _connect(db_path) as client:
+			result = client.execute(f"SELECT {column} FROM {_TABLE} WHERE latin_name = ?", (latin_name,))
 	except Exception as e:
 		logging.warning(f"Could not read from paralog Ks database [{db_path}]: {str(e)}")
 		return None
@@ -211,9 +207,8 @@ def read_anchor_iadhore_files(db_path, latin_name):
 	"""
 	columns = [_IADHORE_COLUMN[key] for key in _IADHORE_FILES]
 	try:
-		client = _connect(db_path)
-		result = client.execute(f"SELECT {', '.join(columns)} FROM {_TABLE} WHERE latin_name = ?", (latin_name,))
-		client.close()
+		with _connect(db_path) as client:
+			result = client.execute(f"SELECT {', '.join(columns)} FROM {_TABLE} WHERE latin_name = ?", (latin_name,))
 	except Exception as e:
 		logging.warning(f"Could not read from paralog Ks database [{db_path}]: {str(e)}")
 		return {key: None for key in _IADHORE_FILES}
@@ -261,13 +256,12 @@ def write_anchor_iadhore_files(latin_name, iadhore_dict, db_path):
 		else:
 			compressed_values.append(None)
 
-	client = _connect(db_path)
-	client.execute(f"""
-		INSERT INTO {_TABLE} (latin_name, {', '.join(columns)})
-		VALUES (?, {placeholders})
-		ON CONFLICT(latin_name) DO UPDATE SET {set_clause}
-	""", (latin_name, *compressed_values))
-	client.close()
+	with _connect(db_path) as client:
+		client.execute(f"""
+			INSERT INTO {_TABLE} (latin_name, {', '.join(columns)})
+			VALUES (?, {placeholders})
+			ON CONFLICT(latin_name) DO UPDATE SET {set_clause}
+		""", (latin_name, *compressed_values))
 	return True
 
 
@@ -406,16 +400,15 @@ def write_to_paralog_db(latin_name, ks_data_dict, db_path):
 	blob_anchors = zlib.compress(pickle.dumps(ks_anchors)) if ks_anchors is not None else None
 	blob_recret = zlib.compress(pickle.dumps(ks_recret)) if ks_recret is not None else None
 
-	client = _connect(db_path)
-	client.execute(f"""
-		INSERT INTO {_TABLE} (latin_name, paranome, anchors, reciprocally_retained)
-		VALUES (?, ?, ?, ?)
-		ON CONFLICT(latin_name) DO UPDATE SET
-			paranome=COALESCE(excluded.paranome, {_TABLE}.paranome),
-			anchors=COALESCE(excluded.anchors, {_TABLE}.anchors),
-			reciprocally_retained=COALESCE(excluded.reciprocally_retained, {_TABLE}.reciprocally_retained)
-	""", (latin_name, blob_paranome, blob_anchors, blob_recret))
-	client.close()
+	with _connect(db_path) as client:
+		client.execute(f"""
+			INSERT INTO {_TABLE} (latin_name, paranome, anchors, reciprocally_retained)
+			VALUES (?, ?, ?, ?)
+			ON CONFLICT(latin_name) DO UPDATE SET
+				paranome=COALESCE(excluded.paranome, {_TABLE}.paranome),
+				anchors=COALESCE(excluded.anchors, {_TABLE}.anchors),
+				reciprocally_retained=COALESCE(excluded.reciprocally_retained, {_TABLE}.reciprocally_retained)
+		""", (latin_name, blob_paranome, blob_anchors, blob_recret))
 	return True
 
 
