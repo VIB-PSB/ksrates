@@ -10,6 +10,7 @@ Welcome to *ksrates* documentation!
    input_output
    configuration
    paralogs_analyses
+   paralog_ks_database
    reciprocal_retention
    faqs
    citation_acknowledgement

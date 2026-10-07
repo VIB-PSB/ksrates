@@ -26,6 +26,10 @@ jobs:
         # Builds here the Docker container
         run: docker build . --file Dockerfile --tag ksrates
 
+      - name: Run Python unit tests
+        # Fast test for some CLI commands external to the main pipeline
+        run: docker run --rm -v "$PWD:$PWD" -w "$PWD" ksrates python3.9 -m pytest unit_tests/ -v
+
       - name: Set Java 17 Environment
         run: |
           echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> $GITHUB_ENV
@@ -37,11 +41,40 @@ jobs:
           sudo apt-get install wget openjdk-17-jdk
           sudo wget -qO- https://get.nextflow.io | bash
           sudo mv nextflow /usr/bin
-            
+
+      - name: Start sqld server for the paralog Ks database test
+        # --network host (not GH Actions' "services:") so docker-executor containers on the
+        # default bridge network can reach it via the bridge gateway IP.
+        # No auth: ephemeral, isolated CI job only - a missing token line is treated as auth-off.
+        # DB dir lives under test/ so it's captured by the "Test output files" upload below.
+        run: |
+          mkdir -p test/database
+          docker run -d --network host --name sqld_ci \
+            -v "$PWD/test/database:/var/lib/sqld" \
+            ghcr.io/tursodatabase/libsql-server:latest
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8080/health && break
+            sleep 1
+          done
+          BRIDGE_GATEWAY=$(docker network inspect bridge --format '{{ (index .IPAM.Config 0).Gateway }}')
+          echo "${BRIDGE_GATEWAY}:8080" > test/database/paralog_ks_server_address.txt
+          cat test/database/paralog_ks_server_address.txt
+
       - name: Running ksrates Nextflow pipeline
         run: |
           cd test
           NXF_VER=24.10.5 nextflow run ../main.nf --test -profile docker --config config_files/config_elaeis.txt --expert config_files/config_expert.txt -with-docker ksrates
+
+      - name: Export human-readable paralog Ks database dump
+        # Runs even on failure, for debugging a partial run; before the server is stopped below.
+        if: ${{ always() }}
+        run: |
+          docker run --rm -v "$PWD:$PWD" -w "$PWD" ksrates \
+            ksrates inspect-paralog-ks-db test/database/paralog_ks_server_address.txt
+
+      - name: Stop sqld server
+        if: ${{ always() }}
+        run: docker stop sqld_ci
 
       - name: Visualize output files
         if: ${{ always() }}
@@ -52,4 +85,4 @@ jobs:
         if: ${{ always() }}
         with:
           name: ksrates_test_pipeline_output
-          path: test/rate_adjustment/elaeis/
+          path: test

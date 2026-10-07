@@ -13,3 +13,4 @@ max_gene_family_size = 200
 num_reciprocally_retained_gfs = 2000
 use_bottom_gfs_instead_of_top = no
 use_original_orthomcl_version = no
+use_paralog_ks_database = yes

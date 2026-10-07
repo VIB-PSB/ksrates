@@ -49,6 +49,23 @@ RUN wget https://raw.githubusercontent.com/VIB-PSB/OrthoMCLight/main/orthomcligh
     wget https://raw.githubusercontent.com/VIB-PSB/OrthoMCLight/main/orthomclight_module.pm -P /bin && \
     chmod a+rx /usr/bin/orthomclight*
 
+# sqld (libSQL server) for the paralog Ks database feature - fetched directly from the GitHub
+# release since the official installer rejects glibc < 2.35 and falls back to an unpublished asset.
+ARG SQLD_VERSION=libsql-server-v0.24.32
+RUN apt-get update && apt-get install -yq xz-utils && rm -rf /var/lib/apt/lists/* && \
+    ARCH=$(uname -m) && \
+    case "$ARCH" in \
+        x86_64)  SQLD_ASSET="libsql-server-x86_64-unknown-linux-gnu.tar.xz" ;; \
+        aarch64) SQLD_ASSET="libsql-server-aarch64-unknown-linux-gnu.tar.xz" ;; \
+        *) echo "Unsupported architecture for sqld: $ARCH" && exit 1 ;; \
+    esac && \
+    curl --proto '=https' --tlsv1.2 -LsSf -o /tmp/sqld.tar.xz \
+        "https://github.com/tursodatabase/libsql/releases/download/${SQLD_VERSION}/${SQLD_ASSET}" && \
+    mkdir /tmp/sqld_extract && tar -xJf /tmp/sqld.tar.xz -C /tmp/sqld_extract && \
+    find /tmp/sqld_extract -type f -name sqld -exec cp {} /usr/local/bin/sqld \; && \
+    chmod +x /usr/local/bin/sqld && \
+    rm -rf /tmp/sqld.tar.xz /tmp/sqld_extract
+
 # Copy ksrates files
 ADD /requirements.txt /ksrates/requirements.txt
 ADD /setup.py /ksrates/setup.py

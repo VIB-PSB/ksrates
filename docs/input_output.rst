@@ -97,6 +97,8 @@ Nextflow log files
     * ``paralogs_analyses.log`` shows the progress in analyzing the paralog distribution to detect potential WGD signatures through anchor *K*:sub:`S` clustering, exponential-lognormal mixture modeling and/or lognormal-only mixture modeling. 
 
 
+.. _`ks_estimate_output_wgd`:
+
 *K*:sub:`S` estimate output (*wgd*)
 -----------------------------------
 
