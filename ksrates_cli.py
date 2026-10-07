@@ -425,16 +425,12 @@ def orthologs_ks_cleanup(orthologs_dir_path, dry_run):
 @click.option('--address-filename', default="paralog_ks_server_address.txt", help="Filename (not path) of the address file written under LOCATION (default: paralog_ks_server_address.txt)")
 def launch_paralog_ks_server(location, port, address_filename):
 	"""
-	Launches the sqld server that hosts the shared paralog Ks database, in the foreground. This
+	Launches the sqld server that hosts the paralog Ks database, in the foreground. This
 	command never returns on success (it execs into sqld) - submit it once as a long-running job
 	(see setup_database_server.nf) and leave it running indefinitely; every ksrates analysis then becomes
 	a network client of it instead of opening a local database file directly.
-	Do not launch this from within a per-analysis pipeline run: the server's lifetime must outlive
-	any single analysis, and must not be duplicated by concurrent analyses sharing the same database.
 
-	Writes <LOCATION>/<ADDRESS_FILENAME>: point every dataset's ks_list_paralog_database_path
-	configuration field at this file (see the "Paralog Ks database server" section of the
-	documentation).
+	Writes <LOCATION>/<ADDRESS_FILENAME>.
 
 	\b
 	Example:
@@ -470,13 +466,11 @@ def populate_paralog_ks_db(config_dir, paralog_distributions_dir, database, forc
 
 	\b
 	If a species is already in the database, only analysis types (paranome/anchors/reciprocally
-	retained) and i-ADHoRe files it doesn't have data for yet are extracted and added - e.g. if
-	reciprocal retention finishes days after paranome/anchors were first stored, a later run of
-	this command picks it up automatically, without disturbing what's already there. Use --force
-	to instead re-extract and overwrite everything, including types the species already has.
+	retained) and i-ADHoRe files it doesn't have data for yet are extracted and added. Use --force
+	to instead re-extract and overwrite everything.
 
 	\b
-	Example (process all species with configs in configs/ directory):
+	Example (process all species with configuration files in configs/ directory):
 	  ksrates populate-paralog-ks-db configs/ paralog_distributions/ --database paralog_ks_server_address.txt
 
 	\b
@@ -511,21 +505,17 @@ def inspect_paralog_ks_db(database, species_filter, delete, list_only):
 	"paralog_ks_db_YYYYMMDD_HHMMSS.tsv".
     The per-species i-ADHoRe output files (anchorpoints.txt, multiplicons.txt, segments.txt, 
     list_elements.txt, multiplicon_pairs.txt) are also printed to file under a matching
-	"..._iadhore_files" directory, one subdirectory per species. Since the database itself stores 
-	this data as binary blobs and text columns (for speed/size), this is the way to actually
-	inspect its content (e.g. in Excel, VSCode, pandas...).
+	"..._iadhore_files" directory, one subdirectory per species.
 
 	Add --list to instead export a TSV listing the species in the database, plus a True/False
-    column per analysis type (paranome, anchors, reciprocally retained, i-ADHoRe files).
+    column per analysis type.
 
-	Add --delete to instead delete every species matching SPECIES_FILTER from the database (e.g. to
-	discard data written incompletely or now considered outdated).
+	Add --delete to instead delete every species matching SPECIES_FILTER from the database.
 
 	\b
 	DATABASE: path to the sqld server's address file
 	SPECIES_FILTER: optional substring to only export/list matching species (case-insensitive);
-                    required when using --delete. Multi-word (latin) names need to be provided
-                    with quotes, e.g. "Arabidopsis thaliana".
+                    required when using --delete. Multi-word (latin) names need to be quoted.
 
 	\b
 	Example (dump all species):
@@ -573,8 +563,7 @@ def check_paralog_db(config_file, expert, analysis_type):
 	"""
 	Checks whether CONFIG_FILE's focal species already has data for ANALYSIS_TYPE in the
 	paralog Ks database, without loading any of the actual Ks data. Intended for
-	non-interactive use from scripts (e.g. main.nf's own skip-recomputation checks), not for
-	routine interactive use - see inspect-paralog-ks-db --list for a human-readable overview.
+	non-interactive use from scripts (e.g. main.nf's own skip-recomputation checks).
 
 	If the database is disabled in CONFIG_FILE (use_paralog_ks_database = no), always reports
 	"not present", so a caller can use this check unconditionally regardless of whether the
@@ -624,21 +613,20 @@ def check_paralog_db(config_file, expert, analysis_type):
 def check_ortholog_db(config_file, species1, species2, expert):
 	"""
 	Checks whether SPECIES1/SPECIES2 (species labels as used in CONFIG_FILE) already have both
-	an ortholog peak and a full Ks list stored in the shared peak_database_path/
+	an ortholog peak and a full Ks list stored in the peak_database_path/
 	ks_list_database_path TSVs, without loading any of the actual Ks data. Intended for
 	non-interactive use from scripts (e.g. main.nf's own skip-recomputation checks).
 
 	Exits with status 0 and prints "yes" only if BOTH the peak and the Ks list are already
 	present for this pair, or status 1 and prints "no" otherwise (missing either one, or the
-	database files can't be read) - a caller always safely falls through to recomputation on
-	any doubt.
+	database files can't be read) - a caller always safely falls through to recomputation on any doubt.
 
 	\b
 	CONFIG_FILE: configuration file to set up the rate-adjustment relative to the focal species
 	SPECIES1, SPECIES2: the two species labels (as used in CONFIG_FILE) making up the pair
 
 	\b
-	Example: ksrates check-ortholog-db config_file.txt SP1 SP2
+	Example: ksrates check-ortholog-db config_file.txt SPECIES1 SPECIES2
 	"""
 	import pandas
 	from ksrates.fc_configfile import Configuration
