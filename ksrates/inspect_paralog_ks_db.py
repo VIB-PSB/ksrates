@@ -149,7 +149,7 @@ def list_species(db_path, species_filter=None):
 	output_tsv_path = os.path.join(os.path.dirname(db_path), f"{db_base}_species_list_{timestamp}.tsv")
 
 	client = fc_consolidate_paralog_ks._connect(db_path)
-	iadhore_presence = " OR ".join(f"{col} IS NOT NULL" for col in _IADHORE_COLUMNS)
+	iadhore_presence = " AND ".join(f"{col} IS NOT NULL" for col in _IADHORE_COLUMNS)
 	result = client.execute(f"""
 		SELECT latin_name, paranome IS NOT NULL, anchors IS NOT NULL, reciprocally_retained IS NOT NULL,
 		       ({iadhore_presence})
