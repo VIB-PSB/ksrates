@@ -192,7 +192,6 @@ Finally, the two following commands are not strictly part of the workflow:
     
     For example it will generate ``paralog_distributions/wgd_asparagus`` and ``paralog_distributions/wgd_oryza`` with all related paralog output files.
 
-.. _practical_considerations:
 
 Practical considerations
 ========================
