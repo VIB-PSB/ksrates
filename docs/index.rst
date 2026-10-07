@@ -8,9 +8,9 @@ Welcome to *ksrates* documentation!
    installation
    usage
    input_output
-   paralog_ks_database
    configuration
    paralogs_analyses
+   paralog_ks_database
    reciprocal_retention
    faqs
    citation_acknowledgement
