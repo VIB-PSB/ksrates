@@ -226,19 +226,19 @@ class Configuration:
             ks_list_db_path = "ortholog_ks_db.tsv"
         return ks_list_db_path
 
-    def get_paralog_ks_database(self):
+    def get_ks_database(self):
         """
-        Gets the config file field of the paralog Ks database path: this points at the small address
+        Gets the config file field of the Ks database path: this points at the small address
         file written by a long-running sqld server job at startup (see docs/configuration.rst), not a
-        local SQLite file directly.
+        local SQLite file directly. The same database serves both paralog and ortholog Ks data.
 
-        :return ks_list_paralog_db_path: path to the paralog Ks database
+        :return ks_db_path: path to the sqld server address file
         """
-        ks_list_paralog_db_path = self.config.get("SPECIES", "ks_list_paralog_database_path", fallback="paralog_ks_server_address.txt")
-        if not ks_list_paralog_db_path:
-            ks_list_paralog_db_path = "paralog_ks_server_address.txt"
-        return ks_list_paralog_db_path
-    
+        ks_db_path = self.config.get("SPECIES", "ks_database_server_address_path", fallback="ks_database_server_address.txt")
+        if not ks_db_path:
+            ks_db_path = "ks_database_server_address.txt"
+        return ks_db_path
+
     def get_fasta_dict(self):
         """
         Gets the config file field of the dictionary that associates the informal species names to the their FASTA files.
@@ -582,31 +582,30 @@ class Configuration:
         return preserve
 
 
-    def use_paralog_ks_database(self):
+    def use_ks_database(self):
         """
-        Checks whether "use_paralog_ks_database" is requested or not in the expert configuration file.
-        If set to "yes", the shared paralog Ks database is used instead of reading the paralog Ks TSV file.
-        Default is "no", i.e. using directly the Ks TSV file, for legacy purposes.
+        Checks whether "use_ks_database" is requested or not in the expert configuration file.
+        If set to "yes", the shared Ks database (paralog and ortholog Ks data) is used instead of the
+        paralog Ks TSV files and the ortholog peak/Ks list TSV databases. If the database is requested
+        but cannot be reached, the analysis stops: there is no silent fallback to the TSV files.
+        Default is "no", i.e. using directly the TSV files, for legacy purposes.
 
-        :return use_paralog_ks_database: boolean for using the database (True) or the paralog Ks TSV file (False)
+        :return use_ks_database: boolean for using the database (True) or the TSV files (False)
         """
         if self.expert_config is not None:
             try:
-                use_paralog_ks_database = self.expert_config.get("EXPERT PARAMETERS", "use_paralog_ks_database").lower()
-                if use_paralog_ks_database not in ["yes", "no"]:
-                    logging.warning(f'Unrecognized field in expert configuration file [use_paralog_ks_database = {use_paralog_ks_database}]. Please choose between "yes" and "no". Default choice will be applied [no]')
-                    use_paralog_ks_database = False
+                use_ks_database = self.expert_config.get("EXPERT PARAMETERS", "use_ks_database").lower()
+                if use_ks_database not in ["yes", "no"]:
+                    logging.warning(f'Unrecognized field in expert configuration file [use_ks_database = {use_ks_database}]. Please choose between "yes" and "no". Default choice will be applied [no]')
+                    use_ks_database = False
                 else:
-                    if use_paralog_ks_database == "yes":
-                        use_paralog_ks_database = True
-                    elif use_paralog_ks_database == "no":
-                        use_paralog_ks_database = False
+                    use_ks_database = (use_ks_database == "yes")
             except Exception:
-                logging.warning(f'Missing field [use_paralog_ks_database] in expert configuration file. Please choose between "yes" and "no". Default choice will be applied [no]')
-                use_paralog_ks_database = False
+                logging.warning(f'Missing field [use_ks_database] in expert configuration file. Please choose between "yes" and "no". Default choice will be applied [no]')
+                use_ks_database = False
         else:
-            use_paralog_ks_database = False
-        return use_paralog_ks_database
+            use_ks_database = False
+        return use_ks_database
 
 
     def get_peak_stats(self):

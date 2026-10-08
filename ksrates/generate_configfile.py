@@ -27,8 +27,8 @@ def generate_configfile(configfile_name):
     Config.set("SPECIES", "ks_list_database_path", "ortholog_ks_list_db.tsv")
     Config.set("SPECIES", "# filenames/paths of the ortholog data databases\n")
 
-    Config.set("SPECIES", "ks_list_paralog_database_path", "paralog_ks_server_address.txt")
-    Config.set("SPECIES", "# filenames/paths of the paralog data databases\n")
+    Config.set("SPECIES", "ks_database_server_address_path", "ks_database_server_address.txt")
+    Config.set("SPECIES", "# path of the address file of the Ks database server (paralog and ortholog Ks data); used if use_ks_database = yes\n")
 
 
     Config.add_section("ANALYSIS SETTING")
