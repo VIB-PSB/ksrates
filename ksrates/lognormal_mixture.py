@@ -9,7 +9,7 @@ import ksrates.fc_configfile as fcConf
 import ksrates.fc_check_input as fcCheck
 import ksrates.fc_plotting as fcPlot
 import ksrates.fc_extract_ks_list as fc_extract_ks_list
-import ksrates.fc_consolidate_paralog_ks as fc_consolidate_paralog_ks
+import ksrates.fc_ks_database as fcKsDb
 import ksrates.fc_lognormal_mixture as fcLMM
 from ksrates.fc_plotting import COLOR_ANCHOR_HISTOGRAM, COLOR_REC_RET_HISTOGRAM
 from ksrates.fc_cluster_anchors import subfolder
@@ -99,8 +99,10 @@ def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors
             correction_table = read_csv(f, sep="\t")
             correction_table_available = True
 
-    use_paralog_ks_database = config.use_paralog_ks_database() # Whether to use the collective paralog Ks database (default: no)
-    ks_list_paralog_db_path = config.get_paralog_ks_database() # address file for the shared sqld-backed paralog Ks database
+    use_ks_database = config.use_ks_database() # Whether to use the collective Ks database (default: no)
+    ks_db_path = config.get_ks_database() # address file for the shared sqld-backed Ks database
+    if use_ks_database:
+        fcKsDb.initialize_or_exit(ks_db_path) # fail fast if the requested database cannot be used
 
     # Get paralog/anchors/recret Ks data as DataFrames, either from the consolidated database first
     # (if enabled; an indexed single-row lookup that doesn't load data for any other species) or by
@@ -111,13 +113,8 @@ def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors
 
     if paranome_analysis:
         db_data = None
-        if use_paralog_ks_database:
-            try:
-                if not fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path):
-                    raise RuntimeError("database unreachable")
-                db_data = fc_consolidate_paralog_ks.read_analysis_data(ks_list_paralog_db_path, latinSpecies, 'paranome')
-            except Exception as e:
-                logging.warning(f"Could not use paralog Ks database [{ks_list_paralog_db_path}]: {str(e)}. Will read TSV file instead.")
+        if use_ks_database:
+            db_data = fcKsDb.read_analysis_data(ks_db_path, latinSpecies, 'paranome')
         if db_data is not None:
             paranome_df = DataFrame(db_data)
         else:
@@ -132,13 +129,8 @@ def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors
 
     if colinearity_analysis:
         db_data = None
-        if use_paralog_ks_database:
-            try:
-                if not fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path):
-                    raise RuntimeError("database unreachable")
-                db_data = fc_consolidate_paralog_ks.read_analysis_data(ks_list_paralog_db_path, latinSpecies, 'anchors')
-            except Exception as e:
-                logging.warning(f"Could not use paralog Ks database [{ks_list_paralog_db_path}]: {str(e)}. Will read TSV file instead.")
+        if use_ks_database:
+            db_data = fcKsDb.read_analysis_data(ks_db_path, latinSpecies, 'anchors')
         if db_data is not None:
             anchors_df = DataFrame(db_data)
         else:
@@ -153,13 +145,8 @@ def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors
 
     if reciprocal_retention_analysis:
         db_data = None
-        if use_paralog_ks_database:
-            try:
-                if not fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path):
-                    raise RuntimeError("database unreachable")
-                db_data = fc_consolidate_paralog_ks.read_analysis_data(ks_list_paralog_db_path, latinSpecies, 'recret')
-            except Exception as e:
-                logging.warning(f"Could not use paralog Ks database [{ks_list_paralog_db_path}]: {str(e)}. Will read TSV file instead.")
+        if use_ks_database:
+            db_data = fcKsDb.read_analysis_data(ks_db_path, latinSpecies, 'recret')
         if db_data is not None:
             recret_df = DataFrame(db_data)
         else:

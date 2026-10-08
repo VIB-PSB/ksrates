@@ -9,6 +9,7 @@ import ksrates.fc_check_input as fcCheck
 import ksrates.fc_kde_bootstrap as fcPeak
 import ksrates.fc_plotting as fcPlot
 import ksrates.fc_configfile as fcConf
+import ksrates.fc_ks_database as fcKsDb
 from ksrates.utils import init_logging
 import matplotlib
 # Use the Agg (Anti-Grain Geometry) backend to avoid needing a graphical user interface (X11 backend)
@@ -39,21 +40,43 @@ def plot_orthologs_distr(config_file, expert_config_file, trios_file):
     with open(trios_file, 'r') as f1:
         trios = pandas.read_csv(f1, sep="\t")
 
-    # Get the ortholog Ks list database (to plot histograms; mandatory input file)
-    ks_list_db_path = config.get_ks_db()
-    fcCheck.check_inputfile(ks_list_db_path, "Ortholog Ks list database")
-    with open(ks_list_db_path, 'r') as f2:
-        ks_list_db = pandas.read_csv(f2, sep="\t", index_col=0)
+    use_ks_database = config.use_ks_database() # Whether to use the shared Ks database instead of the TSV files (default: no)
+    ks_db_path = config.get_ks_database()
+    if use_ks_database:
+        fcKsDb.initialize_or_exit(ks_db_path)
+
+    # Get the ortholog Ks list database (to plot histograms; mandatory input)
+    if use_ks_database:
+        # Only the pairs needed by the trios are read (the database can hold the pairs of many analyses).
+        # The Ks_Values cells are already real lists.
+        needed_pair_keys = set()
+        for __, row in trios.iterrows():
+            latin_species, latin_sister, latin_out = (latin_names[row['Focal_Species']], latin_names[row['Sister_Species']],
+                                                      latin_names[row['Out_Species']])
+            needed_pair_keys.update([fcKsDb.pair_key(latin_species, latin_sister), fcKsDb.pair_key(latin_species, latin_out),
+                                     fcKsDb.pair_key(latin_sister, latin_out)])
+        ks_list_db = fcKsDb.read_ks_lists(ks_db_path, sorted(needed_pair_keys))
+    else:
+        ks_list_db_path = config.get_ks_db()
+        fcCheck.check_inputfile(ks_list_db_path, "Ortholog Ks list database")
+        with open(ks_list_db_path, 'r') as f2:
+            ks_list_db = pandas.read_csv(f2, sep="\t", index_col=0)
+        # When imported from csv format, all the Ks lists in the df are read as
+        # plain text (strings) and must be converted back to value lists
+        ks_list_db.loc[:, 'Ks_Values'] = ks_list_db.loc[:, 'Ks_Values'].apply(literal_eval)
 
     # Get the ortholog peak database (to plot distribution mode and median; not mandatory)
-    db_path = config.get_ortho_db()
     no_peak_db = False
-    try:
-        with open(db_path, 'r') as f3:
-            db = pandas.read_csv(f3, sep="\t", index_col=0)
-    except Exception:
-        no_peak_db = True
-        logging.warning(f"Ortholog Ks peak database empty or not found at the path provided in the config file: distribution peaks will not be shown")
+    if use_ks_database:
+        db = fcKsDb.read_all_peaks(ks_db_path)
+    else:
+        db_path = config.get_ortho_db()
+        try:
+            with open(db_path, 'r') as f3:
+                db = pandas.read_csv(f3, sep="\t", index_col=0)
+        except Exception:
+            no_peak_db = True
+            logging.warning(f"Ortholog Ks peak database empty or not found at the path provided in the config file: distribution peaks will not be shown")
 
     # -----------------------------------------------------------------------------
 
@@ -114,7 +137,7 @@ def plot_orthologs_distr(config_file, expert_config_file, trios_file):
             logging.info(f"Plotting ortholog Ks distributions for species pair [{latinSpecies} - {latinSister}]")
 
             # SPECIES - SISTER
-            ks_list_species_sister = literal_eval(ks_list_db.at[species_sister, 'Ks_Values'])
+            ks_list_species_sister = ks_list_db.at[species_sister, 'Ks_Values']
             # Getting 20 KDE curves through bootstrap
             bootstrap_kde_species_sister = fcPeak.bootstrap_KDE(ks_list_species_sister, 20, x_lim, bin_width_ortho)
 
@@ -138,7 +161,7 @@ def plot_orthologs_distr(config_file, expert_config_file, trios_file):
                                                             bootstrap_kde_species_sister)
 
                 # SPECIES - OUTGROUP
-                ks_list = literal_eval(ks_list_db.at[species_out, 'Ks_Values'])
+                ks_list = ks_list_db.at[species_out, 'Ks_Values']
                 # Getting 20 KDE curves through bootstrap
                 logging.info(f"  Plotting data for focal species and outspecies [{latinSpecies} - {latinOut}]")
                 bootstrap_kde = fcPeak.bootstrap_KDE(ks_list, 20, x_lim, bin_width_ortho)
@@ -146,7 +169,7 @@ def plot_orthologs_distr(config_file, expert_config_file, trios_file):
                 fcPlot.plot_orthologs_histogram_kdes(ks_list, bin_list_ortho, axes[1], bootstrap_kde)
 
                 # SISTER - OUTGROUP
-                ks_list = literal_eval(ks_list_db.at[sister_out, 'Ks_Values'])
+                ks_list = ks_list_db.at[sister_out, 'Ks_Values']
                 # Getting 20 KDE curves through bootstrap
                 logging.info(f"  Plotting data for sister species and outspecies [{latinSister} - {latinOut}]")
                 bootstrap_kde = fcPeak.bootstrap_KDE(ks_list, 20, x_lim, bin_width_ortho)
