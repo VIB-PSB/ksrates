@@ -38,7 +38,7 @@ The analysis configuration file is composed of a first section defining the spec
     peak_database_path = ortholog_peak_db.tsv
     ks_list_database_path = ortholog_ks_list_db.tsv
 
-    ks_list_paralog_database_path = paralog_ks_server_address.txt
+    ks_database_server_address_path = ks_database_server_address.txt
 
 
     [ANALYSIS SETTING]
@@ -74,9 +74,10 @@ The [SPECIES] section includes:
 * **latin_names**: list of associations between each of the species names in parameter `newick_tree` and their scientific names, which will be used in legends and plot titles. The association is made with a colon (':').
 * **fasta_filenames**: list of associations between each of the species names in parameter `newick_tree` and the corresponding paths to their FASTA files. The association is made with a colon (':').
 * **gff_filename**: association between the focal species as named in parameter `focal_species` and the path to the GFF3 file for the focal species (only required for collinearity analysis). The association is made with a colon (':').
-* **peak_database_path**: path to the database of ortholog *K*:sub:`S` distribution peaks. If the file is not present yet, it will be automatically generated.
-* **ks_list_database_path**: path to the database of ortholog *K*:sub:`S` lists. If the file is not present, it will be automatically generated.
-* **ks_list_paralog_database_path**: path to the address file of the paralog *K*:sub:`S` database server, pointing to where to reach it over the network (see :ref:`paralog_ks_database`).
+* **peak_database_path**: path to the TSV database file storing the ortholog *K*:sub:`S` distribution peaks. If the file is not present yet, it will be automatically generated.
+* **ks_list_database_path**: path to the TSV database file storing the ortholog *K*:sub:`S` lists. If the file is not present, it will be automatically generated.
+* **ks_database_server_address_path**: path to the address file of the *K*:sub:`S` database server, an SQL database served by a running sqld server that stores both paralog and ortholog *K*:sub:`S` data. Only used if ``use_ks_database`` is enabled in the expert configuration file; in that case it replaces the two ortholog TSV files above. See :ref:`paralog_ks_database`.
+
 
 The [ANALYSIS SETTING] section includes:
 
@@ -246,7 +247,7 @@ The following can be used as a template (default values)::
     num_reciprocally_retained_gfs = 2000
     use_bottom_gfs_instead_of_top = no
     use_original_orthomcl_version = no
-    use_paralog_ks_database = no
+    use_ks_database = no
 
 * **logging_level**: the lowest logging/verbosity level of messages printed to the console/logs (increasing severity levels: *notset*, *debug*, *info*, *warning*, *error*, *critical*). Messages less severe than *level* will be ignored; *notset* causes all messages to be processed. [Default: "info"]
 * **preserve_ks_tmp_files**: whether to preserve or not the intermediate files generated during the paralogs *K*:sub:`S` and ortholog *K*:sub:`S` pipelines (options: "yes" and "no"). [Default: "no"]
@@ -263,4 +264,4 @@ The following can be used as a template (default values)::
 * **num_reciprocally_retained_gfs**: number of gene families at the top of the reciprocal retention ranking that will be used to build the related *K*:sub:`S` distribution. [Default: 2000]
 * **use_bottom_gfs_instead_of_top**: use the bottom-ranked reciprocally retained GFs instead of the top-ranked ones (not recommended; only meant for comparison purposes with top-ranked GFs) 
 * **use_original_orthomcl_version**: allows compatibility with the original OrthoMCL v1.4 version; by default it is used a modified faster version called OrthoMCLight. [Default: "no"]
-* **use_paralog_ks_database**: also store the *K*:sub:`S` data into the shared paralog *K*:sub:`S` database (see :ref:`paralog_ks_database`), in addition to the standard *K*:sub:`S` TSV files; useful to centralize multiple analyses
+* **use_ks_database**: store and read the paralog and ortholog *K*:sub:`S` data in the *K*:sub:`S` database server (see :ref:`paralog_ks_database`) instead of in plain *K*:sub:`S` TSV files; useful to let multiple independent analyses safely access the same data simultaneously and to centralize data from multiple analyses. [Default: "no"]
