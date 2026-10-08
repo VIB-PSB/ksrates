@@ -419,135 +419,165 @@ def orthologs_ks_cleanup(orthologs_dir_path, dry_run):
                 print('Please choose between "y" or "n". Cancelled.')
 
 
-@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Launches the shared paralog Ks database server (sqld).")
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Launches the shared Ks database server (sqld).")
 @click.option('--location', type=click.Path(file_okay=False), required=True, help="Central directory to hold the server's data/keys directories and address file")
 @click.option('--port', type=int, default=8080, help="Port sqld listens on (default: 8080)")
-@click.option('--address-filename', default="paralog_ks_server_address.txt", help="Filename (not path) of the address file written under LOCATION (default: paralog_ks_server_address.txt)")
-def launch_paralog_ks_server(location, port, address_filename):
+@click.option('--address-filename', default="ks_database_server_address.txt", help="Filename (not path) of the address file written under LOCATION (default: ks_database_server_address.txt)")
+def launch_ks_database_server(location, port, address_filename):
 	"""
-	Launches the sqld server that hosts the paralog Ks database, in the foreground. This
+	Launches the sqld server that hosts the Ks database, in the foreground. This
 	command never returns on success (it execs into sqld) - submit it once as a long-running job
 	(see setup_database_server.nf) and leave it running indefinitely; every ksrates analysis then becomes
 	a network client of it instead of opening a local database file directly.
 	Writes file <LOCATION>/<ADDRESS_FILENAME>.
 
 	\b
-	Example 1: ksrates launch-paralog-ks-server --location /path/to/central/dir
-	Example 2: ksrates launch-paralog-ks-server --location /path/to/central/dir --address-filename myaddress.txt
+	Example 1: ksrates launch-ks-database-server --location /path/to/central/dir
+	Example 2: ksrates launch-ks-database-server --location /path/to/central/dir --address-filename myaddress.txt
 	"""
-	from ksrates.launch_paralog_ks_server import launch_server
+	from ksrates.launch_ks_database_server import launch_server
 
 	click.format_filename(location)
-	print(f"Launching paralog Ks database server in [{location}]...")
+	print(f"Launching Ks database server in [{location}]...")
 	launch_server(location, port=port, address_filename=address_filename)
 
 
-@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Populate paralog Ks database from existing data.")
-@click.argument('config_dir', type=click.Path(exists=True))
-@click.argument('paralog_distributions_dir', type=click.Path(exists=True))
-@click.option('-d', '--database', type=click.Path(), required=True, help="Path to the sqld server's address file (written by the server job at startup; the server must already be running)")
-@click.option('--force', is_flag=True, help="Re-extract and overwrite analysis types a species already has data for (by default only what's missing is added)")
-@click.option('--num-gfs', type=int, default=2000, help="Number of gene families for reciprocally retained (default: 2000)")
-def populate_paralog_ks_db(config_dir, paralog_distributions_dir, database, force, num_gfs):
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Populate Ks database from existing data.")
+@click.option('--paralogs', 'paralog_dirs', nargs=2, type=click.Path(exists=True), metavar='CONFIG_DIR PARALOG_DISTRIBUTIONS_DIR', help="Populate paralog Ks data: directory containing the config files of the species to consolidate, and the paralog_distributions directory")
+@click.option('--orthologs', 'ortholog_tsvs', nargs=2, type=click.Path(), metavar='PEAK_TSV KS_LIST_TSV', help="Populate ortholog Ks data: legacy ortholog peak TSV database (peak_database_path) and Ks list TSV database (ks_list_database_path)")
+@click.option('-d', '--database', type=click.Path(), required=True, help="Path to the sqld server's address file")
+@click.option('--force', is_flag=True, help="Re-extract and overwrite the data a species (or species pair) already has (by default only what's missing is added)")
+@click.option('--num-gfs', type=int, default=2000, help="Number of gene families for reciprocally retained, paralogs only (default: 2000)")
+def populate_ks_db(paralog_dirs, ortholog_tsvs, database, force, num_gfs):
 	"""
-	Populates the paralog Ks database (served by a running sqld server) from config files and existing paralog TSV files.
+    Populates the Ks database (served by a running sqld server) from existing paralog and/or ortholog data.
+    By default, if a species (or species pair) is already in database, only data it doesn't have yet are added.
 
-	Reads config files in CONFIG_DIR to extract species information (informal and latin names),
-	then consolidates paralog Ks data from matching directories in PARALOG_DISTRIBUTIONS_DIR.
-	By default, if a species is already in database, only data it doesn't have yet are added.
+    Paralogs: reads config files in CONFIG_DIR to extract species information (informal and latin names),
+    then consolidates paralog Ks data from matching directories in PARALOG_DISTRIBUTIONS_DIR.
+    
+    Orthologs: copies the already-computed peaks and Ks lists of the legacy ortholog TSV databases
+    into the database.
 
-	\b
-	CONFIG_DIR: path to directory containing config files for species to consolidate
-	PARALOG_DISTRIBUTIONS_DIR: path to directory containing wgd_* subdirectories
-	\b
-	Example 1: ksrates populate-paralog-ks-db configs/ paralog_distributions/ --database paralog_ks_server_address.txt
-    Example 2: ksrates populate-paralog-ks-db configs/ paralog_distributions/ --database paralog_ks_server_address.txt --force
+    \b
+    Example 1: ksrates populate-ks-db --paralogs configs/ paralog_distributions/ --database ks_database_server_address.txt
+    Example 2: ksrates populate-ks-db --orthologs ortholog_peak_db.tsv ortholog_ks_list_db.tsv --database ks_database_server_address.txt
+    Example 3: ksrates populate-ks-db --paralogs configs/ paralog_distributions/ --orthologs peak_db.tsv ks_list_db.tsv --database ks_database_server_address.txt --force
 	"""
-	from ksrates.populate_paralog_ks_db import populate_paralog_ks_db_batch as populate_batch
+	from ksrates.fc_ks_database import KsDatabaseError
+	from ksrates.populate_ks_db import populate_paralog_ks_db_batch, populate_ortholog_ks_db
 
-	click.format_filename(config_dir)
-	click.format_filename(paralog_distributions_dir)
+	if not paralog_dirs and not ortholog_tsvs:
+		raise click.UsageError("At least one of --paralogs and --orthologs is required.")
 	click.format_filename(database)
 
-	populate_batch(config_dir, paralog_distributions_dir, database, force_overwrite=force, num_gfs=num_gfs)
+	try:
+		if paralog_dirs:
+			populate_paralog_ks_db_batch(paralog_dirs[0], paralog_dirs[1], database, force_overwrite=force, num_gfs=num_gfs)
+		if ortholog_tsvs:
+			populate_ortholog_ks_db(ortholog_tsvs[0], ortholog_tsvs[1], database, force_overwrite=force)
+	except KsDatabaseError as e:
+		raise click.ClickException(str(e))
 
 
-@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Visualize or delete paralog Ks database content.")
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Visualize or delete Ks database content.")
 @click.argument('database', type=click.Path(exists=True))
-@click.argument('species_filter', required=False)
-@click.option('--delete', is_flag=True, help="Delete species matching SPECIES_FILTER (required) from the database. Lists matches and asks for confirmation before deleting.")
-@click.option('--list', 'list_only', is_flag=True, help="Export a TSV listing which species are in the database and which analysis types each has.")
-def inspect_paralog_ks_db(database, species_filter, delete, list_only):
+@click.argument('name_filter', required=False)
+@click.option('--type', 'data_type', type=click.Choice(['paralog', 'ortholog', 'all']), default='all', show_default=True, help="Which kind of data to inspect (--delete requires paralog or ortholog)")
+@click.option('--delete', is_flag=True, help="Delete the species (paralog) or species pairs (ortholog) matching NAME_FILTER (required) from the database. Lists matches and asks for confirmation before deleting.")
+@click.option('--list', 'list_only', is_flag=True, help="Export a TSV listing which species (paralog) or species pairs (ortholog) are in the database and which kinds of data each has.")
+def inspect_ks_db(database, name_filter, data_type, delete, list_only):
 	"""
-	Prints the full content of the paralog Ks database in a TSV file, one row per gene pair.
-    Columns are: latin_name, analysis_type, Paralog1, Paralog2, Family, Node, Ks, 
-	AlignmentCoverage, AlignmentIdentity, AlignmentLength.
-    The output filename is generated automatically next to the database, from its
-	basename with the current timestamp appended, e.g. "paralog_ks_server_address.txt" ->
-	"paralog_ks_db_YYYYMMDD_HHMMSS.tsv".
-    The per-species i-ADHoRe output files (anchorpoints.txt, multiplicons.txt, segments.txt, 
+    Prints the content of the Ks database to files.
+
+    Paralog data: a TSV file with one row per gene pair. Columns are: latin_name, analysis_type,
+    Paralog1, Paralog2, Family, Node, Ks, AlignmentCoverage, AlignmentIdentity, AlignmentLength.
+    The per-species i-ADHoRe output files (anchorpoints.txt, multiplicons.txt, segments.txt,
     list_elements.txt, multiplicon_pairs.txt) are also printed to file under a matching
-	"..._iadhore_files" directory, one subdirectory per species.
+    "..._iadhore_files" directory, one subdirectory per species.
 
-	Add --list to instead export a TSV listing the species in the database, plus a True/False
-    column per analysis type.
+    Ortholog data: two TSV files in the exact format of the legacy ortholog TSV databases
+    (peaks, and Ks lists), so that they can be used as a replacement.
 
-	Add --delete to instead delete every species matching SPECIES_FILTER from the database.
+    The output filenames are generated next to the database, from its basename with
+    the current timestamp appended, e.g. "my_ks_database_server_address_YYYYMMDD_HHMMSS.tsv".
 
-	\b
-	DATABASE: path to the sqld server's address file
-	SPECIES_FILTER: optional substring to only export/list matching species (case-insensitive);
-                    required when using --delete. Multi-word (latin) names need to be quoted.
-	\b
-	Example 1: ksrates inspect-paralog-ks-db paralog_ks_server_address.txt
-	Example 2: ksrates inspect-paralog-ks-db paralog_ks_server_address.txt Elaeis
-	Example 3: ksrates inspect-paralog-ks-db paralog_ks_server_address.txt --list
-	Example 4: ksrates inspect-paralog-ks-db paralog_ks_server_address.txt "Elaeis guineensis" --delete
+    Add --list to instead export a TSV listing what is in the database, plus a True/False
+    column per kind of data.
+
+    Add --delete to instead delete every species (paralog) or species pair (ortholog) matching NAME_FILTER from the database.
+
+    \b
+    DATABASE: path to the sqld server's address file
+    NAME_FILTER: optional substring to only export/list matching species (paralog, latin name) or species pairs
+                 (ortholog, latin names joined by "_") (case-insensitive); required when using --delete.
+                 Multi-word (latin) names need to be quoted.
+    \b
+    Example 1: ksrates inspect-ks-db ks_database_server_address.txt
+    Example 2: ksrates inspect-ks-db ks_database_server_address.txt Elaeis --type paralog
+    Example 3: ksrates inspect-ks-db ks_database_server_address.txt --list
+    Example 4: ksrates inspect-ks-db ks_database_server_address.txt "Elaeis guineensis" --type paralog --delete
+    Example 5: ksrates inspect-ks-db ks_database_server_address.txt "Elaeis guineensis_Oryza sativa" --type ortholog --delete
 	"""
+	import ksrates.inspect_ks_db as inspect_ks
+	from ksrates.fc_ks_database import KsDatabaseError
+
 	click.format_filename(database)
 
 	if delete and list_only:
 		raise click.UsageError("--delete and --list cannot be used together.")
+	if delete and not name_filter:
+		raise click.UsageError("NAME_FILTER is required when using --delete.")
+	if delete and data_type == 'all':
+		raise click.UsageError("--delete requires --type paralog or --type ortholog.")
 
-	if delete:
-		if not species_filter:
-			raise click.UsageError("SPECIES_FILTER is required when using --delete.")
-		from ksrates.inspect_paralog_ks_db import delete_species
-		delete_species(database, species_filter)
-	elif list_only:
-		from ksrates.inspect_paralog_ks_db import list_species
-		list_species(database, species_filter)
-	else:
-		from ksrates.inspect_paralog_ks_db import export_full_tsv
-		export_full_tsv(database, species_filter)
+	try:
+		if data_type in ('paralog', 'all'):
+			if delete:
+				inspect_ks.delete_species(database, name_filter)
+			elif list_only:
+				inspect_ks.list_species(database, name_filter)
+			else:
+				inspect_ks.export_full_tsv(database, name_filter)
+		if data_type in ('ortholog', 'all'):
+			if delete:
+				inspect_ks.delete_ortholog_pairs(database, name_filter)
+			elif list_only:
+				inspect_ks.list_ortholog_pairs(database, name_filter)
+			else:
+				inspect_ks.export_ortholog_tsvs(database, name_filter)
+	except KsDatabaseError as e:
+		raise click.ClickException(str(e))
 
 
-@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Check whether the focal species already has data in the paralog Ks database.")
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Check whether the focal species already has data in the Ks database.")
 @click.argument('config_file', type=click.Path(exists=True))
 @click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option('--type', 'analysis_type', type=click.Choice(['paranome', 'anchors', 'recret']), required=True, help="Which analysis type to check for")
 def check_paralog_db(config_file, expert, analysis_type):
 	"""
-	Checks whether CONFIG_FILE's focal species already has data for ANALYSIS_TYPE in the
-	paralog Ks database, without loading any of the actual Ks data. Intended for
-	non-interactive use from scripts (e.g. main.nf's own skip-recomputation checks).
+    Checks whether CONFIG_FILE's focal species already has data for ANALYSIS_TYPE in the
+    Ks database, without loading any of the actual Ks data. Intended for
+    non-interactive use from scripts (e.g. main.nf's own skip-recomputation checks).
 
-	If the database is disabled in CONFIG_FILE (use_paralog_ks_database = no), always reports
-	"not present", so a caller can use this check unconditionally regardless of whether the
-	database is enabled for this dataset.
+    If the database is disabled in CONFIG_FILE (use_ks_database = no), always reports
+    "not present", so a caller can use this check unconditionally regardless of whether the
+    database is enabled for this dataset.
 
-	Exits with status 0 and prints "yes" if the data is already present, or status 1 and
-	prints "no" if it's missing, the database is disabled, or the database can't be reached
-	(all treated the same way, so a caller always safely falls through to recomputation on
-	any doubt).
+    \b
+    Exit status:
+    0 and prints "yes" if the data is already present;
+    1 and prints "no" if it's missing or the database is disabled;
+    2 and prints "error" if the database is enabled but cannot be reached (the caller must
+    stop, not treat this as "missing": that would silently recompute everything while the server is down).
 
-	\b
-	CONFIG_FILE: configuration file to set up the rate-adjustment relative to the focal species
-	\b
-	Example: ksrates check-paralog-db config_file.txt --type paranome
+    \b
+    CONFIG_FILE: configuration file to set up the rate-adjustment relative to the focal species
+    \b
+    Example: ksrates check-paralog-db config_file.txt --type paranome
 	"""
 	from ksrates.fc_configfile import Configuration
-	from ksrates.fc_consolidate_paralog_ks import existing_data_types
+	from ksrates.fc_ks_database import existing_data_types, KsDatabaseError
 
 	click.format_filename(config_file)
 	if expert:
@@ -557,21 +587,26 @@ def check_paralog_db(config_file, expert, analysis_type):
 
 	config = Configuration(config_file, expert)
 	present = False
-	if config.use_paralog_ks_database():
+	if config.use_ks_database():
 		species = config.get_species()
 		latin_name = config.get_latin_names()[species]
-		db_path = config.get_paralog_ks_database()
-		present = existing_data_types(db_path, latin_name)[analysis_type]
+		db_path = config.get_ks_database()
+		try:
+			present = existing_data_types(db_path, latin_name)[analysis_type]
+		except KsDatabaseError as e:
+			click.echo("error")
+			click.echo(str(e), err=True)
+			sys.exit(2)
 
 	if present:
-		print("yes")
+		click.echo("yes")
 		sys.exit(0)
 	else:
-		print("no")
+		click.echo("no")
 		sys.exit(1)
 
 
-@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Check whether a species pair already has ortholog peak/Ks-list data in the shared TSV databases.")
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Check whether a species pair already has ortholog peak/Ks-list data in the databases.")
 @click.argument('config_file', type=click.Path(exists=True))
 @click.argument('species1')
 @click.argument('species2')
@@ -579,13 +614,16 @@ def check_paralog_db(config_file, expert, analysis_type):
 def check_ortholog_db(config_file, species1, species2, expert):
 	"""
 	Checks whether SPECIES1/SPECIES2 (species labels as used in CONFIG_FILE) already have both
-	an ortholog peak and a full Ks list stored in the peak_database_path/
-	ks_list_database_path TSVs, without loading any of the actual Ks data. Intended for
+	an ortholog peak and a full Ks list stored, either in the Ks database (if use_ks_database = yes) or in the
+	peak_database_path/ks_list_database_path TSVs, without loading any of the actual Ks data. Intended for
 	non-interactive use from scripts (e.g. main.nf's own skip-recomputation checks).
 
-	Exits with status 0 and prints "yes" only if BOTH the peak and the Ks list are already
-	present for this pair, or status 1 and prints "no" otherwise (missing either one, or the
-	database files can't be read) - a caller always safely falls through to recomputation on any doubt.
+	Exit status:
+	0 and prints "yes" only if BOTH the peak and the Ks list are already present for this pair;
+	1 and prints "no" otherwise (missing either one, or the TSV database files can't be read) - a caller
+	always safely falls through to recomputation on any doubt;
+	2 and prints "error" if the Ks database is enabled but cannot be reached (the caller must stop, not
+	treat this as "missing": that would silently recompute everything while the server is down).
 
 	\b
 	CONFIG_FILE: configuration file to set up the rate-adjustment relative to the focal species
@@ -595,6 +633,7 @@ def check_ortholog_db(config_file, species1, species2, expert):
 	"""
 	import pandas
 	from ksrates.fc_configfile import Configuration
+	from ksrates.fc_ks_database import existing_ortholog_data, pair_key, KsDatabaseError
 
 	click.format_filename(config_file)
 	if expert:
@@ -608,11 +647,19 @@ def check_ortholog_db(config_file, species1, species2, expert):
 		latin_names = config.get_latin_names()
 		pair = sorted([species1, species2], key=str.lower)
 		latin_pair = sorted([latin_names[pair[0]], latin_names[pair[1]]], key=str.casefold)
-		pair_key = f"{latin_pair[0]}_{latin_pair[1]}"
-
-		peak_db = pandas.read_csv(config.get_ortho_db(), sep="\t", index_col=0)
-		ks_list_db = pandas.read_csv(config.get_ks_db(), sep="\t", index_col=0)
-		present = pair_key in peak_db.index and pair_key in ks_list_db.index
+		key = pair_key(latin_pair[0], latin_pair[1])
+		if config.use_ks_database():
+			try:
+				existing = existing_ortholog_data(config.get_ks_database(), latin_pair[0], latin_pair[1])
+			except KsDatabaseError as e:
+				click.echo("error")
+				click.echo(str(e), err=True)
+				sys.exit(2)
+			present = existing["peak"] and existing["ks_list"]
+		else:
+			peak_db = pandas.read_csv(config.get_ortho_db(), sep="\t", index_col=0)
+			ks_list_db = pandas.read_csv(config.get_ks_db(), sep="\t", index_col=0)
+			present = key in peak_db.index and key in ks_list_db.index
 	except Exception:
 		present = False
 
