@@ -534,11 +534,11 @@ def inspect_ks_db(database, name_filter, data_type, delete, list_only):
 	try:
 		if data_type in ('paralog', 'all'):
 			if delete:
-				inspect_ks.delete_species(database, name_filter)
+				inspect_ks.delete_paralog_species(database, name_filter)
 			elif list_only:
-				inspect_ks.list_species(database, name_filter)
+				inspect_ks.list_paralog_species(database, name_filter)
 			else:
-				inspect_ks.export_full_tsv(database, name_filter)
+				inspect_ks.export_paralog_tsv(database, name_filter)
 		if data_type in ('ortholog', 'all'):
 			if delete:
 				inspect_ks.delete_ortholog_pairs(database, name_filter)
