@@ -213,7 +213,7 @@ def read_columns(db_path, spec, key, columns):
 	return tuple(result.rows[0]) if result.rows else None
 
 
-def upsert(db_path, spec, key, values):
+def upsert(db_path, spec, key, values, clear=()):
 	"""
 	Write some columns of one row in a single atomic statement (INSERT ... ON CONFLICT DO UPDATE).
 	Only the columns with a non-None value are written; the others are left untouched, so a partial
@@ -223,10 +223,12 @@ def upsert(db_path, spec, key, values):
 	:param spec: TableSpec of the table to write to
 	:param key: primary key value
 	:param values: dict column -> value (None values are ignored)
+	:param clear: columns to explicitly set to NULL in the same statement (the only way to erase a value)
 	:return: True if something was written, False if there was nothing to write
 	:raises KsDatabaseError: if the write fails
 	"""
 	values = {column: value for column, value in values.items() if value is not None}
+	values.update({column: None for column in clear})
 	if not values:
 		return False
 	_check_columns(spec, values.keys())
@@ -707,7 +709,7 @@ def read_ks_lists(db_path, keys):
 	return df
 
 
-def write_to_ortholog_db(db_path, latin_sp1, latin_sp2, peak=None, ks_list=None):
+def write_to_ortholog_db(db_path, latin_sp1, latin_sp2, peak=None, ks_list=None, reset_peak=False):
 	"""
 	Write the peak and/or the Ks list of a species pair in one atomic statement. Only what is given
 	is written: whatever the row already holds (e.g. written by another concurrent run) is left untouched.
@@ -716,10 +718,13 @@ def write_to_ortholog_db(db_path, latin_sp1, latin_sp2, peak=None, ks_list=None)
 	:param latin_sp1, latin_sp2: latin names of the two species (in any order)
 	:param peak: (mode, mode_sd) tuple, or None
 	:param ks_list: list of Ks values, or None
+	:param reset_peak: erase the stored peak in the same statement. Used when a new Ks list is stored without a new
+	                   peak: the old peak was estimated from a different list, and a stored peak must always come
+	                   from the stored Ks list
 	:return: True if something was written, False if there was nothing to write
 	:raises KsDatabaseError: if the write fails
 	"""
-	if peak is None and ks_list is None:
+	if peak is None and ks_list is None and not reset_peak:
 		return False
 	name1, name2 = _sorted_latin_names(latin_sp1, latin_sp2)
 	values = {"latin_sp1": name1, "latin_sp2": name2}
@@ -727,7 +732,8 @@ def write_to_ortholog_db(db_path, latin_sp1, latin_sp2, peak=None, ks_list=None)
 		values["mode"], values["mode_sd"] = float(peak[0]), float(peak[1])
 	if ks_list is not None:
 		values["ks_values"] = _compress([float(ks) for ks in ks_list])
-	return upsert(db_path, ORTHOLOG_TABLE, pair_key(name1, name2), values)
+	return upsert(db_path, ORTHOLOG_TABLE, pair_key(name1, name2), values,
+	              clear=("mode", "mode_sd") if (reset_peak and peak is None) else ())
 
 
 def extract_from_legacy_tsvs(peak_tsv_path, ks_list_tsv_path):
