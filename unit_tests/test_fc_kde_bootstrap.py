@@ -20,7 +20,12 @@ import numpy as np
 # Makes the repo root importable as "ksrates.xxx", since this file lives one level down in unit_tests/
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
+sys.path.insert(0, os.path.dirname(__file__))
+
+import ksrates.fc_ks_database_utilities as fcKsDbUtil
+import ksrates.fc_ks_database_ortholog as fcKsDbOrtho
 from ksrates.fc_kde_bootstrap import estimate_peak, MIN_KS_VALUES_FOR_PEAK_ESTIMATE
+from fake_sqld import install_fake_sqld
 
 
 def _write_ks_tsv(path, species1, species2, ks_values):
@@ -107,6 +112,70 @@ class EstimatePeakTest(unittest.TestCase):
         # Neither database file should have been touched - confirms no needless recomputation.
         self.assertFalse(os.path.exists(self.peak_db_path) and os.path.getsize(self.peak_db_path) > 0)
         self.assertFalse(os.path.exists(self.ks_list_db_path) and os.path.getsize(self.ks_list_db_path) > 0)
+
+
+class EstimatePeakWithKsDatabaseTest(EstimatePeakTest):
+    """Same checks as above, with the results going to the Ks database instead of the TSV files."""
+
+    def setUp(self):
+        super().setUp()
+        self.db, self.unreachable_db = install_fake_sqld(self, self.tmpdir.name)
+        fcKsDbUtil.initialize_database(self.db)
+
+    def _estimate(self, ks_values, flag_not_in_peak_db=True, flag_not_in_ks_db=True, ks_database_server_address_path=None):
+        ks_tsv = os.path.join("ortholog_distributions", "wgd_SP1_SP2", "SP1_SP2.ks.tsv")
+        _write_ks_tsv(ks_tsv, "SP1", "SP2", ks_values)
+        return estimate_peak(
+            "SP1", "SP2", "Species one", "Species two",
+            max_ks_ortho=10, n_iter=20, x_lim_ortho=5, bin_width_ortho=0.1,
+            ks_list_db_path=self.ks_list_db_path, db_path=self.peak_db_path,
+            flag_not_in_peak_db=flag_not_in_peak_db, flag_not_in_ks_db=flag_not_in_ks_db,
+            ks_database_server_address_path=ks_database_server_address_path or self.db,
+        )
+
+    # The four tests inherited from the TSV version assert on the TSV files: overridden below
+    def test_too_few_ks_values_skips_gracefully_without_raising(self):
+        failed = self._estimate([7.57, 7.80, 8.71])
+        self.assertTrue(failed)
+        self.assertIsNone(fcKsDbOrtho.read_peak(self.db, "Species one", "Species two"))
+
+    def test_too_few_ks_values_still_records_the_raw_ks_list(self):
+        self._estimate([7.57, 7.80, 8.71])
+        self.assertEqual(fcKsDbOrtho.read_ks_list(self.db, "Species one", "Species two"), [7.57, 7.80, 8.71])
+
+    def test_enough_ks_values_computes_a_real_peak(self):
+        failed = self._estimate(list(np.linspace(0.5, 2.5, 20)))
+        self.assertFalse(failed)
+        peak = fcKsDbOrtho.read_peak(self.db, "Species one", "Species two")
+        self.assertIsNotNone(peak)
+        self.assertEqual(len(fcKsDbOrtho.read_ks_list(self.db, "Species one", "Species two")), 20)
+
+    def test_already_in_peak_and_ks_db_skips_recomputation_entirely(self):
+        failed = self._estimate([1.0, 1.1, 1.2], flag_not_in_peak_db=False, flag_not_in_ks_db=False)
+        self.assertFalse(failed)
+        self.assertEqual(fcKsDbUtil.list_keys(self.db, fcKsDbOrtho.ORTHOLOG_TABLE), [])
+
+    def test_stored_peak_always_comes_from_the_stored_ks_list(self):
+        # A pair with a peak but no Ks list: the new list is stored, and if no new peak can be computed from it
+        # (too few values) the old peak (estimated from another list) is erased, not kept.
+        fcKsDbOrtho.write_to_ortholog_db(self.db, "Species one", "Species two", peak=(9.9, 0.9))
+        self._estimate([7.57, 7.80, 8.71], flag_not_in_peak_db=False, flag_not_in_ks_db=True)
+        self.assertEqual(fcKsDbOrtho.read_ks_list(self.db, "Species one", "Species two"), [7.57, 7.80, 8.71])
+        self.assertIsNone(fcKsDbOrtho.read_peak(self.db, "Species one", "Species two"))
+
+    def test_results_are_written_to_both_database_and_tsv_files(self):
+        self._estimate(list(np.linspace(0.5, 2.5, 20)))
+        with open(self.peak_db_path) as handle:
+            self.assertIn("Species one_Species two", handle.read())
+        with open(self.ks_list_db_path) as handle:
+            self.assertIn("Species one_Species two", handle.read())
+        self.assertIsNotNone(fcKsDbOrtho.read_peak(self.db, "Species one", "Species two"))
+
+    def test_unreachable_database_raises_before_anything_is_added_to_tsv_files(self):
+        with self.assertRaises(fcKsDbUtil.KsDatabaseError):
+            self._estimate(list(np.linspace(0.5, 2.5, 20)), ks_database_server_address_path=self.unreachable_db)
+        self.assertFalse(os.path.exists(self.peak_db_path))
+        self.assertFalse(os.path.exists(self.ks_list_db_path))
 
 
 if __name__ == "__main__":
