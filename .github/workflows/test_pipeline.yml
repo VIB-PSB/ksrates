@@ -42,7 +42,7 @@ jobs:
           sudo wget -qO- https://get.nextflow.io | bash
           sudo mv nextflow /usr/bin
 
-      - name: Start sqld server for the paralog Ks database test
+      - name: Start sqld server for the Ks database test (paralog and ortholog Ks data)
         # --network host (not GH Actions' "services:") so docker-executor containers on the
         # default bridge network can reach it via the bridge gateway IP.
         # No auth: ephemeral, isolated CI job only - a missing token line is treated as auth-off.
@@ -57,20 +57,20 @@ jobs:
             sleep 1
           done
           BRIDGE_GATEWAY=$(docker network inspect bridge --format '{{ (index .IPAM.Config 0).Gateway }}')
-          echo "${BRIDGE_GATEWAY}:8080" > test/database/paralog_ks_server_address.txt
-          cat test/database/paralog_ks_server_address.txt
+          echo "${BRIDGE_GATEWAY}:8080" > test/database/ks_database_server_address.txt
+          cat test/database/ks_database_server_address.txt
 
       - name: Running ksrates Nextflow pipeline
         run: |
           cd test
           NXF_VER=24.10.5 nextflow run ../main.nf --test -profile docker --config config_files/config_elaeis.txt --expert config_files/config_expert.txt -with-docker ksrates
 
-      - name: Export human-readable paralog Ks database dump
+      - name: Export human-readable Ks database dump (paralog and ortholog data)
         # Runs even on failure, for debugging a partial run; before the server is stopped below.
         if: ${{ always() }}
         run: |
           docker run --rm -v "$PWD:$PWD" -w "$PWD" ksrates \
-            ksrates inspect-paralog-ks-db test/database/paralog_ks_server_address.txt
+            ksrates inspect-ks-db test/database/ks_database_server_address.txt
 
       - name: Stop sqld server
         if: ${{ always() }}
