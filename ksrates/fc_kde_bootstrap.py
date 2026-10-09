@@ -192,8 +192,13 @@ def estimate_peak(species1, species2, latinSp1, latinSp2, max_ks_ortho, n_iter, 
                 logging.info("- Adding peak to Ks database")
             if ks_list_to_store is not None:
                 logging.info("- Adding Ks list to Ks database")
+            # A new Ks list without a new peak: any peak already stored was estimated from a different list, so it is removed
+            reset_peak = ks_list_to_store is not None and peak_to_store is None
+            if reset_peak and fcKsDb.existing_ortholog_data(ks_database_server_address_path, latinSp1, latinSp2)["peak"]:
+                logging.warning("- Removing the peak stored in the Ks database for this pair: it was estimated from a different Ks list, "
+                                "and no new peak could be estimated from the new one")
             fcKsDb.write_to_ortholog_db(ks_database_server_address_path, latinSp1, latinSp2,
-                                        peak=peak_to_store, ks_list=ks_list_to_store)
+                                        peak=peak_to_store, ks_list=ks_list_to_store, reset_peak=reset_peak)
 
         # The TSV files are always kept up to date too, so that the data can be found where they have always been
         if peak_to_store is not None:

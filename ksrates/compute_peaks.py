@@ -143,6 +143,11 @@ def compute_peaks(config_file, expert_config_file, ortholog_pairs_file):
         else:
             flag_not_in_ks_db = False
 
+        if use_ks_database and (flag_not_in_peak_db or flag_not_in_ks_db):
+            # The stored peak must always come from the stored Ks list: if either half is missing, both are
+            # (re)computed from the same Ks list and written together
+            flag_not_in_peak_db, flag_not_in_ks_db = True, True
+
         if flag_not_in_peak_db is False and flag_not_in_ks_db is False:
             logging.info(f"{latinSp1} and {latinSp2}: data already present in ortholog database")
             
