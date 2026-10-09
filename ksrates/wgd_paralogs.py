@@ -5,7 +5,8 @@ import datetime
 import ksrates.fc_configfile as fcConf
 import ksrates.fc_check_input as fcCheck
 import ksrates.fc_wgd as fc_wgd
-import ksrates.fc_ks_database as fcKsDb
+import ksrates.fc_ks_database_utilities as fcKsDbUtil
+import ksrates.fc_ks_database_paralog as fcKsDbPara
 from ksrates.utils import init_logging
 
 def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, parsed_homology_table, test):
@@ -40,7 +41,7 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
 
     if use_ks_database:
         # Fail fast, before the long wgd computations, if the requested database cannot be used
-        fcKsDb.initialize_or_exit(ks_db_path)
+        fcKsDbUtil.initialize_or_exit(ks_db_path)
 
     logging.info(f"Checking if sequence data files exist and if sequence IDs are compatible with wgd pipeline...")
     # Will exit if FASTA or GFF files are missing or empty or if GFF feature/attribute are missing
@@ -144,7 +145,7 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
         logging.info(f"Consolidating paralog Ks lists into database [{ks_db_path}]")
         # paranome_enabled covers both "paranome" and "colinearity": ks_paralogs() runs
         # whenever either is requested, since colinearity depends on its output.
-        fcKsDb.consolidate_paralog_ks_lists(species, latin_name, ks_db_path,
+        fcKsDbPara.consolidate_paralog_ks_lists(species, latin_name, ks_db_path,
                                             paranome_enabled=paranome or colinearity,
                                             anchors_enabled=colinearity,
                                             reciprocal_retention_enabled=reciprocal_retention,
@@ -154,8 +155,8 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
         # cluster_anchor_ks.py can later read them from the database instead of from disk.
         if colinearity:
             logging.info("  - Storing i-ADHoRe output files into database")
-            iadhore_texts = fcKsDb.extract_anchor_iadhore_files(species)
-            fcKsDb.write_anchor_iadhore_files(latin_name, iadhore_texts, ks_db_path)
+            iadhore_texts = fcKsDbPara.extract_anchor_iadhore_files(species)
+            fcKsDbPara.write_anchor_iadhore_files(latin_name, iadhore_texts, ks_db_path)
 
     logging.info("")
     logging.info("Done")

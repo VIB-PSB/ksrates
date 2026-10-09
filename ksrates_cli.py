@@ -464,7 +464,7 @@ def populate_ks_db(paralog_dirs, ortholog_tsvs, database, force, num_gfs):
     Example 2: ksrates populate-ks-db --orthologs ortholog_peak_db.tsv ortholog_ks_list_db.tsv --database ks_database_server_address.txt
     Example 3: ksrates populate-ks-db --paralogs configs/ paralog_distributions/ --orthologs peak_db.tsv ks_list_db.tsv --database ks_database_server_address.txt --force
 	"""
-	from ksrates.fc_ks_database import KsDatabaseError
+	from ksrates.fc_ks_database_utilities import KsDatabaseError
 	from ksrates.populate_ks_db import populate_paralog_ks_db_batch, populate_ortholog_ks_db
 
 	if not paralog_dirs and not ortholog_tsvs:
@@ -520,7 +520,7 @@ def inspect_ks_db(database, name_filter, data_type, delete, list_only):
     Example 5: ksrates inspect-ks-db ks_database_server_address.txt "Elaeis guineensis_Oryza sativa" --type ortholog --delete
 	"""
 	import ksrates.inspect_ks_db as inspect_ks
-	from ksrates.fc_ks_database import KsDatabaseError
+	from ksrates.fc_ks_database_utilities import KsDatabaseError
 
 	click.format_filename(database)
 
@@ -577,7 +577,8 @@ def check_paralog_db(config_file, expert, analysis_type):
     Example: ksrates check-paralog-db config_file.txt --type paranome
 	"""
 	from ksrates.fc_configfile import Configuration
-	from ksrates.fc_ks_database import existing_data_types, KsDatabaseError
+	from ksrates.fc_ks_database_utilities import KsDatabaseError
+	from ksrates.fc_ks_database_paralog import existing_data_types
 
 	click.format_filename(config_file)
 	if expert:
@@ -633,7 +634,8 @@ def check_ortholog_db(config_file, species1, species2, expert):
 	"""
 	import pandas
 	from ksrates.fc_configfile import Configuration
-	from ksrates.fc_ks_database import existing_ortholog_data, pair_key, KsDatabaseError
+	from ksrates.fc_ks_database_utilities import KsDatabaseError
+	from ksrates.fc_ks_database_ortholog import existing_ortholog_data, pair_key
 
 	click.format_filename(config_file)
 	if expert:

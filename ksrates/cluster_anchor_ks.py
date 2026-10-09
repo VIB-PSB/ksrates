@@ -12,7 +12,8 @@ import ksrates.fc_configfile as fcConf
 import ksrates.fc_plotting as fcPlot
 import ksrates.fc_check_input as fcCheck
 import ksrates.fc_extract_ks_list as fc_extract_ks_list
-import ksrates.fc_ks_database as fcKsDb
+import ksrates.fc_ks_database_utilities as fcKsDbUtil
+import ksrates.fc_ks_database_paralog as fcKsDbPara
 from ksrates.utils import init_logging
 from ksrates.fc_cluster_anchors import subfolder
 from ksrates.fc_rrt_correction import _ADJUSTMENT_TABLE, interpretation_adjusted_plot
@@ -66,7 +67,7 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
     use_ks_database = config.use_ks_database() # Whether to use the collective Ks database (default: no)
     ks_db_path = config.get_ks_database() # Path to the sqld server address file
     if use_ks_database:
-        fcKsDb.initialize_or_exit(ks_db_path) # fail fast if the requested database cannot be used
+        fcKsDbUtil.initialize_or_exit(ks_db_path) # fail fast if the requested database cannot be used
 
     # Get the i-ADHoRe output files (anchorpoints/multiplicons/segments/list_elements/multiplicon_pairs)
     # as in-memory text, either from the database first (if enabled) or from disk. These 5 files are
@@ -75,7 +76,7 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
     iadhore_keys = ['anchorpoints', 'multiplicons', 'segments', 'list_elements', 'multiplicon_pairs']
     iadhore_texts = None
     if use_ks_database:
-        db_iadhore = fcKsDb.read_anchor_iadhore_files(ks_db_path, latin_names[species])
+        db_iadhore = fcKsDbPara.read_anchor_iadhore_files(ks_db_path, latin_names[species])
         if all(db_iadhore[key] is not None for key in iadhore_keys):
             iadhore_texts = db_iadhore
             logging.info(f"Using i-ADHoRe output files stored in Ks database")
@@ -140,7 +141,7 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
     # here and reuse the same DataFrame everywhere below.
     anchors_df = None
     if use_ks_database:
-        db_data = fcKsDb.read_analysis_data(ks_db_path, latin_names[species], 'anchors')
+        db_data = fcKsDbPara.read_analysis_data(ks_db_path, latin_names[species], 'anchors')
         if db_data is not None:
             anchors_df = DataFrame(db_data)
             logging.info(f"Using anchor pair Ks data stored in Ks database")

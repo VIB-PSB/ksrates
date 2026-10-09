@@ -4,7 +4,8 @@ import logging
 import ksrates.fc_manipulate_trees as fcTree
 import ksrates.fc_check_input as fcCheck
 import ksrates.fc_configfile as fcConf
-import ksrates.fc_ks_database as fcKsDb
+import ksrates.fc_ks_database_utilities as fcKsDbUtil
+import ksrates.fc_ks_database_ortholog as fcKsDbOrtho
 from ksrates.fc_rrt_correction import _ADJUSTMENT_TABLE
 from ksrates.utils import init_logging
 import pandas
@@ -63,8 +64,8 @@ def plot_tree_rates(config_file, expert_config_file, correction_table_file, next
 
     # Loading the ortholog peak database for the tree picture: it can contain data to compute all the branch lengths.
     if use_ks_database:
-        fcKsDb.initialize_or_exit(ks_db_path)
-        ortholog_db = fcKsDb.read_all_peaks(ks_db_path)
+        fcKsDbUtil.initialize_or_exit(ks_db_path)
+        ortholog_db = fcKsDbOrtho.read_all_peaks(ks_db_path)
         if ortholog_db.shape[0] == 0:
             logging.warning(f"Ks database doesn't contain any ortholog peak, will be ignored when plotting the tree")
             ortholog_db = pandas.DataFrame()

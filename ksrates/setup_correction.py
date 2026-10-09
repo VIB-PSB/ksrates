@@ -7,7 +7,8 @@ from pandas import DataFrame
 import ksrates.fc_configfile as fcConf
 import ksrates.fc_check_input as fcCheck
 import ksrates.fc_manipulate_trees as fcTree
-import ksrates.fc_ks_database as fcKsDb
+import ksrates.fc_ks_database_utilities as fcKsDbUtil
+import ksrates.fc_ks_database_ortholog as fcKsDbOrtho
 from ksrates.utils import init_logging
 from ksrates.fc_rec_ret_orthomcl import check_recret_name_compatibility
 
@@ -77,7 +78,7 @@ def setup_correction(config_file, expert_config_file, nextflow_flag):
 
     # Fail fast if the Ks database is enabled but unreachable or its address file is invalid
     if use_ks_database:
-        fcKsDb.initialize_or_exit(ks_db_path)
+        fcKsDbUtil.initialize_or_exit(ks_db_path)
 
     if trigger_exit:
         logging.error("Please adjust the configuration file and rerun the analysis. Exiting.")
@@ -226,8 +227,8 @@ def setup_correction(config_file, expert_config_file, nextflow_flag):
 
     if use_ks_database:
         # Only the keys are needed here ("is this pair known yet?"), not the data
-        pair_keys_with_peak = fcKsDb.pair_keys_in_database(ks_db_path, "peak")
-        pair_keys_with_ks_list = fcKsDb.pair_keys_in_database(ks_db_path, "ks_list")
+        pair_keys_with_peak = fcKsDbOrtho.pair_keys_in_database(ks_db_path, "peak")
+        pair_keys_with_ks_list = fcKsDbOrtho.pair_keys_in_database(ks_db_path, "ks_list")
         for tags in tags_list:
             if tags[0] not in pair_keys_with_peak:
                 species_pairs_unknown.append([tags[1][0], tags[1][1]])

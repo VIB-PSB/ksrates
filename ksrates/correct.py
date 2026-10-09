@@ -7,7 +7,8 @@ import logging
 import ksrates.fc_rrt_correction as fcCorrect
 import ksrates.fc_check_input as fcCheck
 import ksrates.fc_configfile as fcConf
-import ksrates.fc_ks_database as fcKsDb
+import ksrates.fc_ks_database_utilities as fcKsDbUtil
+import ksrates.fc_ks_database_ortholog as fcKsDbOrtho
 from ksrates.utils import init_logging
 
 
@@ -32,8 +33,8 @@ def correct(config_file, expert_config_file, trios_file):
         sys.exit(1)
 
     if use_ks_database:
-        fcKsDb.initialize_or_exit(ks_db_path)
-        db = fcKsDb.read_all_peaks(ks_db_path)
+        fcKsDbUtil.initialize_or_exit(ks_db_path)
+        db = fcKsDbOrtho.read_all_peaks(ks_db_path)
         if db.shape[0] == 0:
             logging.error(f"Ks database [{ks_db_path}] doesn't contain any ortholog peak\n\
             -> rate-adjustment will be skipped.")

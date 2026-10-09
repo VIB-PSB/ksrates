@@ -7,7 +7,8 @@ from ast import literal_eval
 import ksrates.fc_check_input as fcCheck
 import ksrates.fc_kde_bootstrap as fcPeak
 import ksrates.fc_configfile as fcConf
-import ksrates.fc_ks_database as fcKsDb
+import ksrates.fc_ks_database_utilities as fcKsDbUtil
+import ksrates.fc_ks_database_ortholog as fcKsDbOrtho
 from ksrates.utils import init_logging
 
 
@@ -44,9 +45,9 @@ def compute_peaks(config_file, expert_config_file, ortholog_pairs_file):
     if use_ks_database:
         # Fail fast if the requested database cannot be used; then take the one snapshot of which
         # pairs are already known (only the keys are needed, not the data)
-        fcKsDb.initialize_or_exit(ks_db_path)
-        pair_keys_with_peak = fcKsDb.pair_keys_in_database(ks_db_path, "peak")
-        pair_keys_with_ks_list = fcKsDb.pair_keys_in_database(ks_db_path, "ks_list")
+        fcKsDbUtil.initialize_or_exit(ks_db_path)
+        pair_keys_with_peak = fcKsDbOrtho.pair_keys_in_database(ks_db_path, "peak")
+        pair_keys_with_ks_list = fcKsDbOrtho.pair_keys_in_database(ks_db_path, "ks_list")
 
         # The TSV files are also kept up to date (see estimate_peak): create them with their header if missing
         for tsv_path, header in [(db_path, "\tSpecies1\tSpecies2\tMode\tMode_SD\n"), (ks_list_db_path, "\tSpecies1\tSpecies2\tKs_Values\n")]:

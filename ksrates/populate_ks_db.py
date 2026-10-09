@@ -3,7 +3,9 @@ import sys
 import logging
 import glob
 import ksrates.fc_configfile as fcConf
-import ksrates.fc_ks_database as fcKsDb
+import ksrates.fc_ks_database_utilities as fcKsDbUtil
+import ksrates.fc_ks_database_paralog as fcKsDbPara
+import ksrates.fc_ks_database_ortholog as fcKsDbOrtho
 from ksrates.utils import init_logging
 
 
@@ -83,8 +85,8 @@ def populate_paralog_ks_db_batch(config_dir_path, paralog_distributions_path, db
 	logging.info("Checking Ks database from input path")
 	# Initialize database; also fail fast here if it's unreachable (e.g. server down, stale address file)
 	try:
-		fcKsDb.initialize_database(db_path)
-	except fcKsDb.KsDatabaseError as e:
+		fcKsDbUtil.initialize_database(db_path)
+	except fcKsDbUtil.KsDatabaseError as e:
 		logging.error(f"Could not initialize Ks database [{db_path}]: {e}")
 		trigger_exit = True
 	logging.info("")
@@ -110,9 +112,9 @@ def populate_paralog_ks_db_batch(config_dir_path, paralog_distributions_path, db
 		# Check if species already exists in database (by latin name), and if so which analysis
 		# types/i-ADHoRe bundle it already has data for. Without --force, only what's missing
 		# gets extracted and written, instead of skipping the species wholesale.
-		exists = fcKsDb.species_exists(db_path, latin_name)
+		exists = fcKsDbPara.species_exists(db_path, latin_name)
 		if exists and not force_overwrite:
-			existing_types = fcKsDb.existing_data_types(db_path, latin_name)
+			existing_types = fcKsDbPara.existing_data_types(db_path, latin_name)
 		else:
 			existing_types = {"paranome": False, "anchors": False, "recret": False, "iadhore": False}
 
@@ -151,7 +153,7 @@ def populate_paralog_ks_db_batch(config_dir_path, paralog_distributions_path, db
 
 			# Extract Ks data from TSV files, but only for the types that are actually enabled
 			# above (missing, or forced); a type already present in the database is left untouched.
-			ks_data = fcKsDb.extract_paralog_ks_from_tsv(
+			ks_data = fcKsDbPara.extract_paralog_ks_from_tsv(
 				informal_name, paranome_enabled=paranome_enabled, anchors_enabled=anchors_enabled,
 				reciprocal_retention_enabled=recret_enabled, num_gfs=num_gfs, rank_type=rank_type, bottom=bottom
 			)
@@ -168,15 +170,15 @@ def populate_paralog_ks_db_batch(config_dir_path, paralog_distributions_path, db
 
 			# Write to database using latin name (a no-op, returning False, if nothing was enabled
 			# above or nothing was actually found on disk for the enabled types)
-			wrote_ks_data = fcKsDb.write_to_paralog_db(latin_name, ks_data, db_path)
+			wrote_ks_data = fcKsDbPara.write_to_paralog_db(latin_name, ks_data, db_path)
 
 			# Also pick up the i-ADHoRe output files if present on disk and enabled above -
 			# extract_paralog_ks_from_tsv() above only reads the three Ks TSVs, not these.
 			if iadhore_enabled:
-				iadhore_texts = fcKsDb.extract_anchor_iadhore_files(informal_name)
+				iadhore_texts = fcKsDbPara.extract_anchor_iadhore_files(informal_name)
 				wrote_iadhore = any(text is not None for text in iadhore_texts.values())
 				if wrote_iadhore:
-					fcKsDb.write_anchor_iadhore_files(latin_name, iadhore_texts, db_path)
+					fcKsDbPara.write_anchor_iadhore_files(latin_name, iadhore_texts, db_path)
 			else:
 				wrote_iadhore = False
 
@@ -209,7 +211,7 @@ def populate_paralog_ks_db_batch(config_dir_path, paralog_distributions_path, db
 
 			os.chdir(original_cwd)
 
-		except fcKsDb.KsDatabaseError:
+		except fcKsDbUtil.KsDatabaseError:
 			# The database itself is failing: no point in carrying on with the other species
 			raise
 		except Exception as e:
@@ -308,8 +310,8 @@ def populate_ortholog_ks_db(peak_tsv_path, ks_list_tsv_path, db_path, force_over
 			logging.error(f"{description} not found: {path}")
 			trigger_exit = True
 	try:
-		fcKsDb.initialize_database(db_path)
-	except fcKsDb.KsDatabaseError as e:
+		fcKsDbUtil.initialize_database(db_path)
+	except fcKsDbUtil.KsDatabaseError as e:
 		logging.error(f"Could not initialize Ks database [{db_path}]: {e}")
 		trigger_exit = True
 	if trigger_exit:
@@ -317,7 +319,7 @@ def populate_ortholog_ks_db(peak_tsv_path, ks_list_tsv_path, db_path, force_over
 		sys.exit(1)
 	
 	# Get Ks list and peak ortholog data from TSV database files
-	pairs = fcKsDb.extract_from_legacy_tsvs(peak_tsv_path, ks_list_tsv_path)
+	pairs = fcKsDbOrtho.extract_from_legacy_tsvs(peak_tsv_path, ks_list_tsv_path)
 	logging.info(f"Found {len(pairs)} species pairs in the TSV files")
 	logging.info("")
 
@@ -328,9 +330,9 @@ def populate_ortholog_ks_db(peak_tsv_path, ks_list_tsv_path, db_path, force_over
 		latin_sp1, latin_sp2 = pair["latin_sp1"], pair["latin_sp2"]
 		try:
 			# Check if species pair exists in SQLD database
-			exists = fcKsDb.row_exists(db_path, fcKsDb.ORTHOLOG_TABLE, key)
+			exists = fcKsDbUtil.row_exists(db_path, fcKsDbOrtho.ORTHOLOG_TABLE, key)
 			# If it does, assign the values; otherwise, assign None
-			existing = fcKsDb.existing_ortholog_data(db_path, latin_sp1, latin_sp2) if exists else {"peak": False, "ks_list": False}
+			existing = fcKsDbOrtho.existing_ortholog_data(db_path, latin_sp1, latin_sp2) if exists else {"peak": False, "ks_list": False}
 			
 			# A stored peak must always come from the stored Ks list: the two halves of a pair are
 			# never taken from different sources.
@@ -387,9 +389,9 @@ def populate_ortholog_ks_db(peak_tsv_path, ks_list_tsv_path, db_path, force_over
 					logging.warning(f"  Skipping [{key}]: the TSV files only have its {partial_data_present_tsv}, "
 					                f"and the database already has the {partial_data_present_tsv} (use --force to replace it)")
 
-			wrote = fcKsDb.write_to_ortholog_db(db_path, latin_sp1, latin_sp2, peak=peak, ks_list=ks_list)
+			wrote = fcKsDbOrtho.write_to_ortholog_db(db_path, latin_sp1, latin_sp2, peak=peak, ks_list=ks_list)
 
-		except fcKsDb.KsDatabaseError:
+		except fcKsDbUtil.KsDatabaseError:
 			raise
 		except Exception as e:
 			logging.error(f"  Error processing [{key}]: {str(e)}")

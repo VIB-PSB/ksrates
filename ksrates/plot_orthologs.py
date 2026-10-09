@@ -9,7 +9,8 @@ import ksrates.fc_check_input as fcCheck
 import ksrates.fc_kde_bootstrap as fcPeak
 import ksrates.fc_plotting as fcPlot
 import ksrates.fc_configfile as fcConf
-import ksrates.fc_ks_database as fcKsDb
+import ksrates.fc_ks_database_utilities as fcKsDbUtil
+import ksrates.fc_ks_database_ortholog as fcKsDbOrtho
 from ksrates.utils import init_logging
 import matplotlib
 # Use the Agg (Anti-Grain Geometry) backend to avoid needing a graphical user interface (X11 backend)
@@ -43,7 +44,7 @@ def plot_orthologs_distr(config_file, expert_config_file, trios_file):
     use_ks_database = config.use_ks_database() # Whether to use the shared Ks database instead of the TSV files (default: no)
     ks_db_path = config.get_ks_database()
     if use_ks_database:
-        fcKsDb.initialize_or_exit(ks_db_path)
+        fcKsDbUtil.initialize_or_exit(ks_db_path)
 
     # Get the ortholog Ks list database (to plot histograms; mandatory input)
     if use_ks_database:
@@ -53,9 +54,9 @@ def plot_orthologs_distr(config_file, expert_config_file, trios_file):
         for __, row in trios.iterrows():
             latin_species, latin_sister, latin_out = (latin_names[row['Focal_Species']], latin_names[row['Sister_Species']],
                                                       latin_names[row['Out_Species']])
-            needed_pair_keys.update([fcKsDb.pair_key(latin_species, latin_sister), fcKsDb.pair_key(latin_species, latin_out),
-                                     fcKsDb.pair_key(latin_sister, latin_out)])
-        ks_list_db = fcKsDb.read_ks_lists(ks_db_path, sorted(needed_pair_keys))
+            needed_pair_keys.update([fcKsDbOrtho.pair_key(latin_species, latin_sister), fcKsDbOrtho.pair_key(latin_species, latin_out),
+                                     fcKsDbOrtho.pair_key(latin_sister, latin_out)])
+        ks_list_db = fcKsDbOrtho.read_ks_lists(ks_db_path, sorted(needed_pair_keys))
     else:
         ks_list_db_path = config.get_ks_db()
         fcCheck.check_inputfile(ks_list_db_path, "Ortholog Ks list database")
@@ -68,7 +69,7 @@ def plot_orthologs_distr(config_file, expert_config_file, trios_file):
     # Get the ortholog peak database (to plot distribution mode and median; not mandatory)
     no_peak_db = False
     if use_ks_database:
-        db = fcKsDb.read_all_peaks(ks_db_path)
+        db = fcKsDbOrtho.read_all_peaks(ks_db_path)
     else:
         db_path = config.get_ortho_db()
         try:

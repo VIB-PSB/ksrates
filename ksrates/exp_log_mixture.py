@@ -10,7 +10,8 @@ import ksrates.fc_check_input as fcCheck
 import ksrates.fc_plotting as fcPlot
 import ksrates.fc_extract_ks_list as fc_extract_ks_list
 import ksrates.fc_exp_log_mixture as fcEM
-import ksrates.fc_ks_database as fcKsDb
+import ksrates.fc_ks_database_utilities as fcKsDbUtil
+import ksrates.fc_ks_database_paralog as fcKsDbPara
 from ksrates.fc_cluster_anchors import subfolder
 from ksrates.fc_rrt_correction import _ADJUSTMENT_TABLE, interpretation_adjusted_plot
 
@@ -70,8 +71,8 @@ def exp_log_mixture(config_file, expert_config_file, paralog_tsv_file, correctio
   # instead of each helper independently re-reading the same file from disk.
   paranome_from_db = None
   if use_ks_database:
-    fcKsDb.initialize_or_exit(ks_db_path) # fail fast if the requested database cannot be used
-    paranome_from_db = fcKsDb.read_analysis_data(ks_db_path, latinSpecies, 'paranome')
+    fcKsDbUtil.initialize_or_exit(ks_db_path) # fail fast if the requested database cannot be used
+    paranome_from_db = fcKsDbPara.read_analysis_data(ks_db_path, latinSpecies, 'paranome')
 
   if paranome_from_db is not None:
     logging.info(f"Using paranome Ks data from database for [{species}]")
