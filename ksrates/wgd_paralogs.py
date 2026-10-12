@@ -92,7 +92,7 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
     if not os.path.isdir(paralog_dists_dir):
         logging.info(f"Creating directory [{paralog_dists_dir}]")
         logging.info("")
-        os.makedirs(paralog_dists_dir)
+        os.makedirs(paralog_dists_dir, exist_ok=True)  # exist_ok: several paralogs-ks jobs can start at the same time in one directory
 
     # -----------------------------------------------------------------------------
 
