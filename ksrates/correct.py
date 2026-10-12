@@ -21,9 +21,9 @@ def correct(config_file, expert_config_file, trios_file):
     # Get parameters from configfile
     species_of_interest = config.get_species()
     latin_names = config.get_latin_names()
-    db_path = config.get_ortho_db()
-    use_ks_database = config.use_ks_database() # Whether to use the shared Ks database instead of the TSV files (default: no)
-    ks_db_path = config.get_ks_database()
+    db_path = config.get_peak_tsv_db()
+    use_ks_database_server = config.use_ks_database_server() # Whether to use the shared Ks database instead of the TSV files (default: no)
+    ks_db_path = config.get_ks_database_server()
 
     default_path_trios_file = os.path.join("rate_adjustment", f"{species_of_interest}", f"ortholog_trios_{species_of_interest}.tsv")
     trios_file = fcCheck.get_argument_path(trios_file, default_path_trios_file, "Trios TSV file")
@@ -32,7 +32,7 @@ def correct(config_file, expert_config_file, trios_file):
         logging.error("Exiting")
         sys.exit(1)
 
-    if use_ks_database:
+    if use_ks_database_server:
         fcKsDbUtil.initialize_or_exit(ks_db_path)
         db = fcKsDbOrtho.read_all_peaks(ks_db_path)
         if db.shape[0] == 0:

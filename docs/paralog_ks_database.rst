@@ -51,7 +51,7 @@ Setting up the database server
 Configure the database server
 -----------------------------
 
-Enable the use of the database via parameter ``use_ks_database`` in each expert configuration 
+Enable the use of the database via parameter ``use_ks_database_server`` in each expert configuration 
 file of the *ksrates* datasets of interest; this is off by default, and without it *ksrates* relies as usual 
 solely on the local TSV output files. The database will cover both paralog and ortholog data.
 

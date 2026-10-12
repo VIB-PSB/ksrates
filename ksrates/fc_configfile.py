@@ -204,7 +204,7 @@ class Configuration:
         self.check_complete_latin_names_dict(latin_names_dict)
         return latin_names_dict
 
-    def get_ortho_db(self):
+    def get_peak_tsv_db(self):
         """
         Gets the config file field of the peak ortholog database path.
 
@@ -215,7 +215,7 @@ class Configuration:
             db_path = "ortholog_peak_db.tsv"
         return db_path
     
-    def get_ks_db(self):
+    def get_ks_list_tsv_db(self):
         """
         Gets the config file field of the ortholog Ks list database path.  
 
@@ -226,7 +226,7 @@ class Configuration:
             ks_list_db_path = "ortholog_ks_db.tsv"
         return ks_list_db_path
 
-    def get_ks_database(self):
+    def get_ks_database_server(self):
         """
         Gets the config file field of the Ks database path: this points at the small address
         file written by a long-running sqld server job at startup (see docs/configuration.rst), not a
@@ -582,30 +582,30 @@ class Configuration:
         return preserve
 
 
-    def use_ks_database(self):
+    def use_ks_database_server(self):
         """
-        Checks whether "use_ks_database" is requested or not in the expert configuration file.
+        Checks whether "use_ks_database_server" is requested or not in the expert configuration file.
         If set to "yes", the shared Ks database (paralog and ortholog Ks data) is used instead of the
         paralog Ks TSV files and the ortholog peak/Ks list TSV databases. If the database is requested
         but cannot be reached, the analysis stops: there is no silent fallback to the TSV files.
         Default is "no", i.e. using directly the TSV files, for legacy purposes.
 
-        :return use_ks_database: boolean for using the database (True) or the TSV files (False)
+        :return use_ks_database_server: boolean for using the database (True) or the TSV files (False)
         """
         if self.expert_config is not None:
             try:
-                use_ks_database = self.expert_config.get("EXPERT PARAMETERS", "use_ks_database").lower()
-                if use_ks_database not in ["yes", "no"]:
-                    logging.warning(f'Unrecognized field in expert configuration file [use_ks_database = {use_ks_database}]. Please choose between "yes" and "no". Default choice will be applied [no]')
-                    use_ks_database = False
+                use_ks_database_server = self.expert_config.get("EXPERT PARAMETERS", "use_ks_database_server").lower()
+                if use_ks_database_server not in ["yes", "no"]:
+                    logging.warning(f'Unrecognized field in expert configuration file [use_ks_database_server = {use_ks_database_server}]. Please choose between "yes" and "no". Default choice will be applied [no]')
+                    use_ks_database_server = False
                 else:
-                    use_ks_database = (use_ks_database == "yes")
+                    use_ks_database_server = (use_ks_database_server == "yes")
             except Exception:
-                logging.warning(f'Missing field [use_ks_database] in expert configuration file. Please choose between "yes" and "no". Default choice will be applied [no]')
-                use_ks_database = False
+                logging.warning(f'Missing field [use_ks_database_server] in expert configuration file. Please choose between "yes" and "no". Default choice will be applied [no]')
+                use_ks_database_server = False
         else:
-            use_ks_database = False
-        return use_ks_database
+            use_ks_database_server = False
+        return use_ks_database_server
 
 
     def get_peak_stats(self):

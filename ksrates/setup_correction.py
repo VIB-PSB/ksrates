@@ -29,16 +29,16 @@ def setup_correction(config_file, expert_config_file, nextflow_flag):
     colinearity = config.get_colinearity()
     reciprocal_retention = config.get_reciprocal_retention()
     divergence_colors = config.get_color_list()
-    use_ks_database = config.use_ks_database()
-    ks_db_path = config.get_ks_database()
+    use_ks_database_server = config.use_ks_database_server()
+    ks_db_path = config.get_ks_database_server()
 
     if not paranome and not colinearity and not reciprocal_retention:
         logging.error('At least "paranome", "collinearity" or "reciprocal_retention" in the configuration file needs to be set to "yes".')
         logging.error("Exiting.")
         sys.exit(1)
 
-    db_path = config.get_ortho_db()
-    ks_list_db_path = config.get_ks_db()
+    db_path = config.get_peak_tsv_db()
+    ks_list_db_path = config.get_ks_list_tsv_db()
     max_num_outspecies = config.get_max_num_outspecies()
     try:
         max_num_outspecies = int(max_num_outspecies)
@@ -77,7 +77,7 @@ def setup_correction(config_file, expert_config_file, nextflow_flag):
         trigger_exit = True
 
     # Fail fast if the Ks database is enabled but unreachable or its address file is invalid
-    if use_ks_database:
+    if use_ks_database_server:
         fcKsDbUtil.initialize_or_exit(ks_db_path)
 
     if trigger_exit:
@@ -225,7 +225,7 @@ def setup_correction(config_file, expert_config_file, nextflow_flag):
         logging.error("Exiting")
         sys.exit(1)
 
-    if use_ks_database:
+    if use_ks_database_server:
         # Only the keys are needed here ("is this pair known yet?"), not the data
         pair_keys_with_peak = fcKsDbOrtho.pair_keys_in_database(ks_db_path, "peak")
         pair_keys_with_ks_list = fcKsDbOrtho.pair_keys_in_database(ks_db_path, "ks_list")

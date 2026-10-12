@@ -157,7 +157,7 @@ logs_names = [
 // Shell function, interpolated into the process scripts that use the "ksrates check-*-db" commands.
 // Usage: ks_db_check ksrates check-paralog-db ...
 // The wrapped command exits with 0 (data present), 1 (data absent) or 2 (the Ks database was requested with
-// use_ks_database = yes but cannot be reached). The function passes 0 and 1 on to the caller, so it can be used
+// use_ks_database_server = yes but cannot be reached). The function passes 0 and 1 on to the caller, so it can be used
 // directly in an "if"; a 2 instead stops the whole process with an error, because it must NOT be taken as
 // "data absent": everything would then be silently recomputed while the database server is down.
 ks_db_check_fn = '''
@@ -165,7 +165,7 @@ ks_db_check() {
     local rc=0
     "$@" > /dev/null || rc=$?
     if [ $rc -eq 2 ]; then
-        echo "ERROR: the Ks database was requested (use_ks_database = yes) but cannot be reached. Stopping." >&2
+        echo "ERROR: the Ks database was requested (use_ks_database_server = yes) but cannot be reached. Stopping." >&2
         exit 2
     fi
     return $rc

@@ -8,7 +8,7 @@ species) and fc_ks_database_ortholog.py (table "ortholog_ks", one row per specie
 
 Every function raises KsDatabaseError if the database cannot be reached or queried: there is no
 silent fallback to the legacy TSV files once the database has been requested in the expert
-configuration file (use_ks_database = yes).
+configuration file (use_ks_database_server = yes).
 """
 import sys
 import pickle
@@ -142,7 +142,7 @@ def initialize_database(db_path):
 
 def initialize_or_exit(db_path):
 	"""
-	Initialize the Ks database for a command that needs it (use_ks_database = yes), stopping the
+	Initialize the Ks database for a command that needs it (use_ks_database_server = yes), stopping the
 	command with a clear error message if the server can't be used: once the database has been
 	requested, the analysis must not silently continue on the TSV files.
 
@@ -152,8 +152,8 @@ def initialize_or_exit(db_path):
 		initialize_database(db_path)
 	except KsDatabaseError as e:
 		logging.error(f"{e}")
-		logging.error(f'The Ks database was requested in the expert configuration file (use_ks_database = yes) but it cannot be used.')
-		logging.error(f'Please check that the sqld server is running and that "ks_database_server_address_path" points to its address file [{db_path}], or set "use_ks_database = no". Exiting.')
+		logging.error(f'The Ks database was requested in the expert configuration file (use_ks_database_server = yes) but it cannot be used.')
+		logging.error(f'Please check that the sqld server is running and that "ks_database_server_address_path" points to its address file [{db_path}], or set "use_ks_database_server = no". Exiting.')
 		sys.exit(1)
 
 

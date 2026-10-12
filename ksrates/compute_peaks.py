@@ -37,12 +37,12 @@ def compute_peaks(config_file, expert_config_file, ortholog_pairs_file):
         header = f.readline() # ignore first line due to headers
         ortholog_pairs = f.readlines()
 
-    db_path = config.get_ortho_db()
-    ks_list_db_path = config.get_ks_db()
-    use_ks_database = config.use_ks_database() # Whether to use the shared Ks database instead of the TSV files (default: no)
-    ks_db_path = config.get_ks_database() if use_ks_database else None
+    db_path = config.get_peak_tsv_db()
+    ks_list_db_path = config.get_ks_list_tsv_db()
+    use_ks_database_server = config.use_ks_database_server() # Whether to use the shared Ks database instead of the TSV files (default: no)
+    ks_db_path = config.get_ks_database_server() if use_ks_database_server else None
 
-    if use_ks_database:
+    if use_ks_database_server:
         # Fail fast if the requested database cannot be used; then take the one snapshot of which
         # pairs are already known (only the keys are needed, not the data)
         fcKsDbUtil.initialize_or_exit(ks_db_path)
@@ -144,7 +144,7 @@ def compute_peaks(config_file, expert_config_file, ortholog_pairs_file):
         else:
             flag_not_in_ks_db = False
 
-        if use_ks_database and (flag_not_in_peak_db or flag_not_in_ks_db):
+        if use_ks_database_server and (flag_not_in_peak_db or flag_not_in_ks_db):
             # The stored peak must always come from the stored Ks list: if either half is missing, both are
             # (re)computed from the same Ks list and written together
             flag_not_in_peak_db, flag_not_in_ks_db = True, True

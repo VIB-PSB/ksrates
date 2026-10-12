@@ -63,14 +63,14 @@ def exp_log_mixture(config_file, expert_config_file, paralog_tsv_file, correctio
     logging.error("Exiting")
     sys.exit(0) # exit code 0 because no actual errors were thrown
 
-  use_ks_database = config.use_ks_database() # Whether to use the collective Ks database (default: no)
-  ks_db_path = config.get_ks_database() # Path to the sqld server address file
+  use_ks_database_server = config.use_ks_database_server() # Whether to use the collective Ks database (default: no)
+  ks_db_path = config.get_ks_database_server() # Path to the sqld server address file
 
   # Get paranome Ks data as a DataFrame, either from the database first (if enabled) or from the
   # wgd output TSV file. Read once here and reuse the same DataFrame for every extraction below,
   # instead of each helper independently re-reading the same file from disk.
   paranome_from_db = None
-  if use_ks_database:
+  if use_ks_database_server:
     fcKsDbUtil.initialize_or_exit(ks_db_path) # fail fast if the requested database cannot be used
     paranome_from_db = fcKsDbPara.read_analysis_data(ks_db_path, latinSpecies, 'paranome')
 

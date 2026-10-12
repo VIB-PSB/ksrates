@@ -19,9 +19,9 @@ def plot_tree_rates(config_file, expert_config_file, correction_table_file, next
 
     # GET PARAMETERS and INPUT FILES
     species = config.get_species()
-    peak_db_path = config.get_ortho_db()
-    use_ks_database = config.use_ks_database() # Whether to use the shared Ks database instead of the TSV files (default: no)
-    ks_db_path = config.get_ks_database()
+    peak_db_path = config.get_peak_tsv_db()
+    use_ks_database_server = config.use_ks_database_server() # Whether to use the shared Ks database instead of the TSV files (default: no)
+    ks_db_path = config.get_ks_database_server()
     newick_tree = config.get_newick_tree() # as Tree object by ete3
     latin_names = config.get_latin_names()
 
@@ -63,7 +63,7 @@ def plot_tree_rates(config_file, expert_config_file, correction_table_file, next
     peak_stats = config.get_peak_stats() # default is mode (other option, median)
 
     # Loading the ortholog peak database for the tree picture: it can contain data to compute all the branch lengths.
-    if use_ks_database:
+    if use_ks_database_server:
         fcKsDbUtil.initialize_or_exit(ks_db_path)
         ortholog_db = fcKsDbOrtho.read_all_peaks(ks_db_path)
         if ortholog_db.shape[0] == 0:

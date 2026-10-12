@@ -23,7 +23,7 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
     paranome = config.get_paranome()
     colinearity = config.get_colinearity()
     reciprocal_retention = config.get_reciprocal_retention()
-    ks_db_path = config.get_ks_database()
+    ks_db_path = config.get_ks_database_server()
 
     num_gfs = config.get_num_reciprocal_retention_gfs(reciprocal_retention) # Number of top GFs to be used
     bottom = config.use_bottom_gfs_instead_of_top(reciprocal_retention) # Use actually the BOTTOM GFs instead of the top ones (number of bottom GFs remains defined by "top" variable)
@@ -32,14 +32,14 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
     max_extra_original_genes_in_new_gfs = config.get_max_extra_original_genes_in_new_gfs(reciprocal_retention)
     min_common_old_genes_in_new_gfs = 3 # TODO: check its use!
     use_original_orthomcl_version = config.get_orthomcl_version() # Whether to use the original or edited OrthoMCL version (default: edited)
-    use_ks_database = config.use_ks_database() # Whether to also copy the Ks data into the shared Ks database (default: no)
+    use_ks_database_server = config.use_ks_database_server() # Whether to also copy the Ks data into the shared Ks database (default: no)
 
     if not paranome and not colinearity and not reciprocal_retention:
         logging.error('At least one of the "paranome", "collinearity" or "reciprocal retention" parameters in the configuration file needs to be set to "yes".')
         logging.error("Exiting.")
         sys.exit(1)
 
-    if use_ks_database:
+    if use_ks_database_server:
         # Fail fast, before the long wgd computations, if the requested database cannot be used
         fcKsDbUtil.initialize_or_exit(ks_db_path)
 
@@ -138,7 +138,7 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
         logging.info("")
 
     # CONSOLIDATING PARALOG Ks VALUES INTO DATABASE (if database is configured)
-    if use_ks_database:
+    if use_ks_database_server:
         # A failure at any point below stops the analysis (it raises KsDatabaseError): the job must not
         # look successful while leaving nothing in the database, or later steps would silently recompute.
         logging.info("---")

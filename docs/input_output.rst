@@ -145,7 +145,7 @@ Other output
 
             Structure of ortholog *K*:sub:`S` mode database.
 
-    * ``ortholog_ks_list_db.tsv`` is a tabular data file storing the ortholog *K*:sub:`S` value lists (column 4 ``Ks_Values``) of species pairs (columns 1--3).  File name and location can be customised in the :ref:`pipeline_config_section`. Like ``ortholog_peak_db.tsv``, this is the format used when the *K*:sub:`S` database is disabled; if ``use_ks_database`` is enabled, the ortholog peaks and lists are stored in the database instead (see :ref:`paralog_ks_database`) and can be exported in these same two formats with ``ksrates inspect-ks-db``.
+    * ``ortholog_ks_list_db.tsv`` is a tabular data file storing the ortholog *K*:sub:`S` value lists (column 4 ``Ks_Values``) of species pairs (columns 1--3).  File name and location can be customised in the :ref:`pipeline_config_section`. Like ``ortholog_peak_db.tsv``, this is the format used when the *K*:sub:`S` database is disabled; if ``use_ks_database_server`` is enabled, the ortholog peaks and lists are stored in the database instead (see :ref:`paralog_ks_database`) and can be exported in these same two formats with ``ksrates inspect-ks-db``.
 
       .. figure:: _images/ortholog_ks_list_db.png
             :align: center

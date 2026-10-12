@@ -560,7 +560,7 @@ def check_paralog_db(config_file, expert, analysis_type):
     Ks database, without loading any of the actual Ks data. Intended for
     non-interactive use from scripts (e.g. main.nf's own skip-recomputation checks).
 
-    If the database is disabled in CONFIG_FILE (use_ks_database = no), always reports
+    If the database is disabled in CONFIG_FILE (use_ks_database_server = no), always reports
     "not present", so a caller can use this check unconditionally regardless of whether the
     database is enabled for this dataset.
 
@@ -588,10 +588,10 @@ def check_paralog_db(config_file, expert, analysis_type):
 
 	config = Configuration(config_file, expert)
 	present = False
-	if config.use_ks_database():
+	if config.use_ks_database_server():
 		species = config.get_species()
 		latin_name = config.get_latin_names()[species]
-		db_path = config.get_ks_database()
+		db_path = config.get_ks_database_server()
 		try:
 			present = existing_data_types(db_path, latin_name)[analysis_type]
 		except KsDatabaseError as e:
@@ -615,7 +615,7 @@ def check_paralog_db(config_file, expert, analysis_type):
 def check_ortholog_db(config_file, species1, species2, expert):
 	"""
 	Checks whether SPECIES1/SPECIES2 (species labels as used in CONFIG_FILE) already have both
-	an ortholog peak and a full Ks list stored, either in the Ks database (if use_ks_database = yes) or in the
+	an ortholog peak and a full Ks list stored, either in the Ks database (if use_ks_database_server = yes) or in the
 	peak_database_path/ks_list_database_path TSVs, without loading any of the actual Ks data. Intended for
 	non-interactive use from scripts (e.g. main.nf's own skip-recomputation checks).
 
@@ -650,17 +650,17 @@ def check_ortholog_db(config_file, species1, species2, expert):
 		pair = sorted([species1, species2], key=str.lower)
 		latin_pair = sorted([latin_names[pair[0]], latin_names[pair[1]]], key=str.casefold)
 		key = pair_key(latin_pair[0], latin_pair[1])
-		if config.use_ks_database():
+		if config.use_ks_database_server():
 			try:
-				existing = existing_ortholog_data(config.get_ks_database(), latin_pair[0], latin_pair[1])
+				existing = existing_ortholog_data(config.get_ks_database_server(), latin_pair[0], latin_pair[1])
 			except KsDatabaseError as e:
 				click.echo("error")
 				click.echo(str(e), err=True)
 				sys.exit(2)
 			present = existing["peak"] and existing["ks_list"]
 		else:
-			peak_db = pandas.read_csv(config.get_ortho_db(), sep="\t", index_col=0)
-			ks_list_db = pandas.read_csv(config.get_ks_db(), sep="\t", index_col=0)
+			peak_db = pandas.read_csv(config.get_peak_tsv_db(), sep="\t", index_col=0)
+			ks_list_db = pandas.read_csv(config.get_ks_list_tsv_db(), sep="\t", index_col=0)
 			present = key in peak_db.index and key in ks_list_db.index
 	except Exception:
 		present = False

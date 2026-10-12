@@ -41,13 +41,13 @@ def plot_orthologs_distr(config_file, expert_config_file, trios_file):
     with open(trios_file, 'r') as f1:
         trios = pandas.read_csv(f1, sep="\t")
 
-    use_ks_database = config.use_ks_database() # Whether to use the shared Ks database instead of the TSV files (default: no)
-    ks_db_path = config.get_ks_database()
-    if use_ks_database:
+    use_ks_database_server = config.use_ks_database_server() # Whether to use the shared Ks database instead of the TSV files (default: no)
+    ks_db_path = config.get_ks_database_server()
+    if use_ks_database_server:
         fcKsDbUtil.initialize_or_exit(ks_db_path)
 
     # Get the ortholog Ks list database (to plot histograms; mandatory input)
-    if use_ks_database:
+    if use_ks_database_server:
         # Only the pairs needed by the trios are read (the database can hold the pairs of many analyses).
         # The Ks_Values cells are already real lists.
         needed_pair_keys = set()
@@ -58,7 +58,7 @@ def plot_orthologs_distr(config_file, expert_config_file, trios_file):
                                      fcKsDbOrtho.pair_key(latin_sister, latin_out)])
         ks_list_db = fcKsDbOrtho.read_ks_lists(ks_db_path, sorted(needed_pair_keys))
     else:
-        ks_list_db_path = config.get_ks_db()
+        ks_list_db_path = config.get_ks_list_tsv_db()
         fcCheck.check_inputfile(ks_list_db_path, "Ortholog Ks list database")
         with open(ks_list_db_path, 'r') as f2:
             ks_list_db = pandas.read_csv(f2, sep="\t", index_col=0)
@@ -68,10 +68,10 @@ def plot_orthologs_distr(config_file, expert_config_file, trios_file):
 
     # Get the ortholog peak database (to plot distribution mode and median; not mandatory)
     no_peak_db = False
-    if use_ks_database:
+    if use_ks_database_server:
         db = fcKsDbOrtho.read_all_peaks(ks_db_path)
     else:
-        db_path = config.get_ortho_db()
+        db_path = config.get_peak_tsv_db()
         try:
             with open(db_path, 'r') as f3:
                 db = pandas.read_csv(f3, sep="\t", index_col=0)

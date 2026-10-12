@@ -100,9 +100,9 @@ def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors
             correction_table = read_csv(f, sep="\t")
             correction_table_available = True
 
-    use_ks_database = config.use_ks_database() # Whether to use the collective Ks database (default: no)
-    ks_db_path = config.get_ks_database() # address file for the shared sqld-backed Ks database
-    if use_ks_database:
+    use_ks_database_server = config.use_ks_database_server() # Whether to use the collective Ks database (default: no)
+    ks_db_path = config.get_ks_database_server() # address file for the shared sqld-backed Ks database
+    if use_ks_database_server:
         fcKsDbUtil.initialize_or_exit(ks_db_path) # fail fast if the requested database cannot be used
 
     # Get paralog/anchors/recret Ks data as DataFrames, either from the consolidated database first
@@ -114,7 +114,7 @@ def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors
 
     if paranome_analysis:
         db_data = None
-        if use_ks_database:
+        if use_ks_database_server:
             db_data = fcKsDbPara.read_analysis_data(ks_db_path, latinSpecies, 'paranome')
         if db_data is not None:
             paranome_df = DataFrame(db_data)
@@ -130,7 +130,7 @@ def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors
 
     if colinearity_analysis:
         db_data = None
-        if use_ks_database:
+        if use_ks_database_server:
             db_data = fcKsDbPara.read_analysis_data(ks_db_path, latinSpecies, 'anchors')
         if db_data is not None:
             anchors_df = DataFrame(db_data)
@@ -146,7 +146,7 @@ def lognormal_mixture(config_file, expert_config_file, paralog_tsv_file, anchors
 
     if reciprocal_retention_analysis:
         db_data = None
-        if use_ks_database:
+        if use_ks_database_server:
             db_data = fcKsDbPara.read_analysis_data(ks_db_path, latinSpecies, 'recret')
         if db_data is not None:
             recret_df = DataFrame(db_data)

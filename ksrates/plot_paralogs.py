@@ -31,8 +31,8 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
     num_gfs = config.get_num_reciprocal_retention_gfs(reciprocal_retention_analysis) # Number of top gene families
     bottom = config.use_bottom_gfs_instead_of_top(reciprocal_retention_analysis) # Use actually the BOTTOM GFs instead of the top ones (number of bottom GFs remains defined by "top" variable)
     rank_type = config.get_reciprocal_retention_rank_type(reciprocal_retention_analysis) # Rank type (only "lambda" supported)
-    use_ks_database = config.use_ks_database() # Whether to use the collective Ks database (default: no)
-    ks_db_path = config.get_ks_database() # address file for the shared sqld-backed Ks database
+    use_ks_database_server = config.use_ks_database_server() # Whether to use the collective Ks database (default: no)
+    ks_db_path = config.get_ks_database_server() # address file for the shared sqld-backed Ks database
 
     # By default the pipeline uses the TOP-ranked reciprocally retained GFs.
     # However, for comparison purposes, the user might want to use the BOTTOM GFs (e.g. the bottom 2000 ones)
@@ -55,7 +55,7 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
 
     # If database usage was enabled in expert config, look up this species' data for each analysis type.
     # Each lookup is an indexed single-row read: it doesn't load data for any other species.
-    if use_ks_database:
+    if use_ks_database_server:
         fcKsDbUtil.initialize_or_exit(ks_db_path) # fail fast if the requested database cannot be used
         if paranome_analysis:
             db_paranome_data = fcKsDbPara.read_analysis_data(ks_db_path, latin_name, 'paranome')

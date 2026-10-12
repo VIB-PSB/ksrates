@@ -64,9 +64,9 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
             correction_table = read_csv(f, sep="\t")
             correction_table_available = True
 
-    use_ks_database = config.use_ks_database() # Whether to use the collective Ks database (default: no)
-    ks_db_path = config.get_ks_database() # Path to the sqld server address file
-    if use_ks_database:
+    use_ks_database_server = config.use_ks_database_server() # Whether to use the collective Ks database (default: no)
+    ks_db_path = config.get_ks_database_server() # Path to the sqld server address file
+    if use_ks_database_server:
         fcKsDbUtil.initialize_or_exit(ks_db_path) # fail fast if the requested database cannot be used
 
     # Get the i-ADHoRe output files (anchorpoints/multiplicons/segments/list_elements/multiplicon_pairs)
@@ -75,7 +75,7 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
     # the database already has the full set for this species, or all 5 are read from disk.
     iadhore_keys = ['anchorpoints', 'multiplicons', 'segments', 'list_elements', 'multiplicon_pairs']
     iadhore_texts = None
-    if use_ks_database:
+    if use_ks_database_server:
         db_iadhore = fcKsDbPara.read_anchor_iadhore_files(ks_db_path, latin_names[species])
         if all(db_iadhore[key] is not None for key in iadhore_keys):
             iadhore_texts = db_iadhore
@@ -140,7 +140,7 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
     # Same database-first/TSV-fallback pattern as above, for the anchor pair Ks data. Read once
     # here and reuse the same DataFrame everywhere below.
     anchors_df = None
-    if use_ks_database:
+    if use_ks_database_server:
         db_data = fcKsDbPara.read_analysis_data(ks_db_path, latin_names[species], 'anchors')
         if db_data is not None:
             anchors_df = DataFrame(db_data)

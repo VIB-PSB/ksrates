@@ -133,12 +133,12 @@ class CheckOrthologDbTest(unittest.TestCase):
 
 EXPERT_CONFIG_DB_ON = """\
 [EXPERT PARAMETERS]
-use_ks_database = yes
+use_ks_database_server = yes
 """
 
 
 class CheckKsDatabaseCliTest(unittest.TestCase):
-    """check-ortholog-db / check-paralog-db when the Ks database is enabled (use_ks_database = yes)."""
+    """check-ortholog-db / check-paralog-db when the Ks database is enabled (use_ks_database_server = yes)."""
 
     def setUp(self):
         self.tmpdir = tempfile.TemporaryDirectory()
@@ -194,7 +194,7 @@ class CheckKsDatabaseCliTest(unittest.TestCase):
         self.assertEqual(run("paranome", self._config(self.unreachable_db)).exit_code, 2)
 
     def test_database_disabled_in_expert_config_never_touches_the_database(self):
-        # No expert file: use_ks_database defaults to "no" -> paralog check always says "no", even for an unreachable server
+        # No expert file: use_ks_database_server defaults to "no" -> paralog check always says "no", even for an unreachable server
         config_path = self._config(self.unreachable_db)
         result = self.runner.invoke(cli, ["check-paralog-db", config_path, "--type", "paranome"], catch_exceptions=False)
         self.assertEqual((result.exit_code, result.output.strip()), (1, "no"))
