@@ -147,13 +147,14 @@ def estimate_peak(species1, species2, latinSp1, latinSp2, max_ks_ortho, n_iter, 
     :param flag_not_in_peak_db: flag for the presence/absence of the species pair in the ortholog peak database (True/False)
     :param flag_not_in_ks_db: flag for the presence/absence of the species pair in the ortholog Ks list database (True/False)
     :param ks_database_server_address_path: path to the sqld server address file of the shared Ks database; if given, the results are
-        written there (atomically, one row per species pair) first, and then ALSO appended to the ks_list_db_path/db_path TSV files
-        (so the data are also available in the legacy files). Database errors are not caught: if the database was requested and cannot be written, the analysis stops.
+        written there (atomically, one row per species pair) instead of being appended to the ks_list_db_path/db_path TSV files
+        (which are only written when no database is requested). Database errors are not caught: if the database was requested
+        and cannot be written, the analysis stops.
     :return: a flag to state if the current peak computation failed due to missing ortholog Ks TSV file,
         too few Ks values to estimate a reliable peak, or a numerically degenerate bootstrap sample (True/False)
     """
     compute_peak_failed = False
-    peak_to_store, ks_list_to_store = None, None # new results to be stored (in the Ks database, if requested, and in the TSV files)
+    peak_to_store, ks_list_to_store = None, None # new results to be stored (in the Ks database if requested, else in the TSV files)
 
     logging.info(f"{latinSp1} and {latinSp2}:")
     logging.info("- Extracting ortholog Ks list")
@@ -185,8 +186,8 @@ def estimate_peak(species1, species2, latinSp1, latinSp2, max_ks_ortho, n_iter, 
         if flag_not_in_ks_db:      # if the pair is missing in the ks list database
             ks_list_to_store = ks_list
 
-        # The Ks database (if requested) is written first, so that a database failure stops the analysis before
-        # anything is added to the TSV files; peak and Ks list go together in one atomic statement.
+        # With the Ks database, peak and Ks list go together in one atomic statement and nothing is appended to the
+        # ortholog TSV files (they would be written concurrently by independent runs, without any locking).
         if ks_database_server_address_path is not None:
             if peak_to_store is not None:
                 logging.info("- Adding peak to Ks database")
@@ -199,19 +200,18 @@ def estimate_peak(species1, species2, latinSp1, latinSp2, max_ks_ortho, n_iter, 
                                 "and no new peak could be estimated from the new one")
             fcKsDbOrtho.write_to_ortholog_db(ks_database_server_address_path, latinSp1, latinSp2,
                                         peak=peak_to_store, ks_list=ks_list_to_store, reset_peak=reset_peak)
-
-        # The TSV files are always kept up to date too, so that the data can be found where they have always been
-        if peak_to_store is not None:
-            db_new_row = DataFrame([[latinSp1, latinSp2, peak_to_store[0], peak_to_store[1]]],
-                                    index=[f"{latinSp1}_{latinSp2}"])
-            with open(db_path, "a+") as outfile_db:
-                logging.info("- Adding peak to ortholog peak TSV file")
-                outfile_db.write(db_new_row.to_csv(sep="\t", header=None))
-        if ks_list_to_store is not None:
-            logging.info("- Adding Ks list to ortholog Ks list TSV file")
-            ks_list_new_row = DataFrame([[latinSp1, latinSp2, ks_list_to_store]], index=[f"{latinSp1}_{latinSp2}"])
-            with open(ks_list_db_path, "a+") as outfile_ksList:
-                outfile_ksList.write(ks_list_new_row.to_csv(sep="\t", header=None))
+        else:
+            if peak_to_store is not None:
+                db_new_row = DataFrame([[latinSp1, latinSp2, peak_to_store[0], peak_to_store[1]]],
+                                        index=[f"{latinSp1}_{latinSp2}"])
+                with open(db_path, "a+") as outfile_db:
+                    logging.info("- Adding peak to ortholog peak TSV file")
+                    outfile_db.write(db_new_row.to_csv(sep="\t", header=None))
+            if ks_list_to_store is not None:
+                logging.info("- Adding Ks list to ortholog Ks list TSV file")
+                ks_list_new_row = DataFrame([[latinSp1, latinSp2, ks_list_to_store]], index=[f"{latinSp1}_{latinSp2}"])
+                with open(ks_list_db_path, "a+") as outfile_ksList:
+                    outfile_ksList.write(ks_list_new_row.to_csv(sep="\t", header=None))
     else:
         logging.warning(f"  Ortholog Ks TSV file not found [{species1}_{species2}.ks.tsv]. Skipping peak estimate.") 
         compute_peak_failed = True

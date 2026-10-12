@@ -163,15 +163,13 @@ class EstimatePeakWithKsDatabaseTest(EstimatePeakTest):
         self.assertEqual(fcKsDbOrtho.read_ks_list(self.db, "Species one", "Species two"), [7.57, 7.80, 8.71])
         self.assertIsNone(fcKsDbOrtho.read_peak(self.db, "Species one", "Species two"))
 
-    def test_results_are_written_to_both_database_and_tsv_files(self):
+    def test_nothing_is_written_to_the_tsv_files(self):
         self._estimate(list(np.linspace(0.5, 2.5, 20)))
-        with open(self.peak_db_path) as handle:
-            self.assertIn("Species one_Species two", handle.read())
-        with open(self.ks_list_db_path) as handle:
-            self.assertIn("Species one_Species two", handle.read())
+        self.assertFalse(os.path.exists(self.peak_db_path))
+        self.assertFalse(os.path.exists(self.ks_list_db_path))
         self.assertIsNotNone(fcKsDbOrtho.read_peak(self.db, "Species one", "Species two"))
 
-    def test_unreachable_database_raises_before_anything_is_added_to_tsv_files(self):
+    def test_unreachable_database_raises_instead_of_falling_back_to_tsv(self):
         with self.assertRaises(fcKsDbUtil.KsDatabaseError):
             self._estimate(list(np.linspace(0.5, 2.5, 20)), ks_database_server_address_path=self.unreachable_db)
         self.assertFalse(os.path.exists(self.peak_db_path))
