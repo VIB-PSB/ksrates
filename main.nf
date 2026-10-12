@@ -1012,6 +1012,8 @@ process doRateAdjustment {
     """
     ${ks_db_check_fn}
     echo ""
+    processDir=\${PWD}
+    cd ${PWD}
 
     # A data type counts as available either as a local TSV file (just produced by wgdParalogs
     # in this run) or already present in the Ks database (if enabled) - see the
@@ -1042,9 +1044,6 @@ process doRateAdjustment {
         echo "Reciprocal retention data not yet available; skipping rate-adjustment"
         exit 0
     fi
-
-    processDir=\${PWD}
-    cd ${PWD}
 
     echo "NF internal work directory for [doRateAdjustment (${task.index})] process:\n\${processDir}\n" >> ${logs_folder}/${logs_names["doRateAdjustment"]}
 
