@@ -301,6 +301,5 @@ def consolidate_paralog_ks_lists(species_name, latin_name, db_path, paranome_ena
 	                                      reciprocal_retention_enabled, num_gfs, rank_type, bottom)
 
 	write_succeeded = write_to_paralog_db(latin_name, ks_data, db_path)
-	logging.info("Done")
 	return not write_succeeded
 
