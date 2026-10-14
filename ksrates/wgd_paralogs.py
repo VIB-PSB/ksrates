@@ -8,6 +8,7 @@ import ksrates.fc_wgd as fc_wgd
 import ksrates.fc_ks_database_utilities as fcKsDbUtil
 import ksrates.fc_ks_database_paralog as fcKsDbPara
 from ksrates.utils import init_logging
+from wgd_ksrates.ks_distribution import FamilySkipRule
 
 def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, parsed_homology_table, test):
     # INPUT
@@ -20,10 +21,17 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
 
     latin_name = config.get_latin_names()[species]
     max_gene_family_size = config.get_max_gene_family_size()
+    skip_rule = FamilySkipRule(config.get_min_gapfree_columns(), config.get_big_family_size(),
+                               config.get_min_gapfree_columns_big_family())
     paranome = config.get_paranome()
     colinearity = config.get_colinearity()
     reciprocal_retention = config.get_reciprocal_retention()
     ks_db_path = config.get_ks_database_server()
+
+    if skip_rule.min_columns > 0 or skip_rule.min_columns_big_family > 0:
+        logging.info(f"Gene families will not be analysed with codeml if their alignment has fewer than "
+                     f"{skip_rule.min_columns} gap-free codon columns, or fewer than {skip_rule.min_columns_big_family} "
+                     f"if they have at least {skip_rule.big_family_size} genes (a limit of 0 is off)")
 
     num_gfs = config.get_num_reciprocal_retention_gfs(reciprocal_retention) # Number of top GFs to be used
     bottom = config.use_bottom_gfs_instead_of_top(reciprocal_retention) # Use actually the BOTTOM GFs instead of the top ones (number of bottom GFs remains defined by "top" variable)
@@ -104,7 +112,7 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
         logging.info("Running wgd whole-paranome Ks pipeline...")
         fc_wgd.ks_paralogs(species, species_fasta_file, max_gene_family_size=max_gene_family_size,
                         base_dir=paralog_dists_dir, n_threads=n_threads, logging_level=logging_level,
-                        preserve=preserve)
+                        preserve=preserve, skip_rule=skip_rule)
         logging.info(datetime.datetime.today().ctime())
         logging.info("")
 
@@ -133,7 +141,7 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
                                    base_dir=paralog_dists_dir,
                                    max_gene_family_size=max_gene_family_size,
                                    n_threads=n_threads, overwrite=False, preserve=preserve,
-                                   is_test_run=test, logging_level=logging_level)
+                                   is_test_run=test, logging_level=logging_level, skip_rule=skip_rule)
         logging.info(datetime.datetime.today().ctime())
         logging.info("")
 

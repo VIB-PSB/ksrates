@@ -911,6 +911,69 @@ class Configuration:
         return max_size
 
 
+    def _get_non_negative_int_expert_field(self, field, default):
+        """
+        Reads an expert configuration field that has to be a non-negative integer.
+
+        :param field: name of the field in the EXPERT PARAMETERS section
+        :param default: value used if the field is missing or invalid
+        :return: the integer
+        """
+        if self.expert_config is None:
+            return default
+        try:
+            value = self.expert_config.get("EXPERT PARAMETERS", field)
+        except Exception:
+            return default
+        try:
+            value = literal_eval(value)
+        except Exception:
+            pass
+        if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+            logging.warning(f'Unrecognized field in expert configuration file [{field} = {value}]. Please choose a non-negative integer. Default choice will be applied [{default}]')
+            return default
+        return value
+
+
+    def get_min_gapfree_columns(self):
+        """
+        Gets the minimum number of gap-free codon columns that the alignment of a paralog gene family needs for the
+        family to be analysed with codeml. Families with fewer columns are skipped. 0 switches the limit off.
+
+        By default ksrates analyses every family. With only 1 column the Ks values rest on a single codon and are
+        unreliable, and codeml can need hours for such a family even with a few dozen genes.
+        Setting this parameter value to 2 skips these families (and those with no column, which gave no Ks results anyway)
+        without losing useful Ks values.
+        For the big families see get_big_family_size() and get_min_gapfree_columns_big_family().
+
+        :return min_gapfree_columns: minimum number of gap-free codon columns (default 0, off)
+        """
+        return self._get_non_negative_int_expert_field("min_gapfree_columns", 0)
+
+
+    def get_big_family_size(self):
+        """
+        Gets the number of genes from which a gene family is considered big, i.e. the families with at least this
+        many genes, for min_gapfree_columns_big_family.
+
+        :return big_family_size: number of genes (default 100)
+        """
+        return self._get_non_negative_int_expert_field("big_family_size", 100)
+
+
+    def get_min_gapfree_columns_big_family(self):
+        """
+        Gets the minimum number of gap-free codon columns for the gene families with at least big_family_size genes,
+        meant to be higher than min_gapfree_columns. 0 switches the limit off.
+
+        A big family has very many gene pairs, so even a few columns can keep codeml busy for days. For example,
+        min_gapfree_columns_big_family = 4 skips the families with 100 genes or more and only 2 or 3 columns.
+
+        :return min_gapfree_columns_big_family: minimum number of gap-free codon columns (default 0, off)
+        """
+        return self._get_non_negative_int_expert_field("min_gapfree_columns_big_family", 0)
+
+
     def get_num_reciprocal_retention_gfs(self, reciprocal_retention):
         """
         Gets the number of ranked reciprocally retained gene families to be considered out of the total ranked 9178 ones.

@@ -242,6 +242,9 @@ The following can be used as a template (default values)::
     max_mixture_model_components = 5
     max_mixture_model_ks = 5
     max_gene_family_size = 200
+    min_gapfree_columns = 0
+    big_family_size = 100
+    min_gapfree_columns_big_family = 0
     distribution_peak_estimate = mode
     min_ks_anchor_pairs = 0.05
     num_reciprocally_retained_gfs = 2000
@@ -259,6 +262,9 @@ The following can be used as a template (default values)::
 * **max_mixture_model_components**: maximum number of components considered during execution of the mixture models. [Default: 5]
 * **max_mixture_model_ks**: upper limit for the *K*:sub:`S` range in which the exponential-lognormal and lognormal-only mixture models are performed. [Default: 5]
 * **max_gene_family_size**: maximum number of members that any paralog gene family can have to be included in *K*:sub:`S` estimation. Large gene families increase the run time and are often composed of unrelated sequences grouped together by shared protein domains or repetitive sequences. But this is not always the case, so one may want to check manually the gene families in file ``paralog_distributions/wgd_species/species.mcl.tsv`` and increase (or even decrease) this number. [Default: 200]
+* **min_gapfree_columns**: minimum number of gap-free codon columns that the alignment of a paralog gene family needs to be analysed with codeml (codeml uses only the columns without gaps or ambiguity characters, which are the ones counted here). Families with fewer columns are skipped and listed in the log with the reason, together with the families that gave no result. Families with very few columns can only give *K*:sub:`S` values based on a handful of codons, and codeml can need a very long time for them (hours for a family with one column and a few dozen genes). A value of 2 skips the families with 0 or 1 column. [Default: 0, no family is skipped]
+* **big_family_size**: number of genes from which a gene family is considered big for the parameter *min_gapfree_columns_big_family*. [Default: 100]
+* **min_gapfree_columns_big_family**: like *min_gapfree_columns*, but only for the gene families with at least *big_family_size* genes. Big families with few gap-free columns have very many gene pairs and are the ones that can keep codeml busy for days. For example, with *big_family_size* = 100 and a value of 4, the families with 100 genes or more and 3 columns or fewer are skipped. [Default: 0, no family is skipped]
 * **distribution_peak_estimate**: the statistical method used to obtain a single ortholog *K*:sub:`S` estimate for the divergence time of a species pair from its ortholog distribution or to obtain a single paralog *K*:sub:`S` estimate from an anchor *K*:sub:`S` cluster or from lognormal components in mixture models (options: "mode" or "median"). [Default: "mode"]
 * **min_ks_anchor_pairs**: lower limit for the *K*:sub:`S` range used to build the anchor pair *K*:sub:`S` distribution. By default, *K*:sub:`S` values smaller than 0.05 in the anchor distribition are ignored (weighted as 0), in order to remove noise at recent *K*:sub:`S` age that could be mistakenly interpreted as a very recent WGM. Set this value to 0 to instead keep all *K*:sub:`S` values when you are actually interested in WGMs with very young age. [Default: 0.05]
 * **num_reciprocally_retained_gfs**: number of gene families at the top of the reciprocal retention ranking that will be used to build the related *K*:sub:`S` distribution. [Default: 2000]
