@@ -262,7 +262,16 @@ def label_leaves_with_latin_names(tree, latin_names):
     for leaf_node in tree.get_leaves():
         leaf_node.name = latin_names[leaf_node.name]
         # The whitespace after the name in the string ("{leaf_node.name} ") is a padding from the branch line
-        leaf_node.add_face(TextFace(f"{leaf_node.name} ", ftype="Arial", fsize=18, fstyle="italic", fgcolor=getattr(leaf_node, "name_color", "black")), column=0,
+        color = getattr(leaf_node, "name_color", "black")
+        if hasattr(leaf_node, "name_background"):
+            # The padding is a margin here, so that the background color covers the name only and does not touch the branch line
+            # Use thin spaces (\u2009) as small padding inside the box on both sides
+            face = TextFace(f"\u2009{leaf_node.name}\u2009", ftype="Arial", fsize=18, fstyle="italic", fgcolor=color)
+            face.inner_background.color = leaf_node.name_background
+            face.margin_left = face.margin_right = 5
+        else:
+            face = TextFace(f"{leaf_node.name} ", ftype="Arial", fsize=18, fstyle="italic", fgcolor=color)
+        leaf_node.add_face(face, column=0,
                            position="branch-right")
 
 
@@ -681,7 +690,8 @@ def plotting_tree(species, latin_names, original_tree, correction_table, consens
     :param peak_stats: flag to specify whether the ortholog distribution peak is the mode or the median
     :param nextflow_flag: boolean flag to state whether the script is run in the Nextflow pipeline or not
     :param tree_hook: optional function called with the tree after the branch lengths and styles are set and before the leaves are
-                      labeled, to customize the figure; a leaf with the attribute "name_color" gets its name in that color
+                      labeled, to customize the figure; a leaf with the attribute "name_color" gets its name in that color,
+                      and with "name_background" on that background color
     :param output_suffix: optional text added before the extension of the PDF file name (e.g. ".b2351")
     """
     # Get an equivalent tree where the focal species is the top leaf
