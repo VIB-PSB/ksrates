@@ -262,7 +262,7 @@ def label_leaves_with_latin_names(tree, latin_names):
     for leaf_node in tree.get_leaves():
         leaf_node.name = latin_names[leaf_node.name]
         # The whitespace after the name in the string ("{leaf_node.name} ") is a padding from the branch line
-        leaf_node.add_face(TextFace(f"{leaf_node.name} ", ftype="Arial", fsize=18, fstyle="italic"), column=0,
+        leaf_node.add_face(TextFace(f"{leaf_node.name} ", ftype="Arial", fsize=18, fstyle="italic", fgcolor=getattr(leaf_node, "name_color", "black")), column=0,
                            position="branch-right")
 
 
@@ -665,7 +665,8 @@ def adapt_unknown_branch_length(tree):
             unknown_branch_len_style(node)
 
 
-def plotting_tree(species, latin_names, original_tree, correction_table, consensus_strategy_for_multi_outgroups, ortholog_db, peak_stats, nextflow_flag):
+def plotting_tree(species, latin_names, original_tree, correction_table, consensus_strategy_for_multi_outgroups, ortholog_db, peak_stats, nextflow_flag,
+                  tree_hook=None, output_suffix=""):
     """
     Generate a PDF figure of the input tree with branch lengths equal to Ks distances.
     If it is not possible to compute the branch length for a branch, the branch line is dashed. This happens when some\\
@@ -679,6 +680,9 @@ def plotting_tree(species, latin_names, original_tree, correction_table, consens
     :para ortholog_db: ortholog peak database used to get ortholog data for the relative rate test; if not available, will be ignored
     :param peak_stats: flag to specify whether the ortholog distribution peak is the mode or the median
     :param nextflow_flag: boolean flag to state whether the script is run in the Nextflow pipeline or not
+    :param tree_hook: optional function called with the tree after the branch lengths and styles are set and before the leaves are
+                      labeled, to customize the figure; a leaf with the attribute "name_color" gets its name in that color
+    :param output_suffix: optional text added before the extension of the PDF file name (e.g. ".b2351")
     """
     # Get an equivalent tree where the focal species is the top leaf
     tree = reorder_tree_leaves(original_tree, species)
@@ -784,8 +788,10 @@ def plotting_tree(species, latin_names, original_tree, correction_table, consens
         if missing_ortholog_data_from_database or missing_ortholog_data_from_correction_table:
             logging.warning(f"It's necessary to run a new Nextflow (or manual) pipeline to complete the tree branch length information")
             
-    label_leaves_with_latin_names(tree, latin_names)
     adapt_unknown_branch_length(tree)
+    if tree_hook:
+        tree_hook(tree)
+    label_leaves_with_latin_names(tree, latin_names)
 
     ts = TreeStyle()
     # ts.title.add_face(TextFace("  Input tree with branch length equal to Ks distances  ", ftype="Arial", fsize=18), column=0)
@@ -799,7 +805,8 @@ def plotting_tree(species, latin_names, original_tree, correction_table, consens
     ts.scale = 200
     #ts.scale_length =  # to set a fixed scale branch length
     root_of_corrected_tree = species_history[-1]
-    root_of_corrected_tree.render(os.path.join("rate_adjustment", f"{species}", f"{_TREE_BRANCH_DISTANCES.format(species)}"), w=4.5, units="in", tree_style=ts)
+    figure_root, figure_extension = os.path.splitext(_TREE_BRANCH_DISTANCES.format(species))
+    root_of_corrected_tree.render(os.path.join("rate_adjustment", f"{species}", f"{figure_root}{output_suffix}{figure_extension}"), w=4.5, units="in", tree_style=ts)
 
 
 def plot_uncorrected_phylogeny(tree, species, latin_names, species_history):

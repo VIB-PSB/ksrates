@@ -11,7 +11,7 @@ from ksrates.utils import init_logging
 import pandas
 
 
-def plot_tree_rates(config_file, expert_config_file, correction_table_file, nextflow_flag):
+def plot_tree_rates(config_file, expert_config_file, correction_table_file, nextflow_flag, tree_hook=None, output_suffix=""):
     # INPUT
     config = fcConf.Configuration(config_file, expert_config_file)
     init_logging("Generating PDF of input tree with branch length equal to Ks distances", config.get_logging_level())
@@ -82,7 +82,7 @@ def plot_tree_rates(config_file, expert_config_file, correction_table_file, next
 
     logging.info("")
     fcTree.plotting_tree(species, latin_names, newick_tree, correction_table, consensus_peak_for_multiple_outgroups, 
-                         ortholog_db, peak_stats, nextflow_flag)
+                         ortholog_db, peak_stats, nextflow_flag, tree_hook, output_suffix)
     logging.info("")
     logging.info(f"Saved PDF tree figure [{fcTree._TREE_BRANCH_DISTANCES.format(species)}]")
     logging.info("")
