@@ -1,9 +1,9 @@
 #!/usr/bin/env nextflow
 
 /*
- * Launches the shared paralog Ks database server (sqld) via "ksrates launch-paralog-ks-server".
+ * Launches the shared Ks database server (sqld) via "ksrates launch-ks-database-server".
  * Never finishes on success - execs into sqld and runs indefinitely - so submit this once, as its
- * own long-running job separate from any analysis run. See docs/paralog_ks_database.rst,
+ * own long-running job separate from any analysis run. See docs/ks_database.rst,
  * "Setting up the database server", for full setup instructions.
  *
  * Override executor.name back to 'local' via -process.executor if nextflow.config sets it to a
@@ -21,14 +21,14 @@ params.location = false
 params.port = 8080
 
 // Filename (not path) of the address file written under params.location
-params.address_filename = "paralog_ks_server_address.txt"
+params.address_filename = "ks_database_server_address.txt"
 
 if (!params.location) {
     log.error "Missing required parameter --location (central directory for the server's data/keys/address file)."
     exit 1
 }
 
-process launchParalogKsServer {
+process launchKsDatabaseServer {
 
     input:
         val location
@@ -37,10 +37,10 @@ process launchParalogKsServer {
 
     script:
     """
-    ksrates launch-paralog-ks-server --location ${location} --port ${port} --address-filename ${address_filename}
+    ksrates launch-ks-database-server --location ${location} --port ${port} --address-filename ${address_filename}
     """
 }
 
 workflow {
-    launchParalogKsServer(params.location, params.port, params.address_filename)
+    launchKsDatabaseServer(params.location, params.port, params.address_filename)
 }

@@ -204,7 +204,7 @@ class Configuration:
         self.check_complete_latin_names_dict(latin_names_dict)
         return latin_names_dict
 
-    def get_ortho_db(self):
+    def get_peak_tsv_db(self):
         """
         Gets the config file field of the peak ortholog database path.
 
@@ -215,7 +215,7 @@ class Configuration:
             db_path = "ortholog_peak_db.tsv"
         return db_path
     
-    def get_ks_db(self):
+    def get_ks_list_tsv_db(self):
         """
         Gets the config file field of the ortholog Ks list database path.  
 
@@ -226,19 +226,19 @@ class Configuration:
             ks_list_db_path = "ortholog_ks_db.tsv"
         return ks_list_db_path
 
-    def get_paralog_ks_database(self):
+    def get_ks_database_server(self):
         """
-        Gets the config file field of the paralog Ks database path: this points at the small address
+        Gets the config file field of the Ks database path: this points at the small address
         file written by a long-running sqld server job at startup (see docs/configuration.rst), not a
-        local SQLite file directly.
+        local SQLite file directly. The same database serves both paralog and ortholog Ks data.
 
-        :return ks_list_paralog_db_path: path to the paralog Ks database
+        :return ks_db_path: path to the sqld server address file
         """
-        ks_list_paralog_db_path = self.config.get("SPECIES", "ks_list_paralog_database_path", fallback="paralog_ks_server_address.txt")
-        if not ks_list_paralog_db_path:
-            ks_list_paralog_db_path = "paralog_ks_server_address.txt"
-        return ks_list_paralog_db_path
-    
+        ks_db_path = self.config.get("SPECIES", "ks_database_server_address_path", fallback="ks_database_server_address.txt")
+        if not ks_db_path:
+            ks_db_path = "ks_database_server_address.txt"
+        return ks_db_path
+
     def get_fasta_dict(self):
         """
         Gets the config file field of the dictionary that associates the informal species names to the their FASTA files.
@@ -582,31 +582,30 @@ class Configuration:
         return preserve
 
 
-    def use_paralog_ks_database(self):
+    def use_ks_database_server(self):
         """
-        Checks whether "use_paralog_ks_database" is requested or not in the expert configuration file.
-        If set to "yes", the shared paralog Ks database is used instead of reading the paralog Ks TSV file.
-        Default is "no", i.e. using directly the Ks TSV file, for legacy purposes.
+        Checks whether "use_ks_database_server" is requested or not in the expert configuration file.
+        If set to "yes", the shared Ks database (paralog and ortholog Ks data) is used instead of the
+        paralog Ks TSV files and the ortholog peak/Ks list TSV databases. If the database is requested
+        but cannot be reached, the analysis stops: there is no silent fallback to the TSV files.
+        Default is "no", i.e. using directly the TSV files, for legacy purposes.
 
-        :return use_paralog_ks_database: boolean for using the database (True) or the paralog Ks TSV file (False)
+        :return use_ks_database_server: boolean for using the database (True) or the TSV files (False)
         """
         if self.expert_config is not None:
             try:
-                use_paralog_ks_database = self.expert_config.get("EXPERT PARAMETERS", "use_paralog_ks_database").lower()
-                if use_paralog_ks_database not in ["yes", "no"]:
-                    logging.warning(f'Unrecognized field in expert configuration file [use_paralog_ks_database = {use_paralog_ks_database}]. Please choose between "yes" and "no". Default choice will be applied [no]')
-                    use_paralog_ks_database = False
+                use_ks_database_server = self.expert_config.get("EXPERT PARAMETERS", "use_ks_database_server").lower()
+                if use_ks_database_server not in ["yes", "no"]:
+                    logging.warning(f'Unrecognized field in expert configuration file [use_ks_database_server = {use_ks_database_server}]. Please choose between "yes" and "no". Default choice will be applied [no]')
+                    use_ks_database_server = False
                 else:
-                    if use_paralog_ks_database == "yes":
-                        use_paralog_ks_database = True
-                    elif use_paralog_ks_database == "no":
-                        use_paralog_ks_database = False
+                    use_ks_database_server = (use_ks_database_server == "yes")
             except Exception:
-                logging.warning(f'Missing field [use_paralog_ks_database] in expert configuration file. Please choose between "yes" and "no". Default choice will be applied [no]')
-                use_paralog_ks_database = False
+                logging.warning(f'Missing field [use_ks_database_server] in expert configuration file. Please choose between "yes" and "no". Default choice will be applied [no]')
+                use_ks_database_server = False
         else:
-            use_paralog_ks_database = False
-        return use_paralog_ks_database
+            use_ks_database_server = False
+        return use_ks_database_server
 
 
     def get_peak_stats(self):
@@ -910,6 +909,69 @@ class Configuration:
         else:
             max_size = 200
         return max_size
+
+
+    def _get_non_negative_int_expert_field(self, field, default):
+        """
+        Reads an expert configuration field that has to be a non-negative integer.
+
+        :param field: name of the field in the EXPERT PARAMETERS section
+        :param default: value used if the field is missing or invalid
+        :return: the integer
+        """
+        if self.expert_config is None:
+            return default
+        try:
+            value = self.expert_config.get("EXPERT PARAMETERS", field)
+        except Exception:
+            return default
+        try:
+            value = literal_eval(value)
+        except Exception:
+            pass
+        if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+            logging.warning(f'Unrecognized field in expert configuration file [{field} = {value}]. Please choose a non-negative integer. Default choice will be applied [{default}]')
+            return default
+        return value
+
+
+    def get_min_gapfree_columns(self):
+        """
+        Gets the minimum number of gap-free codon columns that the alignment of a paralog gene family needs for the
+        family to be analysed with codeml. Families with fewer columns are skipped. 0 switches the limit off.
+
+        By default ksrates analyses every family. With only 1 column the Ks values rest on a single codon and are
+        unreliable, and codeml can need hours for such a family even with a few dozen genes.
+        Setting this parameter value to 2 skips these families (and those with no column, which gave no Ks results anyway)
+        without losing useful Ks values.
+        For the big families see get_big_family_size() and get_min_gapfree_columns_big_family().
+
+        :return min_gapfree_columns: minimum number of gap-free codon columns (default 0, off)
+        """
+        return self._get_non_negative_int_expert_field("min_gapfree_columns", 0)
+
+
+    def get_big_family_size(self):
+        """
+        Gets the number of genes from which a gene family is considered big, i.e. the families with at least this
+        many genes, for min_gapfree_columns_big_family.
+
+        :return big_family_size: number of genes (default 100)
+        """
+        return self._get_non_negative_int_expert_field("big_family_size", 100)
+
+
+    def get_min_gapfree_columns_big_family(self):
+        """
+        Gets the minimum number of gap-free codon columns for the gene families with at least big_family_size genes,
+        meant to be higher than min_gapfree_columns. 0 switches the limit off.
+
+        A big family has very many gene pairs, so even a few columns can keep codeml busy for days. For example,
+        min_gapfree_columns_big_family = 4 skips the families with 100 genes or more and only 2 or 3 columns.
+
+        :return min_gapfree_columns_big_family: minimum number of gap-free codon columns (default 0, off)
+        """
+        return self._get_non_negative_int_expert_field("min_gapfree_columns_big_family", 0)
 
 
     def get_num_reciprocal_retention_gfs(self, reciprocal_retention):

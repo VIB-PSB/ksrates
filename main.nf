@@ -154,6 +154,24 @@ logs_names = [
 "paralogsAnalyses": "paralogs_analyses.log",
 "drawTree": "rate_adjustment.log" ]
 
+// Shell function, interpolated into the process scripts that use the "ksrates check-*-db" commands.
+// Usage: ks_db_check ksrates check-paralog-db ...
+// The wrapped command exits with 0 (data present), 1 (data absent) or 2 (the Ks database was requested with
+// use_ks_database_server = yes but cannot be reached). The function passes 0 and 1 on to the caller, so it can be used
+// directly in an "if"; a 2 instead stops the whole process with an error, because it must NOT be taken as
+// "data absent": everything would then be silently recomputed while the database server is down.
+ks_db_check_fn = '''
+ks_db_check() {
+    local rc=0
+    "$@" > /dev/null || rc=$?
+    if [ $rc -eq 2 ]; then
+        echo "ERROR: the Ks database was requested (use_ks_database_server = yes) but cannot be reached. Stopping." >&2
+        exit 2
+    fi
+    return $rc
+}
+'''
+
 
 /*
  * Function to log various process information before submission/execution
@@ -586,6 +604,7 @@ process setParalogAnalysis {
     script:
     logProcessInfo(task)
     """
+    ${ks_db_check_fn}
     echo ""
     echo "[${species}] Setting up paralog wgd analysis for focal species"
 
@@ -602,36 +621,36 @@ process setParalogAnalysis {
     recret_status="not_required"
     
     # Triggering wgdParalog process only if ".ks.tsv" (and/or ".ks_anchors.tsv", ks_recret_topX.tsv) files
-    # are missing locally AND the shared paralog Ks database (if enabled) doesn't have the data either -
+    # are missing locally AND the shared Ks database (if enabled) doesn't have the data either -
     # "ksrates check-paralog-db" always reports "not present" when the database is disabled, so it can
     # be called unconditionally here regardless of whether this dataset uses it.
 
     if [ ${paranome} = "yes" ]; then
-        if [ -f paralog_distributions/wgd_${species}/${species}.ks.tsv ] || ksrates check-paralog-db ${config_args} --type paranome > /dev/null 2>&1; then
+        if [ -f paralog_distributions/wgd_${species}/${species}.ks.tsv ] || ks_db_check ksrates check-paralog-db ${config_args} --type paranome; then
             paranome_status="already_done"
         else
             echo "[${species}] Will run whole-paranome wgd analysis"
-            echo "[${species}] Paralog TSV file not found [${species}.ks.tsv], and not in the paralog Ks database" >> ${logs_folder}/${logs_names["setParalogAnalysis"]}
+            echo "[${species}] Paralog TSV file not found [${species}.ks.tsv], and not in the Ks database" >> ${logs_folder}/${logs_names["setParalogAnalysis"]}
             echo "[${species}] Whole-paranome wgd pipeline will be started\n" >> ${logs_folder}/${logs_names["setParalogAnalysis"]}
             paranome_status="todo"
         fi
     fi
     if [ ${colinearity} = "yes" ]; then
-        if [ -f paralog_distributions/wgd_${species}/${species}.ks_anchors.tsv ] || ksrates check-paralog-db ${config_args} --type anchors > /dev/null 2>&1; then
+        if [ -f paralog_distributions/wgd_${species}/${species}.ks_anchors.tsv ] || ks_db_check ksrates check-paralog-db ${config_args} --type anchors; then
             colinearity_status="already_done"
         else
             echo "[${species}] Will run anchor-pair (collinearity) wgd analysis"
-            echo "[${species}] Anchor pairs TSV file not found [${species}.ks_anchors.tsv], and not in the paralog Ks database" >> ${logs_folder}/${logs_names["setParalogAnalysis"]}
+            echo "[${species}] Anchor pairs TSV file not found [${species}.ks_anchors.tsv], and not in the Ks database" >> ${logs_folder}/${logs_names["setParalogAnalysis"]}
             echo "[${species}] Collinearity wgd pipeline will be started\n" >> ${logs_folder}/${logs_names["setParalogAnalysis"]}
             colinearity_status="todo"
         fi
     fi
     if [ ${recret} = "yes" ]; then
-        if [ -f paralog_distributions/wgd_${species}/${species}.ks_recret_top${recret_top}.tsv ] || ksrates check-paralog-db ${config_args} --type recret > /dev/null 2>&1; then
+        if [ -f paralog_distributions/wgd_${species}/${species}.ks_recret_top${recret_top}.tsv ] || ks_db_check ksrates check-paralog-db ${config_args} --type recret; then
             recret_status="already_done"
         else
             echo "[${species}] Will run reciprocal retention analysis"
-            echo "[${species}] Reciprocally retained paralog TSV file not found [${species}.ks_recret_top${recret_top}.tsv], and not in the paralog Ks database" >> ${logs_folder}/${logs_names["setParalogAnalysis"]}
+            echo "[${species}] Reciprocally retained paralog TSV file not found [${species}.ks_recret_top${recret_top}.tsv], and not in the Ks database" >> ${logs_folder}/${logs_names["setParalogAnalysis"]}
             echo "[${species}] Reciprocal retention pipeline will be started\n" >> ${logs_folder}/${logs_names["setParalogAnalysis"]}
             recret_status="todo"
         fi
@@ -682,6 +701,7 @@ process setOrthologAnalysis {
     script:
     logProcessInfo(task)
     """
+    ${ks_db_check_fn}
     echo ""
     echo "Setting up required ortholog analyses"
 
@@ -700,7 +720,7 @@ process setOrthologAnalysis {
     fi 
 
     while read -r species1 species2 || [ -n "\${species1}" ]; do
-        if ksrates check-ortholog-db ${config_args} \${species1} \${species2} > /dev/null 2>&1; then
+        if ks_db_check ksrates check-ortholog-db ${config_args} \${species1} \${species2}; then
             # Already fully present in the peak/Ks-list databases - skip both wgdOrthologs (BLAST+codeml, expensive)
             # and estimatePeaks entirely. This is checked before the local-disk check below,
             # so a pair already in the database never gets recomputed just because this particular
@@ -990,22 +1010,25 @@ process doRateAdjustment {
     script:
     logProcessInfo(task, speciesLabel="", printIndex=true)
     """
+    ${ks_db_check_fn}
     echo ""
+    processDir=\${PWD}
+    cd ${PWD}
 
     # A data type counts as available either as a local TSV file (just produced by wgdParalogs
-    # in this run) or already present in the paralog Ks database (if enabled) - see the
+    # in this run) or already present in the Ks database (if enabled) - see the
     # equivalent check in setParalogAnalysis.
 
     missing_paranome=false
-    if [ ${paranome} = "yes" ] && [ ! -s ${PWD}/paralog_distributions/wgd_${species}/${species}.ks.tsv ] && ! ksrates check-paralog-db ${config_args} --type paranome > /dev/null 2>&1; then
+    if [ ${paranome} = "yes" ] && [ ! -s ${PWD}/paralog_distributions/wgd_${species}/${species}.ks.tsv ] && ! ks_db_check ksrates check-paralog-db ${config_args} --type paranome; then
         missing_paranome=true
     fi
     missing_anchorpairs=false
-    if [ ${colinearity} = "yes" ] && [ ! -s ${PWD}/paralog_distributions/wgd_${species}/${species}.ks_anchors.tsv ] && ! ksrates check-paralog-db ${config_args} --type anchors > /dev/null 2>&1; then
+    if [ ${colinearity} = "yes" ] && [ ! -s ${PWD}/paralog_distributions/wgd_${species}/${species}.ks_anchors.tsv ] && ! ks_db_check ksrates check-paralog-db ${config_args} --type anchors; then
         missing_anchorpairs=true
     fi
     missing_recret=false
-    if [ ${recret} = "yes" ] && [ ! -s ${PWD}/paralog_distributions/wgd_${species}/${species}.ks_recret_top${recret_top}.tsv ] && ! ksrates check-paralog-db ${config_args} --type recret > /dev/null 2>&1; then
+    if [ ${recret} = "yes" ] && [ ! -s ${PWD}/paralog_distributions/wgd_${species}/${species}.ks_recret_top${recret_top}.tsv ] && ! ks_db_check ksrates check-paralog-db ${config_args} --type recret; then
         missing_recret=true
     fi
 
@@ -1021,9 +1044,6 @@ process doRateAdjustment {
         echo "Reciprocal retention data not yet available; skipping rate-adjustment"
         exit 0
     fi
-
-    processDir=\${PWD}
-    cd ${PWD}
 
     echo "NF internal work directory for [doRateAdjustment (${task.index})] process:\n\${processDir}\n" >> ${logs_folder}/${logs_names["doRateAdjustment"]}
 

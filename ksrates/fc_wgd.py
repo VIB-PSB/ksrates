@@ -44,7 +44,8 @@ _TMP_OF = '{}.of_tmp'
 
 def ks_paralogs(species_name, cds_fasta, base_dir='.', eval_cutoff=1e-10, inflation_factor=2.0, aligner='muscle',
                 min_msa_length=100, codeml='codeml', codeml_times=1, pairwise=False, preserve=False,
-                max_gene_family_size=200, weighting_method='fasttree', n_threads=1, overwrite=False, logging_level="INFO"):
+                max_gene_family_size=200, weighting_method='fasttree', n_threads=1, overwrite=False, logging_level="INFO",
+                skip_rule=None):
     """
     Modified from wgd_cli.py
 
@@ -60,6 +61,8 @@ def ks_paralogs(species_name, cds_fasta, base_dir='.', eval_cutoff=1e-10, inflat
     :param codeml_times: number of times to iteratively perform codeml ML estimation of Ks
     :param pairwise: run in pairwise mode
     :param max_gene_family_size: maximum size of a gene family to be included in analysis
+    :param skip_rule: wgd_ksrates.ks_distribution.FamilySkipRule, or None: gene families 
+           whose alignment has too few gap-free codon columns are not given to codeml
     :param weighting_method: weighting method (fasttree, phyml or alc)
     :param n_threads: number of threads to use
     :param overwrite: overwrite existing results
@@ -225,7 +228,7 @@ def ks_paralogs(species_name, cds_fasta, base_dir='.', eval_cutoff=1e-10, inflat
                                           output_dir=output_dir, codeml_path=codeml, times=codeml_times, aligner=aligner,
                                           ignore_prefixes=False, min_length=min_msa_length, pairwise=pairwise,
                                           max_gene_family_size=max_gene_family_size, method=weighting_method,
-                                          preserve=preserve, n_threads=n_threads, logging_level=logging_level)
+                                          preserve=preserve, n_threads=n_threads, logging_level=logging_level, skip_rule=skip_rule)
         if os.path.exists(tmp_ks_paralogs):
             logging.error(f'tmp directory {tmp_ks_paralogs} still exists after analysis, '
                           f'paralog Ks data may be incomplete and will not be written to paralog Ks file!')
@@ -248,7 +251,7 @@ def ks_paralogs_rec_ret(species_name, cds_fasta, latin_name, custom_recret_gfs, 
                         max_extra_original_genes_in_new_gfs=15, min_common_old_genes_in_new_gfs=3,
                         base_dir='.', aligner='muscle', min_msa_length=100, codeml='codeml', codeml_times=1, pairwise=False,
                         max_gene_family_size=200, weighting_method='fasttree', n_threads=1, overwrite=False, preserve=False,
-                        is_test_run=False, logging_level="INFO"):
+                        is_test_run=False, logging_level="INFO", skip_rule=None):
     """
     Modified from wgd_cli.py
 
@@ -276,6 +279,8 @@ def ks_paralogs_rec_ret(species_name, cds_fasta, latin_name, custom_recret_gfs, 
     :param codeml_times: number of times to iteratively perform codeml ML estimation of Ks
     :param pairwise: run in pairwise mode
     :param max_gene_family_size: maximum size of a gene family to be included in analysis
+    :param skip_rule: wgd_ksrates.ks_distribution.FamilySkipRule, or None: gene families
+           whose alignment has too few gap-free codon columns are not given to codeml
     :param weighting_method: weighting method (fasttree, phyml or alc)
     :param n_threads: number of threads to use
     :param overwrite: overwrite existing results
@@ -558,7 +563,7 @@ def ks_paralogs_rec_ret(species_name, cds_fasta, latin_name, custom_recret_gfs, 
                                           codeml_path=codeml, times=codeml_times, aligner=aligner,
                                           ignore_prefixes=False, min_length=min_msa_length, pairwise=pairwise,
                                           max_gene_family_size=max_gene_family_size, method=weighting_method,
-                                          preserve=preserve, n_threads=n_threads, logging_level=logging_level)
+                                          preserve=preserve, n_threads=n_threads, logging_level=logging_level, skip_rule=skip_rule)
 
         if os.path.exists(tmp_ks_paralogs):
             logging.error(f'tmp directory {tmp_ks_paralogs} still exists after analysis, '

@@ -38,7 +38,7 @@ The analysis configuration file is composed of a first section defining the spec
     peak_database_path = ortholog_peak_db.tsv
     ks_list_database_path = ortholog_ks_list_db.tsv
 
-    ks_list_paralog_database_path = paralog_ks_server_address.txt
+    ks_database_server_address_path = ks_database_server_address.txt
 
 
     [ANALYSIS SETTING]
@@ -74,9 +74,10 @@ The [SPECIES] section includes:
 * **latin_names**: list of associations between each of the species names in parameter `newick_tree` and their scientific names, which will be used in legends and plot titles. The association is made with a colon (':').
 * **fasta_filenames**: list of associations between each of the species names in parameter `newick_tree` and the corresponding paths to their FASTA files. The association is made with a colon (':').
 * **gff_filename**: association between the focal species as named in parameter `focal_species` and the path to the GFF3 file for the focal species (only required for collinearity analysis). The association is made with a colon (':').
-* **peak_database_path**: path to the database of ortholog *K*:sub:`S` distribution peaks. If the file is not present yet, it will be automatically generated.
-* **ks_list_database_path**: path to the database of ortholog *K*:sub:`S` lists. If the file is not present, it will be automatically generated.
-* **ks_list_paralog_database_path**: path to the address file of the paralog *K*:sub:`S` database server, pointing to where to reach it over the network (see :ref:`paralog_ks_database`).
+* **peak_database_path**: path to the TSV database file storing the ortholog *K*:sub:`S` distribution peaks. If the file is not present yet, it will be automatically generated.
+* **ks_list_database_path**: path to the TSV database file storing the ortholog *K*:sub:`S` lists. If the file is not present, it will be automatically generated.
+* **ks_database_server_address_path**: path to the address file of the *K*:sub:`S` database server, an SQL database served by a running sqld server that stores both paralog and ortholog *K*:sub:`S` data. Only used if ``use_ks_database_server`` is enabled; in that case ortholog data are read from the database instead of from the two ortholog TSV files above. See :ref:`ks_database`.
+
 
 The [ANALYSIS SETTING] section includes:
 
@@ -241,12 +242,15 @@ The following can be used as a template (default values)::
     max_mixture_model_components = 5
     max_mixture_model_ks = 5
     max_gene_family_size = 200
+    min_gapfree_columns = 0
+    big_family_size = 100
+    min_gapfree_columns_big_family = 0
     distribution_peak_estimate = mode
     min_ks_anchor_pairs = 0.05
     num_reciprocally_retained_gfs = 2000
     use_bottom_gfs_instead_of_top = no
     use_original_orthomcl_version = no
-    use_paralog_ks_database = no
+    use_ks_database_server = no
 
 * **logging_level**: the lowest logging/verbosity level of messages printed to the console/logs (increasing severity levels: *notset*, *debug*, *info*, *warning*, *error*, *critical*). Messages less severe than *level* will be ignored; *notset* causes all messages to be processed. [Default: "info"]
 * **preserve_ks_tmp_files**: whether to preserve or not the intermediate files generated during the paralogs *K*:sub:`S` and ortholog *K*:sub:`S` pipelines (options: "yes" and "no"). [Default: "no"]
@@ -258,9 +262,12 @@ The following can be used as a template (default values)::
 * **max_mixture_model_components**: maximum number of components considered during execution of the mixture models. [Default: 5]
 * **max_mixture_model_ks**: upper limit for the *K*:sub:`S` range in which the exponential-lognormal and lognormal-only mixture models are performed. [Default: 5]
 * **max_gene_family_size**: maximum number of members that any paralog gene family can have to be included in *K*:sub:`S` estimation. Large gene families increase the run time and are often composed of unrelated sequences grouped together by shared protein domains or repetitive sequences. But this is not always the case, so one may want to check manually the gene families in file ``paralog_distributions/wgd_species/species.mcl.tsv`` and increase (or even decrease) this number. [Default: 200]
+* **min_gapfree_columns**: minimum number of gap-free codon columns that the alignment of a paralog gene family needs to be analysed with codeml (codeml uses only the columns without gaps or ambiguity characters, which are the ones counted here). Families with fewer columns are skipped and listed in the log with the reason, together with the families that gave no result. Families with very few columns can only give *K*:sub:`S` values based on a handful of codons, and codeml can need a very long time for them (hours for a family with one column and a few dozen genes). A value of 2 skips the families with 0 or 1 column. [Default: 0, no family is skipped]
+* **big_family_size**: number of genes from which a gene family is considered big for the parameter *min_gapfree_columns_big_family*. [Default: 100]
+* **min_gapfree_columns_big_family**: like *min_gapfree_columns*, but only for the gene families with at least *big_family_size* genes. Big families with few gap-free columns have very many gene pairs and are the ones that can keep codeml busy for days. For example, with *big_family_size* = 100 and a value of 4, the families with 100 genes or more and 3 columns or fewer are skipped. [Default: 0, no family is skipped]
 * **distribution_peak_estimate**: the statistical method used to obtain a single ortholog *K*:sub:`S` estimate for the divergence time of a species pair from its ortholog distribution or to obtain a single paralog *K*:sub:`S` estimate from an anchor *K*:sub:`S` cluster or from lognormal components in mixture models (options: "mode" or "median"). [Default: "mode"]
 * **min_ks_anchor_pairs**: lower limit for the *K*:sub:`S` range used to build the anchor pair *K*:sub:`S` distribution. By default, *K*:sub:`S` values smaller than 0.05 in the anchor distribition are ignored (weighted as 0), in order to remove noise at recent *K*:sub:`S` age that could be mistakenly interpreted as a very recent WGM. Set this value to 0 to instead keep all *K*:sub:`S` values when you are actually interested in WGMs with very young age. [Default: 0.05]
 * **num_reciprocally_retained_gfs**: number of gene families at the top of the reciprocal retention ranking that will be used to build the related *K*:sub:`S` distribution. [Default: 2000]
 * **use_bottom_gfs_instead_of_top**: use the bottom-ranked reciprocally retained GFs instead of the top-ranked ones (not recommended; only meant for comparison purposes with top-ranked GFs) 
 * **use_original_orthomcl_version**: allows compatibility with the original OrthoMCL v1.4 version; by default it is used a modified faster version called OrthoMCLight. [Default: "no"]
-* **use_paralog_ks_database**: also store the *K*:sub:`S` data into the shared paralog *K*:sub:`S` database (see :ref:`paralog_ks_database`), in addition to the standard *K*:sub:`S` TSV files; useful to centralize multiple analyses
+* **use_ks_database_server**: store and read the paralog and ortholog *K*:sub:`S` data in the *K*:sub:`S` database server (see :ref:`ks_database`) instead of reading them from plain *K*:sub:`S` TSV files; the ortholog TSV files are then no longer updated (use ``ksrates inspect-ks-db`` to export the database content as TSV files in the same format); useful to let multiple independent analyses safely access the same data simultaneously and to centralize data from multiple analyses. [Default: "no"]

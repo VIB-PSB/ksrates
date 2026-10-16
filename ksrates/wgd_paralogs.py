@@ -5,8 +5,10 @@ import datetime
 import ksrates.fc_configfile as fcConf
 import ksrates.fc_check_input as fcCheck
 import ksrates.fc_wgd as fc_wgd
-import ksrates.fc_consolidate_paralog_ks as fc_consolidate_paralog_ks
+import ksrates.fc_ks_database_utilities as fcKsDbUtil
+import ksrates.fc_ks_database_paralog as fcKsDbPara
 from ksrates.utils import init_logging
+from wgd_ksrates.ks_distribution import FamilySkipRule
 
 def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, parsed_homology_table, test):
     # INPUT
@@ -19,10 +21,17 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
 
     latin_name = config.get_latin_names()[species]
     max_gene_family_size = config.get_max_gene_family_size()
+    skip_rule = FamilySkipRule(config.get_min_gapfree_columns(), config.get_big_family_size(),
+                               config.get_min_gapfree_columns_big_family())
     paranome = config.get_paranome()
     colinearity = config.get_colinearity()
     reciprocal_retention = config.get_reciprocal_retention()
-    ks_list_paralog_db_path = config.get_paralog_ks_database()
+    ks_db_path = config.get_ks_database_server()
+
+    if skip_rule.min_columns > 0 or skip_rule.min_columns_big_family > 0:
+        logging.info(f"Gene families will not be analysed with codeml if their alignment has fewer than "
+                     f"{skip_rule.min_columns} gap-free codon columns, or fewer than {skip_rule.min_columns_big_family} "
+                     f"if they have at least {skip_rule.big_family_size} genes (a limit of 0 is off)")
 
     num_gfs = config.get_num_reciprocal_retention_gfs(reciprocal_retention) # Number of top GFs to be used
     bottom = config.use_bottom_gfs_instead_of_top(reciprocal_retention) # Use actually the BOTTOM GFs instead of the top ones (number of bottom GFs remains defined by "top" variable)
@@ -31,12 +40,16 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
     max_extra_original_genes_in_new_gfs = config.get_max_extra_original_genes_in_new_gfs(reciprocal_retention)
     min_common_old_genes_in_new_gfs = 3 # TODO: check its use!
     use_original_orthomcl_version = config.get_orthomcl_version() # Whether to use the original or edited OrthoMCL version (default: edited)
-    use_paralog_ks_database = config.use_paralog_ks_database() # Whether to also copy the Ks data into the shared paralog Ks database (default: no)
+    use_ks_database_server = config.use_ks_database_server() # Whether to also copy the Ks data into the shared Ks database (default: no)
 
     if not paranome and not colinearity and not reciprocal_retention:
         logging.error('At least one of the "paranome", "collinearity" or "reciprocal retention" parameters in the configuration file needs to be set to "yes".')
         logging.error("Exiting.")
         sys.exit(1)
+
+    if use_ks_database_server:
+        # Fail fast, before the long wgd computations, if the requested database cannot be used
+        fcKsDbUtil.initialize_or_exit(ks_db_path)
 
     logging.info(f"Checking if sequence data files exist and if sequence IDs are compatible with wgd pipeline...")
     # Will exit if FASTA or GFF files are missing or empty or if GFF feature/attribute are missing
@@ -87,7 +100,7 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
     if not os.path.isdir(paralog_dists_dir):
         logging.info(f"Creating directory [{paralog_dists_dir}]")
         logging.info("")
-        os.makedirs(paralog_dists_dir)
+        os.makedirs(paralog_dists_dir, exist_ok=True)  # exist_ok: several paralogs-ks jobs can start at the same time in one directory
 
     # -----------------------------------------------------------------------------
 
@@ -99,7 +112,7 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
         logging.info("Running wgd whole-paranome Ks pipeline...")
         fc_wgd.ks_paralogs(species, species_fasta_file, max_gene_family_size=max_gene_family_size,
                         base_dir=paralog_dists_dir, n_threads=n_threads, logging_level=logging_level,
-                        preserve=preserve)
+                        preserve=preserve, skip_rule=skip_rule)
         logging.info(datetime.datetime.today().ctime())
         logging.info("")
 
@@ -128,32 +141,30 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
                                    base_dir=paralog_dists_dir,
                                    max_gene_family_size=max_gene_family_size,
                                    n_threads=n_threads, overwrite=False, preserve=preserve,
-                                   is_test_run=test, logging_level=logging_level)
+                                   is_test_run=test, logging_level=logging_level, skip_rule=skip_rule)
         logging.info(datetime.datetime.today().ctime())
         logging.info("")
 
     # CONSOLIDATING PARALOG Ks VALUES INTO DATABASE (if database is configured)
-    if use_paralog_ks_database:
-        if fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path):
-            logging.info("---")
-            logging.info(f"Consolidating paralog Ks lists into database [{ks_list_paralog_db_path}]")
-            # paranome_enabled covers both "paranome" and "colinearity": ks_paralogs() runs
-            # whenever either is requested, since colinearity depends on its output.
-            fc_consolidate_paralog_ks.consolidate_paralog_ks_lists(species, latin_name, ks_list_paralog_db_path,
-                                                                    paranome_enabled=paranome or colinearity,
-                                                                    anchors_enabled=colinearity,
-                                                                    reciprocal_retention_enabled=reciprocal_retention,
-                                                                    num_gfs=num_gfs, rank_type=rank_type, bottom=bottom)
+    if use_ks_database_server:
+        # A failure at any point below stops the analysis (it raises KsDatabaseError): the job must not
+        # look successful while leaving nothing in the database, or later steps would silently recompute.
+        logging.info("---")
+        logging.info(f"Consolidating paralog Ks lists into database [{ks_db_path}]")
+        # paranome_enabled covers both "paranome" and "colinearity": ks_paralogs() runs
+        # whenever either is requested, since colinearity depends on its output.
+        fcKsDbPara.consolidate_paralog_ks_lists(species, latin_name, ks_db_path,
+                                            paranome_enabled=paranome or colinearity,
+                                            anchors_enabled=colinearity,
+                                            reciprocal_retention_enabled=reciprocal_retention,
+                                            num_gfs=num_gfs, rank_type=rank_type, bottom=bottom)
 
-            # Also store the i-ADHoRe output files just generated by the colinearity pipeline, so
-            # cluster_anchor_ks.py can later read them from the database instead of from disk.
-            if colinearity:
-                logging.info("  - Storing i-ADHoRe output files into database")
-                iadhore_texts = fc_consolidate_paralog_ks.extract_anchor_iadhore_files(species)
-                fc_consolidate_paralog_ks.write_anchor_iadhore_files(latin_name, iadhore_texts, ks_list_paralog_db_path)
-        else:
-            logging.warning(f"Could not use paralog Ks database [{ks_list_paralog_db_path}].")
-            logging.warning("Skipping.")
+        # Also store the i-ADHoRe output files just generated by the colinearity pipeline, so
+        # cluster_anchor_ks.py can later read them from the database instead of from disk.
+        if colinearity:
+            logging.info("  - Storing i-ADHoRe output files into database")
+            iadhore_texts = fcKsDbPara.extract_anchor_iadhore_files(species)
+            fcKsDbPara.write_anchor_iadhore_files(latin_name, iadhore_texts, ks_db_path)
 
     logging.info("")
     logging.info("Done")
