@@ -11,7 +11,17 @@ Reusing previously computed *K*:sub:`S` data
 Paralog and ortholog *K*:sub:`S` data can be stored in a self-hosted `sqld <https://github.com/tursodatabase/libsql>`__
 database, instead of existing only in local output TSV files (see :ref:`ks_estimate_output_wgd` and the ortholog TSV databases in :ref:`other_output`).
 This is particularly useful to centralize *K*:sub:`S` data across multiple independent *ksrates* analyses,
-which can then also read and write it simultaneously.
+which can then all use it and add to it.
+
+    .. note::
+    **Starting several analyses with the same database.** Each analysis checks at its start which species and species
+    pairs are already stored, and computes only the missing ones. An analysis therefore reuses the data of another
+    one only if that data was stored before it started. To benefit the most from the shared database, start the first
+    analysis, wait until its paralog and ortholog *K*:sub:`S` estimation steps have finished, and only then start the
+    next one. Analyses started together do not see each other's data: a species or pair needed by several of them is
+    computed by each, and the last to finish overwrites the others' value. This does not corrupt the database and the
+    results stay valid, but the computation is repeated.
+
 
 An analysis layout may consist of several independent directories, each running *ksrates* on
 its own dataset. Without a shared database, each dataset computes and stores its *K*:sub:`S` data independently -
