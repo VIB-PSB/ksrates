@@ -1,9 +1,9 @@
-.. _`paralog_ks_database`:
+.. _`ks_database`:
 
 *K*:sub:`S` database
 ********************
 
-.. _`paralog_ks_database_overview`:
+.. _`ks_database_overview`:
 
 Reusing previously computed *K*:sub:`S` data
 ============================================
@@ -43,7 +43,7 @@ the workflow attempts to compute only that new type and reuse the rest.
     processed, where possible.
 
 
-.. _`paralog_ks_database_setup`:
+.. _`ks_database_setup`:
 
 Setting up the database server
 ==============================
@@ -101,7 +101,7 @@ Restarting the server
 The server process and the data it serves are two separate things. Cancelling or losing the
 server job (e.g. it hits a walltime limit) does not delete the database data. What goes stale is the address file, since it recorded a host and port that no longer has a server listening on it.
 
-To pick the database back up, relaunch the server the same way (see :ref:`paralog_ks_database_setup`), with the same ``--location``. It reuses the existing ``ks_database_sqld_data/``
+To pick the database back up, relaunch the server the same way (see :ref:`ks_database_setup`), with the same ``--location``. It reuses the existing ``ks_database_sqld_data/``
 (so no data is lost) and the existing ``ks_database_sqld_keys/`` (so previously-issued tokens keep
 working), and simply writes a fresh ``host:port`` to the address file. Every dataset's configuration file keeps pointing at the same address file path, so no reconfiguration is needed.
 

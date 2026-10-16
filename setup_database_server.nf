@@ -3,7 +3,7 @@
 /*
  * Launches the shared Ks database server (sqld) via "ksrates launch-ks-database-server".
  * Never finishes on success - execs into sqld and runs indefinitely - so submit this once, as its
- * own long-running job separate from any analysis run. See docs/paralog_ks_database.rst,
+ * own long-running job separate from any analysis run. See docs/ks_database.rst,
  * "Setting up the database server", for full setup instructions.
  *
  * Override executor.name back to 'local' via -process.executor if nextflow.config sets it to a
