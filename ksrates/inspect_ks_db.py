@@ -21,13 +21,13 @@ def export_paralog_tsv(db_path, species_filter=None):
 	"""
 	Dump the full paralog content of the Ks database to disk, next to the address file itself. Two
 	kinds of output are produced, both named from the address file's basename with the current
-	timestamp appended (e.g. "ks_database_server_address.txt" -> "ks_database_server_address_YYYYMMDD_HHMMSS.tsv"):
+	timestamp appended (e.g. "ks_database_server_address.txt" -> "ks_database_server_address_paralog_ks_YYYYMMDD_HHMMSS.tsv"):
 	- a single flat TSV file, one row per gene pair (not per species): columns are latin_name,
 	  analysis_type, Paralog1, Paralog2, Family, Node, Ks, AlignmentCoverage, AlignmentIdentity,
 	  AlignmentLength.
 	- the raw i-ADHoRe output files (anchorpoints.txt, multiplicons.txt, segments.txt,
 	  list_elements.txt, multiplicon_pairs.txt) stored per species, written back out one subdirectory
-	  per species (named after its latin name) under a matching "..._iadhore_files" directory.
+	  per species (named after its latin name) under a matching "..._paralog_iadhore_files_YYYYMMDD_HHMMSS" directory.
 	Useful for inspecting or analyzing the underlying data outside of ksrates (e.g. in Excel, pandas,
 	awk), since the database's blobs and text columns themselves aren't directly readable.
 
@@ -41,8 +41,8 @@ def export_paralog_tsv(db_path, species_filter=None):
 
 	db_base = os.path.splitext(os.path.basename(db_path))[0]
 	timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-	output_tsv_path = os.path.join(os.path.dirname(db_path), f"{db_base}_{timestamp}.tsv")
-	iadhore_dir = os.path.join(os.path.dirname(db_path), f"{db_base}_{timestamp}_iadhore_files")
+	output_tsv_path = os.path.join(os.path.dirname(db_path), f"{db_base}_paralog_ks_{timestamp}.tsv")
+	iadhore_dir = os.path.join(os.path.dirname(db_path), f"{db_base}_paralog_iadhore_files_{timestamp}")
 
 	# Fetch species names first to avoid fetching all large BLOBs at once (exceeds websocket message limit).
 	with fcKsDbUtil.connection(db_path) as client:
@@ -138,7 +138,7 @@ def list_paralog_species(db_path, species_filter=None):
 
 	db_base = os.path.splitext(os.path.basename(db_path))[0]
 	timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-	output_tsv_path = os.path.join(os.path.dirname(db_path), f"{db_base}_species_list_{timestamp}.tsv")
+	output_tsv_path = os.path.join(os.path.dirname(db_path), f"{db_base}_paralog_species_list_{timestamp}.tsv")
 
 	with fcKsDbUtil.connection(db_path) as client:
 		iadhore_presence = " AND ".join(f"{col} IS NOT NULL" for col in _IADHORE_COLUMNS)
@@ -182,7 +182,7 @@ def export_ortholog_tsvs(db_path, pair_filter=None):
 	the exact format of the legacy ortholog TSV databases (peak_database_path and ks_list_database_path), so that
 	a dump can be used as a drop-in replacement of those files. Both are named from the address file's basename
 	with the current timestamp appended (e.g. "ks_database_server_address.txt" ->
-	"ks_database_server_address_ortholog_peaks_YYYYMMDD_HHMMSS.tsv" and "..._ortholog_ks_lists_YYYYMMDD_HHMMSS.tsv").
+	"ks_database_server_address_ortholog_peaks_YYYYMMDD_HHMMSS.tsv" and "..._ortholog_ks_YYYYMMDD_HHMMSS.tsv").
 
 	:param db_path: path to the sqld server address file (see fcKsDbUtil.connection)
 	:param pair_filter: if given, only export the species pairs whose key (latin names joined by "_")
@@ -193,7 +193,7 @@ def export_ortholog_tsvs(db_path, pair_filter=None):
 	db_base = os.path.splitext(os.path.basename(db_path))[0]
 	timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 	peaks_path = os.path.join(os.path.dirname(db_path), f"{db_base}_ortholog_peaks_{timestamp}.tsv")
-	ks_lists_path = os.path.join(os.path.dirname(db_path), f"{db_base}_ortholog_ks_lists_{timestamp}.tsv")
+	ks_lists_path = os.path.join(os.path.dirname(db_path), f"{db_base}_ortholog_ks_{timestamp}.tsv")
 
 	peaks = fcKsDbOrtho.read_all_peaks(db_path)
 	if pair_filter:
