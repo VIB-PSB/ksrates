@@ -86,7 +86,7 @@ class PopulateInspectOrthologTest(unittest.TestCase):
         result = self.runner.invoke(cli, ["inspect-ks-db", self.db, "--type", "ortholog"], catch_exceptions=False)
         self.assertEqual(result.exit_code, 0, result.output)
         peaks_dump = glob.glob(os.path.join(self.tmpdir.name, "ks_database_server_address_ortholog_peaks_*.tsv"))[0]
-        ks_dump = glob.glob(os.path.join(self.tmpdir.name, "ks_database_server_address_ortholog_ks_lists_*.tsv"))[0]
+        ks_dump = glob.glob(os.path.join(self.tmpdir.name, "ks_database_server_address_ortholog_ks_*.tsv"))[0]
         pandas.testing.assert_frame_equal(pandas.read_csv(peaks_dump, sep="\t", index_col=0),
                                           pandas.read_csv(self.peak_tsv, sep="\t", index_col=0))
         # Ks lists: same legacy format, readable by the same code that reads the legacy file
