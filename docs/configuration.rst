@@ -250,6 +250,7 @@ The following can be used as a template (default values)::
     num_reciprocally_retained_gfs = 2000
     use_bottom_gfs_instead_of_top = no
     use_original_orthomcl_version = no
+    remove_reciprocal_retention_orthomcl_files = no
     use_ks_database_server = no
 
 * **logging_level**: the lowest logging/verbosity level of messages printed to the console/logs (increasing severity levels: *notset*, *debug*, *info*, *warning*, *error*, *critical*). Messages less severe than *level* will be ignored; *notset* causes all messages to be processed. [Default: "info"]
@@ -270,4 +271,5 @@ The following can be used as a template (default values)::
 * **num_reciprocally_retained_gfs**: number of gene families at the top of the reciprocal retention ranking that will be used to build the related *K*:sub:`S` distribution. [Default: 2000]
 * **use_bottom_gfs_instead_of_top**: use the bottom-ranked reciprocally retained GFs instead of the top-ranked ones (not recommended; only meant for comparison purposes with top-ranked GFs) 
 * **use_original_orthomcl_version**: allows compatibility with the original OrthoMCL v1.4 version; by default it is used a modified faster version called OrthoMCLight. [Default: "no"]
+* **remove_reciprocal_retention_orthomcl_files**: remove the large intermediate files of the reciprocal retention analysis (e.g. diamond table, OrthoMCL workdir). [Default: "no"]
 * **use_ks_database_server**: store and read the paralog and ortholog *K*:sub:`S` data in the *K*:sub:`S` database server (see :ref:`ks_database`) instead of reading them from plain *K*:sub:`S` TSV files; the ortholog TSV files are then no longer updated (use ``ksrates inspect-ks-db`` to export the database content as TSV files in the same format); useful to let multiple independent analyses safely access the same data simultaneously and to centralize data from multiple analyses. [Default: "no"]

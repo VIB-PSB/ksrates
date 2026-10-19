@@ -1064,3 +1064,79 @@ def reconstruct_top_gfs(top_or_bottom, species_name, output_mcl_path, output_mcl
     
     # For transparency, generate analogous file of reconstructed GFs (MCL-like format) including GF IDs and listing also the singletons
     focal_rec_ret_gfs_df_sorted.to_csv(output_mcl_path_with_gf_ids, sep="\t", header=None)
+
+
+# Name of the OrthoMCL working directory, which OrthoMCL names after the date of the run, e.g. Sep_28 or Sep_28_2
+_ORTHOMCL_WORKDIR_PATTERN = re.compile(r"[A-Z][a-z]{2}_\d{1,2}(_\d+)?")
+
+
+def remove_orthomcl_intermediate_files(species_name, orthomcl_outdir_focal, focal_species_aa_filepath,
+                                       orthomcl_output_renamed_path, protected_paths=()):
+    """
+    Removes the large intermediate files of the reciprocal retention pipeline, once the reciprocally retained GFs
+    have been reconstructed. What is kept in the OrthoMCL directory of the focal species:
+    - the OrthoMCL orthogroups [<species>_original_37.orthomcl.out]: with it, the pipeline skips the whole OrthoMCL
+      part and can reconstruct the GFs again for another number of top GFs;
+    - the tables of the matched GFs [<species>_matched_*.tsv] and the reconstructed GFs [<species>_rec_ret_*.mcl.tsv];
+    - the OrthoMCL parameter log, moved out of the OrthoMCL working directory [<species>_orthomcl_parameter.log].
+    What is removed: the diamond table and database, the merged and focal FASTA files, all.gg and the OrthoMCL
+    working directory (named after the date of the run, e.g. Sep_28), which holds the BPO file.
+    Nothing is removed if the OrthoMCL orthogroups file is missing, since the working directory holds its original.
+
+    :param species_name: name or ID of the focal species
+    :param orthomcl_outdir_focal: OrthoMCL directory of the focal species (reciprocal_retention/orthomcl)
+    :param focal_species_aa_filepath: path to the translated FASTA of the focal species
+    :param orthomcl_output_renamed_path: path to the OrthoMCL orthogroups file that is kept
+    :param protected_paths: paths that must not be removed (e.g. a parsed homology table given by the user)
+    :return: number of bytes freed
+    """
+    if not os.path.isfile(orthomcl_output_renamed_path) or os.path.getsize(orthomcl_output_renamed_path) == 0:
+        logging.warning(f"OrthoMCL orthogroup file [{os.path.basename(orthomcl_output_renamed_path)}] is missing or empty: "
+                        f"the OrthoMCL intermediate files are not removed")
+        return 0
+    protected = {os.path.realpath(path) for path in protected_paths if path}
+
+    def size_of(path):
+        if os.path.isdir(path):
+            return sum(os.path.getsize(os.path.join(dirpath, name)) for dirpath, _, names in os.walk(path) for name in names)
+        return os.path.getsize(path)
+
+    to_remove = []
+    # OrthoMCL working directories (one per OrthoMCL run): keep only the parameter log
+    for name in sorted(os.listdir(orthomcl_outdir_focal)):
+        workdir = os.path.join(orthomcl_outdir_focal, name)
+        if not (os.path.isdir(workdir) and _ORTHOMCL_WORKDIR_PATTERN.fullmatch(name)):
+            continue
+        if not (os.path.isfile(os.path.join(workdir, "parameter.log")) or os.path.isdir(os.path.join(workdir, "tmp"))):
+            continue  # not an OrthoMCL working directory
+        parameter_log = os.path.join(workdir, "parameter.log")
+        if os.path.isfile(parameter_log):
+            destination = os.path.join(orthomcl_outdir_focal, f"{species_name}_orthomcl_parameter.log")
+            if os.path.exists(destination):
+                destination = os.path.join(orthomcl_outdir_focal, f"{species_name}_orthomcl_parameter_{name}.log")
+            shutil.move(parameter_log, destination)
+            logging.info(f"Moved the OrthoMCL parameter log to [{os.path.basename(destination)}]")
+        to_remove.append(workdir)
+    # Files made by the diamond and OrthoMCL steps
+    for filename in (f"{species_name}_original_37.dmd.tsv", f"{species_name}_original_37.dmnd",
+                     f"{species_name}_original_37.faa", "all.gg"):
+        path = os.path.join(orthomcl_outdir_focal, filename)
+        if os.path.isfile(path):
+            to_remove.append(path)
+    if os.path.isfile(focal_species_aa_filepath) and os.path.dirname(os.path.abspath(focal_species_aa_filepath)) == os.path.abspath(orthomcl_outdir_focal):
+        to_remove.append(focal_species_aa_filepath)
+
+    freed = 0
+    for path in to_remove:
+        if os.path.realpath(path) in protected:
+            logging.info(f"Not removing [{os.path.basename(path)}]: it was provided by the user")
+            continue
+        freed += size_of(path)
+        if os.path.isdir(path):
+            shutil.rmtree(path)
+        else:
+            os.remove(path)
+        logging.debug(f"Removed [{path}]")
+    logging.info(f"Removed the OrthoMCL intermediate files of [{species_name}] ({freed / 1e9:.1f} GB freed); "
+                 f"kept the orthogroups, the matched and reconstructed GFs and the parameter log")
+    return freed

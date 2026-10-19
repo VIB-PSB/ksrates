@@ -40,6 +40,7 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
     max_extra_original_genes_in_new_gfs = config.get_max_extra_original_genes_in_new_gfs(reciprocal_retention)
     min_common_old_genes_in_new_gfs = 3 # TODO: check its use!
     use_original_orthomcl_version = config.get_orthomcl_version() # Whether to use the original or edited OrthoMCL version (default: edited)
+    remove_orthomcl_files = config.get_remove_reciprocal_retention_orthomcl_files(reciprocal_retention) # Whether to remove the large OrthoMCL intermediate files at the end (default: no)
     use_ks_database_server = config.use_ks_database_server() # Whether to also copy the Ks data into the shared Ks database (default: no)
 
     if not paranome and not colinearity and not reciprocal_retention:
@@ -141,7 +142,8 @@ def wgd_paralogs(config_file, expert_config_file, n_threads, custom_recret_gfs, 
                                    base_dir=paralog_dists_dir,
                                    max_gene_family_size=max_gene_family_size,
                                    n_threads=n_threads, overwrite=False, preserve=preserve,
-                                   is_test_run=test, logging_level=logging_level, skip_rule=skip_rule)
+                                   is_test_run=test, logging_level=logging_level, skip_rule=skip_rule,
+                                   remove_orthomcl_files=remove_orthomcl_files)
         logging.info(datetime.datetime.today().ctime())
         logging.info("")
 

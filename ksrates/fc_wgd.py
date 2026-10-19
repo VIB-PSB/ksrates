@@ -251,7 +251,7 @@ def ks_paralogs_rec_ret(species_name, cds_fasta, latin_name, custom_recret_gfs, 
                         max_extra_original_genes_in_new_gfs=15, min_common_old_genes_in_new_gfs=3,
                         base_dir='.', aligner='muscle', min_msa_length=100, codeml='codeml', codeml_times=1, pairwise=False,
                         max_gene_family_size=200, weighting_method='fasttree', n_threads=1, overwrite=False, preserve=False,
-                        is_test_run=False, logging_level="INFO", skip_rule=None):
+                        is_test_run=False, logging_level="INFO", skip_rule=None, remove_orthomcl_files=False):
     """
     Modified from wgd_cli.py
 
@@ -281,6 +281,8 @@ def ks_paralogs_rec_ret(species_name, cds_fasta, latin_name, custom_recret_gfs, 
     :param max_gene_family_size: maximum size of a gene family to be included in analysis
     :param skip_rule: wgd_ksrates.ks_distribution.FamilySkipRule, or None: gene families
            whose alignment has too few gap-free codon columns are not given to codeml
+    :param remove_orthomcl_files: remove the large intermediate files of the OrthoMCL pipeline once the reciprocally
+           retained GFs have been reconstructed (see fc_rec_ret_orthomcl.remove_orthomcl_intermediate_files)
     :param weighting_method: weighting method (fasttree, phyml or alc)
     :param n_threads: number of threads to use
     :param overwrite: overwrite existing results
@@ -528,6 +530,12 @@ def ks_paralogs_rec_ret(species_name, cds_fasta, latin_name, custom_recret_gfs, 
             fcRecRet_OMCL.reconstruct_top_gfs(top_or_bottom, species_name, output_mcl_path, output_mcl_path_with_gf_ids, 
                                             original_and_focal_genes_in_orthomcl_gfs, matched_orthomcl_gfs)
             logging.info("")
+
+            if remove_orthomcl_files:
+                focal_species_aa_filepath = os.path.join(orthomcl_outdir_focal, f"{os.path.splitext(os.path.basename(cds_fasta))[0]}.faa")
+                fcRecRet_OMCL.remove_orthomcl_intermediate_files(species_name, orthomcl_outdir_focal, focal_species_aa_filepath,
+                                                                 orthomcl_output_renamed_path, protected_paths=[parsed_homology_table])
+                logging.info("")
 
         # NOTE: The following two alternative methods to get the RecRet GFs are not implemented;
         #       however OrthoFinder might be integrated in the future.

@@ -16,5 +16,6 @@ min_gapfree_columns_big_family = 0
 num_reciprocally_retained_gfs = 2000
 use_bottom_gfs_instead_of_top = no
 use_original_orthomcl_version = no
+remove_reciprocal_retention_orthomcl_files = no
 min_ks_anchor_pairs = 0.05
 use_ks_database_server = no

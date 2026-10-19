@@ -1112,6 +1112,25 @@ class Configuration:
             use_original_orthomcl_version = False
         return use_original_orthomcl_version
 
+    def get_remove_reciprocal_retention_orthomcl_files(self, reciprocal_retention):
+        """
+        Checks whether "remove_reciprocal_retention_orthomcl_files" is requested in the expert configuration file.
+        If set to "yes", the large intermediate files of the reciprocal retention pipeline (diamond table, OrthoMCL
+        working directory, merged FASTA...) are removed once the reciprocally retained GFs have been reconstructed.
+        Default is "no", i.e. keeping them.
+
+        :param reciprocal_retention: whether the reciprocal retention analysis is requested
+        :return remove: boolean for removing (True) or keeping (False) the intermediate files
+        """
+        remove = False
+        if reciprocal_retention and self.expert_config is not None:
+            value = self.expert_config.get("EXPERT PARAMETERS", "remove_reciprocal_retention_orthomcl_files", fallback="no").lower()
+            if value not in ["yes", "no"]:
+                logging.warning(f'Unrecognized field in expert configuration file [remove_reciprocal_retention_orthomcl_files = {value}]. Please choose between "yes" and "no". Default choice will be applied [no]')
+            else:
+                remove = (value == "yes")
+        return remove
+
 
     def get_max_extra_original_genes_in_new_gfs(self, reciprocal_retention):
         """
