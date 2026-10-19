@@ -201,7 +201,7 @@ def ks_paralogs(species_name, cds_fasta, base_dir='.', eval_cutoff=1e-10, inflat
                         n_threads=n_threads)
 
         # remove temporary files
-        logging.info('Removing tmp directory')
+        logging.info('Removing BLAST tmp directory')
         shutil.rmtree(tmp_blast_paralogs)
 
     # get paranome (MCL)
@@ -726,7 +726,7 @@ def ks_orthologs(species1, species2, cds_fasta1, cds_fasta2, base_dir='.', eval_
         #                       output_dir, output_blast_file, eval_cutoff, n_threads)
 
         # remove temporary files
-        logging.info('Removing tmp directory')
+        logging.info('Removing BLAST tmp directory')
         shutil.rmtree(tmp_blast_orthologs)
 
     # get one-to-one orthologs (RBHs)

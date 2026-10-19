@@ -721,7 +721,7 @@ def ks_analysis_one_vs_one(
         os.rename(tmp_dir, tmp_dir_preserved)
         logging.info(f"Intermediate files for ortholog Ks estimate are preserved in {tmp_dir_preserved}")
     else:
-        logging.info('Removing tmp directory')
+        logging.info('Removing Ks tmp directory')
         shutil.rmtree(tmp_dir)
 
     return results_frame
@@ -829,7 +829,7 @@ def ks_analysis_paranome(
         os.rename(tmp_dir, tmp_dir_preserved)
         logging.info(f"Intermediate files for paralog Ks estimate were preserved in {tmp_dir_preserved}")
     else:
-        logging.info('Removing tmp directory')
+        logging.info('Removing Ks tmp directory')
         shutil.rmtree(tmp_dir)
 
     return results_frame

@@ -94,6 +94,15 @@ class RemoveOrthomclIntermediateFilesTest(unittest.TestCase):
         self.assertIn(f"{SPECIES}_original_37.dmd.tsv", self.names())
         self.assertNotIn("all.gg", self.names())
 
+    def test_logs_what_was_done(self):
+        with self.assertLogs(level="INFO") as first:
+            self.clean()
+        self.assertTrue(any("Removed the OrthoMCL intermediate files" in line for line in first.output))
+        with self.assertLogs(level="INFO") as second:
+            self.clean()
+        self.assertTrue(any("No OrthoMCL intermediate files to remove" in line for line in second.output))
+        self.assertFalse(any("Removed the OrthoMCL" in line for line in second.output))
+
     def test_second_call_is_harmless(self):
         self.clean()
         before = self.names()

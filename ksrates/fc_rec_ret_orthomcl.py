@@ -1127,6 +1127,7 @@ def remove_orthomcl_intermediate_files(species_name, orthomcl_outdir_focal, foca
         to_remove.append(focal_species_aa_filepath)
 
     freed = 0
+    removed = 0
     for path in to_remove:
         if os.path.realpath(path) in protected:
             logging.info(f"Not removing [{os.path.basename(path)}]: it was provided by the user")
@@ -1136,7 +1137,11 @@ def remove_orthomcl_intermediate_files(species_name, orthomcl_outdir_focal, foca
             shutil.rmtree(path)
         else:
             os.remove(path)
+        removed += 1
         logging.debug(f"Removed [{path}]")
-    logging.info(f"Removed the OrthoMCL intermediate files of [{species_name}] ({freed / 1e9:.1f} GB freed); "
-                 f"kept the orthogroups, the matched and reconstructed GFs and the parameter log")
+    if removed == 0:
+        logging.info(f"No OrthoMCL intermediate files to remove for [{species_name}]")
+    else:
+        logging.info(f"Removed the OrthoMCL intermediate files of [{species_name}] ({freed / 1e9:.1f} GB freed); "
+                     f"kept the orthogroups, the matched and reconstructed GFs and the parameter log")
     return freed
