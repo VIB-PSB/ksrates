@@ -703,7 +703,8 @@ def ks_analysis_one_vs_one(
     for f in os.listdir(tmp_dir):
         if f[-3:] == '.Ks':
             counts += 1
-            df = pd.read_csv(os.path.join(tmp_dir, f), index_col=0)
+            # Read IDs as text; supports also ID made by only digits or starting with 0
+            df = pd.read_csv(os.path.join(tmp_dir, f), index_col=0, dtype={'Paralog1': str, 'Paralog2': str})
             results_frame = pd.concat([results_frame, df], sort=True)
     results_frame.index = list(range(len(results_frame.index)))
 
@@ -812,7 +813,8 @@ def ks_analysis_paranome(
     for f in os.listdir(tmp_dir):
         if f[-3:] == '.Ks':
             counts += 1
-            df = pd.read_csv(os.path.join(tmp_dir, f), index_col=0)
+            # Read IDs as text; supports also only digits or starting with 0
+            df = pd.read_csv(os.path.join(tmp_dir, f), index_col=0, dtype={'Paralog1': str, 'Paralog2': str})
             results_frame = pd.concat([results_frame, df], sort=True)
     results_frame.index = list(range(len(results_frame.index)))
 

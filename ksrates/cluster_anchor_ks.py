@@ -156,7 +156,7 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
             logging.error(f"Anchor pair Ks TSV file not found at default position [{default_path_ks_anchor_file}].")
         else:
             with open(path_ks_anchor_file, "r") as f:
-                anchors_df = read_csv(f, sep="\t")
+                anchors_df = read_csv(f, sep="\t", dtype={"Paralog1": str, "Paralog2": str}) # Read IDs as text, to match those of anchorpoints.txt
 
     if iadhore_resolution_failed or anchors_df is None:
         logging.error("Exiting")

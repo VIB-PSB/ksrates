@@ -127,7 +127,7 @@ def parse_ks_anchors_from_df(df):
     """
     ks_anchors = {}
     for anchor1, anchor2, ks in zip(df["Paralog1"], df["Paralog2"], df["Ks"]):
-        anchor_pair_sorted = tuple(sorted((anchor1, anchor2)))
+        anchor_pair_sorted = tuple(sorted((str(anchor1), str(anchor2))))
         if anchor_pair_sorted not in ks_anchors:
             ks_anchors[anchor_pair_sorted] = str(ks)
     return ks_anchors

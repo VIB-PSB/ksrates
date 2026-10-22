@@ -180,7 +180,7 @@ def _extract_columns_from_tsv(tsv_path):
 	:return: dict mapping each required column name to its list of values
 	"""
 	with open(tsv_path, "r") as f:
-		tsv = read_csv(f, sep="\t")
+		tsv = read_csv(f, sep="\t", dtype={"Paralog1": str, "Paralog2": str}) # Read IDs as text
 	return {col: tsv[col].to_list() for col in _REQUIRED_COLUMNS}
 
 

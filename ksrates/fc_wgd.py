@@ -1268,7 +1268,9 @@ def _write_anchor_pairs_ks(anchor_points_file, ks_file, out_file='ks_anchors.tsv
     #     ks_anchors.to_csv(out_file, sep='\t')
 
     with open(anchor_points_file, "r") as apf, open(ks_file, "r") as ksf:
-        anchor_points = read_table(apf)
+        # Gene IDs are read as text: some genomes have IDs made only of digits, which pandas would turn into numbers
+        # (the join below would fail, and the numeric sorting would not match the text sorting of the pair names in the Ks file)
+        anchor_points = read_table(apf, dtype={'gene_x': str, 'gene_y': str})
         anchor_points = anchor_points[['gene_x', 'gene_y']]
         anchor_points.drop_duplicates()
         anchor_points_id_list = []
@@ -1279,7 +1281,7 @@ def _write_anchor_pairs_ks(anchor_points_file, ks_file, out_file='ks_anchors.tsv
             if not anchor_point_id in anchor_points_id_list:
                 anchor_points_id_list.append(anchor_point_id)
 
-        ks = read_table(ksf, index_col=0, sep='\t')
+        ks = read_table(ksf, index_col=0, sep='\t', dtype={'Paralog1': str, 'Paralog2': str})
         # if (gene) IDs in the Ks file contain pipes remove them (i-ADHoRe anchor (gene) IDs should not contain pipes)
         index_list = list(ks.index.values)
         if isinstance(index_list[0], str) and index_list[0].count('|') == 2:
