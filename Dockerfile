@@ -49,7 +49,7 @@ RUN wget https://raw.githubusercontent.com/VIB-PSB/OrthoMCLight/main/orthomcligh
     wget https://raw.githubusercontent.com/VIB-PSB/OrthoMCLight/main/orthomclight_module.pm -P /bin && \
     chmod a+rx /usr/bin/orthomclight*
 
-# sqld (libSQL server) for the paralog Ks database feature - fetched directly from the GitHub
+# sqld (libSQL server) for the Ks database feature - fetched directly from the GitHub
 # release since the official installer rejects glibc < 2.35 and falls back to an unpublished asset.
 ARG SQLD_VERSION=libsql-server-v0.24.32
 RUN apt-get update && apt-get install -yq xz-utils && rm -rf /var/lib/apt/lists/* && \

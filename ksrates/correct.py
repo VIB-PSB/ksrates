@@ -7,6 +7,8 @@ import logging
 import ksrates.fc_rrt_correction as fcCorrect
 import ksrates.fc_check_input as fcCheck
 import ksrates.fc_configfile as fcConf
+import ksrates.fc_ks_database_utilities as fcKsDbUtil
+import ksrates.fc_ks_database_ortholog as fcKsDbOrtho
 from ksrates.utils import init_logging
 
 
@@ -19,7 +21,9 @@ def correct(config_file, expert_config_file, trios_file):
     # Get parameters from configfile
     species_of_interest = config.get_species()
     latin_names = config.get_latin_names()
-    db_path = config.get_ortho_db()
+    db_path = config.get_peak_tsv_db()
+    use_ks_database_server = config.use_ks_database_server() # Whether to use the shared Ks database instead of the TSV files (default: no)
+    ks_db_path = config.get_ks_database_server()
 
     default_path_trios_file = os.path.join("rate_adjustment", f"{species_of_interest}", f"ortholog_trios_{species_of_interest}.tsv")
     trios_file = fcCheck.get_argument_path(trios_file, default_path_trios_file, "Trios TSV file")
@@ -28,13 +32,21 @@ def correct(config_file, expert_config_file, trios_file):
         logging.error("Exiting")
         sys.exit(1)
 
-    try:
-        with open(db_path, "r") as f:
-            db = pd.read_csv(f, sep="\t", index_col=0)
-    except Exception:
-        logging.error(f"Ortholog peak database [{db_path}] not found or empty\n\
+    if use_ks_database_server:
+        fcKsDbUtil.initialize_or_exit(ks_db_path)
+        db = fcKsDbOrtho.read_all_peaks(ks_db_path)
+        if db.shape[0] == 0:
+            logging.error(f"Ks database [{ks_db_path}] doesn't contain any ortholog peak\n\
             -> rate-adjustment will be skipped.")
-        sys.exit(0)
+            sys.exit(0)
+    else:
+        try:
+            with open(db_path, "r") as f:
+                db = pd.read_csv(f, sep="\t", index_col=0)
+        except Exception:
+            logging.error(f"Ortholog peak database [{db_path}] not found or empty\n\
+            -> rate-adjustment will be skipped.")
+            sys.exit(0)
 
     # Getting the statistical measure for how to determine the representative value of an ortholog distribution
     peak_stats = config.get_peak_stats() # default is mode (other option, median)

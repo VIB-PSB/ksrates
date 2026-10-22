@@ -36,7 +36,7 @@ _ANCHOR_CLUSTERS_FILTERED = "mixed_{}_anchor_clusters.pdf"
 def _read_lines(path_or_stream):
     """
     Returns a readable, line-iterable object from either a file path (str) or an already-open
-    file-like stream (e.g. an io.StringIO wrapping text read back from the paralog Ks database),
+    file-like stream (e.g. an io.StringIO wrapping text read back from the Ks database),
     so the line-based parsers below can accept either source transparently.
 
     :param path_or_stream: either a path (str) to an i-ADHoRe output file, or an already-open
@@ -118,7 +118,7 @@ def parse_ks_anchors_tsv_file(path_ks_anchor_file):
 def parse_ks_anchors_from_df(df):
     """
     Same as parse_ks_anchors_tsv_file, but builds the anchor-pair-to-Ks mapping from an
-    already-loaded DataFrame (e.g. reconstructed from the paralog Ks database) instead of
+    already-loaded DataFrame (e.g. reconstructed from the Ks database) instead of
     reading the wgd ks_anchors.tsv file from disk.
 
     :param df: DataFrame with at least Paralog1, Paralog2 and Ks columns
@@ -127,7 +127,7 @@ def parse_ks_anchors_from_df(df):
     """
     ks_anchors = {}
     for anchor1, anchor2, ks in zip(df["Paralog1"], df["Paralog2"], df["Ks"]):
-        anchor_pair_sorted = tuple(sorted((anchor1, anchor2)))
+        anchor_pair_sorted = tuple(sorted((str(anchor1), str(anchor2))))
         if anchor_pair_sorted not in ks_anchors:
             ks_anchors[anchor_pair_sorted] = str(ks)
     return ks_anchors

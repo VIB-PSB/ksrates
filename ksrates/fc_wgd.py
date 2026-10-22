@@ -44,7 +44,8 @@ _TMP_OF = '{}.of_tmp'
 
 def ks_paralogs(species_name, cds_fasta, base_dir='.', eval_cutoff=1e-10, inflation_factor=2.0, aligner='muscle',
                 min_msa_length=100, codeml='codeml', codeml_times=1, pairwise=False, preserve=False,
-                max_gene_family_size=200, weighting_method='fasttree', n_threads=1, overwrite=False, logging_level="INFO"):
+                max_gene_family_size=200, weighting_method='fasttree', n_threads=1, overwrite=False, logging_level="INFO",
+                skip_rule=None):
     """
     Modified from wgd_cli.py
 
@@ -60,6 +61,8 @@ def ks_paralogs(species_name, cds_fasta, base_dir='.', eval_cutoff=1e-10, inflat
     :param codeml_times: number of times to iteratively perform codeml ML estimation of Ks
     :param pairwise: run in pairwise mode
     :param max_gene_family_size: maximum size of a gene family to be included in analysis
+    :param skip_rule: wgd_ksrates.ks_distribution.FamilySkipRule, or None: gene families 
+           whose alignment has too few gap-free codon columns are not given to codeml
     :param weighting_method: weighting method (fasttree, phyml or alc)
     :param n_threads: number of threads to use
     :param overwrite: overwrite existing results
@@ -198,7 +201,7 @@ def ks_paralogs(species_name, cds_fasta, base_dir='.', eval_cutoff=1e-10, inflat
                         n_threads=n_threads)
 
         # remove temporary files
-        logging.info('Removing tmp directory')
+        logging.info('Removing BLAST tmp directory')
         shutil.rmtree(tmp_blast_paralogs)
 
     # get paranome (MCL)
@@ -225,7 +228,7 @@ def ks_paralogs(species_name, cds_fasta, base_dir='.', eval_cutoff=1e-10, inflat
                                           output_dir=output_dir, codeml_path=codeml, times=codeml_times, aligner=aligner,
                                           ignore_prefixes=False, min_length=min_msa_length, pairwise=pairwise,
                                           max_gene_family_size=max_gene_family_size, method=weighting_method,
-                                          preserve=preserve, n_threads=n_threads, logging_level=logging_level)
+                                          preserve=preserve, n_threads=n_threads, logging_level=logging_level, skip_rule=skip_rule)
         if os.path.exists(tmp_ks_paralogs):
             logging.error(f'tmp directory {tmp_ks_paralogs} still exists after analysis, '
                           f'paralog Ks data may be incomplete and will not be written to paralog Ks file!')
@@ -248,7 +251,7 @@ def ks_paralogs_rec_ret(species_name, cds_fasta, latin_name, custom_recret_gfs, 
                         max_extra_original_genes_in_new_gfs=15, min_common_old_genes_in_new_gfs=3,
                         base_dir='.', aligner='muscle', min_msa_length=100, codeml='codeml', codeml_times=1, pairwise=False,
                         max_gene_family_size=200, weighting_method='fasttree', n_threads=1, overwrite=False, preserve=False,
-                        is_test_run=False, logging_level="INFO"):
+                        is_test_run=False, logging_level="INFO", skip_rule=None, remove_orthomcl_files=False):
     """
     Modified from wgd_cli.py
 
@@ -276,6 +279,10 @@ def ks_paralogs_rec_ret(species_name, cds_fasta, latin_name, custom_recret_gfs, 
     :param codeml_times: number of times to iteratively perform codeml ML estimation of Ks
     :param pairwise: run in pairwise mode
     :param max_gene_family_size: maximum size of a gene family to be included in analysis
+    :param skip_rule: wgd_ksrates.ks_distribution.FamilySkipRule, or None: gene families
+           whose alignment has too few gap-free codon columns are not given to codeml
+    :param remove_orthomcl_files: remove the large intermediate files of the OrthoMCL pipeline once the reciprocally
+           retained GFs have been reconstructed (see fc_rec_ret_orthomcl.remove_orthomcl_intermediate_files)
     :param weighting_method: weighting method (fasttree, phyml or alc)
     :param n_threads: number of threads to use
     :param overwrite: overwrite existing results
@@ -524,6 +531,12 @@ def ks_paralogs_rec_ret(species_name, cds_fasta, latin_name, custom_recret_gfs, 
                                             original_and_focal_genes_in_orthomcl_gfs, matched_orthomcl_gfs)
             logging.info("")
 
+            if remove_orthomcl_files:
+                focal_species_aa_filepath = os.path.join(orthomcl_outdir_focal, f"{os.path.splitext(os.path.basename(cds_fasta))[0]}.faa")
+                fcRecRet_OMCL.remove_orthomcl_intermediate_files(species_name, orthomcl_outdir_focal, focal_species_aa_filepath,
+                                                                 orthomcl_output_renamed_path, protected_paths=[parsed_homology_table])
+                logging.info("")
+
         # NOTE: The following two alternative methods to get the RecRet GFs are not implemented;
         #       however OrthoFinder might be integrated in the future.
         
@@ -558,7 +571,7 @@ def ks_paralogs_rec_ret(species_name, cds_fasta, latin_name, custom_recret_gfs, 
                                           codeml_path=codeml, times=codeml_times, aligner=aligner,
                                           ignore_prefixes=False, min_length=min_msa_length, pairwise=pairwise,
                                           max_gene_family_size=max_gene_family_size, method=weighting_method,
-                                          preserve=preserve, n_threads=n_threads, logging_level=logging_level)
+                                          preserve=preserve, n_threads=n_threads, logging_level=logging_level, skip_rule=skip_rule)
 
         if os.path.exists(tmp_ks_paralogs):
             logging.error(f'tmp directory {tmp_ks_paralogs} still exists after analysis, '
@@ -713,7 +726,7 @@ def ks_orthologs(species1, species2, cds_fasta1, cds_fasta2, base_dir='.', eval_
         #                       output_dir, output_blast_file, eval_cutoff, n_threads)
 
         # remove temporary files
-        logging.info('Removing tmp directory')
+        logging.info('Removing BLAST tmp directory')
         shutil.rmtree(tmp_blast_orthologs)
 
     # get one-to-one orthologs (RBHs)
@@ -1255,7 +1268,9 @@ def _write_anchor_pairs_ks(anchor_points_file, ks_file, out_file='ks_anchors.tsv
     #     ks_anchors.to_csv(out_file, sep='\t')
 
     with open(anchor_points_file, "r") as apf, open(ks_file, "r") as ksf:
-        anchor_points = read_table(apf)
+        # Gene IDs are read as text: some genomes have IDs made only of digits, which pandas would turn into numbers
+        # (the join below would fail, and the numeric sorting would not match the text sorting of the pair names in the Ks file)
+        anchor_points = read_table(apf, dtype={'gene_x': str, 'gene_y': str})
         anchor_points = anchor_points[['gene_x', 'gene_y']]
         anchor_points.drop_duplicates()
         anchor_points_id_list = []
@@ -1266,7 +1281,7 @@ def _write_anchor_pairs_ks(anchor_points_file, ks_file, out_file='ks_anchors.tsv
             if not anchor_point_id in anchor_points_id_list:
                 anchor_points_id_list.append(anchor_point_id)
 
-        ks = read_table(ksf, index_col=0, sep='\t')
+        ks = read_table(ksf, index_col=0, sep='\t', dtype={'Paralog1': str, 'Paralog2': str})
         # if (gene) IDs in the Ks file contain pipes remove them (i-ADHoRe anchor (gene) IDs should not contain pipes)
         index_list = list(ks.index.values)
         if isinstance(index_list[0], str) and index_list[0].count('|') == 2:

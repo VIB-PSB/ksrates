@@ -7,7 +7,8 @@ from pandas import DataFrame
 import ksrates.fc_configfile as fcConf
 import ksrates.fc_check_input as fcCheck
 import ksrates.fc_manipulate_trees as fcTree
-import ksrates.fc_consolidate_paralog_ks as fc_consolidate_paralog_ks
+import ksrates.fc_ks_database_utilities as fcKsDbUtil
+import ksrates.fc_ks_database_ortholog as fcKsDbOrtho
 from ksrates.utils import init_logging
 from ksrates.fc_rec_ret_orthomcl import check_recret_name_compatibility
 
@@ -28,16 +29,16 @@ def setup_correction(config_file, expert_config_file, nextflow_flag):
     colinearity = config.get_colinearity()
     reciprocal_retention = config.get_reciprocal_retention()
     divergence_colors = config.get_color_list()
-    use_paralog_ks_db = config.use_paralog_ks_database()
-    paralog_ks_db_path = config.get_paralog_ks_database()
+    use_ks_database_server = config.use_ks_database_server()
+    ks_db_path = config.get_ks_database_server()
 
     if not paranome and not colinearity and not reciprocal_retention:
         logging.error('At least "paranome", "collinearity" or "reciprocal_retention" in the configuration file needs to be set to "yes".')
         logging.error("Exiting.")
         sys.exit(1)
 
-    db_path = config.get_ortho_db()
-    ks_list_db_path = config.get_ks_db()
+    db_path = config.get_peak_tsv_db()
+    ks_list_db_path = config.get_ks_list_tsv_db()
     max_num_outspecies = config.get_max_num_outspecies()
     try:
         max_num_outspecies = int(max_num_outspecies)
@@ -75,12 +76,9 @@ def setup_correction(config_file, expert_config_file, nextflow_flag):
     if check_recret_name_compatibility(tree.get_leaf_names(), reciprocal_retention):
         trigger_exit = True
 
-    # Fail fast if the paralog Ks database is enabled but unreachable or its address file is invalid
-    if use_paralog_ks_db:
-        # Initialize the database
-        paralog_db_ready = fc_consolidate_paralog_ks.initialize_paralog_db(paralog_ks_db_path)
-        if not paralog_db_ready:
-            trigger_exit = True
+    # Fail fast if the Ks database is enabled but unreachable or its address file is invalid
+    if use_ks_database_server:
+        fcKsDbUtil.initialize_or_exit(ks_db_path)
 
     if trigger_exit:
         logging.error("Please adjust the configuration file and rerun the analysis. Exiting.")
@@ -227,29 +225,42 @@ def setup_correction(config_file, expert_config_file, nextflow_flag):
         logging.error("Exiting")
         sys.exit(1)
 
-    try:
-        with open(db_path, "r") as f:
-            db = pandas.read_csv(f, sep="\t", index_col=0)
-            for tags in tags_list:
-                if tags[0] not in db.index:
+    if use_ks_database_server:
+        # Only the keys are needed here ("is this pair known yet?"), not the data
+        pair_keys_with_peak = fcKsDbOrtho.pair_keys_in_database(ks_db_path, "peak")
+        pair_keys_with_ks_list = fcKsDbOrtho.pair_keys_in_database(ks_db_path, "ks_list")
+        for tags in tags_list:
+            if tags[0] not in pair_keys_with_peak:
+                species_pairs_unknown.append([tags[1][0], tags[1][1]])
+        for tags in tags_list:
+            if tags[0] not in pair_keys_with_ks_list:
+                if [tags[1][0], tags[1][1]] not in species_pairs_unknown:
                     species_pairs_unknown.append([tags[1][0], tags[1][1]])
-            no_db_file = False
-    except Exception:
-        no_db_file = True
-
-    try:
-        with open(ks_list_db_path, "r") as f:
-            ks_list_db = pandas.read_csv(f, sep="\t", index_col=0)
-            # When imported from csv format, all the Ks lists in the df are read as
-            # plain text (strings) and must be converted back to value lists
-            ks_list_db.loc[:, 'Ks_Values'] = ks_list_db.loc[:, 'Ks_Values'].apply(literal_eval)
-            for tags in tags_list:
-                if tags[0] not in ks_list_db.index:
-                    if [tags[1][0], tags[1][1]] not in species_pairs_unknown:
+        no_db_file, no_ks_list_db_file = False, False
+    else:
+        try:
+            with open(db_path, "r") as f:
+                db = pandas.read_csv(f, sep="\t", index_col=0)
+                for tags in tags_list:
+                    if tags[0] not in db.index:
                         species_pairs_unknown.append([tags[1][0], tags[1][1]])
-        no_ks_list_db_file = False
-    except Exception:
-        no_ks_list_db_file = True
+                no_db_file = False
+        except Exception:
+            no_db_file = True
+
+        try:
+            with open(ks_list_db_path, "r") as f:
+                ks_list_db = pandas.read_csv(f, sep="\t", index_col=0)
+                # When imported from csv format, all the Ks lists in the df are read as
+                # plain text (strings) and must be converted back to value lists
+                ks_list_db.loc[:, 'Ks_Values'] = ks_list_db.loc[:, 'Ks_Values'].apply(literal_eval)
+                for tags in tags_list:
+                    if tags[0] not in ks_list_db.index:
+                        if [tags[1][0], tags[1][1]] not in species_pairs_unknown:
+                            species_pairs_unknown.append([tags[1][0], tags[1][1]])
+            no_ks_list_db_file = False
+        except Exception:
+            no_ks_list_db_file = True
 
     if no_db_file and not no_ks_list_db_file:
         logging.info("Ortholog peak database empty or not found at the path provided in the configuration file.")

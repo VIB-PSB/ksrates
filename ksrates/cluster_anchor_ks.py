@@ -12,7 +12,8 @@ import ksrates.fc_configfile as fcConf
 import ksrates.fc_plotting as fcPlot
 import ksrates.fc_check_input as fcCheck
 import ksrates.fc_extract_ks_list as fc_extract_ks_list
-import ksrates.fc_consolidate_paralog_ks as fc_consolidate_paralog_ks
+import ksrates.fc_ks_database_utilities as fcKsDbUtil
+import ksrates.fc_ks_database_paralog as fcKsDbPara
 from ksrates.utils import init_logging
 from ksrates.fc_cluster_anchors import subfolder
 from ksrates.fc_rrt_correction import _ADJUSTMENT_TABLE, interpretation_adjusted_plot
@@ -63,8 +64,10 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
             correction_table = read_csv(f, sep="\t")
             correction_table_available = True
 
-    use_paralog_ks_database = config.use_paralog_ks_database() # Whether to use the collective paralog Ks database (default: no)
-    ks_list_paralog_db_path = config.get_paralog_ks_database() # Path to the sqld server address file
+    use_ks_database_server = config.use_ks_database_server() # Whether to use the collective Ks database (default: no)
+    ks_db_path = config.get_ks_database_server() # Path to the sqld server address file
+    if use_ks_database_server:
+        fcKsDbUtil.initialize_or_exit(ks_db_path) # fail fast if the requested database cannot be used
 
     # Get the i-ADHoRe output files (anchorpoints/multiplicons/segments/list_elements/multiplicon_pairs)
     # as in-memory text, either from the database first (if enabled) or from disk. These 5 files are
@@ -72,19 +75,14 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
     # the database already has the full set for this species, or all 5 are read from disk.
     iadhore_keys = ['anchorpoints', 'multiplicons', 'segments', 'list_elements', 'multiplicon_pairs']
     iadhore_texts = None
-    if use_paralog_ks_database:
-        try:
-            if not fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path):
-                raise RuntimeError("database unreachable")
-            db_iadhore = fc_consolidate_paralog_ks.read_anchor_iadhore_files(ks_list_paralog_db_path, latin_names[species])
-            if all(db_iadhore[key] is not None for key in iadhore_keys):
-                iadhore_texts = db_iadhore
-                logging.info(f"Using i-ADHoRe output files stored in paralog Ks database")
-            else:
-                logging.info(f"Paralog database doesn't contain the i-ADHoRe output files for [{species}]")
-                logging.info(f"Will read i-ADHoRe output files from TSV files instead")
-        except Exception as e:
-            logging.warning(f"Could not use paralog Ks database [{ks_list_paralog_db_path}]: {str(e)}. Will read i-ADHoRe output files from disk instead.")
+    if use_ks_database_server:
+        db_iadhore = fcKsDbPara.read_anchor_iadhore_files(ks_db_path, latin_names[species])
+        if all(db_iadhore[key] is not None for key in iadhore_keys):
+            iadhore_texts = db_iadhore
+            logging.info(f"Using i-ADHoRe output files stored in Ks database")
+        else:
+            logging.info(f"Ks database doesn't contain the i-ADHoRe output files for [{species}]")
+            logging.info(f"Will read i-ADHoRe output files from TSV files instead")
 
     iadhore_resolution_failed = False
     if iadhore_texts is None:
@@ -142,19 +140,14 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
     # Same database-first/TSV-fallback pattern as above, for the anchor pair Ks data. Read once
     # here and reuse the same DataFrame everywhere below.
     anchors_df = None
-    if use_paralog_ks_database:
-        try:
-            if not fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path):
-                raise RuntimeError("database unreachable")
-            db_data = fc_consolidate_paralog_ks.read_analysis_data(ks_list_paralog_db_path, latin_names[species], 'anchors')
-            if db_data is not None:
-                anchors_df = DataFrame(db_data)
-                logging.info(f"Using anchor pair Ks data stored in paralog Ks database")
-            else:
-                logging.info(f"Paralog database doesn't contain the anchor pair Ks data for [{species}]")
-                logging.info(f"Will read anchor pair Ks data from TSV files instead")
-        except Exception as e:
-            logging.warning(f"Could not use paralog Ks database [{ks_list_paralog_db_path}]: {str(e)}. Will read TSV file instead.")
+    if use_ks_database_server:
+        db_data = fcKsDbPara.read_analysis_data(ks_db_path, latin_names[species], 'anchors')
+        if db_data is not None:
+            anchors_df = DataFrame(db_data)
+            logging.info(f"Using anchor pair Ks data stored in Ks database")
+        else:
+            logging.info(f"Ks database doesn't contain the anchor pair Ks data for [{species}]")
+            logging.info(f"Will read anchor pair Ks data from TSV files instead")
 
     if anchors_df is None:
         default_path_ks_anchor_file = os.path.join("paralog_distributions", f"wgd_{species}", _OUTPUT_KS_FILE_PATTERN_ANCHORS.format(species))
@@ -163,7 +156,7 @@ def cluster_anchor_ks(config_file, expert_config_file, correction_table_file, pa
             logging.error(f"Anchor pair Ks TSV file not found at default position [{default_path_ks_anchor_file}].")
         else:
             with open(path_ks_anchor_file, "r") as f:
-                anchors_df = read_csv(f, sep="\t")
+                anchors_df = read_csv(f, sep="\t", dtype={"Paralog1": str, "Paralog2": str}) # Read IDs as text, to match those of anchorpoints.txt
 
     if iadhore_resolution_failed or anchors_df is None:
         logging.error("Exiting")
