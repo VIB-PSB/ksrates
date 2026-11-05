@@ -17,8 +17,8 @@
 // Central directory to hold the server's data/keys directories and address file (required)
 params.location = false
 
-// Port sqld listens on
-params.port = 8080
+// Port sqld listens on (default: a free port chosen automatically)
+params.port = false
 
 // Filename (not path) of the address file written under params.location
 params.address_filename = "ks_database_server_address.txt"
@@ -37,7 +37,7 @@ process launchKsDatabaseServer {
 
     script:
     """
-    ksrates launch-ks-database-server --location ${location} --port ${port} --address-filename ${address_filename}
+    ksrates launch-ks-database-server --location ${location} ${port ? "--port ${port}" : ""} --address-filename ${address_filename}
     """
 }
 

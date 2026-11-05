@@ -421,7 +421,7 @@ def orthologs_ks_cleanup(orthologs_dir_path, dry_run):
 
 @cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Launches the shared Ks database server (sqld).")
 @click.option('--location', type=click.Path(file_okay=False), required=True, help="Central directory to hold the server's data/keys directories and address file")
-@click.option('--port', type=int, default=8080, help="Port sqld listens on (default: 8080)")
+@click.option('--port', type=int, default=None, help="Port sqld listens on (default: a free port chosen automatically)")
 @click.option('--address-filename', default="ks_database_server_address.txt", help="Filename (not path) of the address file written under LOCATION (default: ks_database_server_address.txt)")
 def launch_ks_database_server(location, port, address_filename):
 	"""

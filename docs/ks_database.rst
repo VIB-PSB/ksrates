@@ -86,7 +86,7 @@ Provide via ``-c nextflow.config`` the Nextflow configuration of a *ksrates* ana
 configure ``-profile`` with the container engine in use (e.g. ``apptainer``);
 with ``-process.executor=local``, the pipeline steps are not further submitted to the cluster and remain instead local to the ``nextflow run`` invocation itself;
 ``--location`` is the chosen database directory;
-``--port`` (port ``sqld`` listens on, default 8080) and ``--address-filename`` (by default ``ks_database_server_address.txt``) can also be overridden if needed.
+``--port`` (port ``sqld`` listens on; by default a free port is chosen automatically) and ``--address-filename`` (by default ``ks_database_server_address.txt``) can also be overridden if needed.
 
 .. note::
     When using Nextflow ``26.04`` or later, run ``export NXF_SYNTAX_PARSER=v1`` before the Nextflow command,
