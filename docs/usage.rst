@@ -36,6 +36,11 @@ The *ksrates* pipeline can be automatically run through Nextflow with a few prep
 
             NXF_VER=24.10.5 nextflow run VIB-PSB/ksrates <args>
 
+
+    .. note::
+        When using Nextflow ``26.04`` or later, run ``export NXF_SYNTAX_PARSER=v1`` before the Nextflow command,
+        as the pipeline uses the previous Nextflow syntax.
+
     The first time the command is executed, Nextflow downloads a local copy of the *ksrates* Nextflow pipeline from the ``VIB-PSB/ksrates`` GitHub repository and stores it in the ``$HOME/.nextflow`` directory.
     Parameter ``-profile`` specifies which container will be pulled from Docker Hub (either Apptainer or Docker).
 

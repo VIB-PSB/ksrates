@@ -90,6 +90,10 @@ with ``-process.executor=local``, the pipeline steps are not further submitted t
 ``--location`` is the chosen database directory;
 ``--port`` (port ``sqld`` listens on, default 8080) and ``--address-filename`` (by default ``ks_database_server_address.txt``) can also be overridden if needed.
 
+.. note::
+    When using Nextflow ``26.04`` or later, run ``export NXF_SYNTAX_PARSER=v1`` before the Nextflow command,
+    as the pipeline uses the previous Nextflow syntax.
+
 
 Starting it via the CLI command
 -------------------------------
