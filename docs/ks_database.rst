@@ -94,6 +94,12 @@ with ``-process.executor=local``, the pipeline steps are not further submitted t
     When using Nextflow ``26.04`` or later, run ``export NXF_SYNTAX_PARSER=v1`` before the Nextflow command,
     as the pipeline uses the previous Nextflow syntax.
 
+.. note::
+    Nextflow only mounts each process's ``work`` directory in the container. Mount explicitly a directory containing
+    both the analysis directories and the database directory (``--location``), in the Nextflow configuration file
+    used for the server and for the analyses::
+
+        apptainer.runOptions = '-B /path/to/ks_analysis_dir'
 
 Starting it via the CLI command
 -------------------------------

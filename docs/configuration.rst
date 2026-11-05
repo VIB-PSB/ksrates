@@ -177,9 +177,9 @@ The Nextflow configuration file is used to configure various settings for the *k
 * The **profiles** scope configures the **apptainer** and **docker** container settings:
 
     * **enable** enables or disables the use of the respective container.
-    * **runOptions** passes extra options to the container engine. For Docker, ``-v $PWD:$PWD`` mounts the host's current directory into the container at the same path. For Apptainer, ``-B /path/to/dir`` mounts a host directory not already covered by ``autoMounts``.
+    * **runOptions** passes extra options to the container engine. For Docker, ``-v $PWD:$PWD`` mounts the host's current directory into the container at the same path. For Apptainer, ``-B /path/to/dir`` mounts a host directory not already covered by ``autoMounts``, such as the launch directory and, when using the *K*:sub:`S` database server, the database directory (see :ref:`ks_database_setup`).
     * **cacheDir** (only for Apptainer) the directory where remote the Apptainer image from Docker Hub is stored. When using a computing cluster it must be a shared folder accessible to all computing nodes.
-    * **autoMounts** (only for Apptainer) automatically mounts host paths in the executed container and allows the user to run the pipeline from any directory in a cluster [Default: true]. It requires the `user bind control <https://sylabs.io/guides/3.7/admin-guide/configfiles.html?highlight=user%20bind%20control#bind-mount-management>`__ feature in Apptainer installation, which is active by default.
+    * **autoMounts** (only for Apptainer) automatically mounts in the container the paths Nextflow knows a process needs (its ``work`` directory and input files) [Default: true]. Other directories used by *ksrates*, such as the launch directory and the *K*:sub:`S` database directory, must be mounted through ``runOptions``, unless the Apptainer installation mounts them by default. It requires the `user bind control <https://sylabs.io/guides/3.7/admin-guide/configfiles.html?highlight=user%20bind%20control#bind-mount-management>`__ feature in Apptainer installation, which is active by default.
 
 * The **executor** scope configures the underlying system where processes are executed and its overall resources to use:
 
