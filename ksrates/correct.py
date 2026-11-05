@@ -36,7 +36,7 @@ def correct(config_file, expert_config_file, trios_file):
         fcKsDbUtil.initialize_or_exit(ks_db_path)
         db = fcKsDbOrtho.read_all_peaks(ks_db_path)
         if db.shape[0] == 0:
-            logging.error(f"Ks database [{ks_db_path}] doesn't contain any ortholog peak\n\
+            logging.warning(f"Ks database [{ks_db_path}] doesn't contain any ortholog peak (yet)\n\
             -> rate-adjustment will be skipped.")
             sys.exit(0)
     else:
@@ -44,7 +44,7 @@ def correct(config_file, expert_config_file, trios_file):
             with open(db_path, "r") as f:
                 db = pd.read_csv(f, sep="\t", index_col=0)
         except Exception:
-            logging.error(f"Ortholog peak database [{db_path}] not found or empty\n\
+            logging.warning(f"Ortholog peak database [{db_path}] not found or empty (yet)\n\
             -> rate-adjustment will be skipped.")
             sys.exit(0)
 
