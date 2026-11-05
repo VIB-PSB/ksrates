@@ -13,25 +13,15 @@ database, instead of existing only in local output TSV files (see :ref:`ks_estim
 This is particularly useful to centralize *K*:sub:`S` data across multiple independent *ksrates* analyses,
 which can then all use it and add to it.
 
-    .. note::
-    **Starting several analyses with the same database.** Each analysis checks at its start which species and species
-    pairs are already stored, and computes only the missing ones. An analysis therefore reuses the data of another
-    one only if that data was stored before it started. To benefit the most from the shared database, start the first
-    analysis, wait until its paralog and ortholog *K*:sub:`S` estimation steps have finished, and only then start the
-    next one. Analyses started together do not see each other's data: a species or pair needed by several of them is
-    computed by each, and the last to finish overwrites the others' value. This does not corrupt the database and the
-    results stay valid, but the computation is repeated.
-
-
 An analysis layout may consist of several independent directories, each running *ksrates* on
 its own dataset. Without a shared database, each dataset computes and stores its *K*:sub:`S` data independently -
 even for species that recur across datasets, whose expensive paranome, anchor-pair, reciprocally
 retained and i-ADHoRe computations then get needlessly repeated every time::
 
     /path/to/ks_analysis_dir/
-    ├── dataset1/    (ksrates configuration and output for this dataset)
-    ├── dataset2/
-    ├── dataset3/
+    ├── dataset1/    (own configuration and output)
+    ├── dataset2/    (own configuration and output)
+    ├── dataset3/    (own configuration and output)
     └── ...
 
 Pointing every dataset at the same running server removes this redundancy: once *K*:sub:`S` data
@@ -51,6 +41,14 @@ the workflow attempts to compute only that new type and reuse the rest.
 
     To prevent this, request ``paranome`` and ``colinearity`` together the *first* time a species is
     processed, where possible.
+
+When several analyses use the same database, the order in which they are started matters. Each analysis checks at its start
+which species and species pairs are already stored in the database, and computes only the missing ones: it therefore reuses the data of another
+analysis only if that data was stored before it started. To benefit the most from the shared database, start the first
+analysis, wait until its paralog and ortholog *K*:sub:`S` estimation steps have finished, and only then start the
+next one. Analyses started together do not see each other's data: a species or pair needed by several of them is
+computed by each, and the last to finish overwrites the others' value. This does not corrupt the database and the
+results stay valid, but the computation is repeated.
 
 
 .. _`ks_database_setup`:
