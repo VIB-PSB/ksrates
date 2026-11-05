@@ -113,16 +113,20 @@ When running outside of a container, this command downloads the ``sqld`` binary 
 (by default ``~/.cache/ksrates/sqld_bin``), and reuses it from there afterward.
 
 
-Restarting the server
-=====================
+Server life cycle
+=================
 
-The server process and the data it serves are two separate things. Cancelling or losing the
-server job (e.g. it hits a walltime limit) does not delete the database data. What goes stale is the address file, since it recorded a host and port that no longer has a server listening on it.
+The server must keep running for as long as any *ksrates* analysis uses it: each *ksrates* step checks at its start that the server is
+reachable and otherwise stops with an error, and a step that is writing to the database when the server goes down fails as well.
+In both cases the Nextflow run fails.
 
-To pick the database back up, relaunch the server the same way (see :ref:`ks_database_setup`), with the same ``--location``. It reuses the existing ``ks_database_sqld_data/``
-(so no data is lost) and the existing ``ks_database_sqld_keys/`` (so previously-issued tokens keep
-working), and simply writes a fresh ``host:port`` to the address file. Every dataset's configuration file keeps pointing at the same address file path, so no reconfiguration is needed.
+This typically happens when the server job reaches the cluster's maximum walltime. Relaunch then the server the same way (see :ref:`ks_database_setup`),
+with the same ``--location``, and afterwards the analysis with the same command plus Nextflow's ``-resume`` option:
+completed *K*:sub:`S` computations are reused from the Nextflow cache, while the interrupted step runs again.
 
+Relaunching the server doesn't lose any data: it reuses the existing ``ks_database_sqld_data/`` and ``ks_database_sqld_keys/``
+(so previously-issued tokens keep working) and only writes a fresh ``host:port`` to the address file.
+The address file path doesn't change, so no reconfiguration is needed.
 
 Inspecting and managing the database content
 ==============================================
@@ -135,7 +139,7 @@ added to restrict the action to species matching that string: use the latin name
 
 
     ksrates inspect-ks-db \
-                ks_database_server_address.txt  "Elaeis guineensis" --type paralog
+        ks_database_server_address.txt  "Elaeis guineensis" --type paralog
 
 Two more options change the command behavior:
 
