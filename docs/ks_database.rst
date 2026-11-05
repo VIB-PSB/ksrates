@@ -28,7 +28,7 @@ its own dataset. Without a shared database, each dataset computes and stores its
 even for species that recur across datasets, whose expensive paranome, anchor-pair, reciprocally
 retained and i-ADHoRe computations then get needlessly repeated every time::
 
-    /path/to/ks_analaysis_dir/
+    /path/to/ks_analysis_dir/
     ├── dataset1/    (ksrates configuration and output for this dataset)
     ├── dataset2/
     ├── dataset3/
@@ -65,11 +65,11 @@ Enable the use of the database via parameter ``use_ks_database_server`` in each 
 file of the *ksrates* datasets of interest; this is off by default, and without it *ksrates* relies as usual 
 solely on the local TSV output files. The database will cover both paralog and ortholog data.
 
-Choose a directory that will host the database server, i.e. where the address file (``ks_database_server_address.txt``), ``ks_database_sqld_data/`` and ``ks_database_sqld_keys/`` will be generated. Note: if you want several datasets to share one database, prefer a central directory above/alongside them (e.g. ``/path/to/ks_analaysis_dir/ks_database``).
+Choose a directory that will host the database server, i.e. where the address file (``ks_database_server_address.txt``), ``ks_database_sqld_data/`` and ``ks_database_sqld_keys/`` will be generated. Note: if you want several datasets to share one database, prefer a central directory above/alongside them (e.g. ``/path/to/ks_analysis_dir/ks_database``).
 
 Point then every dataset's configuration file at the address file, by setting parameter ``ks_database_server_address_path`` to the absolute path of ``<location>/<address_filename>``::
 
-    ks_database_server_address_path = /path/to/ks_analaysis_dir/ks_database/ks_database_server_address.txt
+    ks_database_server_address_path = /path/to/ks_analysis_dir/ks_database/ks_database_server_address.txt
 
 Start the server with one of the methods below, providing the chosen directory via ``--location``. This step must be executed once, independently and before of any *ksrates* analysis, and left running for as long as needed (e.g. a self-standing job on the cluster).
 
@@ -82,7 +82,7 @@ Launch the database server through a Nextflow pipeline (``setup_database_server.
         -c nextflow.config \
         -profile apptainer \
         -process.executor=local \
-        --location /path/to/ks_analaysis_dir/ks_database
+        --location /path/to/ks_analysis_dir/ks_database
 
 Provide via ``-c nextflow.config`` the Nextflow configuration of a *ksrates* analysis, to make it use the container;
 configure ``-profile`` with the container engine in use (e.g. ``apptainer``);
@@ -108,7 +108,7 @@ Alternatively, you can start the database server by directly invoking the *ksrat
 optionally leveraging a container as shown in :ref:`manual_pipeline`::
 
     ksrates launch-ks-database-server \
-        --location /path/to/ks_analaysis_dir/ks_database
+        --location /path/to/ks_analysis_dir/ks_database
 
 The same options explained above apply here (``--location``, ``--port`` and ``--address-filename``).
 When running outside of a container, this command downloads the ``sqld`` binary on first launch to ``$XDG_CACHE_HOME/ksrates/sqld_bin``
