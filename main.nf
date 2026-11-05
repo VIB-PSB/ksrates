@@ -373,6 +373,8 @@ process checkConfig {
 
     executor 'local'
     maxForks 1
+    // Always re-run: decides what to compute from config, local files and Ks database (not part of task hash)
+    cache false
 
     output:
         stdout emit: outCheckConfig
@@ -509,6 +511,8 @@ process setupAdjustment {
 
     executor 'local'
     maxForks 1
+    // Always re-run: decides what to compute from config, local files and Ks database (not part of task hash)
+    cache false
 
     input:
         val species
@@ -586,6 +590,8 @@ process setParalogAnalysis {
 
     executor 'local'
     maxForks 1
+    // Always re-run: decides what to compute from config, local files and Ks database (not part of task hash)
+    cache false
 
     input:
         val species
@@ -686,6 +692,8 @@ process setOrthologAnalysis {
 
     executor 'local'
     maxForks 1
+    // Always re-run: decides what to compute from config, local files and Ks database (not part of task hash)
+    cache false
 
     input:
         file ortholog_pairs
@@ -923,6 +931,8 @@ process wgdOrthologs {
 process plotOrthologDistrib {
 
     maxForks 1
+    // Always re-run: only constant 'val' inputs, so -resume would replay stale results
+    cache false
 
     input:
         val species
@@ -981,6 +991,8 @@ process doRateAdjustment {
 
     executor 'local'
     maxForks 1
+    // Always re-run: only constant 'val' inputs, so -resume would replay stale results
+    cache false
 
     input:
         val species
@@ -1082,6 +1094,8 @@ process doRateAdjustment {
  */
 process paralogsAnalyses {
 
+    // Always re-run: only constant 'val' inputs, so -resume would replay stale results
+    cache false
     input:
         val species
         val logs_folder
@@ -1127,6 +1141,8 @@ process drawTree {
 
     executor 'local'
     maxForks 1
+    // Always re-run: only constant 'val' inputs, so -resume would replay stale results
+    cache false
 
     input:
         val species
