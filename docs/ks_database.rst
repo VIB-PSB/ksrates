@@ -8,8 +8,7 @@
 Reusing previously computed *K*:sub:`S` data
 ============================================
 
-Paralog and ortholog *K*:sub:`S` data can be stored in a self-hosted `sqld <https://github.com/tursodatabase/libsql>`__
-database, instead of existing only in local output TSV files (see :ref:`ks_estimate_output_wgd` and the ortholog TSV databases in :ref:`other_output`).
+Paralog and ortholog *K*:sub:`S` data can be stored in a self-hosted `sqld <https://github.com/tursodatabase/libsql>`__ database.
 This is particularly useful to centralize *K*:sub:`S` data across multiple independent *ksrates* analyses,
 which can then all use it and add to it.
 
@@ -59,9 +58,11 @@ Setting up the database server
 Configure the database server
 -----------------------------
 
-Enable the use of the database via parameter ``use_ks_database_server`` in each expert configuration 
-file of the *ksrates* datasets of interest; this is off by default, and without it *ksrates* relies as usual 
-solely on the local TSV output files. The database will cover both paralog and ortholog data.
+Enable the use of the database via parameter ``use_ks_database_server`` in each expert configuration
+file of the *ksrates* datasets of interest. The database will cover both paralog and ortholog data.
+
+.. note::
+    The database is off by default. Without it, *ksrates* relies as usual on the local TSV files: the output of the wgd steps with the *K*:sub:`S` values of each species or species pair (see :ref:`ks_estimate_output_wgd`) and, for the orthologs, the TSV databases of all the peaks and *K*:sub:`S` lists (see :ref:`other_output`).
 
 Choose a directory that will host the database server, i.e. where the address file (``ks_database_server_address.txt``), ``ks_database_sqld_data/`` and ``ks_database_sqld_keys/`` will be generated. Note: if you want several datasets to share one database, prefer a central directory above/alongside them (e.g. ``/path/to/ks_analysis_dir/ks_database``).
 
@@ -109,8 +110,8 @@ optionally leveraging a container as shown in :ref:`manual_pipeline`::
         --location /path/to/ks_analysis_dir/ks_database
 
 The same options explained above apply here (``--location``, ``--port`` and ``--address-filename``).
-When running outside of a container, this command downloads the ``sqld`` binary on first launch to ``$XDG_CACHE_HOME/ksrates/sqld_bin``
-(by default ``~/.cache/ksrates/sqld_bin``), and reuses it from there afterward.
+When running outside of a container, this command downloads the ``sqld`` binary on first launch to ``~/.cache/ksrates/sqld_bin``
+(or ``$XDG_CACHE_HOME/ksrates/sqld_bin`` if that variable is set), and reuses it from there afterward.
 
 
 Server life cycle
@@ -118,9 +119,9 @@ Server life cycle
 
 The server must keep running for as long as any *ksrates* analysis uses it: each *ksrates* step checks at its start that the server is
 reachable and otherwise stops with an error, and a step that is writing to the database when the server goes down fails as well.
-In both cases the Nextflow run fails.
+The server typically goes down when its job reaches the cluster's maximum walltime.
 
-This typically happens when the server job reaches the cluster's maximum walltime. Relaunch then the server the same way (see :ref:`ks_database_setup`),
+To recover, relaunch the server the same way (see :ref:`ks_database_setup`),
 with the same ``--location``, and afterwards the analysis with the same command plus Nextflow's ``-resume`` option:
 completed *K*:sub:`S` computations are reused from the Nextflow cache, while the interrupted step runs again.
 
@@ -131,7 +132,7 @@ The address file path doesn't change, so no reconfiguration is needed.
 Inspecting and managing the database content
 ==============================================
 
-The command ``inspect-ks-db`` dumps the database content to files, for inspection outside of *ksrates*:
+The command ``inspect-ks-db`` dumps the database content to files for visual inspection:
 a TSV file with the paralog data plus per-species i-ADHoRe files, and two TSV files with the ortholog peaks and *K*:sub:`S` lists
 in the exact format of the ortholog TSV databases (``peak_database_path`` and ``ks_list_database_path``).
 The address file path must be passed as argument. An optional ``NAME_FILTER`` argument can be
@@ -160,9 +161,8 @@ Two more options change the command behavior:
 Backfilling from existing TSV output
 ======================================
 
-Species processed without making use of the database already have their *K*:sub:`S` data available in local TSV files, but nothing stored in the
-database yet. Command ``populate-ks-db`` backfills the database from that existing output,
-without re-running any pipeline.
+Species processed without the database server already have their *K*:sub:`S` data in local TSV files. Command ``populate-ks-db`` copies
+that existing output into the database server, without re-running any pipeline.
 
 For paralog data::
 
@@ -180,4 +180,4 @@ For ortholog data::
 The peaks and *K*:sub:`S` lists already stored in the ortholog TSV databases are copied as they are.
 
 Both options can be given in the same call. Since only the data a species
-(pair) doesn't already have in the database are added by default, use ``--force`` to re-extract and overwrite everything instead.
+(or species pair) doesn't already have in the database server are added by default, use ``--force`` to re-extract and overwrite everything instead.
