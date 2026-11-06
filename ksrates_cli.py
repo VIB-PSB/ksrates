@@ -550,7 +550,7 @@ def inspect_ks_db(database, name_filter, data_type, delete, list_only):
 		raise click.ClickException(str(e))
 
 
-@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Check whether the focal species already has data in the Ks database.")
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Check for existing paralog Ks data in database.")
 @click.argument('config_file', type=click.Path(exists=True))
 @click.option('-e', '--expert', type=click.Path(exists=True), help="User-defined path to the expert configuration file")
 @click.option('--type', 'analysis_type', type=click.Choice(['paranome', 'anchors', 'recret']), required=True, help="Which analysis type to check for")
@@ -607,7 +607,7 @@ def check_paralog_db(config_file, expert, analysis_type):
 		sys.exit(1)
 
 
-@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Check whether a species pair already has ortholog peak/Ks-list data in the databases.")
+@cli.command(context_settings={'help_option_names': ['-h', '--help']}, short_help="Check for existing ortholog Ks data in database.")
 @click.argument('config_file', type=click.Path(exists=True))
 @click.argument('species1')
 @click.argument('species2')
