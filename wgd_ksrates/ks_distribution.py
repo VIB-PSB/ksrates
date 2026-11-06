@@ -29,6 +29,8 @@ Contact: arzwa@psb.vib-ugent.be
 #  - add more advanced alignment stripping?
 
 # IMPORTS
+from collections import namedtuple
+import re
 from .codeml import Codeml
 from .alignment import prepare_aln, align, get_pairwise_alns
 from .utils import process_gene_families, get_sequences, write_fasta, read_fasta
@@ -254,12 +256,43 @@ def add_alignment_stats_(df, stats):
 
 
 # WRAP ANALYSE FAMILY FUNCTIONS IN TRY/EXCEPT ---------------------------------
+FamilySkipRule = namedtuple("FamilySkipRule", ["min_columns", "big_family_size", "min_columns_big_family"])
+FamilySkipRule.__doc__ = (
+    "Rule to skip the codeml analysis of the gene families whose alignment has too few gap-free codon columns: "
+    "fewer than min_columns, or fewer than min_columns_big_family if the family has at least big_family_size genes. "
+    "A limit of 0 switches that part of the rule off."
+)
+
+
+_NOKS_SKIPPED = "Skipped before codeml:"  # start of the .noKs file of a family skipped by FamilySkipRule
+_NOKS_SKIPPED_DETAILS = re.compile(r"\[genes=(\d+) columns=(\d+)\]\s*$")
+
+
+def family_skip_reason(n_genes, n_columns, rule):
+    """
+    Tells whether the codeml analysis of a gene family has to be skipped.
+
+    :param n_genes: number of genes of the family
+    :param n_columns: number of gap-free codon columns of the family alignment (count_gapfree_codons)
+    :param rule: FamilySkipRule, or None to skip nothing
+    :return: the reason to skip the family (text), or None if the family has to be analysed
+    """
+    if rule is None:
+        return None
+    if rule.min_columns > 0 and n_columns < rule.min_columns:
+        return f"{n_columns} gap-free codon columns, fewer than {rule.min_columns}"
+    if rule.min_columns_big_family > 0 and n_genes >= rule.big_family_size and n_columns < rule.min_columns_big_family:
+        return (f"{n_columns} gap-free codon columns, fewer than {rule.min_columns_big_family}, "
+                f"in a family of {n_genes} genes (at least {rule.big_family_size})")
+    return None
+
+
 def analyse_family_try_except(analysis_function, threshold_failed,
                               family_id, family, nucleotide, tmp='./',
                               codeml='codeml', preserve=False, times=1,
                               min_length=100, method='alc', aligner='muscle',
                               output_dir='./out', n_families=-1,
-                              last_family_id=None, logging_level="INFO"):
+                              last_family_id=None, logging_level="INFO", skip_rule=None):
     """
     Wrapping the analysis in a try/except checkpoint, so that if one family has
     a problem the whole loop is not interrupted and only that family will be
@@ -279,7 +312,7 @@ def analyse_family_try_except(analysis_function, threshold_failed,
     try:
         analysis_function(family_id, family, nucleotide, tmp, codeml, preserve,
                           times, min_length, method, aligner, output_dir,
-                          n_families, is_last_family, logging_level)
+                          n_families, is_last_family, logging_level, skip_rule)
     except Exception:
         # this also prints the exception:
         logging.exception(f"Unexpected internal error during analysis of gene "
@@ -318,7 +351,7 @@ def analyse_family_try_except(analysis_function, threshold_failed,
 def analyse_family(
         family_id, family, nucleotide, tmp='./', codeml='codeml',
         preserve=False, times=1, min_length=100, method='alc', aligner='muscle',
-        output_dir='./out', n_families=-1, is_last_family=False, logging_level=None
+        output_dir='./out', n_families=-1, is_last_family=False, logging_level=None, skip_rule=None
 ):
     """
     Wrapper function for the analysis of one paralog family. Performs alignment
@@ -335,6 +368,8 @@ def analyse_family(
     :param preserve: preserve intermediate files
     :param times: number of times to perform ML estimation of Ks, Ka and omega
         values
+    :param skip_rule: FamilySkipRule, or None: families whose alignment has
+           too few gap-free codon columns are not given to codeml (logged in .noKs)
     :param method: weighting method, from fast to slow: ``alc``, ``fasttree``,
         ``phyml``
     :param aligner: alignment program
@@ -371,10 +406,17 @@ def analyse_family(
     logging.debug('Performing MSA ({0}) for {1}'.format(aligner, family_id))
     ff = write_fasta(family, os.path.join(tmp, family_id + '.fasta'))
     msa_path_protein = align(in_file=ff, out_file=ff + '.msa', aligner=aligner)
-    msa_path, stats, successful = prepare_aln(msa_path_protein, nucleotide)
+    msa_path, stats, successful, n_columns = prepare_aln(msa_path_protein, nucleotide)
     if not successful:
         logging.warning("Failed to obtain codon alignment for gene family "
                         "{}".format(family_id))
+
+    skip_reason = family_skip_reason(len(family), n_columns, skip_rule)
+    if skip_reason is not None:
+        logging.warning(f"Skipping gene family {family_id} (size {len(family)}) before codeml: {skip_reason}")
+        with open(os.path.join(tmp, family_id + '.noKs'), 'w+') as o:
+            o.write(f'{_NOKS_SKIPPED} {skip_reason} [genes={len(family)} columns={n_columns}]')
+        return
         # todo: why is the rest of the analysis not skipped in this case??
 
     # Calculate Ks values (codeml) ---------------------------------------------
@@ -423,7 +465,7 @@ def analyse_family_pairwise(
         family_id, family, nucleotide, tmp='./', codeml='codeml',
         preserve=False, times=1, min_length=100, method='alc',
         aligner='muscle', output_dir='./out', n_families=-1,
-        is_last_family=False, logging_level=None
+        is_last_family=False, logging_level=None, skip_rule=None
 ):
     """
     Perform Ks analysis for one gene family using teh pairwise approach. The
@@ -661,7 +703,8 @@ def ks_analysis_one_vs_one(
     for f in os.listdir(tmp_dir):
         if f[-3:] == '.Ks':
             counts += 1
-            df = pd.read_csv(os.path.join(tmp_dir, f), index_col=0)
+            # Read IDs as text; supports also ID made by only digits or starting with 0
+            df = pd.read_csv(os.path.join(tmp_dir, f), index_col=0, dtype={'Paralog1': str, 'Paralog2': str})
             results_frame = pd.concat([results_frame, df], sort=True)
     results_frame.index = list(range(len(results_frame.index)))
 
@@ -679,7 +722,7 @@ def ks_analysis_one_vs_one(
         os.rename(tmp_dir, tmp_dir_preserved)
         logging.info(f"Intermediate files for ortholog Ks estimate are preserved in {tmp_dir_preserved}")
     else:
-        logging.info('Removing tmp directory')
+        logging.info('Removing Ks tmp directory')
         shutil.rmtree(tmp_dir)
 
     return results_frame
@@ -690,7 +733,7 @@ def ks_analysis_paranome(
         tmp_dir='./tmp', output_dir='./ks.out', codeml_path='codeml',
         preserve=False, times=1, ignore_prefixes=False, n_threads=1,
         min_length=100, method='alc', aligner='muscle',
-        pairwise=False, max_gene_family_size=142, logging_level="INFO"
+        pairwise=False, max_gene_family_size=142, logging_level="INFO", skip_rule=None
 ):
     """
     Calculate a Ks distribution for a whole paranome.
@@ -713,6 +756,9 @@ def ks_analysis_paranome(
     :param pairwise: perform pairwise (instead of gene family wise) analysis
     :param max_gene_family_size: maximum number of members a gene family
         may have
+    :param skip_rule: FamilySkipRule, or None: families whose alignment has
+           too few gap-free codon columns are not analysed with codeml
+           (gene family wise analysis only)
     :return: data frame
     """
     # ignore prefixes in gene families, since only one species -----------------
@@ -745,7 +791,7 @@ def ks_analysis_paranome(
             analysis_function, _THRESHOLD_FAILED_PARALOG_GF,
             family[0], protein[family[0]], nucleotide_sequences, tmp_dir,
             codeml_path, preserve, times, min_length, method, aligner,
-            output_dir, n_families, sorted_families[n_families-1][0], logging_level,
+            output_dir, n_families, sorted_families[n_families-1][0], logging_level, skip_rule,
         ) for family in sorted_families)
     except GeneFamiliesError:
         _log_failed_families_threshold(_THRESHOLD_FAILED_PARALOG_GF,
@@ -767,7 +813,8 @@ def ks_analysis_paranome(
     for f in os.listdir(tmp_dir):
         if f[-3:] == '.Ks':
             counts += 1
-            df = pd.read_csv(os.path.join(tmp_dir, f), index_col=0)
+            # Read IDs as text; supports also only digits or starting with 0
+            df = pd.read_csv(os.path.join(tmp_dir, f), index_col=0, dtype={'Paralog1': str, 'Paralog2': str})
             results_frame = pd.concat([results_frame, df], sort=True)
     results_frame.index = list(range(len(results_frame.index)))
 
@@ -784,16 +831,53 @@ def ks_analysis_paranome(
         os.rename(tmp_dir, tmp_dir_preserved)
         logging.info(f"Intermediate files for paralog Ks estimate were preserved in {tmp_dir_preserved}")
     else:
-        logging.info('Removing tmp directory')
+        logging.info('Removing Ks tmp directory')
         shutil.rmtree(tmp_dir)
 
     return results_frame
+
+
+def noks_skipped_summary(noks_texts):
+    """
+    Summary of the gene families that were skipped before codeml (FamilySkipRule), from the text of their .noKs
+    files. The .noKs files disappear with the tmp directory, so this is what remains in the log of the run.
+
+    :param noks_texts: dictionary family ID -> text of its .noKs file
+    :return: list of log lines, empty if no family was skipped before codeml
+    """
+    skipped = {}
+    for family_id, text in sorted(noks_texts.items()):
+        if text.startswith(_NOKS_SKIPPED):
+            match = _NOKS_SKIPPED_DETAILS.search(text)
+            skipped[family_id] = (int(match.group(1)), int(match.group(2))) if match else (None, None)
+    if not skipped:
+        return []
+    n_no_column = sum(1 for genes, columns in skipped.values() if columns == 0)
+    few_columns = {family_id: details for family_id, details in skipped.items() if details[1] != 0}
+    lines = [f"{len(skipped)} gene families were skipped before codeml, because their alignment has too few gap-free "
+             f"codon columns (see min_gapfree_columns, big_family_size and min_gapfree_columns_big_family):"]
+    if n_no_column:
+        lines.append(f" - {n_no_column} with no gap-free column at all")
+    if few_columns:
+        lines.append(f" - {len(few_columns)} with some columns, but too few:")
+        lines.extend(f"     {family_id}: {genes} genes, {columns} gap-free codon columns"
+                     for family_id, (genes, columns) in few_columns.items())
+    return lines
 
 
 def _log_no_ks_families():
     noks_families = glob.glob("*.noKs")
     n_noresults_families = len(noks_families)
     if n_noresults_families != 0:
+        noks_texts = {}
+        for noks_file in noks_families:
+            with open(noks_file) as handle:
+                noks_texts[noks_file.split(sep='.')[0]] = handle.read().strip()
+        skipped_lines = noks_skipped_summary(noks_texts)
+        if skipped_lines:
+            logging.warning("--")
+            for line in skipped_lines:
+                logging.warning(line)
         logging.warning("--")
         if n_noresults_families == 1:
             logging.warning(f"The analysis of {n_noresults_families} gene "

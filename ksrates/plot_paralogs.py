@@ -7,7 +7,8 @@ import ksrates.fc_plotting as fcPlot
 import ksrates.fc_extract_ks_list as fc_extract_ks_list
 import ksrates.fc_check_input as fcCheck
 import ksrates.fc_configfile as fcConf
-import ksrates.fc_consolidate_paralog_ks as fc_consolidate_paralog_ks
+import ksrates.fc_ks_database_utilities as fcKsDbUtil
+import ksrates.fc_ks_database_paralog as fcKsDbPara
 from ksrates.fc_rrt_correction import _ADJUSTMENT_TABLE
 from ksrates.fc_plotting import _MIXED_ADJUSTED_PLOT_FILENAME, _MIXED_UNADJUSTED_PLOT_FILENAME, _OTHER_MIXED_PLOTS_SUBDIR
 from ksrates.fc_wgd import _OUTPUT_KS_FILE_PATTERN_PARA, _OUTPUT_KS_FILE_PATTERN_ANCHORS, _OUTPUT_KS_FILE_PATTERN_RR_OMCL
@@ -30,8 +31,8 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
     num_gfs = config.get_num_reciprocal_retention_gfs(reciprocal_retention_analysis) # Number of top gene families
     bottom = config.use_bottom_gfs_instead_of_top(reciprocal_retention_analysis) # Use actually the BOTTOM GFs instead of the top ones (number of bottom GFs remains defined by "top" variable)
     rank_type = config.get_reciprocal_retention_rank_type(reciprocal_retention_analysis) # Rank type (only "lambda" supported)
-    use_paralog_ks_database = config.use_paralog_ks_database() # Whether to use the collective paralog Ks database (default: no)
-    ks_list_paralog_db_path = config.get_paralog_ks_database() # address file for the shared sqld-backed paralog Ks database
+    use_ks_database_server = config.use_ks_database_server() # Whether to use the collective Ks database (default: no)
+    ks_db_path = config.get_ks_database_server() # address file for the shared sqld-backed Ks database
 
     # By default the pipeline uses the TOP-ranked reciprocally retained GFs.
     # However, for comparison purposes, the user might want to use the BOTTOM GFs (e.g. the bottom 2000 ones)
@@ -54,18 +55,14 @@ def plot_paralogs_distr(config_file, expert_config_file, correction_table_file, 
 
     # If database usage was enabled in expert config, look up this species' data for each analysis type.
     # Each lookup is an indexed single-row read: it doesn't load data for any other species.
-    if use_paralog_ks_database:
-        try:
-            if not fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path):
-                raise RuntimeError("database unreachable")
-            if paranome_analysis:
-                db_paranome_data = fc_consolidate_paralog_ks.read_analysis_data(ks_list_paralog_db_path, latin_name, 'paranome')
-            if colinearity_analysis:
-                db_anchors_data = fc_consolidate_paralog_ks.read_analysis_data(ks_list_paralog_db_path, latin_name, 'anchors')
-            if reciprocal_retention_analysis:
-                db_recret_data = fc_consolidate_paralog_ks.read_analysis_data(ks_list_paralog_db_path, latin_name, 'recret')
-        except Exception as e:
-            logging.warning(f"Could not use paralog Ks database [{ks_list_paralog_db_path}]: {str(e)}. Will read TSV files instead.")
+    if use_ks_database_server:
+        fcKsDbUtil.initialize_or_exit(ks_db_path) # fail fast if the requested database cannot be used
+        if paranome_analysis:
+            db_paranome_data = fcKsDbPara.read_analysis_data(ks_db_path, latin_name, 'paranome')
+        if colinearity_analysis:
+            db_anchors_data = fcKsDbPara.read_analysis_data(ks_db_path, latin_name, 'anchors')
+        if reciprocal_retention_analysis:
+            db_recret_data = fcKsDbPara.read_analysis_data(ks_db_path, latin_name, 'recret')
 
     # If the species' Ks data is not available in the database, use the original paralog TSV files as fallback
     paralog_tsv_file_required = paranome_analysis and db_paranome_data is None

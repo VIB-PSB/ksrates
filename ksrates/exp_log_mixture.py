@@ -10,7 +10,8 @@ import ksrates.fc_check_input as fcCheck
 import ksrates.fc_plotting as fcPlot
 import ksrates.fc_extract_ks_list as fc_extract_ks_list
 import ksrates.fc_exp_log_mixture as fcEM
-import ksrates.fc_consolidate_paralog_ks as fc_consolidate_paralog_ks
+import ksrates.fc_ks_database_utilities as fcKsDbUtil
+import ksrates.fc_ks_database_paralog as fcKsDbPara
 from ksrates.fc_cluster_anchors import subfolder
 from ksrates.fc_rrt_correction import _ADJUSTMENT_TABLE, interpretation_adjusted_plot
 
@@ -62,20 +63,16 @@ def exp_log_mixture(config_file, expert_config_file, paralog_tsv_file, correctio
     logging.error("Exiting")
     sys.exit(0) # exit code 0 because no actual errors were thrown
 
-  use_paralog_ks_database = config.use_paralog_ks_database() # Whether to use the collective paralog Ks database (default: no)
-  ks_list_paralog_db_path = config.get_paralog_ks_database() # Path to the sqld server address file
+  use_ks_database_server = config.use_ks_database_server() # Whether to use the collective Ks database (default: no)
+  ks_db_path = config.get_ks_database_server() # Path to the sqld server address file
 
   # Get paranome Ks data as a DataFrame, either from the database first (if enabled) or from the
   # wgd output TSV file. Read once here and reuse the same DataFrame for every extraction below,
   # instead of each helper independently re-reading the same file from disk.
   paranome_from_db = None
-  if use_paralog_ks_database:
-    try:
-      if not fc_consolidate_paralog_ks.initialize_paralog_db(ks_list_paralog_db_path):
-        raise RuntimeError("database unreachable")
-      paranome_from_db = fc_consolidate_paralog_ks.read_analysis_data(ks_list_paralog_db_path, latinSpecies, 'paranome')
-    except Exception as e:
-      logging.warning(f"Could not use paralog Ks database [{ks_list_paralog_db_path}]: {str(e)}. Will read TSV file instead.")
+  if use_ks_database_server:
+    fcKsDbUtil.initialize_or_exit(ks_db_path) # fail fast if the requested database cannot be used
+    paranome_from_db = fcKsDbPara.read_analysis_data(ks_db_path, latinSpecies, 'paranome')
 
   if paranome_from_db is not None:
     logging.info(f"Using paranome Ks data from database for [{species}]")

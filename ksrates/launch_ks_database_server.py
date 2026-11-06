@@ -186,27 +186,53 @@ def _generate_jwt(private_key):
 	return f"{header_b64}.{payload_b64}.{signature_b64}"
 
 
-def launch_server(location, port=8080, address_filename="paralog_ks_server_address.txt",
+def _port_is_free(port):
+	"""
+	Check whether a TCP port can currently be bound on all interfaces of this node.
+
+	:param port: port number
+	:return: True if the port is free, False if it's already in use
+	"""
+	with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+		try:
+			s.bind(("0.0.0.0", port))
+		except OSError:
+			return False
+	return True
+
+
+def _find_free_port():
+	"""
+	Ask the operating system for a currently free TCP port on this node.
+
+	:return: port number
+	"""
+	with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+		s.bind(("0.0.0.0", 0))
+		return s.getsockname()[1]
+
+
+def launch_server(location, port=None, address_filename="ks_database_server_address.txt",
 				   max_response_size="200MB", max_total_response_size="500MB"):
 	"""
-	Launch the sqld server that hosts the shared paralog Ks database, in the foreground - this
+	Launch the sqld server that hosts the shared Ks database (paralog and ortholog Ks data), in the foreground - this
 	call never returns (it execs into sqld), so it's meant to be run once as a long-running job
 	(e.g. via setup_database_server.nf) and left running indefinitely. Every ksrates analysis then becomes
 	a network client of it instead of opening a local database file directly.
 
 	:param location: central directory to hold the data/keys directories and address file; every
-	                  dataset's ks_list_paralog_database_path should point at
+	                  dataset's ks_database_server_address_path should point at
 	                  <location>/<address_filename>
-	:param port: port sqld listens on (default: 8080)
+	:param port: port sqld listens on (default: None, i.e. a free port is chosen automatically)
 	:param address_filename: filename (not path) of the address file written under location
-	                          (default: "paralog_ks_server_address.txt"); customizable so multiple
+	                          (default: "ks_database_server_address.txt"); customizable so multiple
 	                          independent servers can share the same location without colliding
 	:param max_response_size: passed through to sqld's --max-response-size (default: "200MB")
 	:param max_total_response_size: passed through to sqld's --max-total-response-size (default: "500MB")
 	"""
 	location = os.path.abspath(location)
-	data_dir = os.path.join(location, "paralog_ks_sqld_data")
-	key_dir = os.path.join(location, "paralog_ks_sqld_keys")
+	data_dir = os.path.join(location, "ks_database_sqld_data")
+	key_dir = os.path.join(location, "ks_database_sqld_keys")
 	address_file = os.path.join(location, address_filename)
 
 	os.makedirs(data_dir, exist_ok=True)
@@ -216,6 +242,15 @@ def launch_server(location, port=8080, address_filename="paralog_ks_server_addre
 		sqld_bin = _resolve_sqld_bin()
 	except RuntimeError as e:
 		print(f"ERROR: {e}", file=sys.stderr)
+		sys.exit(1)
+
+	# Check the port before writing the address file, so that a port already in use on this (shared)
+	# node doesn't leave an address file pointing at another service. A small race remains between
+	# this check and sqld binding the port; if it is lost, sqld fails with "Address already in use".
+	if port is None:
+		port = _find_free_port()
+	elif not _port_is_free(port):
+		print(f"ERROR: port {port} is already in use on this node; choose another one or omit --port to pick a free one automatically.", file=sys.stderr)
 		sys.exit(1)
 
 	private_key, public_key = _generate_jwt_keys(key_dir)

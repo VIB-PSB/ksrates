@@ -4,12 +4,14 @@ import logging
 import ksrates.fc_manipulate_trees as fcTree
 import ksrates.fc_check_input as fcCheck
 import ksrates.fc_configfile as fcConf
+import ksrates.fc_ks_database_utilities as fcKsDbUtil
+import ksrates.fc_ks_database_ortholog as fcKsDbOrtho
 from ksrates.fc_rrt_correction import _ADJUSTMENT_TABLE
 from ksrates.utils import init_logging
 import pandas
 
 
-def plot_tree_rates(config_file, expert_config_file, correction_table_file, nextflow_flag):
+def plot_tree_rates(config_file, expert_config_file, correction_table_file, nextflow_flag, tree_hook=None, output_suffix=""):
     # INPUT
     config = fcConf.Configuration(config_file, expert_config_file)
     init_logging("Generating PDF of input tree with branch length equal to Ks distances", config.get_logging_level())
@@ -17,7 +19,9 @@ def plot_tree_rates(config_file, expert_config_file, correction_table_file, next
 
     # GET PARAMETERS and INPUT FILES
     species = config.get_species()
-    peak_db_path = config.get_ortho_db()
+    peak_db_path = config.get_peak_tsv_db()
+    use_ks_database_server = config.use_ks_database_server() # Whether to use the shared Ks database instead of the TSV files (default: no)
+    ks_db_path = config.get_ks_database_server()
     newick_tree = config.get_newick_tree() # as Tree object by ete3
     latin_names = config.get_latin_names()
 
@@ -59,19 +63,26 @@ def plot_tree_rates(config_file, expert_config_file, correction_table_file, next
     peak_stats = config.get_peak_stats() # default is mode (other option, median)
 
     # Loading the ortholog peak database for the tree picture: it can contain data to compute all the branch lengths.
-    try:
-        with open(peak_db_path, "r") as f:
-            ortholog_db = pandas.read_csv(f, sep="\t", index_col=0)
-            if ortholog_db.shape[0] == 0:
-                logging.warning(f"Ortholog peak database is present by doesn't contain any data, will be ignored when plotting the tree")
-                ortholog_db = pandas.DataFrame()
-    except Exception:
-        logging.warning(f"Ortholog peak database [{peak_db_path}] not found or empty, will be ignored when plotting the tree")
-        ortholog_db = pandas.DataFrame() # since there is no ortholog database, just assign an empty dataframe to this variable
+    if use_ks_database_server:
+        fcKsDbUtil.initialize_or_exit(ks_db_path)
+        ortholog_db = fcKsDbOrtho.read_all_peaks(ks_db_path)
+        if ortholog_db.shape[0] == 0:
+            logging.warning(f"Ks database doesn't contain any ortholog peak, will be ignored when plotting the tree")
+            ortholog_db = pandas.DataFrame()
+    else:
+        try:
+            with open(peak_db_path, "r") as f:
+                ortholog_db = pandas.read_csv(f, sep="\t", index_col=0)
+                if ortholog_db.shape[0] == 0:
+                    logging.warning(f"Ortholog peak database is present by doesn't contain any data, will be ignored when plotting the tree")
+                    ortholog_db = pandas.DataFrame()
+        except Exception:
+            logging.warning(f"Ortholog peak database [{peak_db_path}] not found or empty, will be ignored when plotting the tree")
+            ortholog_db = pandas.DataFrame() # since there is no ortholog database, just assign an empty dataframe to this variable
 
     logging.info("")
     fcTree.plotting_tree(species, latin_names, newick_tree, correction_table, consensus_peak_for_multiple_outgroups, 
-                         ortholog_db, peak_stats, nextflow_flag)
+                         ortholog_db, peak_stats, nextflow_flag, tree_hook, output_suffix)
     logging.info("")
     logging.info(f"Saved PDF tree figure [{fcTree._TREE_BRANCH_DISTANCES.format(species)}]")
     logging.info("")

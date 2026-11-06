@@ -7,6 +7,8 @@ from ast import literal_eval
 import ksrates.fc_check_input as fcCheck
 import ksrates.fc_kde_bootstrap as fcPeak
 import ksrates.fc_configfile as fcConf
+import ksrates.fc_ks_database_utilities as fcKsDbUtil
+import ksrates.fc_ks_database_ortholog as fcKsDbOrtho
 from ksrates.utils import init_logging
 
 
@@ -35,31 +37,42 @@ def compute_peaks(config_file, expert_config_file, ortholog_pairs_file):
         header = f.readline() # ignore first line due to headers
         ortholog_pairs = f.readlines()
 
-    db_path = config.get_ortho_db()
-    ks_list_db_path = config.get_ks_db()
+    db_path = config.get_peak_tsv_db()
+    ks_list_db_path = config.get_ks_list_tsv_db()
+    use_ks_database_server = config.use_ks_database_server() # Whether to use the shared Ks database instead of the TSV files (default: no)
+    ks_db_path = config.get_ks_database_server() if use_ks_database_server else None
 
-    try:
-        with open(db_path, "r") as f:
-            db = pandas.read_csv(f, sep="\t", index_col=0)
-    except Exception:
-        logging.warning(f"Ortholog peak database [{db_path}] not found or empty: a new one is now generated.")
+    if use_ks_database_server:
+        # Fail fast if the requested database cannot be used; then take the one snapshot of which
+        # pairs are already known (only the keys are needed, not the data)
+        fcKsDbUtil.initialize_or_exit(ks_db_path)
+        pair_keys_with_peak = fcKsDbOrtho.pair_keys_in_database(ks_db_path, "peak")
+        pair_keys_with_ks_list = fcKsDbOrtho.pair_keys_in_database(ks_db_path, "ks_list")
+    else:
+        try:
+            with open(db_path, "r") as f:
+                db = pandas.read_csv(f, sep="\t", index_col=0)
+        except Exception:
+            logging.warning(f"Ortholog peak TSV database file [{db_path}] not found or empty: a new one is now generated.")
 
-        db = DataFrame()
-        with open(db_path, "w+") as outfile:
-            outfile.write('\tSpecies1\tSpecies2\tMode\tMode_SD\n')
+            db = DataFrame()
+            with open(db_path, "w+") as outfile:
+                outfile.write('\tSpecies1\tSpecies2\tMode\tMode_SD\n')
 
-    try:
-        with open(ks_list_db_path, "r") as f:
-            ks_list_db = pandas.read_csv(f, sep="\t", index_col=0)
-            # When imported from csv format, all the Ks lists in the df are read as
-            # plain text (strings) and must be converted back to value lists
-            ks_list_db.loc[:, 'Ks_Values'] = ks_list_db.loc[:, 'Ks_Values'].apply(literal_eval)
-    except Exception:
-        logging.warning(f"Ortholog Ks list database [{ks_list_db_path}] not found or empty: a new one is now generated.")
+        try:
+            with open(ks_list_db_path, "r") as f:
+                ks_list_db = pandas.read_csv(f, sep="\t", index_col=0)
+                # When imported from csv format, all the Ks lists in the df are read as
+                # plain text (strings) and must be converted back to value lists
+                ks_list_db.loc[:, 'Ks_Values'] = ks_list_db.loc[:, 'Ks_Values'].apply(literal_eval)
+        except Exception:
+            logging.warning(f"Ortholog Ks list TSV database file [{ks_list_db_path}] not found or empty: a new one is now generated.")
 
-        ks_list_db = DataFrame()
-        with open(ks_list_db_path, "w+") as outfile:
-            outfile.write('\tSpecies1\tSpecies2\tKs_Values\n')
+            ks_list_db = DataFrame()
+            with open(ks_list_db_path, "w+") as outfile:
+                outfile.write('\tSpecies1\tSpecies2\tKs_Values\n')
+        pair_keys_with_peak = set(db.index)
+        pair_keys_with_ks_list = set(ks_list_db.index)
 
     logging.info("")
 
@@ -115,21 +128,26 @@ def compute_peaks(config_file, expert_config_file, ortholog_pairs_file):
             logging.warning("It is advised to delete the temporary folders and the file that was being created (.blast.tsv or .ks.tsv) and re-compute the data.")
             logging.warning("")
 
-        if f"{latinSp1}_{latinSp2}" not in db.index: # flag for presence/absence of species pair in the ortholog peak database
+        if f"{latinSp1}_{latinSp2}" not in pair_keys_with_peak: # flag for presence/absence of species pair in the ortholog peak database
             flag_not_in_peak_db = True 
         else:
             flag_not_in_peak_db = False
 
-        if f"{latinSp1}_{latinSp2}" not in ks_list_db.index: # same but for ks list database
+        if f"{latinSp1}_{latinSp2}" not in pair_keys_with_ks_list: # same but for ks list database
             flag_not_in_ks_db = True
         else:
             flag_not_in_ks_db = False
 
+        if use_ks_database_server and (flag_not_in_peak_db or flag_not_in_ks_db):
+            # The stored peak must always come from the stored Ks list: if either half is missing, both are
+            # (re)computed from the same Ks list and written together
+            flag_not_in_peak_db, flag_not_in_ks_db = True, True
+
         if flag_not_in_peak_db is False and flag_not_in_ks_db is False:
-            logging.info(f"{latinSp1} and {latinSp2}: data already present in ortholog database")
+            logging.info(f"{latinSp1} and {latinSp2}: data already present in {'the Ks database' if use_ks_database_server else 'the ortholog TSV database files'}")
             
         if flag_not_in_peak_db or flag_not_in_ks_db:    # if the pair is missing in the ortholog peak or ks databases
-            compute_peak_failed_flag = fcPeak.estimate_peak(sp1, sp2, latinSp1, latinSp2, max_ks_ortho, n_iter, x_lim_ortho, bin_width_ortho, ks_list_db_path, db_path, flag_not_in_peak_db=flag_not_in_peak_db, flag_not_in_ks_db=flag_not_in_ks_db)
+            compute_peak_failed_flag = fcPeak.estimate_peak(sp1, sp2, latinSp1, latinSp2, max_ks_ortho, n_iter, x_lim_ortho, bin_width_ortho, ks_list_db_path, db_path, flag_not_in_peak_db=flag_not_in_peak_db, flag_not_in_ks_db=flag_not_in_ks_db, ks_database_server_address_path=ks_db_path)
             list_of_compute_peak_results.append(compute_peak_failed_flag)
         logging.info("")
 
