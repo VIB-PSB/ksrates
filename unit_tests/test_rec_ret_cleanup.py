@@ -61,7 +61,7 @@ class RemoveOrthomclIntermediateFilesTest(unittest.TestCase):
         self.assertEqual(self.names(), sorted([
             f"{SPECIES}_matched_top_2000_gfs_max_15_extra.tsv",
             f"{SPECIES}_matched_top_4000_gfs_max_15_extra.tsv",
-            f"{SPECIES}_orthomcl_parameter.log",
+            f"{SPECIES}_orthomcl_parameter_Sep_1.log",
             f"{SPECIES}_original_37.orthomcl.out",
             f"{SPECIES}_rec_ret_top_2000_ids.mcl.tsv",
             f"{SPECIES}_rec_ret_top_4000_ids.mcl.tsv",
@@ -69,7 +69,7 @@ class RemoveOrthomclIntermediateFilesTest(unittest.TestCase):
 
     def test_parameter_log_keeps_its_content(self):
         self.clean()
-        with open(os.path.join(self.dir, f"{SPECIES}_orthomcl_parameter.log")) as f:
+        with open(os.path.join(self.dir, f"{SPECIES}_orthomcl_parameter_Sep_1.log")) as f:
             self.assertEqual(f.read(), "MCL Inflation  1.5\n")
 
     def test_returns_the_freed_bytes(self):
@@ -109,11 +109,11 @@ class RemoveOrthomclIntermediateFilesTest(unittest.TestCase):
         self.assertEqual(self.clean(), 0)
         self.assertEqual(self.names(), before)
 
-    def test_existing_parameter_log_is_not_overwritten(self):
-        write(os.path.join(self.dir, f"{SPECIES}_orthomcl_parameter.log"), "first run\n")
+    def test_parameter_log_of_an_earlier_cleanup_is_kept(self):
+        write(os.path.join(self.dir, f"{SPECIES}_orthomcl_parameter_Aug_30.log"), "earlier run\n")
         self.clean()
-        with open(os.path.join(self.dir, f"{SPECIES}_orthomcl_parameter.log")) as f:
-            self.assertEqual(f.read(), "first run\n")
+        with open(os.path.join(self.dir, f"{SPECIES}_orthomcl_parameter_Aug_30.log")) as f:
+            self.assertEqual(f.read(), "earlier run\n")
         self.assertIn(f"{SPECIES}_orthomcl_parameter_Sep_1.log", self.names())
 
     def test_other_directories_are_left_alone(self):
@@ -129,7 +129,7 @@ class RemoveOrthomclIntermediateFilesTest(unittest.TestCase):
         self.clean()
         self.assertFalse(os.path.exists(os.path.join(self.dir, "Sep_1")))
         self.assertFalse(os.path.exists(os.path.join(self.dir, "Sep_1_2")))
-        self.assertIn(f"{SPECIES}_orthomcl_parameter.log", self.names())
+        self.assertIn(f"{SPECIES}_orthomcl_parameter_Sep_1.log", self.names())
         self.assertIn(f"{SPECIES}_orthomcl_parameter_Sep_1_2.log", self.names())
 
     def test_focal_fasta_outside_the_orthomcl_directory_is_not_removed(self):

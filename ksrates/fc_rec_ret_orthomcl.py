@@ -1078,7 +1078,8 @@ def remove_orthomcl_intermediate_files(species_name, orthomcl_outdir_focal, foca
     - the OrthoMCL orthogroups [<species>_original_37.orthomcl.out]: with it, the pipeline skips the whole OrthoMCL
       part and can reconstruct the GFs again for another number of top GFs;
     - the tables of the matched GFs [<species>_matched_*.tsv] and the reconstructed GFs [<species>_rec_ret_*.mcl.tsv];
-    - the OrthoMCL parameter log, moved out of the OrthoMCL working directory [<species>_orthomcl_parameter.log].
+    - the OrthoMCL parameter log, moved out of the OrthoMCL working directory and named after it
+      [<species>_orthomcl_parameter_<working directory>.log, e.g. <species>_orthomcl_parameter_Sep_28.log].
     What is removed: the diamond table and database, the merged and focal FASTA files, all.gg and the OrthoMCL
     working directory (named after the date of the run, e.g. Sep_28), which holds the BPO file.
     Nothing is removed if the OrthoMCL orthogroups file is missing, since the working directory holds its original.
@@ -1111,9 +1112,7 @@ def remove_orthomcl_intermediate_files(species_name, orthomcl_outdir_focal, foca
             continue  # not an OrthoMCL working directory
         parameter_log = os.path.join(workdir, "parameter.log")
         if os.path.isfile(parameter_log):
-            destination = os.path.join(orthomcl_outdir_focal, f"{species_name}_orthomcl_parameter.log")
-            if os.path.exists(destination):
-                destination = os.path.join(orthomcl_outdir_focal, f"{species_name}_orthomcl_parameter_{name}.log")
+            destination = os.path.join(orthomcl_outdir_focal, f"{species_name}_orthomcl_parameter_{name}.log")
             shutil.move(parameter_log, destination)
             logging.info(f"Moved the OrthoMCL parameter log to [{os.path.basename(destination)}]")
         to_remove.append(workdir)
