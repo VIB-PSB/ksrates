@@ -263,15 +263,15 @@ def setup_correction(config_file, expert_config_file, nextflow_flag):
             no_ks_list_db_file = True
 
     if no_db_file and not no_ks_list_db_file:
-        logging.info("Ortholog peak database empty or not found at the path provided in the configuration file.")
+        logging.info("Ortholog peak TSV file empty or not found at the path provided in the configuration file (peak_database_path).")
         logging.info("All of the species pairs will be used to compute their ortholog distribution and its peak.")
         species_pairs_unknown = species_pairs.copy()
     elif not no_db_file and no_ks_list_db_file:
-        logging.info("Ortholog Ks list database empty or not found at the path provided in the configuration file.")
+        logging.info("Ortholog Ks list TSV file empty or not found at the path provided in the configuration file (ks_list_database_path).")
         logging.info("All of the species pairs will be used to compute their ortholog distribution and its peak.")
         species_pairs_unknown = species_pairs.copy()
     elif no_db_file or no_ks_list_db_file:
-        logging.info("Ortholog databases empty or not found at the paths provided in the configuration file.")
+        logging.info("Ortholog TSV files empty or not found at the paths provided in the configuration file (peak_database_path, ks_list_database_path).")
         logging.info("All of the species pairs will be used to compute their ortholog distribution and its peak.")
         species_pairs_unknown = species_pairs.copy()
     else:  # False and False

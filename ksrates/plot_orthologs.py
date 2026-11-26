@@ -59,7 +59,7 @@ def plot_orthologs_distr(config_file, expert_config_file, trios_file):
         ks_list_db = fcKsDbOrtho.read_ks_lists(ks_db_path, sorted(needed_pair_keys))
     else:
         ks_list_db_path = config.get_ks_list_tsv_db()
-        fcCheck.check_inputfile(ks_list_db_path, "Ortholog Ks list database")
+        fcCheck.check_inputfile(ks_list_db_path, "Ortholog Ks list TSV file")
         with open(ks_list_db_path, 'r') as f2:
             ks_list_db = pandas.read_csv(f2, sep="\t", index_col=0)
         # When imported from csv format, all the Ks lists in the df are read as
@@ -77,7 +77,7 @@ def plot_orthologs_distr(config_file, expert_config_file, trios_file):
                 db = pandas.read_csv(f3, sep="\t", index_col=0)
         except Exception:
             no_peak_db = True
-            logging.warning(f"Ortholog Ks peak database empty or not found at the path provided in the config file: distribution peaks will not be shown")
+            logging.warning(f"Ortholog peak TSV file [{db_path}] empty or not found at the path provided in the configuration file (peak_database_path): distribution peaks will not be shown")
 
     # -----------------------------------------------------------------------------
 

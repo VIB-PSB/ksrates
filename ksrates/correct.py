@@ -44,7 +44,7 @@ def correct(config_file, expert_config_file, trios_file):
             with open(db_path, "r") as f:
                 db = pd.read_csv(f, sep="\t", index_col=0)
         except Exception:
-            logging.warning(f"Ortholog peak database [{db_path}] not found or empty (yet)\n\
+            logging.warning(f"Ortholog peak TSV file [{db_path}] not found or empty (yet)\n\
             -> rate-adjustment will be skipped.")
             sys.exit(0)
 

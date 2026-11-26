@@ -74,10 +74,10 @@ def plot_tree_rates(config_file, expert_config_file, correction_table_file, next
             with open(peak_db_path, "r") as f:
                 ortholog_db = pandas.read_csv(f, sep="\t", index_col=0)
                 if ortholog_db.shape[0] == 0:
-                    logging.warning(f"Ortholog peak database is present by doesn't contain any data, will be ignored when plotting the tree")
+                    logging.warning(f"Ortholog peak TSV file is present but doesn't contain any data, will be ignored when plotting the tree")
                     ortholog_db = pandas.DataFrame()
         except Exception:
-            logging.warning(f"Ortholog peak database [{peak_db_path}] not found or empty, will be ignored when plotting the tree")
+            logging.warning(f"Ortholog peak TSV file [{peak_db_path}] not found or empty, will be ignored when plotting the tree")
             ortholog_db = pandas.DataFrame() # since there is no ortholog database, just assign an empty dataframe to this variable
 
     logging.info("")
