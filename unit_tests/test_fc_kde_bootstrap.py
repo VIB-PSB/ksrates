@@ -171,7 +171,7 @@ class EstimatePeakWithKsDatabaseTest(EstimatePeakTest):
         failed = self._estimate(ks_values, flag_not_in_peak_db=True, flag_not_in_ks_db=False)
         self.assertFalse(failed)
         self.assertIsNotNone(fcKsDbOrtho.read_peak(self.db, "Species one", "Species two"))
-        self.assertEqual(fcKsDbOrtho.read_ks_list(self.db, "Species one", "Species two"), ks_values)
+        np.testing.assert_allclose(fcKsDbOrtho.read_ks_list(self.db, "Species one", "Species two"), ks_values, rtol=1e-12)
 
     def test_nothing_is_written_to_the_tsv_files(self):
         self._estimate(list(np.linspace(0.5, 2.5, 20)))
