@@ -444,7 +444,10 @@ def ks_paralogs_rec_ret(species_name, cds_fasta, latin_name, custom_recret_gfs, 
 
             orthomcl_output_renamed = f"{species_name}_original_37.orthomcl.out"
             orthomcl_output_renamed_path = os.path.join(orthomcl_outdir_focal, orthomcl_output_renamed)
-            
+            # Translated focal species FASTA: made below if OrthoMCL has to run, removed at the end if requested
+            focal_species_aa_filename = f"{os.path.splitext(os.path.basename(cds_fasta))[0]}.faa"
+            focal_species_aa_filepath = os.path.join(orthomcl_outdir_focal, focal_species_aa_filename)
+
             if os.path.exists(orthomcl_output_renamed_path):
                 logging.info(f"OrthoMCL orthogroup file [{orthomcl_output_renamed}] already exists, will skip OrthoMCL pipeline")
             else:
@@ -460,8 +463,6 @@ def ks_paralogs_rec_ret(species_name, cds_fasta, latin_name, custom_recret_gfs, 
                     original_37_fasta_dir_targz = os.path.join("sequences", "original_angiosperm_sequences_test.tar.gz")
 
                 # Translate focal species FASTA
-                focal_species_aa_filename = f"{os.path.splitext(os.path.basename(cds_fasta))[0]}.faa"
-                focal_species_aa_filepath = os.path.join(orthomcl_outdir_focal, focal_species_aa_filename)
                 fcRecRet_OMCL.translate_focal_fasta_for_recret(species_name, cds_fasta, focal_species_aa_filepath)
                 
                 # Generate homology search table, or reuse an older one provided by user
@@ -532,7 +533,6 @@ def ks_paralogs_rec_ret(species_name, cds_fasta, latin_name, custom_recret_gfs, 
             logging.info("")
 
             if remove_orthomcl_files:
-                focal_species_aa_filepath = os.path.join(orthomcl_outdir_focal, f"{os.path.splitext(os.path.basename(cds_fasta))[0]}.faa")
                 fcRecRet_OMCL.remove_orthomcl_intermediate_files(species_name, orthomcl_outdir_focal, focal_species_aa_filepath,
                                                                  orthomcl_output_renamed_path, protected_paths=[parsed_homology_table])
                 logging.info("")
