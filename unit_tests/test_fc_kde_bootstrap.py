@@ -163,6 +163,16 @@ class EstimatePeakWithKsDatabaseTest(EstimatePeakTest):
         self.assertEqual(fcKsDbOrtho.read_ks_list(self.db, "Species one", "Species two"), [7.57, 7.80, 8.71])
         self.assertIsNone(fcKsDbOrtho.read_peak(self.db, "Species one", "Species two"))
 
+    def test_new_peak_is_stored_with_the_ks_list_it_comes_from(self):
+        # A pair with a Ks list but no peak: the peak is estimated from the list on disk, so that list replaces the
+        # stored one (which may come from another source) in the same write
+        fcKsDbOrtho.write_to_ortholog_db(self.db, "Species one", "Species two", ks_list=[9.1, 9.2, 9.3])
+        ks_values = list(np.linspace(0.5, 2.5, 20))
+        failed = self._estimate(ks_values, flag_not_in_peak_db=True, flag_not_in_ks_db=False)
+        self.assertFalse(failed)
+        self.assertIsNotNone(fcKsDbOrtho.read_peak(self.db, "Species one", "Species two"))
+        self.assertEqual(fcKsDbOrtho.read_ks_list(self.db, "Species one", "Species two"), ks_values)
+
     def test_nothing_is_written_to_the_tsv_files(self):
         self._estimate(list(np.linspace(0.5, 2.5, 20)))
         self.assertFalse(os.path.exists(self.peak_db_path))

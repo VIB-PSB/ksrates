@@ -189,6 +189,10 @@ def estimate_peak(species1, species2, latinSp1, latinSp2, max_ks_ortho, n_iter, 
         # With the Ks database, peak and Ks list go together in one atomic statement and nothing is appended to the
         # ortholog TSV files (they would be written concurrently by independent runs, without any locking).
         if ks_database_server_address_path is not None:
+            # A new peak is stored with the Ks list it was estimated from, even if the database already has a list:
+            # that list may come from another source (e.g. another max_ks_ortho), and the peak must match the stored list
+            if peak_to_store is not None:
+                ks_list_to_store = ks_list
             if peak_to_store is not None:
                 logging.info("- Adding peak to Ks database")
             if ks_list_to_store is not None:
