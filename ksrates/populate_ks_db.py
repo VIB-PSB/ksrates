@@ -293,9 +293,10 @@ def populate_ortholog_ks_db(peak_tsv_path, ks_list_tsv_path, db_path, force_over
 	list). The already-computed values are copied forward as they are, never recomputed: the bootstrap
 	peak estimate is random, so recomputing it would silently change the stored values.
 	A pair already complete in the database is left as it is (unless force_overwrite). To keep every stored
-	peak consistent with the stored Ks list, the two are always copied together from the same TSV pair: an
-	incomplete database pair is replaced by the TSV pair if the TSVs have both, and a pair for which the TSVs
-	only have one half is skipped if the database already holds the other half.
+	peak consistent with the stored Ks list, the two are copied together from the same TSV pair whenever the
+	TSVs have both. If the TSVs only have one half of a pair, it is copied only when the database holds nothing
+	else for that pair (or, with force_overwrite, only that same half); if the database already holds the other
+	half, the pair is skipped, even with force_overwrite, so that the two halves never come from different sources.
 
 	:param peak_tsv_path: path to the legacy ortholog peak TSV database (peak_database_path)
 	:param ks_list_tsv_path: path to the legacy ortholog Ks list TSV database (ks_list_database_path)
@@ -324,6 +325,7 @@ def populate_ortholog_ks_db(peak_tsv_path, ks_list_tsv_path, db_path, force_over
 	logging.info("")
 
 	added, updated, overwritten, skipped, failed = [], [], [], [], []
+	half_skipped = [] # skipped pairs whose TSVs only have one half and whose database row holds the other
 	status = {} # pair_key -> (has peak, has Ks list) after this run
 	# For each species present in the TSV database files
 	for key, pair in pairs.items():
@@ -337,6 +339,7 @@ def populate_ortholog_ks_db(peak_tsv_path, ks_list_tsv_path, db_path, force_over
 			# A stored peak must always come from the stored Ks list: the two halves of a pair are
 			# never taken from different sources.
 			peak, ks_list = None, None  # what will be written; None = write nothing for that half
+			half_only_skipped = False
 
 			# 1) If SQLD database already contains complete data for species pair, and we don't want to overwrite it:
 			#    skip copying from TSVs
@@ -365,6 +368,7 @@ def populate_ortholog_ks_db(peak_tsv_path, ks_list_tsv_path, db_path, force_over
 				if existing[partial_data_missing_tsv]:
 					logging.warning(f"  Skipping [{key}]: the TSV files only have its {partial_data_present_tsv}, "
 					                f"and the database has the {partial_data_missing_tsv} from a possibly different source")
+					half_only_skipped = True
 				
 				# 3.2) If database lacks the complementary data because it has actually no data for this pair at all:
 				#      copy the TSV partial data
@@ -382,12 +386,13 @@ def populate_ortholog_ks_db(peak_tsv_path, ks_list_tsv_path, db_path, force_over
 					logging.warning(f"  [{key}]: the TSV files only have its {partial_data_present_tsv}: "
                                     f"the {partial_data_present_tsv} in the database is replaced and the pair stays without {partial_data_missing_tsv}")
 				
-				# 3.4) The database lacks the complementary data because it contains only the same partial datak, and we don't want to overwrite:
+				# 3.4) The database lacks the complementary data because it contains only the same partial data, and we don't want to overwrite:
 				#      skip copying the partial data from TSV
 				#      RESULT: kept old partial data already present in SQLD database
 				else:
 					logging.warning(f"  Skipping [{key}]: the TSV files only have its {partial_data_present_tsv}, "
 					                f"and the database already has the {partial_data_present_tsv} (use --force to replace it)")
+					half_only_skipped = True
 
 			wrote = fcKsDbOrtho.write_to_ortholog_db(db_path, latin_sp1, latin_sp2, peak=peak, ks_list=ks_list)
 
@@ -408,14 +413,18 @@ def populate_ortholog_ks_db(peak_tsv_path, ks_list_tsv_path, db_path, force_over
 			added.append(key)
 		else:  # nothing was written (complete already, or skipped to avoid mixing halves)
 			skipped.append(key)
+			if half_only_skipped:
+				half_skipped.append(key)
 
 	logging.info("=" * 70)
 	logging.info("BATCH PROCESSING SUMMARY")
 	logging.info("=" * 70)
 	logging.info(f"Processed: {len(added)} new, {len(updated)} updated, {len(overwritten)} overwritten, "
 	             f"{len(skipped)} skipped, {len(failed)} failed, out of {len(pairs)} species pairs")
-	if skipped:
+	if len(skipped) > len(half_skipped):
 		logging.info(f"Skipped pairs were already fully populated (use --force to overwrite)")
+	if half_skipped:
+		logging.info(f"{len(half_skipped)} skipped pair(s) have only one half in the TSV files (see the warnings above)")
 	if failed:
 		logging.info("")
 		logging.error(f"Failed to process: {len(failed)} species pairs")
