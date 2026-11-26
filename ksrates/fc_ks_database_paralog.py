@@ -124,10 +124,11 @@ def read_anchor_iadhore_files(db_path, latin_name):
 
 def write_anchor_iadhore_files(latin_name, iadhore_dict, db_path):
 	"""
-	Write the i-ADHoRe output file contents (raw text) for one species to the database. Like
-	write_to_paralog_db, only the keys present (non-None) in iadhore_dict are overwritten; keys
-	not present are left untouched (so a partial dict never wipes out previously stored files).
-	Text is compressed with zlib before storage to avoid exceeding parameter size limits.
+	Write the i-ADHoRe output file contents (raw text) for one species to the database. The 5 files
+	come from one i-ADHoRe run, so they are replaced as one set: a file missing from iadhore_dict is
+	erased from the database rather than kept from an earlier run, and a warning names it (the species
+	then counts as having no i-ADHoRe files, see existing_data_types). If all 5 are missing nothing
+	is written. Text is compressed with zlib before storage to avoid exceeding parameter size limits.
 
 	:param latin_name: latin name of species of interest
 	:param iadhore_dict: dict with any of the keys 'anchorpoints', 'multiplicons', 'segments',
@@ -141,7 +142,11 @@ def write_anchor_iadhore_files(latin_name, iadhore_dict, db_path):
 	if all(v is None for v in values.values()):
 		logging.warning("  No i-ADHoRe output files could be read.")
 		return False
-	return upsert(db_path, PARALOG_TABLE, latin_name, values)
+	missing = [key for key in IADHORE_FILES if values[IADHORE_COLUMN[key]] is None]
+	if missing:
+		logging.warning(f"  Incomplete i-ADHoRe output for [{latin_name}]: {', '.join(missing)} missing. The stored "
+		                f"set is replaced and incomplete; cluster_anchor_ks.py will look for the files on disk instead.")
+	return upsert(db_path, PARALOG_TABLE, latin_name, values, clear=[IADHORE_COLUMN[key] for key in missing])
 
 
 def extract_anchor_iadhore_files(species_name):

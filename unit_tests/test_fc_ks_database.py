@@ -138,6 +138,16 @@ class KsDatabaseTest(unittest.TestCase):
         full = {key: key for key in fcKsDbPara.IADHORE_FILES}
         fcKsDbPara.write_anchor_iadhore_files(SP_A, full, self.db)
         self.assertTrue(fcKsDbPara.existing_data_types(self.db, SP_A)["iadhore"])
+        # a later partial set replaces the whole set: the missing files are erased, not kept from the earlier run
+        with self.assertLogs(level="WARNING"):
+            fcKsDbPara.write_anchor_iadhore_files(SP_A, {"anchorpoints": "new a", "segments": "new s"}, self.db)
+        read = fcKsDbPara.read_anchor_iadhore_files(self.db, SP_A)
+        self.assertEqual((read["anchorpoints"], read["segments"]), ("new a", "new s"))
+        self.assertIsNone(read["multiplicons"])
+        self.assertFalse(fcKsDbPara.existing_data_types(self.db, SP_A)["iadhore"])
+        # nothing readable: nothing written, the stored set stays
+        self.assertFalse(fcKsDbPara.write_anchor_iadhore_files(SP_A, {}, self.db))
+        self.assertEqual(fcKsDbPara.read_anchor_iadhore_files(self.db, SP_A)["anchorpoints"], "new a")
 
     # ---- fail-fast
     def test_unreachable_server_raises_everywhere(self):
