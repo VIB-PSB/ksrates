@@ -63,7 +63,7 @@ jobs:
       - name: Running ksrates Nextflow pipeline
         run: |
           cd test
-          NXF_VER=24.10.5 nextflow run ../main.nf --test -profile docker --config config_files/config_elaeis.txt --expert config_files/config_expert.txt -with-docker ksrates
+          NXF_VER=26.10.7 NXF_SYNTAX_PARSER=v1 nextflow run ../main.nf --test -profile docker --config config_files/config_elaeis.txt --expert config_files/config_expert.txt -with-docker ksrates
 
       - name: Export human-readable Ks database dump (paralog and ortholog data)
         # Runs even on failure, for debugging a partial run; before the server is stopped below.
