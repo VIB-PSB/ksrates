@@ -233,44 +233,55 @@ The following can be used as a template (default values)::
 
     [EXPERT PARAMETERS]
 
+    # ---- General ----
     logging_level = info
-    preserve_ks_tmp_files = no
-    kde_bandwidth_modifier = 0.4
-    plot_adjustment_arrows = no
-    max_mixture_model_iterations = 600
-    num_mixture_model_initializations = 10
-    extra_paralogs_analyses_methods = no
-    max_mixture_model_components = 5
-    max_mixture_model_ks = 5
+
+    # ---- Ks estimation ----
     max_gene_family_size = 200
     min_gapfree_columns = 0
     big_family_size = 100
     min_gapfree_columns_big_family = 0
+    preserve_ks_tmp_files = no
+
+    # ---- Ks distributions and plots ----
+    plot_adjustment_arrows = no
     distribution_peak_estimate = mode
+    kde_bandwidth_modifier = 0.4
     min_ks_anchor_pairs = 0.05
+
+    # ---- Paralog peak analysis ----
+    extra_paralogs_analyses_methods = no
+    max_mixture_model_components = 5
+    max_mixture_model_ks = 5
+    max_mixture_model_iterations = 600
+    num_mixture_model_initializations = 10
+
+    # ---- Reciprocal retention ----
     num_reciprocally_retained_gfs = 2000
-    use_bottom_gfs_instead_of_top = no
-    use_original_orthomcl_version = no
     remove_reciprocal_retention_orthomcl_files = no
+    use_original_orthomcl_version = no
+    use_bottom_gfs_instead_of_top = no
+
+    # ---- Ks database ----
     use_ks_database_server = no
 
 * **logging_level**: the lowest logging/verbosity level of messages printed to the console/logs (increasing severity levels: *notset*, *debug*, *info*, *warning*, *error*, *critical*). Messages less severe than *level* will be ignored; *notset* causes all messages to be processed. [Default: "info"]
-* **preserve_ks_tmp_files**: whether to preserve or not the intermediate files generated during the paralogs *K*:sub:`S` and ortholog *K*:sub:`S` pipelines (options: "yes" and "no"). [Default: "no"]
-* **kde_bandwidth_modifier**: modifier to adjust the fitting of the KDE curve on the underlying whole-paranome or anchor *K*:sub:`S` distribution. The KDE Scott's factor internally computed by SciPy tends to produce an overly smooth KDE curve, especially with steep WGD peaks, and therefore it is reduced by multiplying it by a modifier. Decreasing the modifier leads to tighter fits, increasing it leads to smoother fits, and setting it to 1 gives the default KDE factor. Note that a too small factor is likely to take into account data noise. [Default: 0.4]
-* **plot_adjustment_arrows**: flag to toggle the plotting of rate-adjustment arrows below the adjusted mixed paralog--ortholog *K*:sub:`S` plot. These arrows start from the original unadjusted ortholog divergence *K*:sub:`S` estimate and end on the rate-adjusted estimate (options: "yes" and "no"). [Default: "no"]
-* **max_mixture_model_iterations**: maximum number of EM iterations for mixture modeling. [Default: 600]
-* **num_mixture_model_initializations**: number of times the EM algorithm is initialized (either for the random initialization in the exponential-lognormal mixture model or for k-means in the lognormal mixture model). [Default: 10]
-* **extra_paralogs_analyses_methods**: flag to toggle the optional analysis of the paralog *K*:sub:`S` distribution with non default mixture model methods (see section :ref:`paralogs_analyses` and Supplementary Materials) [Default: "no"]
-* **max_mixture_model_components**: maximum number of components considered during execution of the mixture models. [Default: 5]
-* **max_mixture_model_ks**: upper limit for the *K*:sub:`S` range in which the exponential-lognormal and lognormal-only mixture models are performed. [Default: 5]
 * **max_gene_family_size**: maximum number of members that any paralog gene family can have to be included in *K*:sub:`S` estimation. Large gene families increase the run time and are often composed of unrelated sequences grouped together by shared protein domains or repetitive sequences. But this is not always the case, so one may want to check manually the gene families in file ``paralog_distributions/wgd_species/species.mcl.tsv`` and increase (or even decrease) this number. [Default: 200]
 * **min_gapfree_columns**: minimum number of gap-free codon columns (the only ones codeml uses) that the alignment of a paralog gene family needs to be analysed with codeml. Families with fewer columns are skipped and listed in the log. Their *K*:sub:`S` values would rest on very few codons, and codeml can need hours for them. Recommended value: 2, which skips the families with 0 or 1 column: those with 1 column are about 10 times slower per gene pair and add almost nothing to the distribution. [Default: 0, no family is skipped]
 * **big_family_size**: number of genes from which a gene family is considered big for the parameter *min_gapfree_columns_big_family*. [Default: 100]
 * **min_gapfree_columns_big_family**: like *min_gapfree_columns*, but only for the families with at least *big_family_size* genes, which have very many gene pairs and can keep codeml busy for days. Recommended value: 4, which skips the big families with 3 columns or fewer. [Default: 0, no family is skipped]
+* **preserve_ks_tmp_files**: whether to preserve or not the intermediate files generated during the paralogs *K*:sub:`S` and ortholog *K*:sub:`S` pipelines (options: "yes" and "no"). [Default: "no"]
+* **plot_adjustment_arrows**: flag to toggle the plotting of rate-adjustment arrows below the adjusted mixed paralog--ortholog *K*:sub:`S` plot. These arrows start from the original unadjusted ortholog divergence *K*:sub:`S` estimate and end on the rate-adjusted estimate (options: "yes" and "no"). [Default: "no"]
 * **distribution_peak_estimate**: the statistical method used to obtain a single ortholog *K*:sub:`S` estimate for the divergence time of a species pair from its ortholog distribution or to obtain a single paralog *K*:sub:`S` estimate from an anchor *K*:sub:`S` cluster or from lognormal components in mixture models (options: "mode" or "median"). [Default: "mode"]
+* **kde_bandwidth_modifier**: modifier to adjust the fitting of the KDE curve on the underlying whole-paranome or anchor *K*:sub:`S` distribution. The KDE Scott's factor internally computed by SciPy tends to produce an overly smooth KDE curve, especially with steep WGD peaks, and therefore it is reduced by multiplying it by a modifier. Decreasing the modifier leads to tighter fits, increasing it leads to smoother fits, and setting it to 1 gives the default KDE factor. Note that a too small factor is likely to take into account data noise. [Default: 0.4]
 * **min_ks_anchor_pairs**: lower limit for the *K*:sub:`S` range used to build the anchor pair *K*:sub:`S` distribution. By default, *K*:sub:`S` values smaller than 0.05 in the anchor distribition are ignored (weighted as 0), in order to remove noise at recent *K*:sub:`S` age that could be mistakenly interpreted as a very recent WGM. Set this value to 0 to instead keep all *K*:sub:`S` values when you are actually interested in WGMs with very young age. [Default: 0.05]
+* **extra_paralogs_analyses_methods**: flag to toggle the optional analysis of the paralog *K*:sub:`S` distribution with non default mixture model methods (see section :ref:`paralogs_analyses` and Supplementary Materials) [Default: "no"]
+* **max_mixture_model_components**: maximum number of components considered during execution of the mixture models. [Default: 5]
+* **max_mixture_model_ks**: upper limit for the *K*:sub:`S` range in which the exponential-lognormal and lognormal-only mixture models are performed. [Default: 5]
+* **max_mixture_model_iterations**: maximum number of EM iterations for mixture modeling. [Default: 600]
+* **num_mixture_model_initializations**: number of times the EM algorithm is initialized (either for the random initialization in the exponential-lognormal mixture model or for k-means in the lognormal mixture model). [Default: 10]
 * **num_reciprocally_retained_gfs**: number of gene families at the top of the reciprocal retention ranking that will be used to build the related *K*:sub:`S` distribution. [Default: 2000]
-* **use_bottom_gfs_instead_of_top**: use the bottom-ranked reciprocally retained GFs instead of the top-ranked ones (not recommended; only meant for comparison purposes with top-ranked GFs) 
-* **use_original_orthomcl_version**: allows compatibility with the original OrthoMCL v1.4 version; by default it is used a modified faster version called OrthoMCLight. [Default: "no"]
 * **remove_reciprocal_retention_orthomcl_files**: remove the large intermediate files of the reciprocal retention analysis (e.g. diamond table, OrthoMCL workdir). [Default: "no"]
+* **use_original_orthomcl_version**: allows compatibility with the original OrthoMCL v1.4 version; by default it is used a modified faster version called OrthoMCLight. [Default: "no"]
+* **use_bottom_gfs_instead_of_top**: use the bottom-ranked reciprocally retained GFs instead of the top-ranked ones (not recommended; only meant for comparison purposes with top-ranked GFs) 
 * **use_ks_database_server**: store and read the paralog and ortholog *K*:sub:`S` data in the *K*:sub:`S` database server (see :ref:`ks_database`) instead of in TSV files, so that multiple independent analyses can safely share the same data. The ortholog TSV files are then no longer updated; use ``ksrates inspect-ks-db`` to export the database content in the same TSV format. [Default: "no"]
