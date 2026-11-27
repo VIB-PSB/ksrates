@@ -10,24 +10,24 @@ Reusing previously computed *K*:sub:`S` data
 
 Paralog and ortholog *K*:sub:`S` data can be stored in a self-hosted `sqld <https://github.com/tursodatabase/libsql>`__ database.
 This is particularly useful to centralize *K*:sub:`S` data across multiple independent *ksrates* analyses,
-which can then all use it and add to it.
+which can all use it and add to it.
 
 An analysis layout may consist of several independent directories, each running *ksrates* on
 its own dataset. Without a shared database, each dataset computes and stores its *K*:sub:`S` data independently -
 even for species that recur across datasets, whose expensive paranome, anchor-pair, reciprocally
-retained and i-ADHoRe computations then get needlessly repeated every time::
+retained and i-ADHoRe computations then get needlessly repeated every time.
+Pointing every dataset at the same running server removes this redundancy: once *K*:sub:`S` data
+for a species has been computed by any one dataset, it's available to every other dataset that
+later needs it::
 
     /path/to/ks_analysis_dir/
     ├── dataset1/    (own configuration and output)
     ├── dataset2/    (own configuration and output)
-    ├── dataset3/    (own configuration and output)
-    └── ...
+    ├── ...
+    └── ks_database/ (shared database server, used by all datasets)
 
-Pointing every dataset at the same running server removes this redundancy: once *K*:sub:`S` data
-for a species has been computed by any one dataset, it's available to every other dataset that
-later needs it.
-If a later request asks for an additional analysis type for a species already in the database,
-the workflow attempts to compute only that new type and reuse the rest. 
+If a later dataset requests an additional analysis type for a species already in the database,
+the workflow attempts to compute only that new type and reuse the rest.
 
 .. note::
     ``colinearity`` is the one common exception: it requires paranome's output as local files
@@ -42,12 +42,12 @@ the workflow attempts to compute only that new type and reuse the rest.
     processed, where possible.
 
 When several analyses use the same database, the order in which they are started matters. Each analysis checks at its start
-which species and species pairs are already stored in the database, and computes only the missing ones: it therefore reuses the data of another
-analysis only if that data was stored before it started. To benefit the most from the shared database, start the first
-analysis, wait until its paralog and ortholog *K*:sub:`S` estimation steps have finished, and only then start the
-next one. Analyses started together do not see each other's data: a species or pair needed by several of them is
+which species and species pairs are already stored in the database, and computes only the missing ones: it therefore reuses data that other analyses had already stored *before* its own start.
+Analyses started together do not see each other's data: a species or pair needed by several of them is
 computed by each, and the last to finish overwrites the others' value. This does not corrupt the database and the
 results stay valid, but the computation is repeated.
+To benefit the most from the shared database, start the first
+analysis, wait until its paralog and ortholog *K*:sub:`S` estimation steps have finished, and only then start the next one.
 
 
 .. _`ks_database_setup`:
@@ -59,18 +59,18 @@ Configure the database server
 -----------------------------
 
 Enable the use of the database via parameter ``use_ks_database_server`` in each expert configuration
-file of the *ksrates* datasets of interest. The database will cover both paralog and ortholog data.
+file of the *ksrates* datasets of interest.
 
 .. note::
-    The database is off by default. Without it, *ksrates* relies as usual on the local TSV files: the output of the wgd steps with the *K*:sub:`S` values of each species or species pair (see :ref:`ks_estimate_output_wgd`) and, for the orthologs, the TSV databases of all the peaks and *K*:sub:`S` lists (see :ref:`other_output`).
+    The database is off by default. Without it, *ksrates* relies on the traditional local TSV files to store and read both the *K*:sub:`S` values (see :ref:`ks_estimate_output_wgd`) and the ortholog peaks (see :ref:`other_output`). With the database enabled, the *K*:sub:`S` values are still written as TSV files, but are then stored in and read from the database, while the ortholog peaks are only stored in the database.
 
-Choose a directory that will host the database server, i.e. where the address file (``ks_database_server_address.txt``), ``ks_database_sqld_data/`` and ``ks_database_sqld_keys/`` will be generated. Note: if you want several datasets to share one database, prefer a central directory above/alongside them (e.g. ``/path/to/ks_analysis_dir/ks_database``).
+Choose a directory that will host the database server, i.e. where the address file (``ks_database_server_address.txt``), ``ks_database_sqld_data/`` and ``ks_database_sqld_keys/`` will be generated. If you want several datasets to share one database, prefer a central directory alongside them (e.g. ``/path/to/ks_analysis_dir/ks_database``).
 
-Point then every dataset's configuration file at the address file, by setting parameter ``ks_database_server_address_path`` to the absolute path of ``<location>/<address_filename>``::
+Then point every dataset's configuration file at the server address file, by setting parameter ``ks_database_server_address_path`` to its absolute path::
 
     ks_database_server_address_path = /path/to/ks_analysis_dir/ks_database/ks_database_server_address.txt
 
-Start the server with one of the methods below, providing the chosen directory via ``--location``. This step must be executed once, independently and before of any *ksrates* analysis, and left running for as long as needed (e.g. a self-standing job on the cluster).
+Start the server with one of the methods below (Nextflow pipeline or CLI command), by providing the chosen directory via ``--location``. This step must be executed once, independently and before any *ksrates* analysis, and left running for as long as needed (e.g. a self-standing job on the cluster).
 
 Starting it via the Nextflow pipeline (recommended)
 ---------------------------------------------------
@@ -94,8 +94,8 @@ with ``-process.executor=local``, the pipeline steps are not further submitted t
     as the pipeline uses the previous Nextflow syntax.
 
 .. note::
-    Nextflow only mounts each process's ``work`` directory in the container. Mount explicitly a directory containing
-    both the analysis directories and the database directory (``--location``), in the Nextflow configuration file
+    Nextflow only mounts each process's ``work`` directory in the container. Explicitly mount the directory containing
+    both the *K*:sub:`S` datasets and the database (``--location``), in the Nextflow configuration file
     used for the server and for the analyses::
 
         apptainer.runOptions = '-B /path/to/ks_analysis_dir'
@@ -122,25 +122,26 @@ reachable and otherwise stops with an error, and a step that is writing to the d
 The server typically goes down when its job reaches the cluster's maximum walltime.
 
 To recover, relaunch the server the same way (see :ref:`ks_database_setup`),
-with the same ``--location``, and afterwards the analysis with the same command plus Nextflow's ``-resume`` option:
+with the same ``--location``, and afterwards relaunch the analysis with the same command plus Nextflow's ``-resume`` option:
 completed *K*:sub:`S` computations are reused from the Nextflow cache, while the interrupted step runs again.
 
-Relaunching the server doesn't lose any data: it reuses the existing ``ks_database_sqld_data/`` and ``ks_database_sqld_keys/``
-(so previously-issued tokens keep working) and only writes a fresh ``host:port`` to the address file.
-The address file path doesn't change, so no reconfiguration is needed.
+Relaunching the server doesn't lose any data: it reuses the existing ``ks_database_sqld_data/`` and ``ks_database_sqld_keys/``, and only updates the ``host:port`` in the address file, whose path stays the same. No reconfiguration is needed.
 
 Inspecting and managing the database content
 ==============================================
 
 The command ``inspect-ks-db`` dumps the database content to files for visual inspection:
-a TSV file with the paralog data plus per-species i-ADHoRe files, and two TSV files with the ortholog peaks and *K*:sub:`S` lists
-in the exact format of the ortholog TSV databases (``peak_database_path`` and ``ks_list_database_path``).
-The address file path must be passed as argument. An optional ``NAME_FILTER`` argument can be
-added to restrict the action to species matching that string: use the latin name to filter paralogs data, or the two latin names joined by an underscore for ortholog data. The match is case-insensitive and must be quoted if it includes spaces. Option ``--type`` restricts the action to ``paralog`` or ``ortholog`` data (default: ``all``)::
-
+it generates a TSV file with the paralog data plus per-species i-ADHoRe files, and two TSV files with the ortholog peaks and *K*:sub:`S` lists
+in the exact format of the traditional ortholog TSV files (``peak_database_path`` and ``ks_list_database_path``)::
 
     ksrates inspect-ks-db \
-        ks_database_server_address.txt  "Elaeis guineensis" --type paralog
+        ks_database_server_address.txt  "Elaeis guineensis_Oryza sativa" --type ortholog
+
+The address file path must be passed as argument. An optional ``NAME_FILTER`` argument can be added
+to restrict the action to species (pairs) matching that string: use the latin name to filter paralog data,
+or for ortholog data either one latin name (all pairs with that species) or the two latin names in
+alphabetical order joined by an underscore. The match is case-insensitive and must be quoted if it
+includes spaces. Option ``--type`` restricts the action to ``paralog`` or ``ortholog`` data (default: ``all``).
 
 Two more options change the command behavior:
 
@@ -148,14 +149,14 @@ Two more options change the command behavior:
   database, instead exports a TSV with one row per species (paralogs; with a True/False column per analysis
   type: paranome, anchors, reciprocally retained, i-ADHoRe files) and one with one row per species pair (orthologs; peak and *K*:sub:`S` list)::
 
-            ksrates inspect-ks-db \
-                ks_database_server_address.txt --list
+        ksrates inspect-ks-db \
+            ks_database_server_address.txt --list
 
 * ``--delete``: instead deletes every species or species pair matching ``NAME_FILTER`` (required), 
   after listing the matches and asking for confirmation; requires ``--type paralog`` or ``--type ortholog``::
 
-            ksrates inspect-ks-db \
-                ks_database_server_address.txt "Elaeis guineensis" --type paralog --delete
+        ksrates inspect-ks-db \
+            ks_database_server_address.txt "Elaeis guineensis" --type paralog --delete
 
 
 Backfilling from existing TSV output
@@ -164,20 +165,21 @@ Backfilling from existing TSV output
 Species processed without the database server already have their *K*:sub:`S` data in local TSV files. Command ``populate-ks-db`` copies
 that existing output into the database server, without re-running any pipeline.
 
-For paralog data::
+*   For paralog data::
 
-    ksrates populate-ks-db \
-        --paralogs configs/ paralog_distributions/ --database ks_database_server_address.txt
+        ksrates populate-ks-db \
+            --paralogs configs/ paralog_distributions/ --database ks_database_server_address.txt
 
-Here, ``configs/`` is a directory containing at least one *ksrates* configuration file (used to resolve each species' latin
-name); ``paralog_distributions/`` is the directory containing the *K*:sub:`S` TSV output to copy from; ``--database`` is the path to the address file.
 
-For ortholog data::
+    Here, ``configs/`` is a directory containing at least one *ksrates* configuration file (used to resolve each species' latin
+    name); ``paralog_distributions/`` is the directory containing the *K*:sub:`S` TSV output to copy from; ``--database`` is the path to the address file.
 
-    ksrates populate-ks-db \
-        --orthologs ortholog_peak_db.tsv ortholog_ks_list_db.tsv --database ks_database_server_address.txt
+*   For ortholog data::
 
-The peaks and *K*:sub:`S` lists already stored in the ortholog TSV databases are copied as they are.
+        ksrates populate-ks-db \
+            --orthologs ortholog_peak_db.tsv ortholog_ks_list_db.tsv --database ks_database_server_address.txt
+
+    The peaks and *K*:sub:`S` lists stored in the two provided ortholog TSV files are copied as they are.
 
 Both options can be given in the same call. Since only the data a species
 (or species pair) doesn't already have in the database server are added by default, use ``--force`` to re-extract and overwrite everything instead.
