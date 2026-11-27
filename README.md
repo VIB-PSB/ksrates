@@ -6,9 +6,8 @@
 VIB-UGent Center for Plant Systems Biology&mdash;[Evolutionary Systems Biology Lab](http://www.psb.ugent.be/esb)
 
 # *ksrates*
-*ksrates* is a tool to position whole-genome duplications\* (WGDs) relative to speciation events using substitution-rate-adjusted mixed paralog&ndash;ortholog distributions of synonymous substitutions per synonymous site (*K*<sub>S</sub>).
 
-*\*or, more generally, whole-genome multiplications (WGMs), but we will simply use the more common WGD to refer to any multiplication*
+*ksrates* is a tool to position whole-genome duplications (WGDs) relative to speciation events using substitution-rate-adjusted mixed paralog&ndash;ortholog distributions of synonymous substitutions per synonymous site (*K*<sub>S</sub>).
 
 > [!IMPORTANT]
 > For detailed information about installation, configuration, all options and the full tutorial, please refer to the **[documentation](https://ksrates.readthedocs.io/)**.
