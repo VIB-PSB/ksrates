@@ -155,6 +155,7 @@ def initialize_or_exit(db_path):
 		logging.error(f'The Ks database was requested in the expert configuration file (use_ks_database_server = yes) but it cannot be used.')
 		logging.error(f'Please check that the sqld server is running and that "ks_database_server_address_path" points to its address file [{db_path}], or set "use_ks_database_server = no". Exiting.')
 		sys.exit(1)
+	logging.info(f"Using the Ks database server (address file: {db_path})")
 
 
 def row_exists(db_path, spec, key):
