@@ -3,7 +3,7 @@ How to cite us
 
 *   If you publish results generated using *ksrates*, please cite:
 
-    Sensalari C., Maere S. and Lohaus R. (2021) *ksrates*: positioning whole-genome duplications relative to speciation events in *K*:sub:`S` distributions. *Bioinformatics*, Volume 38, Issue 2, January 2022, Pages 530–532, `https://doi.org/10.1093/bioinformatics/btab602 <https://doi.org/10.1093/bioinformatics/btab602>`__
+    Sensalari C., Maere S. and Lohaus R. *ksrates*: positioning whole-genome duplications relative to speciation events in *K*:sub:`S` distributions. *Bioinformatics*, Volume 38, Issue 2, January 2022, Pages 530–532, `https://doi.org/10.1093/bioinformatics/btab602 <https://doi.org/10.1093/bioinformatics/btab602>`__
 
     BibTeX format:
 
@@ -24,7 +24,7 @@ How to cite us
         }
 
 
-*   If you use the reciprocally retained gene family analysis, introduced in *ksrates* version 2, please also cite:
+*   If you use the reciprocally retained gene family analysis, introduced in version 2, please also cite:
 
     Tasdighian, S., Sensalari, C. & Maere, S. Using reciprocally retained gene families to detect whole-genome multiplications in plants. *Genome Biol* **27**, 152 (2026). `https://doi.org/10.1186/s13059-026-04032-y <https://doi.org/10.1186/s13059-026-04032-y>`__
 
