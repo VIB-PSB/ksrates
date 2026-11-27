@@ -3,31 +3,36 @@
 [![Documentation Status](https://readthedocs.org/projects/ksrates/badge/?version=latest)](https://ksrates.readthedocs.io/en/latest/?badge=latest)
 
 
-VIB-UGent Center for Plant Systems Biology&mdash;[Evolutionary Systems Biology Lab](http://www.psb.ugent.be/esb)
+VIB-UGent Center for Plant Systems Biology&mdash;[Evolutionary Systems Biology Lab](https://maerelab.sites.vib.be)
 
 # *ksrates*
-*ksrates* is a tool to position whole-genome duplications\* (WGDs) relative to speciation events using substitution-rate-adjusted mixed paralog&ndash;ortholog distributions of synonymous substitutions per synonymous site (*K*<sub>S</sub>).
 
-*\*or, more generally, whole-genome multiplications (WGMs), but we will simply use the more common WGD to refer to any multiplication*
+*ksrates* is a tool to position whole-genome duplications (WGDs) relative to speciation events using substitution-rate-adjusted mixed paralog&ndash;ortholog distributions of synonymous substitutions per synonymous site (*K*<sub>S</sub>).
+
+> [!IMPORTANT]
+> For detailed information about installation, configuration, all options and the full tutorial, please refer to the **[documentation](https://ksrates.readthedocs.io/)**.
 
 ## Overview
 
 To position ancient WGD events with respect to speciation events in a phylogeny, the *K*<sub>S</sub> values of WGD paralog pairs in a species of interest are often compared with the *K*<sub>S</sub> values of ortholog pairs between this species and other species. For example, it is common practice to superimpose ortholog and paralog *K*<sub>S</sub> distributions in a mixed plot. However, if the lineages involved exhibit different substitution rates, such direct naive comparison of paralog and ortholog *K*<sub>S</sub> estimates can be misleading and result in phylogenetic misinterpretation of WGD signatures. 
 
-*ksrates* is user-friendly command-line tool and [Nextflow](https://github.com/nextflow-io/nextflow) pipeline to compare paralog and ortholog *K*<sub>S</sub> distributions derived from genomic or transcriptomic sequences. *ksrates* estimates differences in synonymous substitution rates among the lineages involved and generates an adjusted mixed plot of paralog and ortholog *K*<sub>S</sub> distributions that allows to assess the relative phylogenetic positioning of presumed WGD and speciation events.
+*ksrates* is a user-friendly command-line tool and [Nextflow](https://github.com/nextflow-io/nextflow) pipeline to compare paralog and ortholog *K*<sub>S</sub> distributions derived from genomic or transcriptomic sequences. *ksrates* estimates differences in synonymous substitution rates among the lineages involved and generates an adjusted mixed plot of paralog and ortholog *K*<sub>S</sub> distributions that allows to assess the relative phylogenetic positioning of presumed WGD and speciation events.
+
+Since version 2, *ksrates* can also use [reciprocally retained gene families](https://ksrates.readthedocs.io/en/latest/reciprocal_retention.html) to detect plant WGDs, and can store and reuse *K*<sub>S</sub> data across analyses in a shared [*K*<sub>S</sub> database](https://ksrates.readthedocs.io/en/latest/ks_database.html).
 
 ## Useful links
 
 [Documentation](https://ksrates.readthedocs.io/)\
 [Tutorial](https://ksrates.readthedocs.io/en/latest/usage.html)\
 [FAQ](https://ksrates.readthedocs.io/en/latest/faqs.html)\
-[Publication](https://doi.org/10.1093/bioinformatics/btab602)
+[Software publication](https://doi.org/10.1093/bioinformatics/btab602)\
+[Reciprocal retention publication](https://doi.org/10.1186/s13059-026-04032-y)
 
 ## Quick start
 
 *ksrates* can be executed using either a [Nextflow](https://github.com/nextflow-io/nextflow) pipeline (recommended) or a manual command-line interface. The latter is available via Docker and Apptainer containers, and as a Python package to be integrated into existing genomics toolsets and workflows. 
 
-In the following sections we briefly describe how to install, configure and run the Nextflow pipeline and the basic usage of the command-line interface for the Docker or Apptainer containers. For detailed usage information, full tutorial and additional installation options, please refer the [full documentation](https://ksrates.readthedocs.io/).
+In the following sections we briefly describe how to install, configure and run the Nextflow pipeline and the basic usage of the command-line interface for the Docker or Apptainer containers.
 
 ### Example and test datasets
 
@@ -46,9 +51,9 @@ Instructions to execute the Nextflow pipeline.
 #### Installation
 
 1. Install [Nextflow](https://github.com/nextflow-io/nextflow), official instructions are [here](https://www.nextflow.io/docs/latest/getstarted.html), but briefly:
-	1. If you do not have [Java](https://www.oracle.com/java/) installed, install [Java 11 or later](https://www.oracle.com/java/technologies/javase-downloads.html); on Linux you can use: 
+	1. Nextflow requires Java 17 or later (up to 26 at the time of writing; see the [Nextflow installation page](https://docs.seqera.io/nextflow/install)). If you do not have it installed, on Linux you can use: 
 	
-           sudo apt-get install default-jdk
+           sudo apt-get install openjdk-17-jdk
 
 	2. Install Nextflow using either:
 	
@@ -61,6 +66,8 @@ Instructions to execute the Nextflow pipeline.
 	   It creates the `nextflow` executable file in the current directory. You may want to move it to a folder accessible from your `$PATH`, for example:
 	    
            mv nextflow /usr/local/bin
+
+	   *ksrates* has been tested with Nextflow 24.10.4, 25.10.3 and 26.10.7.
     
 2. Install either [Apptainer](https://apptainer.org/docs/admin/latest/installation.html) (recommended, but check [availability](https://ksrates.readthedocs.io/en/latest/installation.html#availability-and-dependencies)) or [Docker](https://docs.docker.com/get-docker/).
 
@@ -89,6 +96,8 @@ We briefly illustrate here how to run the *ksrates* Nextflow pipeline on the `te
 3. Launch the *ksrates* Nextflow pipeline.
 
    > **Note:** If this is the first time you launch the pipeline, Nextflow will first download the *ksrates* Nextflow pipeline and the *ksrates* Apptainer or Docker container.
+
+   > **Note:** When using Nextflow `26.04` or later, run `export NXF_SYNTAX_PARSER=v1` before the Nextflow command, as the pipeline uses the previous Nextflow syntax.
        
 	      nextflow run VIB-PSB/ksrates --test -profile apptainer --config config_files/config_elaeis.txt --expert config_files/config_expert.txt
 
@@ -111,8 +120,6 @@ Instructions to execute the manual command-line interface.
 	Or for the Docker container:
 	    
         docker pull vibpsb/ksrates:latest
-
-2. *ksrates* and its dependencies are already installed within the container.
 
 #### Usage
 
@@ -161,4 +168,9 @@ If you come across a bug or have any question or suggestion, feel free to reach 
 
 If you publish results generated using *ksrates*, please cite:
 
-Sensalari C., Maere S. and Lohaus R. (2021) *ksrates*: positioning whole-genome duplications relative to speciation events in *K*<sub>S</sub> distributions. *Bioinformatics*, btab602, [doi: https://doi.org/10.1093/bioinformatics/btab602](https://doi.org/10.1093/bioinformatics/btab602)
+Sensalari C., Maere S. and Lohaus R. *ksrates*: positioning whole-genome duplications relative to speciation events in *K*<sub>S</sub> distributions. *Bioinformatics*, Volume 38, Issue 2, January 2022, Pages 530–532, [https://doi.org/10.1093/bioinformatics/btab602](https://doi.org/10.1093/bioinformatics/btab602)
+
+If you use the reciprocally retained gene family analysis, introduced in *ksrates* version 2, please also cite:
+
+Tasdighian S., Sensalari C. and Maere S. (2026) Using reciprocally retained gene families to detect whole-genome multiplications in plants. *Genome Biology*, 27, 152, [https://doi.org/10.1186/s13059-026-04032-y](https://doi.org/10.1186/s13059-026-04032-y)
+

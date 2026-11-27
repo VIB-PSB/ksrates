@@ -16,7 +16,13 @@ from click.testing import CliRunner
 # Makes the repo root importable, since this file lives one level down in unit_tests/.
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
+sys.path.insert(0, os.path.dirname(__file__))
+
+import ksrates.fc_ks_database_utilities as fcKsDbUtil
+import ksrates.fc_ks_database_paralog as fcKsDbPara
+import ksrates.fc_ks_database_ortholog as fcKsDbOrtho
 from ksrates_cli import cli
+from fake_sqld import install_fake_sqld
 
 
 # Minimal fake ksrates config file, just enough for Configuration() to parse without errors.
@@ -123,6 +129,75 @@ class CheckOrthologDbTest(unittest.TestCase):
 
         self.assertEqual(result.exit_code, 1)
         self.assertEqual(result.output.strip(), "no")
+
+
+EXPERT_CONFIG_DB_ON = """\
+[EXPERT PARAMETERS]
+use_ks_database_server = yes
+"""
+
+
+class CheckKsDatabaseCliTest(unittest.TestCase):
+    """check-ortholog-db / check-paralog-db when the Ks database is enabled (use_ks_database_server = yes)."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmpdir.cleanup)
+        self.db, self.unreachable_db = install_fake_sqld(self, self.tmpdir.name)
+        fcKsDbUtil.initialize_database(self.db)
+        self.expert_path = os.path.join(self.tmpdir.name, "expert.txt")
+        with open(self.expert_path, "w") as handle:
+            handle.write(EXPERT_CONFIG_DB_ON)
+        self.runner = CliRunner()
+
+    def _config(self, address_file):
+        path = os.path.join(self.tmpdir.name, "config.txt")
+        with open(path, "w") as handle:
+            handle.write(CONFIG_TEMPLATE.format(peak_db="unused_peak.tsv", ks_list_db="unused_ks.tsv") +
+                         f"ks_database_server_address_path = {address_file}\n")
+        return path
+
+    def _ortholog(self, config_path, sp1="sp1", sp2="sp2"):
+        return self.runner.invoke(cli, ["check-ortholog-db", config_path, sp1, sp2, "-e", self.expert_path], catch_exceptions=False)
+
+    def test_ortholog_pair_missing_reports_no(self):
+        result = self._ortholog(self._config(self.db))
+        self.assertEqual((result.exit_code, result.output.strip()), (1, "no"))
+
+    def test_ortholog_pair_with_peak_only_reports_no(self):
+        fcKsDbOrtho.write_to_ortholog_db(self.db, "Species one", "Species two", peak=(1.2, 0.1))
+        result = self._ortholog(self._config(self.db))
+        self.assertEqual((result.exit_code, result.output.strip()), (1, "no"))
+
+    def test_ortholog_pair_with_peak_and_ks_list_reports_yes_in_any_order(self):
+        fcKsDbOrtho.write_to_ortholog_db(self.db, "Species one", "Species two", peak=(1.2, 0.1), ks_list=[1.0, 1.1])
+        config_path = self._config(self.db)
+        for sp1, sp2 in [("sp1", "sp2"), ("sp2", "sp1")]:
+            result = self._ortholog(config_path, sp1, sp2)
+            self.assertEqual((result.exit_code, result.output.strip()), (0, "yes"))
+        self.assertEqual(self._ortholog(config_path, "sp1", "sp3").exit_code, 1)
+
+    def test_ortholog_unreachable_database_exits_2_not_1(self):
+        # exit 2 (not 1 = "absent") so that main.nf stops instead of recomputing everything
+        result = self._ortholog(self._config(self.unreachable_db))
+        self.assertEqual(result.exit_code, 2)
+        self.assertTrue(result.output.startswith("error"))  # first line on stdout (the details follow on stderr)
+
+    def test_paralog_check_exit_codes(self):
+        config_path = self._config(self.db)
+        def run(analysis_type, path=config_path):
+            return self.runner.invoke(cli, ["check-paralog-db", path, "-e", self.expert_path, "--type", analysis_type], catch_exceptions=False)
+        self.assertEqual(run("paranome").exit_code, 1)
+        fcKsDbPara.write_to_paralog_db("Species one", {"paranome": {"Ks": [1.0]}, "anchors": None, "recret": None}, self.db)
+        self.assertEqual((run("paranome").exit_code, run("paranome").output.strip()), (0, "yes"))
+        self.assertEqual(run("anchors").exit_code, 1)
+        self.assertEqual(run("paranome", self._config(self.unreachable_db)).exit_code, 2)
+
+    def test_database_disabled_in_expert_config_never_touches_the_database(self):
+        # No expert file: use_ks_database_server defaults to "no" -> paralog check always says "no", even for an unreachable server
+        config_path = self._config(self.unreachable_db)
+        result = self.runner.invoke(cli, ["check-paralog-db", config_path, "--type", "paranome"], catch_exceptions=False)
+        self.assertEqual((result.exit_code, result.output.strip()), (1, "no"))
 
 
 if __name__ == "__main__":

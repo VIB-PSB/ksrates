@@ -28,26 +28,52 @@ import logging
 import itertools
 
 
+_UNAMBIGUOUS_BASES = frozenset("ACGT")
+
+
+def count_gapfree_codons(alignment):
+    """
+    Number of codon columns of a codon alignment without a gap or an ambiguous base in any of the sequences,
+    i.e. the sites that codeml keeps when it removes the sites with gaps or ambiguity characters (cleandata = 1).
+    It is the number of sites (ls) that codeml reports for the alignment in the .codeml file.
+
+    :param alignment: codon alignment dictionary (gene ID -> nucleotide sequence with gaps)
+    :return: number of codon columns present in all the sequences with only A, C, G or T
+    """
+    sequences = list(alignment.values())
+    if not sequences:
+        return 0
+    n_codons = min(len(sequence) for sequence in sequences) // 3
+    count = 0
+    for start in range(0, n_codons * 3, 3):
+        if all(set(sequence[start:start + 3].upper()) <= _UNAMBIGUOUS_BASES for sequence in sequences):
+            count += 1
+    return count
+
+
 # REWRITE
 def prepare_aln(msa_file, nuc_seqs):
     """
     Main wrapper function for alignments for Ks distributions, takes an 
     alignment file as input (protein or nucleotide), and returns a nucleotide 
-    alignment (codon) file and pairwise alignment statistics.
+    alignment (codon) file, pairwise alignment statistics, whether the file could be written and the number of
+    gap-free codon columns of the alignment.
 
     :param msa_file: multiple sequence alignment file path
     :param nuc_seqs: nucleotide sequences (set to ``None`` if input is a 
         nucleotide alignment).
-    :return: file path to nucleotide alignment, pairwise alignment statistics
+    :return: file path to nucleotide alignment, pairwise alignment statistics, success flag, number of gap-free
+        codon columns
     """
     with open(msa_file, 'r') as f:
         aln = read_fasta(msa_file)
         if nuc_seqs:
             aln = pal2nal(aln, nuc_seqs)
         stats = pairwise_alignment_stats(aln)
+        n_columns = count_gapfree_codons(aln)
     out_path = msa_file + '.nuc'
     success = write_alignment_codeml(aln, out_path)
-    return out_path, stats, success
+    return out_path, stats, success, n_columns
 
 
 def pal2nal(pal, nuc_seqs):

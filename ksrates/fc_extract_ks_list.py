@@ -24,7 +24,7 @@ def ks_list_from_df(df, max_ks, data_type, min_ks=0.005):
     """
     Same as ks_list_from_tsv, but takes an already-loaded DataFrame instead of reading a TSV file
     from disk. Useful when the caller already has the data in memory (e.g. reconstructed from the
-    paralog Ks database) and doesn't want to pay for a redundant read.
+    Ks database) and doesn't want to pay for a redundant read.
 
     :param df: DataFrame with the same columns as a wgd Ks TSV file (at minimum: Family, Node, Ks,
                AlignmentCoverage, AlignmentIdentity, AlignmentLength)

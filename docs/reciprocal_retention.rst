@@ -60,6 +60,7 @@ The diamond step, taking as input tens of angiosperm FASTA files (focal species 
 
 The OrthoMCL step, taking as input the diamond table, generates within the ``tmp`` subdirectory the "blast parse output" (BPO) output file, which occupies the same space as the diamond table (i.e. 21 GB). This file can be deleted once the reciprocal retention pipeline is completed. The file location for the ``example`` dataset is ``paralog_distributions/wgd_elaeis/reciprocal_retention/orthomcl/May_16/tmp/all.bpo``.
 
+For simplicity, the deletion of most intermediate files can be automatically executed by setting ``remove_reciprocal_retention_orthomcl_files = yes`` in the expert configuration file (off by default). The OrthoMCL orthogroups (``<species>_original_37.orthomcl.out``), the table of the matched/reconstructed gene families and the OrthoMCL parameter logs are instead kept for inspection and to allow follow-up analyses to run with another set of reciprocally retained gene families (i.e. *num_reciprocally_retained_gfs*) without repeating the expensive OrthoMCL step.
 
 Note on OrthoMCL implementation
 ===============================

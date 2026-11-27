@@ -32,9 +32,13 @@ The *ksrates* pipeline can be automatically run through Nextflow with a few prep
         nextflow run VIB-PSB/ksrates -profile apptainer --config config_files/config_elaeis.txt --expert config_files/config_expert.txt
 
     .. note::
-       As from `ksrates` ``v2.0.0``, the Nextflow pipeline has been ported to DSL2 syntax and requires at least Nextflow version ``22.03.0-edge``. Refer to the :ref:`installation page <install_nextflow>` to learn how to get the latest Nextflow version. You can also launch a specific (e.g. previous) Nextflow version through the ``NXF_VER`` environmental variable in the command line::
+       The tested Nextflow versions are listed in the :ref:`installation page <install_nextflow>`. To run a
+       specific Nextflow version without installing it separately, use the ``NXF_VER`` environment variable::
 
-            NXF_VER=24.10.5 nextflow run VIB-PSB/ksrates <args>
+            NXF_VER=25.10.3 nextflow run VIB-PSB/ksrates <args>
+
+       When using Nextflow ``26.04`` or later, run ``export NXF_SYNTAX_PARSER=v1`` before the Nextflow command,
+       as the pipeline uses the previous Nextflow syntax.
 
     The first time the command is executed, Nextflow downloads a local copy of the *ksrates* Nextflow pipeline from the ``VIB-PSB/ksrates`` GitHub repository and stores it in the ``$HOME/.nextflow`` directory.
     Parameter ``-profile`` specifies which container will be pulled from Docker Hub (either Apptainer or Docker).
@@ -89,22 +93,29 @@ The syntax to run a command depends on how the package is installed:
 
     Docker pulls the container image from Docker Hub and from then on makes use of the local copy.
 
-In order to submit the command as a job on a computer cluster, wrap the command in the appropriate syntax for the cluster executor system/HPC scheduler (e.g. ``qsub`` for a Sun Grid Engine (SGE) or compatible cluster or a PBS/Torque family scheduler). It is strongly recommended to run the *K*:sub:`S` paralog and orthologs estimation steps (see commands below) on a computer cluster.
+In order to submit the command as a job on a computer cluster, wrap the command in the appropriate syntax for the cluster executor system/HPC scheduler (e.g. ``sbatch`` for Slurm). It is strongly recommended to run the *K*:sub:`S` paralog and orthologs estimation steps on a computer cluster.
 
-An overview of the commands is available by accessing the package help menu (``ksrates -h``)::
+The available commands are listed below in workflow order (``ksrates -h`` lists them alphabetically)::
 
-    generate-config       Generates configuration file.
-    init                  Initializes rate-adjustment.
-    orthologs-adjustment  Performs ortholog substitution rate-adjustment.
-    orthologs-analysis    Computes ortholog divergence times Ks estimates.
-    orthologs-ks          Performs ortholog Ks estimation.
-    orthologs-ks-cleanup  Delete all ortholog BLAST tables.
-    paralogs-analyses     Detects WGD signatures in paralog Ks distribution.
-    paralogs-ks           Performs paralog Ks estimation.
-    paralogs-ks-multi     Performs paralog Ks estimation for all species.
-    plot-orthologs        Generates ortholog Ks distributions plot.
-    plot-paralogs         Generates rate-adjusted mixed Ks plot.
-    plot-tree             Generates phylogram with Ks-unit branch lengths.
+    generate-config           Generate configuration file.
+    init                      Initialize rate-adjustment.
+    paralogs-ks               Perform paralog Ks estimation.
+    orthologs-ks              Perform ortholog Ks estimation.
+    orthologs-analysis        Compute ortholog divergence times Ks estimates.
+    plot-orthologs            Generate ortholog Ks distributions plot.
+    orthologs-adjustment      Perform ortholog substitution rate-adjustment.
+    plot-paralogs             Generate rate-adjusted mixed Ks plot.
+    plot-tree                 Generate phylogram with Ks-unit branch lengths.
+    paralogs-analyses         Detect WGD signatures in paralog Ks distribution.
+
+    orthologs-ks-cleanup      Delete all ortholog BLAST tables.
+    paralogs-ks-multi         Perform paralog Ks estimation for all species.
+
+    launch-ks-database-server Launch the shared Ks database server (sqld).
+    populate-ks-db            Populate Ks database from existing data.
+    inspect-ks-db             Visualize or delete Ks database content.
+    check-paralog-db          Check for existing paralog Ks data in database.
+    check-ortholog-db         Check for existing ortholog Ks data in database.
 
 The order of execution of the single commands to run the whole workflow is the following. We assume here a local installation without the use of a *ksrates* container.
 
@@ -121,7 +132,7 @@ The order of execution of the single commands to run the whole workflow is the f
 
             ksrates generate-config path/to/config_filename.txt
 
-3.  Run the initialization script to obtain the ortholog trios for the rate-adjustment (``rate_adjustment/elaeis/ortholog_trios_elaeis.tsv``) and to extract the species pairs to be run through the *wgd* ortholog *K*:sub:`S` analysis (``rate_adjustment/elaeis/ortholog_pairs_elaeis.txt``)::
+3.  Run the initialization script to obtain the ortholog trios for the rate-adjustment (``rate_adjustment/elaeis/ortholog_trios_elaeis.tsv``) and to extract the species pairs to be run through the *wgd* ortholog *K*:sub:`S` analysis (``rate_adjustment/elaeis/ortholog_pairs_elaeis.tsv``)::
 
         ksrates init config_files/config_elaeis.txt --expert config_files/config_expert.txt
 
@@ -131,11 +142,11 @@ The order of execution of the single commands to run the whole workflow is the f
 
         ksrates paralogs-ks config_files/config_elaeis.txt --expert config_files/config_expert.txt --n-threads 4
 
-    The output files are generated in the ``paralog_distributions/wgd_elaies`` directory, i.e. ``/elaeis.ks.tsv`` for whole-paranome, ``elaeis.ks_anchors.tsv`` for anchor pairs and ``elaeis.ks_recret_top2000.tsv`` for reciprocally retained gene families.
+    The output files are generated in the ``paralog_distributions/wgd_elaeis`` directory, i.e. ``elaeis.ks.tsv`` for whole-paranome, ``elaeis.ks_anchors.tsv`` for anchor pairs and ``elaeis.ks_recret_top2000.tsv`` for reciprocally retained gene families.
 
     Using multiple threads to parallelize the analysis will reduce the compute time. The ``--n-threads`` option configures the number of threads to use (set this according to your available resources, i.e. CPUs/cores; e.g. 10 or more cores running on a computer cluster).
 
-5.  Launch the *wgd* ortholog *K*:sub:`S` analysis to estimate the ortholog *K*:sub:`S` values *for each required species pair*. These are listed in ``rate_adjustment/elaeis/ortholog_pairs_elaeis.txt``::
+5.  Launch the *wgd* ortholog *K*:sub:`S` analysis to estimate the ortholog *K*:sub:`S` values *for each required species pair*. These are listed in ``rate_adjustment/elaeis/ortholog_pairs_elaeis.tsv``::
 
         ksrates orthologs-ks config_files/config_elaeis.txt --expert config_files/config_expert.txt elaeis asparagus --n-threads 4
         ksrates orthologs-ks config_files/config_elaeis.txt --expert config_files/config_expert.txt elaeis oryza --n-threads 4
@@ -149,7 +160,7 @@ The order of execution of the single commands to run the whole workflow is the f
     
         ksrates orthologs-analysis config_files/config_elaeis.txt --expert config_files/config_expert.txt
 
-    The results are stored in a local database, namely a TSV file called by default ``ortholog_peak_db.tsv`` and generated by default in the launching directory (see :ref:`pipeline_config_section`).
+    The results are stored in a local TSV file called ``ortholog_peak_db.tsv`` and generated by default in the launching directory (see :ref:`pipeline_config_section`). When the *K*:sub:`S` database is enabled, they are stored in the database instead (see :ref:`ks_database`).
 
 7.  Plot the ortholog *K*:sub:`S` distributions for each focal species--other species pair (and each of their trios)::
     
@@ -163,7 +174,7 @@ The order of execution of the single commands to run the whole workflow is the f
 
     The branch-specific *K*:sub:`S` contributions and the rate-adjusted ortholog *K*:sub:`S` mode estimates are collected in ``rate_adjustment/elaeis/adjustment_table_elaeis.tsv``.
 
-9.  Plot the adjusted mixed paralog--ortholog *K*:sub:`S` distribution plot (``rate_adjustment/elaeis/mixed_elaeis_adjusted.pdf``)::
+9.  Plot the adjusted mixed paralog--ortholog *K*:sub:`S` distribution plot (e.g. ``rate_adjustment/elaeis/mixed_elaeis_adjusted_paranome.pdf``)::
 
         ksrates plot-paralogs config_files/config_elaeis.txt --expert config_files/config_expert.txt
     
@@ -178,11 +189,11 @@ The order of execution of the single commands to run the whole workflow is the f
     The methods used for detecting WGD signatures depend on the paralog analysis settings in the *ksrates* configuration files. For more details please refer to section :ref:`paralogs_analyses`.
 
 
-Finally, the two following commands are not strictly part of the workflow:
+The following two commands are not strictly part of the workflow:
 
 12. Remove all BLAST ``.tsv`` files generated by ``orthologs-ks`` in order to free disk space::
 
-        ksrates orthologs-ks-cleanup path/to/ortholog_distributions --expert config_files/config_expert.txt
+        ksrates orthologs-ks-cleanup path/to/ortholog_distributions
 
     The command only acts within the provided path to the ``ortholog_distributions`` directory, for example removing ``wgd_asparagus_elaeis/asparagus_elaeis.blast.tsv`` and all the other analogous files.
 
@@ -192,6 +203,8 @@ Finally, the two following commands are not strictly part of the workflow:
     
     For example it will generate ``paralog_distributions/wgd_asparagus`` and ``paralog_distributions/wgd_oryza`` with all related paralog output files.
 
+The following commands are related to the *K*:sub:`S` database server (see :ref:`ks_database`): ``launch-ks-database-server``, ``populate-ks-db``, ``inspect-ks-db``, ``check-paralog-db`` and ``check-ortholog-db``. The two ``check-*`` commands are mainly used internally by the Nextflow pipeline.
+
 
 Practical considerations
 ========================
@@ -199,7 +212,8 @@ Practical considerations
 When dealing with large input phylogenies it is useful to know that *ksrates* can be used iteratively, by starting with a small dataset and subsequently adding additional species to finetune the phylogenetic positioning of any hypothesized WGDs.
 For such iterative analyses the pipeline can reuse data from previous runs, and will only perform additional calculations on the extended dataset where needed.
 
-When *ksrates* is run, the ortholog *K*:sub:`S` values for each species pair in the input phylogenetic tree and the associated ortholog *K*:sub:`S` modes are stored in a local database.
-When the *ksrates* pipeline is subsequently rerun with additional species included in the input phylogeny, *ksrates* will skip the ortholog *K*:sub:`S` calculations for any species pair for which an ortholog *K*:sub:`S` mode has already been stored. The database consists of two tabular files (``ortholog_peak_db.tsv`` and ``ortholog_ks_list_db.tsv``, see :ref:`other_output` for more details) generated/accessed by default in the working directory. A custom path location can be otherwise specified in the :ref:`pipeline_config_section`.
+When *ksrates* is run, the ortholog *K*:sub:`S` values for each species pair in the input phylogenetic tree and the associated ortholog *K*:sub:`S` modes are stored in local TSV files.
+When the *ksrates* pipeline is subsequently rerun with additional species included in the input phylogeny, *ksrates* will skip the ortholog *K*:sub:`S` calculations for any species pair for which an ortholog *K*:sub:`S` mode has already been stored. The two tabular files (``ortholog_peak_db.tsv`` and ``ortholog_ks_list_db.tsv``, see :ref:`other_output` for more details) are generated/accessed by default in the working directory; a custom path location can be otherwise specified in the :ref:`pipeline_config_section`. These two files are used when the *K*:sub:`S` database server is disabled (default); to instead store the ortholog data (together with the paralog ones) in the *K*:sub:`S` database server, which lets several independent analyses share them, see :ref:`ks_database`.
 
-In case a user doesn't want to reuse an existing ortholog *K*:sub:`S` mode of a particular species pair and wants instead to re-estimate it from the same input data but using e.g. a different number of bootstrap iterations or KDE bandwidth, the line concerning the mode has to be manually deleted from the ``ortholog_peak_db.tsv`` database file. The successive *ksrates* pipeline will re-estimate the mode according to the new parameters by starting from the previously computed ortholog *K*:sub:`S` estimates for the species pair concerned, thereby skipping the onerous ortholog *K*:sub:`S` estimation step.
+In case a user doesn't want to reuse an existing ortholog *K*:sub:`S` mode of a particular species pair and wants instead to re-estimate it from the same input data but using e.g. a different number of bootstrap iterations or KDE bandwidth, the line concerning the mode has to be manually deleted from the ``ortholog_peak_db.tsv`` file. The successive *ksrates* pipeline will re-estimate the mode according to the new parameters by starting from the previously computed ortholog *K*:sub:`S` estimates for the species pair concerned, thereby skipping the onerous ortholog *K*:sub:`S` estimation step.
+If the *K*:sub:`S` database server is used instead, delete the pair with ``ksrates inspect-ks-db`` (see :ref:`ks_database` for details). This removes both the mode and the ortholog *K*:sub:`S` list of the pair, so the next *ksrates* run estimates both again with the new parameters. As above, the ortholog *K*:sub:`S` estimation step is skipped if the file of that pair is still present (``ortholog_distributions/wgd_species1_species2/species1_species2.ks.tsv``).

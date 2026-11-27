@@ -16,12 +16,9 @@ To install `Nextflow <https://www.nextflow.io>`__ and its dependencies, follow t
 
 *   Make sure you have Bash 3.2 (or later) installed.
 
-*   If you do not have `Java <https://www.oracle.com/java/>`__ installed, install `Java 11 or later <https://www.oracle.com/java/technologies/javase-downloads.html>`__; on Linux you can for example use::
+*   Nextflow requires Java 17 or later (up to 26 at the time of writing; see the `Nextflow installation page <https://docs.seqera.io/nextflow/install>`__). If you do not have it installed, on Linux you can for example use::
 
-        sudo apt-get install default-jdk  
-   
-   .. note::
-      Nextflow versions before ``22.01.x-edge`` `require <https://www.nextflow.io/blog/2022/evolution-of-nextflow-runtime.html>`__ Java version 8 up to 15 for their execution.
+        sudo apt-get install openjdk-17-jdk
 
 *   Then install Nextflow using either::
 
@@ -35,6 +32,8 @@ To install `Nextflow <https://www.nextflow.io>`__ and its dependencies, follow t
     This creates the ``nextflow`` executable file in the current directory.
 
    .. note::
+      The current *ksrates* Nextflow pipeline has been tested with Nextflow ``24.10.4``, ``25.10.3`` and ``26.10.7``. When using Nextflow ``26.04`` or later, run ``export NXF_SYNTAX_PARSER=v1`` before the Nextflow command, as the pipeline uses the previous Nextflow syntax.
+
       As from `ksrates` ``v2.0.0``, the Nextflow pipeline has been ported to DSL2 syntax and requires at least Nextflow version ``22.03.0-edge``. Concerning older `ksrates` versions written with DSL1, from ``v1.1.3`` to ``v1.1.5`` they support from ``22.03.0-edge`` until before ``22.12.0-edge``, while ``v1.1.2`` and previous ones require earlier versions than ``22.03.0-edge``.
 
 *   Optionally make the ``nextflow`` executable accessible by your ``$PATH`` variable, for example by moving it::

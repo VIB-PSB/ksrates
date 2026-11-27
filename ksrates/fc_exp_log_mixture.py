@@ -447,7 +447,7 @@ def deconvolute_data(tsv_file, max_ks, data_type, min_ks_anchors=0.05):
 def deconvolute_data_from_df(df, max_ks, data_type, min_ks_anchors=0.05):
   """
   Same as deconvolute_data, but takes an already-loaded DataFrame instead of reading a TSV file
-  from disk (e.g. when the data was reconstructed from the paralog Ks database rather than read
+  from disk (e.g. when the data was reconstructed from the Ks database rather than read
   from a wgd output file).
 
   :param df: DataFrame with the same columns as a wgd Ks TSV file (at minimum: Family, Node, Ks,
