@@ -32,14 +32,13 @@ The *ksrates* pipeline can be automatically run through Nextflow with a few prep
         nextflow run VIB-PSB/ksrates -profile apptainer --config config_files/config_elaeis.txt --expert config_files/config_expert.txt
 
     .. note::
-       As from `ksrates` ``v2.0.0``, the Nextflow pipeline has been ported to DSL2 syntax and requires at least Nextflow version ``22.03.0-edge``. Refer to the :ref:`installation page <install_nextflow>` to learn how to get the latest Nextflow version. You can also launch a specific (e.g. previous) Nextflow version through the ``NXF_VER`` environmental variable in the command line::
+       The tested Nextflow versions are listed in the :ref:`installation page <install_nextflow>`. To run a
+       specific Nextflow version without installing it separately, use the ``NXF_VER`` environment variable::
 
-            NXF_VER=24.10.5 nextflow run VIB-PSB/ksrates <args>
+            NXF_VER=25.10.3 nextflow run VIB-PSB/ksrates <args>
 
-
-    .. note::
-        When using Nextflow ``26.04`` or later, run ``export NXF_SYNTAX_PARSER=v1`` before the Nextflow command,
-        as the pipeline uses the previous Nextflow syntax.
+       When using Nextflow ``26.04`` or later, run ``export NXF_SYNTAX_PARSER=v1`` before the Nextflow command,
+       as the pipeline uses the previous Nextflow syntax.
 
     The first time the command is executed, Nextflow downloads a local copy of the *ksrates* Nextflow pipeline from the ``VIB-PSB/ksrates`` GitHub repository and stores it in the ``$HOME/.nextflow`` directory.
     Parameter ``-profile`` specifies which container will be pulled from Docker Hub (either Apptainer or Docker).
