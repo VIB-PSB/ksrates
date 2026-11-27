@@ -3,7 +3,7 @@
 [![Documentation Status](https://readthedocs.org/projects/ksrates/badge/?version=latest)](https://ksrates.readthedocs.io/en/latest/?badge=latest)
 
 
-VIB-UGent Center for Plant Systems Biology&mdash;[Evolutionary Systems Biology Lab](http://www.psb.ugent.be/esb)
+VIB-UGent Center for Plant Systems Biology&mdash;[Evolutionary Systems Biology Lab](https://maerelab.sites.vib.be)
 
 # *ksrates*
 
